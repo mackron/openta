@@ -1,0 +1,89 @@
+// Public domain. See "unlicense" statement at the end of this file.
+
+// The main file containing the entry point. This is the only compiled file for the entire game.
+
+// Platform headers. Never expose these publicly. Ever.
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+// Platform libraries, for simplifying MSVC builds.
+#ifdef _WIN32
+#if defined(_MSC_VER) || defined(__clang__)
+#pragma comment(lib, "msimg32.lib")
+#endif
+#endif
+
+// dr_libs headers.
+#define DR_GUI_INCLUDE_WIP
+#define DR_WAV_NO_STDIO
+#define DR_FS_WIN32_USE_EVENT_MUTEX     // For better deadlock detection, but possibly less efficient (need to profile).
+
+#include "../dr_libs/dr_util.h"
+#include "../dr_libs/dr_path.h"
+#include "../dr_libs/dr_fs.h"
+#include "../dr_libs/dr_gui.h"
+#include "../dr_libs/dr_2d.h"
+#include "../dr_libs/dr_audio.h"
+#include "../dr_libs/dr_wav.h"
+#include "../dr_libs/dr_math.h"
+
+// dr_libs
+#define DR_UTIL_IMPLEMENTATION
+#define DR_PATH_IMPLEMENTATION
+#define DR_FS_IMPLEMENTATION
+#define DR_GUI_IMPLEMENTATION
+#define DR_2D_IMPLEMENTATION
+#define DR_AUDIO_IMPLEMENTATION
+#define DR_WAV_IMPLEMENTATION
+#define DR_MATH_IMPLEMENTATION
+
+#include "../dr_libs/dr_util.h"
+#include "../dr_libs/dr_path.h"
+#include "../dr_libs/dr_fs.h"
+#include "../dr_libs/dr_gui.h"
+#include "../dr_libs/dr_2d.h"
+#include "../dr_libs/dr_audio.h"
+#include "../dr_libs/dr_wav.h"
+#include "../dr_libs/dr_math.h"
+
+// Total Annihilation headers.
+#include "ta_errors.h"
+#include "ta_type_declarations.h"
+#include "ta_platform_layer.h"
+#include "ta_graphics.h"
+#include "ta_game.h"
+
+// Total Annihilation source files.
+#include "ta_platform_layer.c"
+#include "ta_graphics.c"
+#include "ta_game.c"
+
+int ta_main(dr_cmdline cmdline)
+{
+    // The window system needs to be initialized once, before creating the game context.
+    ta_init_window_system();
+
+    ta_game* pGame = ta_create_game(cmdline);
+    if (pGame == NULL) {
+        return TA_ERROR_FAILED_TO_CREATE_GAME_CONTEXT;
+    }
+
+    int result = ta_game_run(pGame);
+
+
+    ta_delete_game(pGame);
+    ta_uninit_window_system();
+
+    return result;
+}
+
+int main(int argc, char** argv)
+{
+    dr_cmdline cmdline;
+    if (!dr_init_cmdline(&cmdline, argc, argv)) {
+        return TA_ERROR_FAILED_TO_PARSE_CMDLINE;
+    }
+
+    return ta_main(cmdline);
+}
