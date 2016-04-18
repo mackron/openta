@@ -36,6 +36,9 @@ void ta_uninit_window_system();
 // Creates a game window.
 #ifdef _WIN32
 ta_window* ta_create_window(ta_game* pGame, const char* pTitle, unsigned int width, unsigned int height, unsigned int options);
+
+// Retrieves a handle to the device context of the given window.
+HDC ta_get_window_hdc(ta_window* pWindow);
 #endif
 
 // Deletes the given window.

@@ -9,8 +9,14 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
     pGame->cmdline = cmdline;
 
+    // We need to create a graphics context before we can create the game window.
+    pGame->pGraphics = ta_create_graphics_context(pGame);
+    if (pGame->pGraphics == NULL) {
+        goto on_error;
+    }
+
     // Create a show the window as soon as we can to make loading feel faster.
-    pGame->pWindow = ta_create_window(pGame, "Total Annihilation", 640, 480, TA_WINDOW_FULLSCREEN);
+    pGame->pWindow = ta_graphics_create_window(pGame->pGraphics, "Total Annihilation", 640, 480, TA_WINDOW_FULLSCREEN);
     if (pGame->pWindow == NULL) {
         goto on_error;
     }
@@ -55,6 +61,10 @@ on_error:
             ta_delete_window(pGame->pWindow);
         }
 
+        if (pGame->pGraphics != NULL) {
+            ta_delete_graphics_context(pGame->pGraphics);
+        }
+
         if (pGame->pTimer != NULL) {
             ta_delete_timer(pGame->pTimer);
         }
@@ -70,6 +80,7 @@ void ta_delete_game(ta_game* pGame)
     }
 
     ta_delete_window(pGame->pWindow);
+    ta_delete_graphics_context(pGame->pGraphics);
     ta_delete_timer(pGame->pTimer);
     free(pGame);
 }
@@ -105,4 +116,9 @@ void ta_game_step(ta_game* pGame)
 void ta_game_render(ta_game* pGame)
 {
     assert(pGame != NULL);
+
+    ta_graphics_set_current_window(pGame->pGraphics, pGame->pWindow);
+
+
+    ta_graphics_present(pGame->pGraphics, pGame->pWindow);
 }

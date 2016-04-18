@@ -125,6 +125,11 @@ int ta_main_loop(ta_game* pGame)
     return 0;
 }
 
+HDC ta_get_window_hdc(ta_window* pWindow)
+{
+    return GetDC(pWindow->hWnd);
+}
+
 
 struct ta_timer
 {
