@@ -2,9 +2,16 @@
 
 // The main file containing the entry point. This is the only compiled file for the entire game.
 
+// Standard headers.
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <assert.h>
+
 // Platform headers. Never expose these publicly. Ever.
 #ifdef _WIN32
 #include <windows.h>
+#include <direct.h> // For _chdir(). This should be temp once we start using dr_fs.
 #endif
 
 // Platform libraries, for simplifying MSVC builds.
@@ -50,14 +57,31 @@
 // Total Annihilation headers.
 #include "ta_errors.h"
 #include "ta_type_declarations.h"
+#include "ta_misc.h"
 #include "ta_platform_layer.h"
 #include "ta_graphics.h"
 #include "ta_game.h"
+#include "ta_hpi.h"
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//
+// IMPLEMENTATION
+//
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+// miniz
+//#define MINIZ_NO_ARCHIVE_APIS
+//#define MINIZ_NO_STDIO
+#include "miniz.c"
 
 // Total Annihilation source files.
 #include "ta_platform_layer.c"
 #include "ta_graphics.c"
 #include "ta_game.c"
+#include "ta_hpi.c"
 
 int ta_main(dr_cmdline cmdline)
 {

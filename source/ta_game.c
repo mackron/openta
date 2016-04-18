@@ -16,6 +16,31 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     }
 
 
+    // File system. We want to set the working directory to the executable.
+    char exedir[DRFS_MAX_PATH];
+    if (!dr_get_executable_path(exedir, sizeof(exedir))) {
+        goto on_error;
+    }
+    drpath_remove_file_name(exedir);
+
+#ifdef _WIN32
+    _chdir(exedir);
+#else
+    chdir(exedir)
+#endif
+
+#if 0
+    // TESTING
+    ta_hpi_archive* pHPI = ta_open_hpi_from_file("totala1.hpi");
+    ta_hpi_file* pHPIFile = ta_hpi_open_file(pHPI, "weapons/MISSILES.TDF");
+    
+    size_t fileSize = (size_t)ta_hpi_size(pHPIFile);
+    char* pFileData = malloc(fileSize + 1);
+    ta_hpi_read(pHPIFile, pFileData, fileSize, NULL);
+    pFileData[fileSize] = '\0';
+    printf("%s", pFileData);
+#endif
+
     // Initialize the timer last so that the first frame has as accurate of a delta time as possible.
     pGame->pTimer = ta_create_timer();
     if (pGame->pTimer == NULL) {
