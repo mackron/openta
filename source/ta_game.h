@@ -13,6 +13,9 @@ struct ta_game
 
     // The game timer for stepping the game.
     ta_timer* pTimer;
+
+    // The audio context.
+    draudio_context* pAudioContext;
 };
 
 // Creates a game instance.
