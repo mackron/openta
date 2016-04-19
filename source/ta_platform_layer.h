@@ -1,6 +1,7 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#define TA_WINDOW_FULLSCREEN    0x0001
+#define TA_WINDOW_CENTERED      0x0001
+#define TA_WINDOW_FULLSCREEN    0x0002
 
 
 ///////////////////////////////////////////////////////////////////////////////

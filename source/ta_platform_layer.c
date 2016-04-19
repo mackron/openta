@@ -66,12 +66,43 @@ ta_window* ta_create_window(ta_game* pGame, const char* pTitle, unsigned int res
         return NULL;
     }
 
-    RECT windowRect;
-    GetWindowRect(hWnd, &windowRect);
+    // We should have a window, but before showing it we need to make a few small adjustments to the position and size. First, we need to
+    // honour the TA_WINDOW_CENTERED option. Second, we need to make a small change to the size of the window such that the client size
+    // is equal to resolutionX and resolutionY. When we created the window, we specified resolutionX and resolutionY as the dimensions,
+    // however this includes the size of the outer border. The outer border should not be included, so we need to stretch the window just
+    // a little bit such that the area inside the borders are exactly equal to resolutionX and resolutionY.
+    //
+    // We use a single API to both move and resize the window.
 
-    windowRect.right = windowRect.left + resolutionX;
-    windowRect.bottom = windowRect.top + resolutionY;
-    AdjustWindowRectEx(&windowRect, dwStyle, FALSE, dwExStyle);
+    UINT swpflags = SWP_NOZORDER | SWP_NOMOVE;
+
+    RECT windowRect;
+    RECT clientRect;
+    GetWindowRect(hWnd, &windowRect);
+    GetClientRect(hWnd, &clientRect);
+
+    int windowWidth  = (int)resolutionX + ((windowRect.right - windowRect.left) - (clientRect.right - clientRect.left));
+    int windowHeight = (int)resolutionY + ((windowRect.bottom - windowRect.top) - (clientRect.bottom - clientRect.top));
+
+    int windowPosX = 0;
+    int windowPosY = 0;
+    if ((options & TA_WINDOW_CENTERED) != 0)
+    {
+        // We need to center the window. To do this properly, we want to reposition based on the monitor it started on.
+        MONITORINFO mi;
+        ZeroMemory(&mi, sizeof(mi));
+        mi.cbSize = sizeof(MONITORINFO);
+        if (GetMonitorInfoA(MonitorFromWindow(hWnd, 0), &mi))
+        {
+            windowPosX = ((mi.rcMonitor.right - mi.rcMonitor.left) - windowWidth)  / 2;
+            windowPosY = ((mi.rcMonitor.bottom - mi.rcMonitor.top) - windowHeight) / 2;
+
+            swpflags &= ~SWP_NOMOVE;
+        }
+    }
+
+    SetWindowPos(hWnd, NULL, windowPosX, windowPosY, windowWidth, windowHeight, swpflags);
+
 
 
     ta_window* pWindow = calloc(1, sizeof(*pWindow));
