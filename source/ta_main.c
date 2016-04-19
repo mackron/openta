@@ -34,6 +34,7 @@
 #include "../dr_libs/dr_audio.h"
 #include "../dr_libs/dr_wav.h"
 #include "../dr_libs/dr_math.h"
+#include "../dr_libs/dr_pcx.h"
 
 // dr_libs
 #define DR_UTIL_IMPLEMENTATION
@@ -44,6 +45,7 @@
 #define DR_AUDIO_IMPLEMENTATION
 #define DR_WAV_IMPLEMENTATION
 #define DR_MATH_IMPLEMENTATION
+#define DR_PCX_IMPLEMENTATION
 
 #include "../dr_libs/dr_util.h"
 #include "../dr_libs/dr_path.h"
@@ -53,6 +55,7 @@
 #include "../dr_libs/dr_audio.h"
 #include "../dr_libs/dr_wav.h"
 #include "../dr_libs/dr_math.h"
+#include "../dr_libs/dr_pcx.h"
 
 // Total Annihilation headers.
 #include "ta_errors.h"
@@ -73,8 +76,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // miniz
-//#define MINIZ_NO_ARCHIVE_APIS
-//#define MINIZ_NO_STDIO
+#define MINIZ_NO_ARCHIVE_APIS
+#define MINIZ_NO_STDIO
 #include "miniz.c"
 
 // Total Annihilation source files.
