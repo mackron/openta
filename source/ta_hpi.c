@@ -348,7 +348,9 @@ bool ta_hpi__find_file_traversal_callback(ta_hpi__central_dir_entry* pEntry, con
 {
     ta_hpi__ffi* ffi = pUserData;
 
-    if (strcmp(filePath, ffi->filePath) == 0) {
+    // It appears TA is not case sensitive.
+    //if (strcmp(filePath, ffi->filePath) == 0) {
+    if (_stricmp(filePath, ffi->filePath) == 0) {
         ffi->entry = *pEntry;
         ffi->exists = true;
         return false;   // <-- Stop traversing at this point.
