@@ -16,7 +16,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     }
 
     // Create a show the window as soon as we can to make loading feel faster.
-    pGame->pWindow = ta_graphics_create_window(pGame->pGraphics, "Total Annihilation", 640, 480, TA_WINDOW_FULLSCREEN);
+    pGame->pWindow = ta_graphics_create_window(pGame->pGraphics, "Total Annihilation", 640, 480, TA_WINDOW_FULLSCREEN | TA_WINDOW_CENTERED);
     if (pGame->pWindow == NULL) {
         goto on_error;
     }
@@ -35,17 +35,8 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     chdir(exedir)
 #endif
 
-#if 0
-    // TESTING
-    ta_hpi_archive* pHPI = ta_open_hpi_from_file("totala1.hpi");
-    ta_hpi_file* pHPIFile = ta_hpi_open_file(pHPI, "weapons/MISSILES.TDF");
-    
-    size_t fileSize = (size_t)ta_hpi_size(pHPIFile);
-    char* pFileData = malloc(fileSize + 1);
-    ta_hpi_read(pHPIFile, pFileData, fileSize, NULL);
-    pFileData[fileSize] = '\0';
-    printf("%s", pFileData);
-#endif
+
+
 
     // Initialize the timer last so that the first frame has as accurate of a delta time as possible.
     pGame->pTimer = ta_create_timer();
@@ -118,7 +109,7 @@ void ta_game_render(ta_game* pGame)
     assert(pGame != NULL);
 
     ta_graphics_set_current_window(pGame->pGraphics, pGame->pWindow);
-
-
+    {
+    }
     ta_graphics_present(pGame->pGraphics, pGame->pWindow);
 }
