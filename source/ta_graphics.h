@@ -25,3 +25,15 @@ void ta_graphics_disable_vsync(ta_graphics_context* pGraphics);
 
 // Presents the back buffer of the given window.
 void ta_graphics_present(ta_graphics_context* pGraphics, ta_window* pWindow);
+
+
+// Creates a texture.
+ta_texture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width, unsigned int height, unsigned int components, const void* pImageData);
+
+// Deletes the given texture.
+void ta_delete_texture(ta_texture* pTexture);
+
+
+
+// TESTING
+void ta_draw_texture(ta_texture* pTexture);

@@ -16,6 +16,9 @@ struct ta_graphics_context
     ta_window* pCurrentWindow;
 
 
+    // A simple single texture shader.
+    GLuint singleTextureShader;
+
 
     // Platform Specific.
 #if _WIN32
@@ -40,6 +43,24 @@ struct ta_graphics_context
 #endif
 };
 
+struct ta_texture
+{
+    // The graphics context that owns this texture.
+    ta_graphics_context* pGraphics;
+
+    // The OpenGL texture object.
+    GLuint objectGL;
+
+    // The width of the texture.
+    uint32_t width;
+
+    // The height of the texture.
+    uint32_t height;
+};
+
+
+
+
 #ifdef _WIN32
 static LRESULT DummyWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -61,7 +82,7 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame)
     }
 
 
-    pGraphics->pGame          = NULL;
+    pGraphics->pGame          = pGame;
     pGraphics->pCurrentWindow = NULL;
 
 #ifdef _WIN32
@@ -106,10 +127,19 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame)
 
     wglMakeCurrent(pGraphics->hDummyDC, pGraphics->hRC);
 
-
     // Retrieve WGL function pointers.
     pGraphics->SwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 #endif
+
+
+    // Default state.
+    glEnable(GL_TEXTURE_2D);
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+    glDisable(GL_DEPTH_TEST);
 
     return pGraphics;
 
@@ -206,4 +236,80 @@ void ta_graphics_present(ta_graphics_context* pGraphics, ta_window* pWindow)
 #ifdef _WIN32
     SwapBuffers(ta_get_window_hdc(pWindow));
 #endif
+}
+
+
+ta_texture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width, unsigned int height, unsigned int components, const void* pImageData)
+{
+    if (pGraphics == NULL || width == 0 || height == 0 || (components != 3 && components != 4) || pImageData == NULL) {
+        return NULL;
+    }
+
+    GLuint objectGL;
+    glGenTextures(1, &objectGL);
+    
+    glBindTexture(GL_TEXTURE_2D, objectGL);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, (components == 3) ? GL_RGB : GL_RGBA, width, height, 0, (components == 3) ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, pImageData);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+
+    // Nearest/Nearest filtering to try and emulate the original feel of the game.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+
+    ta_texture* pTexture = malloc(sizeof(*pTexture));
+    if (pTexture == NULL) {
+        glDeleteTextures(1, &objectGL);
+        return NULL;
+    }
+
+    pTexture->pGraphics = pGraphics;
+    pTexture->objectGL = objectGL;
+    pTexture->width = width;
+    pTexture->height = height;
+
+    return pTexture;
+}
+
+void ta_delete_texture(ta_texture* pTexture)
+{
+    glDeleteTextures(1, &pTexture->objectGL);
+    free(pTexture);
+}
+
+
+
+
+// TESTING
+void ta_draw_texture(ta_texture* pTexture)
+{
+    GLenum error = glGetError();
+
+    // Clear first.
+    glClearDepth(1.0);
+    glClearColor(0, 0, 0.5, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+    glViewport(0, 0, pTexture->width, pTexture->height);
+
+    glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    
+    glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
+    glBegin(GL_QUADS);
+    {
+        glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
+        glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
+        glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
+        glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+    }
+    glEnd();
 }

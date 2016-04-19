@@ -2,3 +2,4 @@
 
 typedef struct ta_game ta_game;
 typedef struct ta_graphics_context ta_graphics_context;
+typedef struct ta_texture ta_texture;
