@@ -36,6 +36,9 @@ void ta_delete_config(ta_config_obj* pConfig);
 // Retrieves a pointer to a generic variable from the given config.
 ta_config_var* ta_config_get_var(ta_config_obj* pConfig, const char* varName);
 
+// Retrieves the value of the given config variable as a sub-object. Returns NULL if the variable does not exist.
+ta_config_obj* ta_config_get_subobj(ta_config_obj* pConfig, const char* varName);
+
 // Retrieves the value of the given config variable as an integer. Returns NULL if the variable does not exist.
 const char* ta_config_get_string(ta_config_obj* pConfig, const char* varName);
 

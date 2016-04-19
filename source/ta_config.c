@@ -324,6 +324,16 @@ ta_config_var* ta_config_get_var(ta_config_obj* pConfig, const char* varName)
     return NULL;
 }
 
+ta_config_obj* ta_config_get_subobj(ta_config_obj* pConfig, const char* varName)
+{
+    ta_config_var* pVar = ta_config_get_var(pConfig, varName);
+    if (pVar == NULL) {
+        return NULL;
+    }
+
+    return pVar->pObject;
+}
+
 const char* ta_config_get_string(ta_config_obj* pConfig, const char* varName)
 {
     ta_config_var* pVar = ta_config_get_var(pConfig, varName);
