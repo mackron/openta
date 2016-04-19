@@ -65,6 +65,7 @@
 #include "ta_graphics.h"
 #include "ta_game.h"
 #include "ta_hpi.h"
+#include "ta_config.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -85,6 +86,7 @@
 #include "ta_graphics.c"
 #include "ta_game.c"
 #include "ta_hpi.c"
+#include "ta_config.c"
 
 int ta_main(dr_cmdline cmdline)
 {
