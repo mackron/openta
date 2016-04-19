@@ -307,3 +307,49 @@ void ta_delete_config(ta_config_obj* pConfig)
     free(pConfig->pVars);
     free(pConfig);
 }
+
+
+ta_config_var* ta_config_get_var(ta_config_obj* pConfig, const char* varName)
+{
+    if (pConfig == NULL || varName == NULL) {
+        return NULL;
+    }
+
+    for (unsigned i = 0; i < pConfig->varCount; ++i) {
+        if (strcmp(pConfig->pVars[i].name, varName) == 0) { // <-- Should this be case insensitive?
+            return &pConfig->pVars[i];
+        }
+    }
+
+    return NULL;
+}
+
+const char* ta_config_get_string(ta_config_obj* pConfig, const char* varName)
+{
+    ta_config_var* pVar = ta_config_get_var(pConfig, varName);
+    if (pVar == NULL) {
+        return NULL;
+    }
+
+    return pVar->value;
+}
+
+int ta_config_get_int(ta_config_obj* pConfig, const char* varName)
+{
+    const char* value = ta_config_get_string(pConfig, varName);
+    if (value == NULL) {
+        return 0;
+    }
+
+    return atoi(value);
+}
+
+float ta_config_get_float(ta_config_obj* pConfig, const char* varName)
+{
+    const char* value = ta_config_get_string(pConfig, varName);
+    if (value == NULL) {
+        return 0;
+    }
+
+    return (float)atof(value);
+}

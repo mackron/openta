@@ -31,3 +31,16 @@ ta_config_obj* ta_parse_config(const char* configString);
 
 // Deletes the given config object.
 void ta_delete_config(ta_config_obj* pConfig);
+
+
+// Retrieves a pointer to a generic variable from the given config.
+ta_config_var* ta_config_get_var(ta_config_obj* pConfig, const char* varName);
+
+// Retrieves the value of the given config variable as an integer. Returns NULL if the variable does not exist.
+const char* ta_config_get_string(ta_config_obj* pConfig, const char* varName);
+
+// Retrieves the value of the given config variable as an integer. Returns 0 if the variable does not exist.
+int ta_config_get_int(ta_config_obj* pConfig, const char* varName);
+
+// Retrieves the value of the given config variable as a float. Returns 0.0f if the variable does not exist.
+float ta_config_get_float(ta_config_obj* pConfig, const char* varName);
