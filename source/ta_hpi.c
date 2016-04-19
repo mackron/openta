@@ -52,7 +52,7 @@ bool ta_hpi__decompress_lz77(const unsigned char* pIn, uint32_t compressedSize, 
 bool ta_hpi__decompress_zlib(const void* pIn, uint32_t compressedSize, void* pOut, uint32_t uncompressedSize)
 {
     // This is untested.
-    return mz_uncompress(pOut, &uncompressedSize, pIn, compressedSize);
+    return mz_uncompress(pOut, &uncompressedSize, pIn, compressedSize) == MZ_OK;
 }
 
 
@@ -83,8 +83,14 @@ static TA_INLINE void ta_hpi__decrypt(uint8_t* pData, size_t sizeInBytes, uint32
 {
     assert(pData != NULL);
 
-    for (size_t i = 0; i < sizeInBytes; ++i) {
-        pData[i] = (uint8_t)((firstBytePos + i) ^ decryptionKey) ^ ~pData[i];
+    if (decryptionKey != 0) {
+        for (size_t i = 0; i < sizeInBytes; ++i) {
+            pData[i] = (uint8_t)((firstBytePos + i) ^ decryptionKey) ^ ~pData[i];
+        }
+    } else {
+        for (size_t i = 0; i < sizeInBytes; ++i) {
+            pData[i] = pData[i];
+        }
     }
 }
 
@@ -97,7 +103,10 @@ static size_t ta_hpi__read_archive(ta_hpi_archive* pHPI, void* pBufferOut, size_
 
     // The data is encrypted which creates unnecessary inefficiency. Sigh.
     size_t bytesRead = pHPI->onRead(pHPI->pUserData, pBufferOut, bytesToRead);
-    ta_hpi__decrypt(pBufferOut, bytesRead, pHPI->decryptionKey, pHPI->currentPos);
+    if (pHPI->header.key != 0) {
+        ta_hpi__decrypt(pBufferOut, bytesRead, pHPI->decryptionKey, pHPI->currentPos);
+    }
+    
 
     pHPI->currentPos += bytesRead;
     return bytesRead;
@@ -394,6 +403,9 @@ ta_hpi_archive* ta_open_hpi(ta_read_proc onRead, ta_seek_proc onSeek, void* pUse
 
     // From this point on, everything is encrypted.
     uint32_t decryptionKey = ~((header.key * 4) | (header.key >> 6));
+    if (header.key == 0) {
+        decryptionKey = 0;
+    }
 
     ta_hpi_archive* pHPI = malloc(sizeof(*pHPI) - sizeof(pHPI->pExtraData) + header.directorySize);
     if (pHPI == NULL) {

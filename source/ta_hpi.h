@@ -55,13 +55,6 @@ typedef struct
     uint32_t decryptionKey;
 
 
-    // The number of files and subfolders in the archive.
-    uint32_t fileCount;
-
-    // Information about each file and subfolder. This is an offset of pExtraData.
-    ta_hpi_file_info* pFiles;
-
-
     // Variable length data containing information about each file in the archive.
     char pExtraData[1];
 
