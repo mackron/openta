@@ -110,53 +110,68 @@ static bool ta_hpi__read_archive_compressed(ta_hpi_archive* pHPI, void* pBufferO
         chunkCount += 1;
     }
 
+    bool result = false;
+    size_t* pChunkSizes = malloc(chunkCount * sizeof(*pChunkSizes));
+
     for (size_t iChunk = 0; iChunk < chunkCount; ++iChunk)
     {
-        uint32_t chunkSize;
-        if (ta_hpi__read_archive(pHPI, &chunkSize, 4) != 4) {
-            return false;
+        if (ta_hpi__read_archive(pHPI, &pChunkSizes[iChunk], 4) != 4) {
+            result = false;
+            goto finished;
         }
+    }
 
+
+    for (size_t iChunk = 0; iChunk < chunkCount; ++iChunk)
+    {
         uint32_t marker = 0;
         if (ta_hpi__read_archive(pHPI, &marker, 4) != 4 || marker != 'HSQS') {
-            return false;
+            result = false;
+            goto finished;
         }
 
         uint8_t unused;
         if (ta_hpi__read_archive(pHPI, &unused, 1) != 1) {
-            return false;
+            result = false;
+            goto finished;
         }
 
         uint8_t compressionType;
         if (ta_hpi__read_archive(pHPI, &compressionType, 1) != 1) {
-            return false;
+            result = false;
+            goto finished;
         }
 
         uint8_t encrypted;
         if (ta_hpi__read_archive(pHPI, &encrypted, 1) != 1) {
-            return false;
+            result = false;
+            goto finished;
         }
 
         uint32_t compressedSize;
         if (ta_hpi__read_archive(pHPI, &compressedSize, 4) != 4) {
-            return false;
+            result = false;
+            goto finished;
         }
 
         uint32_t uncompressedSize;
         if (ta_hpi__read_archive(pHPI, &uncompressedSize, 4) != 4) {
-            return false;
+            result = false;
+            goto finished;
         }
 
         uint32_t checksum;
         if (ta_hpi__read_archive(pHPI, &checksum, 4) != 4) {
-            return false;
+            result = false;
+            goto finished;
         }
 
 
         unsigned char* pCompressedData = malloc(compressedSize);
         if (ta_hpi__read_archive(pHPI, pCompressedData, compressedSize) != compressedSize) {
             free(pCompressedData);
-            return false;
+            result = false;
+            goto finished;
         }
 
         
@@ -175,7 +190,8 @@ static bool ta_hpi__read_archive_compressed(ta_hpi_archive* pHPI, void* pBufferO
 
         if (checksum != checksum2) {
             free(pCompressedData);
-            return false;
+            result = false;
+            goto finished;
         }
 
 
@@ -186,7 +202,8 @@ static bool ta_hpi__read_archive_compressed(ta_hpi_archive* pHPI, void* pBufferO
             {
                 if (!ta_hpi__decompress_lz77(pCompressedData, compressedSize, (char*)pBufferOut + (iChunk * 65536))) {
                     free(pCompressedData);
-                    return false;
+                    result = false;
+            goto finished;
                 }
             } break;
 
@@ -194,7 +211,8 @@ static bool ta_hpi__read_archive_compressed(ta_hpi_archive* pHPI, void* pBufferO
             {
                 if (!ta_hpi__decompress_zlib(pCompressedData, compressedSize, (char*)pBufferOut + (iChunk * 65536), uncompressedSize)) {
                     free(pCompressedData);
-                    return false;
+                    result = false;
+                    goto finished;
                 }
             } break;
         }
@@ -203,7 +221,12 @@ static bool ta_hpi__read_archive_compressed(ta_hpi_archive* pHPI, void* pBufferO
         free(pCompressedData);
     }
 
-    return true;
+    result = true;
+
+
+finished:
+    free(pChunkSizes);
+    return result;
 }
 
 
