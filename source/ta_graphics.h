@@ -34,6 +34,10 @@ ta_texture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width
 void ta_delete_texture(ta_texture* pTexture);
 
 
+// Retrievs the maximum dimensions of a texture.
+unsigned int ta_get_max_texture_size(ta_graphics_context* pGraphics);
+
 
 // TESTING
 void ta_draw_texture(ta_texture* pTexture, bool transparent);
+void ta_draw_subtexture(ta_texture* pTexture, bool transparent, int offsetX, int offsetY, int width, int height);

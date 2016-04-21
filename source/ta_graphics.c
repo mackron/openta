@@ -57,6 +57,10 @@ struct ta_graphics_context
     PFNGLBINDPROGRAMARBPROC glBindProgramARB;
     PFNGLPROGRAMSTRINGARBPROC glProgramStringARB;
     PFNGLPROGRAMLOCALPARAMETER4FARBPROC glProgramLocalParameter4fARB;
+
+
+    // Limits.
+    GLint maxTextureSize;
 };
 
 struct ta_texture
@@ -170,6 +174,9 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
     pGraphics->glProgramStringARB = ta_get_gl_proc_address("glProgramStringARB");
     pGraphics->glProgramLocalParameter4fARB = ta_get_gl_proc_address("glProgramLocalParameter4fARB");
 
+
+    // Limits.
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &pGraphics->maxTextureSize);
 
 
     // The texture containing the palette. This is always bound to texture unit 1.
@@ -388,10 +395,19 @@ void ta_delete_texture(ta_texture* pTexture)
 }
 
 
+unsigned int ta_get_max_texture_size(ta_graphics_context* pGraphics)
+{
+    if (pGraphics == NULL) {
+        return 0;
+    }
+
+    return (unsigned int)pGraphics->maxTextureSize;
+}
+
 
 
 // TESTING
-void ta_draw_texture(ta_texture* pTexture, bool transparent)
+void ta_draw_subtexture(ta_texture* pTexture, bool transparent, int offsetX, int offsetY, int width, int height)
 {
     if (pTexture == NULL) {
         return;
@@ -407,7 +423,7 @@ void ta_draw_texture(ta_texture* pTexture, bool transparent)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-    glViewport(0, 0, pTexture->width, pTexture->height);
+    glViewport(0, 0, width, height);
 
     glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -436,12 +452,22 @@ void ta_draw_texture(ta_texture* pTexture, bool transparent)
     glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
     glBegin(GL_QUADS);
     {
-        glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f,  1.0f);
-        glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f,  1.0f);
-        glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f,  1.0f);
-        glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
+        float left = (float)offsetX / pTexture->width;
+        float top  = (float)offsetY / pTexture->height;
+        float right = (float)(offsetX + width) / pTexture->width;
+        float bottom = (float)(offsetY + height) / pTexture->height;
+
+        glTexCoord2f(left, top); glVertex3f(-1.0f, -1.0f,  1.0f);
+        glTexCoord2f(right, top); glVertex3f( 1.0f, -1.0f,  1.0f);
+        glTexCoord2f(right, bottom); glVertex3f( 1.0f,  1.0f,  1.0f);
+        glTexCoord2f(left, bottom); glVertex3f(-1.0f,  1.0f,  1.0f);
     }
     glEnd();
 
     glDisable(GL_FRAGMENT_PROGRAM_ARB);
+}
+
+void ta_draw_texture(ta_texture* pTexture, bool transparent)
+{
+    ta_draw_subtexture(pTexture, transparent, 0, 0, pTexture->width, pTexture->height);
 }
