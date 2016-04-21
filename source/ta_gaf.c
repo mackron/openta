@@ -60,18 +60,15 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
 
         // The image data is one byte per pixel, with that byte being an index into the palette which defines the color.
         pFrame->isTransparent = false;
-        pFrame->pImageData = malloc(pFrame->width * pFrame->height * 4);
+        pFrame->pImageData = malloc(pFrame->width * pFrame->height);
 
-        uint32_t* pImageData32 = pFrame->pImageData;
-
-        // TODO: Handle uncompressed data.
         if (isCompressed)
         {
             for (unsigned int y = 0; y < pFrame->height; ++y)
             {
                 uint16_t rowSize;
                 if (!ta_hpi_read(pFile, &rowSize, 2, NULL)) {
-                    free(pImageData32);
+                    free(pFrame->pImageData);
                     return false;
                 }
 
@@ -89,7 +86,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                     {
                         uint8_t mask;
                         if (!ta_hpi_read(pFile, &mask, 1, NULL)) {
-                            free(pImageData32);
+                            free(pFrame->pImageData);
                             return false;
                         }
 
@@ -98,7 +95,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                             // Transparent.
                             uint8_t repeat = (mask >> 1);
                             while (repeat > 0) {
-                                pImageData32[(yflipped*pFrame->width) + x] = 0x00000000;   // Fully transparent.
+                                pFrame->pImageData[(yflipped*pFrame->width) + x] = TA_TRANSPARENT_COLOR;   // Fully transparent.
                                 x += 1;
                                 repeat -= 1;
                             }
@@ -111,12 +108,16 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                             uint8_t repeat = (mask >> 2) + 1;
                             uint8_t value;
                             if (!ta_hpi_read(pFile, &value, 1, NULL)) {
-                                free(pImageData32);
+                                free(pFrame->pImageData);
                                 return false;
                             }
 
+                            if (value == TA_TRANSPARENT_COLOR) {
+                                value = 0;
+                            }
+
                             while (repeat > 0) {
-                                pImageData32[(yflipped*pFrame->width) + x] = palette[value] | 0xFF000000;
+                                pFrame->pImageData[(yflipped*pFrame->width) + x] = value;
                                 x += 1;
                                 repeat -= 1;
                             }
@@ -131,11 +132,15 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                             {
                                 uint8_t value;
                                 if (!ta_hpi_read(pFile, &value, 1, NULL)) {
-                                    free(pImageData32);
+                                    free(pFrame->pImageData);
                                     return false;
                                 }
 
-                                pImageData32[(yflipped*pFrame->width) + x] = palette[value] | 0xFF000000;
+                                if (value == TA_TRANSPARENT_COLOR) {
+                                    value = 0;
+                                }
+
+                                pFrame->pImageData[(yflipped*pFrame->width) + x] = value;
 
                                 x += 1;
                                 repeat -= 1;
@@ -150,13 +155,11 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                 {
                     // rowSize == 0. Assume the whole row is transparent.
                     for (unsigned int x = 0; x < pFrame->width; ++x) {
-                        pImageData32[(yflipped*pFrame->width) + x] = 0x00000000;   // Fully transparent.
+                        pFrame->pImageData[(yflipped*pFrame->width) + x] = TA_TRANSPARENT_COLOR;   // Fully transparent.
                     }
 
                     pFrame->isTransparent = true;
                 }
-
-                //assert(x == pFrame->width);
             }
         }
         else
@@ -169,10 +172,14 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                     yflipped = (pFrame->height - y - 1);
                 }
 
-                for (unsigned int x = 0; x < pFrame->width; ++x)
-                {
+                uint8_t* pRow = pFrame->pImageData + (yflipped*pFrame->width);
 
+                if (!ta_hpi_read(pFile, pRow, pFrame->width, NULL)) {
+                    free(pFrame->pImageData);
+                    return false;
                 }
+
+                // TODO: How do we check for transparency?
             }
         }
     }
@@ -208,6 +215,41 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                 pFrame->pSubframes = NULL;
                 pFrame->subframeCount = 0;
                 return false;
+            }
+        }
+
+        // At this point we have the subframes so now we need to composite them into a single frame (this one).
+        pFrame->isTransparent = true;
+        pFrame->pImageData = malloc(pFrame->width * pFrame->height);
+        memset(pFrame->pImageData, TA_TRANSPARENT_COLOR, pFrame->width * pFrame->height);
+        
+        for (unsigned short iSubframe = 0; iSubframe < pFrame->subframeCount; ++iSubframe)
+        {
+            unsigned short offsetX   = pFrame->offsetX - pFrame->pSubframes[iSubframe].offsetX;
+            unsigned short offsetY   = pFrame->offsetY - pFrame->pSubframes[iSubframe].offsetY;
+            unsigned short srcWidth  = pFrame->pSubframes[iSubframe].width;
+            unsigned short srcHeight = pFrame->pSubframes[iSubframe].height;
+
+            for (unsigned short srcY = 0; srcY < srcHeight; ++srcY)
+            {
+                unsigned short srcYFlipped = srcY;
+                unsigned short dstYFlipped = offsetY + srcY;                
+                if (flipped) {
+                    srcYFlipped = (srcHeight - srcY - 1);
+                    dstYFlipped = (pFrame->height - dstYFlipped - 1);
+                }
+
+                uint8_t* pDstRow = pFrame->pImageData + (dstYFlipped * pFrame->width);
+                uint8_t* pSrcRow = pFrame->pSubframes[iSubframe].pImageData + (srcYFlipped * srcWidth);
+
+                for (unsigned short srcX = 0; srcX < srcWidth; ++srcX)
+                {
+                    short dstX = offsetX + srcX;
+
+                    if (pSrcRow[srcX] != TA_TRANSPARENT_COLOR) {
+                        pDstRow[dstX] = pSrcRow[srcX];
+                    }
+                }
             }
         }
     }

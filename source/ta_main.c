@@ -82,6 +82,12 @@
 #define MINIZ_NO_STDIO
 #include "miniz.c"
 
+// Options.
+
+// The color within the palette to use as the transparent pixel.
+#define TA_TRANSPARENT_COLOR 240
+
+
 // Total Annihilation source files.
 #include "ta_platform_layer.c"
 #include "ta_graphics.c"

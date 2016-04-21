@@ -55,7 +55,7 @@ struct ta_gaf_entry_frame
     ta_gaf_entry_frame* pSubframes;
 
     // A pointer to the image data. This will be freed and set to null after uploading the image data to a texture atlas.
-    void* pImageData;
+    uint8_t* pImageData;
 };
 
 typedef struct

@@ -1,5 +1,29 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
+bool ta_load_palette(ta_hpi_archive* pHPI, const char* filePath, uint32_t* paletteOut)
+{
+    ta_hpi_file* pPaletteFile = ta_hpi_open_file(pHPI, filePath);
+    if (pPaletteFile == NULL) {
+        return false;
+    }
+
+    if (!ta_hpi_read(pPaletteFile, paletteOut, 1024, NULL)) {
+        ta_hpi_close_file(pPaletteFile);
+        return false;
+    }
+
+    ta_hpi_close_file(pPaletteFile);
+
+
+    // The palettes will include room for an alpha component, but it'll always be set to 0 (fully transparent). However, due
+    // to the way I'm doing things in this project it's better for us to convert all of them to fully opaque.
+    for (int i = 0; i < 256; ++i) {
+        paletteOut[i] |= 0xFF000000;
+    }
+
+    return true;
+}
+
 ta_game* ta_create_game(dr_cmdline cmdline)
 {
     ta_game* pGame = calloc(1, sizeof(*pGame));
@@ -23,8 +47,32 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 #endif
 
 
+    // The palettes. The graphics system depends on these so they need to be loaded first.
+    ta_hpi_archive* pTotalA1HPI = ta_open_hpi_from_file("totala1.hpi");
+    if (pTotalA1HPI == NULL) {
+        goto on_error;
+    }
+
+    if (!ta_load_palette(pTotalA1HPI, "palettes/PALETTE.PAL", pGame->palette)) {
+        goto on_error;
+    }
+
+    if (!ta_load_palette(pTotalA1HPI, "palettes/GUIPAL.PAL", pGame->guipal)) {
+        goto on_error;
+    }
+
+    ta_close_hpi(pTotalA1HPI);
+    pTotalA1HPI = NULL;
+
+    // Due to the way I'm doing a few things with the rendering, we want to use a specific entry in the palette to act as a
+    // fully transparent value. For now I'll be using entry 240. Any non-transparent pixel that wants to use this entry will
+    // be changed to use color 0. From what I can tell there should be no difference in visual appearance by doing this.
+    pGame->palette[TA_TRANSPARENT_COLOR] &= 0x00FFFFFF; // <-- Make the alpha component fully transparent.
+
+
+
     // We need to create a graphics context before we can create the game window.
-    pGame->pGraphics = ta_create_graphics_context(pGame);
+    pGame->pGraphics = ta_create_graphics_context(pGame, pGame->palette);
     if (pGame->pGraphics == NULL) {
         goto on_error;
     }
@@ -42,44 +90,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     }
 
 
-    // The palettes.
-    ta_hpi_archive* pTotalA1HPI = ta_open_hpi_from_file("totala1.hpi");
-    if (pTotalA1HPI == NULL) {
-        goto on_error;
-    }
 
-    ta_hpi_file* pPaletteFile = ta_hpi_open_file(pTotalA1HPI, "palettes/PALETTE.PAL");
-    if (pPaletteFile == NULL) {
-        goto on_error;
-    }
-
-    if (!ta_hpi_read(pPaletteFile, pGame->palette, 1024, NULL)) {
-        ta_hpi_close_file(pPaletteFile);
-        goto on_error;
-    }
-
-    ta_hpi_close_file(pPaletteFile);
-    pPaletteFile = NULL;
-
-
-    pPaletteFile = ta_hpi_open_file(pTotalA1HPI, "palettes/GUIPAL.PAL");
-    if (pPaletteFile == NULL) {
-        goto on_error;
-    }
-
-    if (!ta_hpi_read(pPaletteFile, pGame->guipal, 1024, NULL)) {
-        ta_hpi_close_file(pPaletteFile);
-        goto on_error;
-    }
-
-    ta_hpi_close_file(pPaletteFile);
-    pPaletteFile = NULL;
-
-
-    ta_close_hpi(pTotalA1HPI);
-    pTotalA1HPI = NULL;
-
-    
 
     // Initialize the timer last so that the first frame has as accurate of a delta time as possible.
     pGame->pTimer = ta_create_timer();
@@ -106,10 +117,13 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     ta_hpi_file* pFile = ta_hpi_open_file(pHPI, "anims/Archipelago.GAF");
     ta_gaf* pGAF = ta_load_gaf_from_file(pFile, pGame->pGraphics, pGame->palette, true);    // <-- "true" = flipped.
 
-    ta_gaf_entry_frame* pFrame = &pGAF->pEntries[0].pFrames[0];
-    //ta_gaf_entry* pEntry = ta_gaf_get_entry_by_name(pGAF, "Frond01CrispRec");
+    //ta_gaf_entry_frame* pFrame = &pGAF->pEntries[0].pFrames[0];
+    ta_gaf_entry* pEntry = ta_gaf_get_entry_by_name(pGAF, "Frond01CrispRec");
     //ta_gaf_entry_frame* pFrame = &pEntry->pFrames[0].pSubframes[1];
-    pGame->pTexture = ta_create_texture(pGame->pGraphics, pFrame->width, pFrame->height, 4, pFrame->pImageData);
+    ta_gaf_entry_frame* pFrame = &pEntry->pFrames[4];
+    pGame->pTexture = ta_create_texture(pGame->pGraphics, pFrame->width, pFrame->height, 1, pFrame->pImageData);
+
+    ta_unload_gaf(pGAF);
 #endif
 
 

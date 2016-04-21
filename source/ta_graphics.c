@@ -1,5 +1,10 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
+// HARDWARE REQUIREMENTS
+//
+// Multitexture (at least 2 textures)
+// ARB_vertex_program / ARG_fragment_program
+
 #include <gl/gl.h>
 #include <gl/glext.h>
 
@@ -16,8 +21,11 @@ struct ta_graphics_context
     ta_window* pCurrentWindow;
 
 
-    // A simple single texture shader.
-    GLuint singleTextureShader;
+    // The texture containing the palette.
+    GLuint paletteTextureGL;
+
+    // The fragment program to use when drawing an object with a paletted texture.
+    GLuint palettedFragmentProgram;
 
 
     // Platform Specific.
@@ -41,6 +49,14 @@ struct ta_graphics_context
     // WGL Functions
     PFNWGLSWAPINTERVALEXTPROC SwapIntervalEXT;
 #endif
+
+    PFNGLACTIVETEXTUREPROC glActiveTexture;
+
+    PFNGLGENPROGRAMSARBPROC glGenProgramsARB;
+    PFNGLDELETEPROGRAMSARBPROC glDeleteProgramsARB;
+    PFNGLBINDPROGRAMARBPROC glBindProgramARB;
+    PFNGLPROGRAMSTRINGARBPROC glProgramStringARB;
+    PFNGLPROGRAMLOCALPARAMETER4FARBPROC glProgramLocalParameter4fARB;
 };
 
 struct ta_texture
@@ -56,6 +72,9 @@ struct ta_texture
 
     // The height of the texture.
     uint32_t height;
+
+    // The number of components in the texture. If this is set to 1, the texture will be treated as paletted.
+    uint32_t components;
 };
 
 
@@ -69,8 +88,15 @@ static LRESULT DummyWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
 #endif
 
 
+void* ta_get_gl_proc_address(const char* name)
+{
+#ifdef _WIN32
+    return wglGetProcAddress(name);
+#endif
+}
 
-ta_graphics_context* ta_create_graphics_context(ta_game* pGame)
+
+ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette[256])
 {
     if (pGame == NULL) {
         return NULL;
@@ -130,6 +156,62 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame)
     // Retrieve WGL function pointers.
     pGraphics->SwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 #endif
+
+    // TODO: Check for support for mandatory extensions such as ARB shaders.
+
+    // Function pointers.
+    // Multitexture
+    pGraphics->glActiveTexture = ta_get_gl_proc_address("glActiveTexture");
+
+    // ARB_vertex_program / ARG_fragment_program
+    pGraphics->glGenProgramsARB = ta_get_gl_proc_address("glGenProgramsARB");
+    pGraphics->glDeleteProgramsARB = ta_get_gl_proc_address("glDeleteProgramsARB");
+    pGraphics->glBindProgramARB = ta_get_gl_proc_address("glBindProgramARB");
+    pGraphics->glProgramStringARB = ta_get_gl_proc_address("glProgramStringARB");
+    pGraphics->glProgramLocalParameter4fARB = ta_get_gl_proc_address("glProgramLocalParameter4fARB");
+
+
+
+    // The texture containing the palette. This is always bound to texture unit 1.
+    pGraphics->glActiveTexture(GL_TEXTURE0 + 1);
+    {
+        glGenTextures(1, &pGraphics->paletteTextureGL);
+
+        glBindTexture(GL_TEXTURE_2D, pGraphics->paletteTextureGL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, palette);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
+    pGraphics->glActiveTexture(GL_TEXTURE0 + 0);
+    
+
+
+
+    // Create all of the necessary shaders up front.
+    pGraphics->glGenProgramsARB(1, &pGraphics->palettedFragmentProgram);
+    pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgram);
+
+    const char palettedFragmentProgramStr[] =
+        "!!ARBfp1.0\n"
+        "TEMP paletteIndex;\n"
+        "TEX paletteIndex, fragment.texcoord[0], texture[0], 2D;\n"
+        "TEX result.color, paletteIndex, texture[1], 2D;\n"
+        "END";
+    pGraphics->glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, sizeof(palettedFragmentProgramStr) - 1, palettedFragmentProgramStr);    // -1 to remove null terminator.
+
+    GLint errorPos;
+    glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
+    if (errorPos != -1)
+    {
+        // Error.
+        printf("--- FRAGMENT SHADER ---\n%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+    }
+
+
+
+    
+
 
 
     // Default state.
@@ -241,8 +323,32 @@ void ta_graphics_present(ta_graphics_context* pGraphics, ta_window* pWindow)
 
 ta_texture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width, unsigned int height, unsigned int components, const void* pImageData)
 {
-    if (pGraphics == NULL || width == 0 || height == 0 || (components != 3 && components != 4) || pImageData == NULL) {
+    if (pGraphics == NULL || width == 0 || height == 0 || (components != 1 && components != 3 && components != 4) || pImageData == NULL) {
         return NULL;
+    }
+
+    GLint internalFormat;
+    GLenum format;
+    switch (components)
+    {
+        case 1:
+        {
+            internalFormat = GL_LUMINANCE;
+            format = GL_LUMINANCE;
+        } break;
+
+        case 3:
+        {
+            internalFormat = GL_RGB;
+            format = GL_RGB;
+        } break;
+
+        case 4:
+        default:
+        {
+            internalFormat = GL_RGBA;
+            format = GL_RGBA;
+        } break;
     }
 
     GLuint objectGL;
@@ -251,11 +357,11 @@ ta_texture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width
     glBindTexture(GL_TEXTURE_2D, objectGL);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, (components == 3) ? GL_RGB : GL_RGBA, width, height, 0, (components == 3) ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, pImageData);
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, pImageData);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
 
-    // Nearest/Nearest filtering to try and emulate the original feel of the game.
+    // Must use nearest/nearest filtering in order for palettes to work properly.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
@@ -270,6 +376,7 @@ ta_texture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width
     pTexture->objectGL = objectGL;
     pTexture->width = width;
     pTexture->height = height;
+    pTexture->components = components;
 
     return pTexture;
 }
@@ -286,11 +393,17 @@ void ta_delete_texture(ta_texture* pTexture)
 // TESTING
 void ta_draw_texture(ta_texture* pTexture, bool transparent)
 {
+    if (pTexture == NULL) {
+        return;
+    }
+
+    ta_graphics_context* pGraphics = pTexture->pGraphics;
+
     GLenum error = glGetError();
 
     // Clear first.
     glClearDepth(1.0);
-    glClearColor(0, 0, 0.5, 0);
+    glClearColor(1, 1, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
@@ -308,7 +421,18 @@ void ta_draw_texture(ta_texture* pTexture, bool transparent)
     } else {
         glDisable(GL_BLEND);
     }
+
+
+    // We need to use a different fragment program depending on whether or not we're using a paletted texture.
+    bool isPaletted = pTexture->components == 1;
+    if (isPaletted) {
+        glEnable(GL_FRAGMENT_PROGRAM_ARB);
+        pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgram);
+    } else {
+        glDisable(GL_FRAGMENT_PROGRAM_ARB);
+    }
     
+
     glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
     glBegin(GL_QUADS);
     {
@@ -318,4 +442,6 @@ void ta_draw_texture(ta_texture* pTexture, bool transparent)
         glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f,  1.0f);
     }
     glEnd();
+
+    glDisable(GL_FRAGMENT_PROGRAM_ARB);
 }
