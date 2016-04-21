@@ -2,6 +2,10 @@
 
 // Credits to http://units.tauniverse.com/tutorials/tadesign/tadesign/ta-gaf-fmt.txt for the description of this file format.
 
+// IMPROVEMENTS
+//  - Can probably avoid allocating memory for subframes - just build the frame in-place.
+//  - Improve atlas packing. Stop using stb_pack_rect - it's API doesn't really suit us.
+
 bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t* palette, bool flipped)
 {
     // This function assumes the file is sitting on the first byte of the frame.
@@ -307,6 +311,10 @@ ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
         goto on_error;
     }
 
+    unsigned int totalWidth  = 0;
+    unsigned int totalHeight = 0;
+    unsigned int totalFrameCount = 0;
+
     for (uint32_t iEntry = 0; iEntry < entryCount; ++iEntry)
     {
         // Seek to the start of the entry...
@@ -355,17 +363,164 @@ ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
                     goto on_error;
                 }
 
-                if (!ta_gaf__read_frame(pFile, &pGAF->pEntries[iEntry].pFrames[iFrame], palette, flipped)) {
+                ta_gaf_entry_frame* pFrame = pGAF->pEntries[iEntry].pFrames + iFrame;
+                if (!ta_gaf__read_frame(pFile, pFrame, palette, flipped)) {
                     free(pFramePointers);
                     goto on_error;
                 }
+
+
+                totalWidth += pFrame->width;
+                totalHeight += pFrame->height;
             }
+
+            totalFrameCount += pGAF->pEntries[iEntry].frameCount;
 
 
             free(pFramePointers);
         }
     }
 
+
+    // At this point we should have everything loaded into system memory, but now we need to add them to a texture atlas. To do this we first
+    // need to determine how large to make the atlas. If we make it too large, it'll waste too much memory, but we also want to reduce the
+    // total number of textures as much as possible.
+    //
+    // We'll use a mostly trial-and-error system to figure out how big to make the texture atlas. The initial size will be based on the average
+    // width and height of every frame of every entry.
+    
+#if 0
+    unsigned int avgWidth = totalWidth / totalFrameCount;
+    unsigned int avgHeight = totalHeight / totalFrameCount;
+
+    unsigned int atlasWidth = dr_clamp(avgWidth * (sqrt(totalFrameCount) + 1), 0, 2048);
+    unsigned int atlasHeight = atlasHeight;
+#endif
+
+    // TEMP: For testing, just use 1024x1024 atlas sizes for now.
+
+    // We use stb_rect_pack for now, but I might simplify this to something simpler and more efficient later on.
+    stbrp_node* pNodes = malloc(1024 * sizeof(stbrp_node));
+    stbrp_rect* pRects = malloc(totalFrameCount * sizeof(stbrp_rect));
+    int i = 0;
+    for (unsigned int iEntry = 0; iEntry < pGAF->entryCount; ++iEntry) {
+        for (unsigned int iFrame = 0; iFrame < pGAF->pEntries[iEntry].frameCount; ++iFrame) {
+            pRects[i].id = i;
+            pRects[i].w = pGAF->pEntries[iEntry].pFrames[iFrame].width;
+            pRects[i].h = pGAF->pEntries[iEntry].pFrames[iFrame].height;
+            i += 1;
+        }
+    }
+
+    assert(i == totalFrameCount);
+
+    uint8_t* pAtlasImageData = malloc(1024 * 1024);
+
+    int framesRemaining = totalFrameCount;
+    while (framesRemaining > 0)
+    {
+        // Clear the atlas image data to transparent for debugging purposes.
+        memset(pAtlasImageData, TA_TRANSPARENT_COLOR, 1024 * 1024);
+
+        stbrp_context context;
+        stbrp_init_target(&context, 1024, 1024, pNodes, 1024);
+        stbrp_pack_rects(&context, pRects, framesRemaining);
+
+        int packedFrameCount = 0;
+        for (int iRect = 0; iRect < framesRemaining; ++iRect)
+        {
+            if (pRects[iRect].was_packed)
+            {
+                // The frame was packed so we need to do a few things:
+                //  1) Set the position of the frame within the atlas
+                //  2) Copy the image data to the atlas's image data
+                //  3) Free the image data that's sitting on system memory
+                //  4) Remove it from the list of rectangles so it's not included in the next iteration
+
+                i = 0;
+                for (unsigned int iEntry = 0; iEntry < pGAF->entryCount; ++iEntry) {
+                    for (unsigned int iFrame = 0; iFrame < pGAF->pEntries[iEntry].frameCount; ++iFrame) {
+                        if (i == pRects[iRect].id) {
+                            int atlasPosX = pRects[iRect].x;
+                            int atlasPosY = pRects[iRect].y;
+                            
+                            pGAF->pEntries[iEntry].pFrames[iFrame].atlasPosX = atlasPosX;
+                            pGAF->pEntries[iEntry].pFrames[iFrame].atlasPosY = atlasPosY;
+
+                            unsigned short width  = pGAF->pEntries[iEntry].pFrames[iFrame].width;
+                            unsigned short height = pGAF->pEntries[iEntry].pFrames[iFrame].height;
+
+                            for (int y = 0; y < height; ++y) {
+                                for (int x = 0; x < width; ++x) {
+                                    pAtlasImageData[((atlasPosY + y) * 1024) + (atlasPosX + x)] = pGAF->pEntries[iEntry].pFrames[iFrame].pImageData[(y*width) + x];
+                                }
+                            }
+
+                            pGAF->pEntries[iEntry].pFrames[iFrame].atlasIndex = pGAF->textureAtlasCount;
+
+                            free(pGAF->pEntries[iEntry].pFrames[iFrame].pImageData);
+                            pGAF->pEntries[iEntry].pFrames[iFrame].pImageData = NULL;
+
+                            goto finished_packing_rect;
+                        }
+                        i += 1;
+                    }
+                }
+
+            finished_packing_rect:
+                packedFrameCount += 1;
+            }
+        }
+
+        if (packedFrameCount == 0)
+        {
+            // We weren't able to pack any frames. Should never get here if all is working well.
+            free(pRects);
+            free(pNodes);
+            goto on_error;
+        }
+
+
+        // The final stage is to create the texture on the graphics system and add it to our internal list.
+        ta_texture* pAtlas = ta_create_texture(pGraphics, 1024, 1024, 1, pAtlasImageData);
+        if (pAtlas == NULL) {
+            free(pRects);
+            free(pNodes);
+            goto on_error;
+        }
+
+        
+        pGAF->pTextureAtlases = realloc(pGAF->pTextureAtlases, sizeof(ta_texture*) * (pGAF->textureAtlasCount + 1));
+        if (pGAF->pTextureAtlases == NULL) {
+            free(pRects);
+            free(pNodes);
+            goto on_error;
+        }
+
+        pGAF->pTextureAtlases[pGAF->textureAtlasCount] = pAtlas;
+        pGAF->textureAtlasCount += 1;
+
+
+        // We need to remove some rectangles from the pRects list to ensure we don't try packing them multiple times.
+        for (int iRect = 0; iRect < framesRemaining; /* DO NOTHING */) {
+            if (pRects[iRect].was_packed) {
+                for (int iRect2 = iRect; iRect2 < framesRemaining-1; ++iRect2) {
+                    pRects[iRect2] = pRects[iRect2+1];
+                }
+
+                framesRemaining -= 1;
+            } else {
+                ++iRect;
+            }
+        }
+    }
+
+
+    free(pAtlasImageData);
+    free(pRects);
+    free(pNodes);
+
+    free(pEntryPointers);
     return pGAF;
 
 on_error:
@@ -406,6 +561,8 @@ void ta_unload_gaf(ta_gaf* pGAF)
         for (unsigned int iTextureAtlas = 0; iTextureAtlas < pGAF->textureAtlasCount; ++iTextureAtlas) {
             ta_delete_texture(pGAF->pTextureAtlases[iTextureAtlas]);
         }
+
+        free(pGAF->pTextureAtlases);
     }
 
     

@@ -56,6 +56,10 @@ struct ta_gaf_entry_frame
 
     // A pointer to the image data. This will be freed and set to null after uploading the image data to a texture atlas.
     uint8_t* pImageData;
+
+    // The index of the texture atlas containing the image data of the frame. This is an index in the list of texture atlas' in
+    // the ta_gaf object that owns this frame.
+    unsigned short atlasIndex;
 };
 
 typedef struct
@@ -68,9 +72,6 @@ typedef struct
 
     // The list of frames making up the entry.
     ta_gaf_entry_frame* pFrames;
-
-    // The texture atlas containing the image data of every frame. All frames in an entry are contained within the same atlas.
-    ta_texture* pTextureAtlas;
 
 } ta_gaf_entry;
 

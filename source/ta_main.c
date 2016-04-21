@@ -82,6 +82,10 @@
 #define MINIZ_NO_STDIO
 #include "miniz.c"
 
+// stb_rect_pack
+#define STB_RECT_PACK_IMPLEMENTATION
+#include "stb_rect_pack.h"
+
 // Options.
 
 // The color within the palette to use as the transparent pixel.
