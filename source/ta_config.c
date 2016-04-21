@@ -7,6 +7,11 @@
 // - The contents of an object are wrapped in { ... } pairs
 // - Each key/value pair is terminated with a semi-colon
 
+// TODO:
+// - Improve this by doing a single allocation of a mutable string and use offsets into this allocation
+//   for the name/value pairs. Place null terminators at ']', '=' and ';' characters. This will eliminate
+//   per-variable data movement.
+
 ta_config_obj* ta_allocate_config_object()
 {
     ta_config_obj* pObj = calloc(1, sizeof(*pObj));
