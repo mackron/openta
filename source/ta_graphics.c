@@ -284,7 +284,7 @@ void ta_delete_texture(ta_texture* pTexture)
 
 
 // TESTING
-void ta_draw_texture(ta_texture* pTexture)
+void ta_draw_texture(ta_texture* pTexture, bool transparent)
 {
     GLenum error = glGetError();
 
@@ -302,6 +302,12 @@ void ta_draw_texture(ta_texture* pTexture)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    if (transparent) {
+        glEnable(GL_BLEND);
+        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    } else {
+        glDisable(GL_BLEND);
+    }
     
     glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
     glBegin(GL_QUADS);

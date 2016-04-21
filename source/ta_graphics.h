@@ -36,4 +36,4 @@ void ta_delete_texture(ta_texture* pTexture);
 
 
 // TESTING
-void ta_draw_texture(ta_texture* pTexture);
+void ta_draw_texture(ta_texture* pTexture, bool transparent);
