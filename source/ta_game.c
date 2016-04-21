@@ -40,10 +40,46 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     if (pGame->pAudioContext == NULL) {
         goto on_error;
     }
+
+
+    // The palettes.
+    ta_hpi_archive* pTotalA1HPI = ta_open_hpi_from_file("totala1.hpi");
+    if (pTotalA1HPI == NULL) {
+        goto on_error;
+    }
+
+    ta_hpi_file* pPaletteFile = ta_hpi_open_file(pTotalA1HPI, "palettes/PALETTE.PAL");
+    if (pPaletteFile == NULL) {
+        goto on_error;
+    }
+
+    if (!ta_hpi_read(pPaletteFile, pGame->palette, 1024, NULL)) {
+        ta_hpi_close_file(pPaletteFile);
+        goto on_error;
+    }
+
+    ta_hpi_close_file(pPaletteFile);
+    pPaletteFile = NULL;
+
+
+    pPaletteFile = ta_hpi_open_file(pTotalA1HPI, "palettes/GUIPAL.PAL");
+    if (pPaletteFile == NULL) {
+        goto on_error;
+    }
+
+    if (!ta_hpi_read(pPaletteFile, pGame->guipal, 1024, NULL)) {
+        ta_hpi_close_file(pPaletteFile);
+        goto on_error;
+    }
+
+    ta_hpi_close_file(pPaletteFile);
+    pPaletteFile = NULL;
+
+
+    ta_close_hpi(pTotalA1HPI);
+    pTotalA1HPI = NULL;
+
     
-
-
-
 
     // Initialize the timer last so that the first frame has as accurate of a delta time as possible.
     pGame->pTimer = ta_create_timer();
@@ -51,9 +87,39 @@ ta_game* ta_create_game(dr_cmdline cmdline)
         goto on_error;
     }
 
+
+
+    // TESTING
+#if 0
+    ta_hpi_archive* pHPI = ta_open_hpi_from_file("rev31.gp3");
+    ta_hpi_file* pFile = ta_hpi_open_file(pHPI, "gamedata/WEAPONS.TDF");
+
+    char* fileData = malloc(pFile->sizeInBytes + 1);
+    ta_hpi_read(pFile, fileData, pFile->sizeInBytes, NULL);
+    fileData[pFile->sizeInBytes] = '\0';
+
+    ta_config_obj* pConfig = ta_parse_config(fileData);
+#endif
+
+#if 1
+    ta_hpi_archive* pHPI = ta_open_hpi_from_file("totala1.hpi");
+    ta_hpi_file* pFile = ta_hpi_open_file(pHPI, "anims/Archipelago.GAF");
+    ta_gaf* pGAF = ta_load_gaf_from_file(pFile, pGame->pGraphics, pGame->palette, true);    // <-- "true" = flipped.
+
+    ta_gaf_entry_frame* pFrame = &pGAF->pEntries[0].pFrames[0];
+    //ta_gaf_entry* pEntry = ta_gaf_get_entry_by_name(pGAF, "Frond01CrispRec");
+    //ta_gaf_entry_frame* pFrame = &pEntry->pFrames[0].pSubframes[1];
+    pGame->pTexture = ta_create_texture(pGame->pGraphics, pFrame->width, pFrame->height, 4, pFrame->pImageData);
+#endif
+
+
     return pGame;
 
 on_error:
+    if (pTotalA1HPI) {
+        ta_close_hpi(pTotalA1HPI);
+    }
+
     if (pGame != NULL) {
         if (pGame->pWindow != NULL) {
             ta_delete_window(pGame->pWindow);
@@ -122,6 +188,7 @@ void ta_game_render(ta_game* pGame)
 
     ta_graphics_set_current_window(pGame->pGraphics, pGame->pWindow);
     {
+        ta_draw_texture(pGame->pTexture, true);
     }
     ta_graphics_present(pGame->pGraphics, pGame->pWindow);
 }

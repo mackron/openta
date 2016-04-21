@@ -8,6 +8,12 @@ struct ta_game
     // The graphics context.
     ta_graphics_context* pGraphics;
 
+    // The standard palette. PALETTE.PAL
+    uint32_t palette[256];
+
+    // The GUI palette. GUIPAL.PAL
+    uint32_t guipal[256];
+
     // The game window.
     ta_window* pWindow;
 
@@ -16,6 +22,10 @@ struct ta_game
 
     // The audio context.
     draudio_context* pAudioContext;
+
+
+    // TEST TEXTURE
+    ta_texture* pTexture;
 };
 
 // Creates a game instance.
