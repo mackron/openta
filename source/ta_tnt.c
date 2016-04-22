@@ -282,21 +282,41 @@ ta_tnt* ta_load_tnt_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
 
 
 
+    //// Features ////
+
+    if (!ta_hpi_seek(pFile, specialItemsPtr, ta_hpi_seek_origin_start)) {
+        goto on_error;
+    }
+
+    for (uint32_t iSpecialItem = 0; iSpecialItem < specialItemsCount; ++iSpecialItem) {
+        if (!ta_hpi_seek(pFile, 4, ta_hpi_seek_origin_current)) {
+            goto on_error;
+        }
+
+        char featureName[128];
+        if (!ta_hpi_read(pFile, featureName, 128, NULL)) {
+            goto on_error;
+        }
+
+        printf("%s\n", featureName);
+    }
+
+
 
 
     //// Minimap ////
 
     // The minimap is a maximum of 252 x 252. We will use a 256x256 texture to keep it a power of 2.
     if (!ta_hpi_seek(pFile, minimapPtr, ta_hpi_seek_origin_start)) {
-        return NULL;
+        goto on_error;
     }
 
     if (!ta_hpi_read(pFile, &pTNT->minimapWidth, 4, NULL)) {
-        return NULL;
+        goto on_error;
     }
 
     if (!ta_hpi_read(pFile, &pTNT->minimapHeight, 4, NULL)) {
-        return NULL;
+        goto on_error;
     }
 
     uint32_t minimapTextureWidth  = ta_next_power_of_2(pTNT->minimapWidth);
