@@ -86,6 +86,13 @@ HDC ta_get_window_hdc(ta_window* pWindow);
 void ta_delete_window(ta_window* pWindow);
 
 
+// Gives the given window the mouse capture.
+void ta_window_capture_mouse(ta_window* pWindow);
+
+// Releases the mouse.
+void ta_window_release_mouse();
+
+
 // Runs the main application loop.
 int ta_main_loop(ta_game* pGame);
 

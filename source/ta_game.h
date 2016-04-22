@@ -24,6 +24,14 @@ struct ta_game
     draudio_context* pAudioContext;
 
 
+    // Whether or not the middle mouse button is down.
+    bool isMMBDown;
+
+    // The position of the mouse at the time it was clicked.
+    int mouseDownPosX;
+    int mouseDownPosY;
+
+
     // TEST TEXTURE
     ta_texture* pTexture;
     ta_gaf_entry_frame* pFrame;
@@ -49,6 +57,13 @@ void ta_game_step(ta_game* pGame);
 
 // Renders the game.
 void ta_game_render(ta_game* pGame);
+
+
+// Captures the mouse so that all mouse events get directed to the game window.
+void ta_capture_mouse(ta_game* pGame);
+
+// Releases the mouse. The opposite of ta_capture_mouse().
+void ta_release_mouse(ta_game* pGame);
 
 
 //// Events from Window ////

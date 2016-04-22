@@ -428,6 +428,21 @@ void ta_delete_window(ta_window* pWindow)
     free(pWindow);
 }
 
+void ta_window_capture_mouse(ta_window* pWindow)
+{
+    if (pWindow == NULL) {
+        return;
+    }
+
+    SetCapture(pWindow->hWnd);
+}
+
+void ta_window_release_mouse()
+{
+    ReleaseCapture();
+}
+
+
 int ta_main_loop(ta_game* pGame)
 {
     for (;;)

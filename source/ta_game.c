@@ -241,6 +241,21 @@ void ta_game_render(ta_game* pGame)
 }
 
 
+void ta_capture_mouse(ta_game* pGame)
+{
+    ta_window_capture_mouse(pGame->pWindow);
+}
+
+void ta_release_mouse(ta_game* pGame)
+{
+    (void)pGame;
+    ta_window_release_mouse();
+}
+
+
+
+//// Events from Window
+
 void ta_on_window_size(ta_game* pGame, unsigned int newWidth, unsigned int newHeight)
 {
     assert(pGame != NULL);
@@ -250,21 +265,33 @@ void ta_on_window_size(ta_game* pGame, unsigned int newWidth, unsigned int newHe
 void ta_on_mouse_button_down(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags)
 {
     assert(pGame != NULL);
-    (void)pGame;
-    (void)button;
     (void)posX;
     (void)posY;
     (void)stateFlags;
+
+    // TODO: Properly handle mouse capture with respect to all mouse buttons.
+
+    if (button == TA_MOUSE_BUTTON_MIDDLE) {
+        pGame->isMMBDown = true;
+        pGame->mouseDownPosX = posX;
+        pGame->mouseDownPosY = posY;
+        ta_capture_mouse(pGame);
+    }
 }
 
 void ta_on_mouse_button_up(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags)
 {
     assert(pGame != NULL);
-    (void)pGame;
-    (void)button;
     (void)posX;
     (void)posY;
     (void)stateFlags;
+
+    // TODO: Properly handle mouse capture with respect to all mouse buttons.
+
+    if (button == TA_MOUSE_BUTTON_MIDDLE) {
+        pGame->isMMBDown = false;
+        ta_release_mouse(pGame);
+    }
 }
 
 void ta_on_mouse_button_dblclick(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags)
@@ -294,6 +321,12 @@ void ta_on_mouse_move(ta_game* pGame, int posX, int posY, unsigned int stateFlag
     (void)posX;
     (void)posY;
     (void)stateFlags;
+
+    if (pGame->isMMBDown) {
+        ta_translate_camera(pGame->pGraphics, pGame->mouseDownPosX - posX, pGame->mouseDownPosY - posY);
+        pGame->mouseDownPosX = posX;
+        pGame->mouseDownPosY = posY;
+    }
 }
 
 void ta_on_mouse_enter(ta_game* pGame)
