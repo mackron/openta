@@ -50,3 +50,18 @@ static TA_INLINE uint32_t ta__be2host_32(uint32_t n)
     return n;
 #endif
 }
+
+
+
+static TA_INLINE uint32_t ta_next_power_of_2(uint32_t value)
+{
+    --value;
+
+    value = (value >> 1)  | value;
+    value = (value >> 2)  | value;
+    value = (value >> 4)  | value;
+    value = (value >> 8)  | value;
+    value = (value >> 16) | value;
+        
+    return value + 1;
+}

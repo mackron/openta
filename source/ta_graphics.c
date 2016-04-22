@@ -61,6 +61,15 @@ struct ta_graphics_context
 
     // Limits.
     GLint maxTextureSize;
+
+
+    // The current resolution.
+    GLsizei resolutionX;
+    GLsizei resolutionY;
+
+    // The position of the camera.
+    int cameraPosX;
+    int cameraPosY;
 };
 
 struct ta_texture
@@ -406,6 +415,91 @@ unsigned int ta_get_max_texture_size(ta_graphics_context* pGraphics)
 
 
 
+//// Drawing ////
+
+void ta_set_resolution(ta_graphics_context* pGraphics, unsigned int resolutionX, unsigned int resolutionY)
+{
+    if (pGraphics == NULL) {
+        return;
+    }
+
+    pGraphics->resolutionX = (GLsizei)resolutionX;
+    pGraphics->resolutionY = (GLsizei)resolutionY;
+    glViewport(0, 0, pGraphics->resolutionX, pGraphics->resolutionY);
+}
+
+void ta_set_camera_position(ta_graphics_context* pGraphics, int posX, int posY)
+{
+    if (pGraphics == NULL) {
+        return;
+    }
+
+    pGraphics->cameraPosX = posX;
+    pGraphics->cameraPosY = posY;
+}
+
+void ta_translate_camera(ta_graphics_context* pGraphics, int offsetX, int offsetY)
+{
+    if (pGraphics == NULL) {
+        return;
+    }
+
+    pGraphics->cameraPosX += offsetX;
+    pGraphics->cameraPosY += offsetY;
+}
+
+void ta_draw_terrain(ta_graphics_context* pGraphics, ta_tnt* pTNT)
+{
+    if (pGraphics == NULL || pTNT == NULL) {
+        return;
+    }
+
+    // The terrain is the base layer so there's no need to clear the color buffer - we just draw over it anyway.
+    glClearDepth(1.0f);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, 0, 1);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef((GLfloat)-pGraphics->cameraPosX, (GLfloat)-pGraphics->cameraPosY, 0);
+
+    
+    glEnable(GL_FRAGMENT_PROGRAM_ARB);
+    pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgram);
+
+
+    // TODO: Only draw visible chunks.
+    // TODO: Stop using begin/end.
+    for (uint32_t iChunk = 0; iChunk < pTNT->chunkCountX*pTNT->chunkCountY; ++iChunk)
+    {
+        ta_tnt_tile_chunk* pChunk = &pTNT->pChunks[iChunk];
+        if (pChunk->subchunkCount > 0)  // ?? Wouldn't have thought this would ever be true, but it is.
+        {
+            for (uint32_t iSubchunk = 0; iSubchunk < pChunk->subchunkCount; ++iSubchunk)
+            {
+                glBindTexture(GL_TEXTURE_2D, pChunk->pSubchunks[iSubchunk].pTexture->objectGL);
+                glBegin(GL_QUADS);
+                {
+                    for (uint32_t iVertex = 0; iVertex < pChunk->pSubchunks[iSubchunk].pMesh->quadCount * 4; ++iVertex)
+                    {
+                        ta_tnt_mesh_vertex* pVertex = pChunk->pSubchunks[iSubchunk].pMesh->pVertices + iVertex;
+                        glTexCoord2f(pVertex->u, pVertex->v); glVertex2f(pVertex->x, pVertex->y);
+                    }
+                }
+                glEnd();
+            }
+        }
+    }
+
+    // Restore default state.
+    glDisable(GL_FRAGMENT_PROGRAM_ARB);
+}
+
+
+
 // TESTING
 void ta_draw_subtexture(ta_texture* pTexture, bool transparent, int offsetX, int offsetY, int width, int height)
 {
@@ -464,10 +558,89 @@ void ta_draw_subtexture(ta_texture* pTexture, bool transparent, int offsetX, int
     }
     glEnd();
 
+
+    // Restore default state.
     glDisable(GL_FRAGMENT_PROGRAM_ARB);
+    if (transparent) {
+        glDisable(GL_BLEND);
+    }
 }
 
 void ta_draw_texture(ta_texture* pTexture, bool transparent)
 {
     ta_draw_subtexture(pTexture, transparent, 0, 0, pTexture->width, pTexture->height);
+}
+
+
+void ta_draw_tnt_mesh(ta_texture* pTexture, ta_tnt_mesh* pMesh)
+{
+    if (pTexture == NULL) {
+        return;
+    }
+
+    ta_graphics_context* pGraphics = pTexture->pGraphics;
+
+    GLenum error = glGetError();
+
+    // Clear first.
+    glClearDepth(1.0);
+    glClearColor(0, 0, 0.5, 1);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+    glViewport(0, 0, 640*4, 480*4);
+
+    glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+    glOrtho(0, 640*4, 480*4, 0, 0, 1);
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+
+    glDisable(GL_BLEND);
+
+
+    // We need to use a different fragment program depending on whether or not we're using a paletted texture.
+    bool isPaletted = pTexture->components == 1;
+    if (isPaletted) {
+        glEnable(GL_FRAGMENT_PROGRAM_ARB);
+        pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgram);
+    } else {
+        glDisable(GL_FRAGMENT_PROGRAM_ARB);
+    }
+    
+
+    glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
+    glBegin(GL_QUADS);
+    {
+#if 1
+        for (uint32_t iQuad = 0; iQuad < pMesh->quadCount; ++iQuad)
+        {
+            ta_tnt_mesh_vertex* pQuad = pMesh->pVertices + (iQuad*4);
+
+            glTexCoord2f(pQuad[0].u, pQuad[0].v); glVertex3f(pQuad[0].x, pQuad[0].y, 0.0f);
+            glTexCoord2f(pQuad[1].u, pQuad[1].v); glVertex3f(pQuad[1].x, pQuad[1].y, 0.0f);
+            glTexCoord2f(pQuad[2].u, pQuad[2].v); glVertex3f(pQuad[2].x, pQuad[2].y, 0.0f);
+            glTexCoord2f(pQuad[3].u, pQuad[3].v); glVertex3f(pQuad[3].x, pQuad[3].y, 0.0f);
+        }
+#endif
+
+#if 0
+        float uvleft   = 0;
+        float uvtop    = 0;
+        float uvright  = 1;
+        float uvbottom = 1;
+
+        glTexCoord2f(0, 0); glVertex3f(0.0f, 0.0f,  0.0f);
+        glTexCoord2f(0, 0.03125f); glVertex3f(0.0f, -31.0f,  0.0f);
+        glTexCoord2f(0.03125f, 0.03125f); glVertex3f(31.0f,  -31.0f,  0.0f);
+        glTexCoord2f(0.03125f, 0.06250f); glVertex3f(31.0f,  0.0f,  0.0f);
+#endif
+    }
+    glEnd();
+
+    glDisable(GL_FRAGMENT_PROGRAM_ARB);
+
+    int a; a = 0;
 }

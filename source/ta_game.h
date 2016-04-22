@@ -49,3 +49,39 @@ void ta_game_step(ta_game* pGame);
 
 // Renders the game.
 void ta_game_render(ta_game* pGame);
+
+
+//// Events from Window ////
+
+// Called from the window system when the game window is resized.
+void ta_on_window_size(ta_game* pGame, unsigned int newWidth, unsigned int newHeight);
+
+// Called when a mouse button is pressed.
+void ta_on_mouse_button_down(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags);
+
+// Called when a mouse button is released.
+void ta_on_mouse_button_up(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags);
+
+// Called when a mouse button is double clicked.
+void ta_on_mouse_button_dblclick(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags);
+
+// Called when the mouse wheel is turned.
+void ta_on_mouse_wheel(ta_game* pGame, int delta, int posX, int posY, unsigned int stateFlags);
+
+// Called when the mouse moves.
+void ta_on_mouse_move(ta_game* pGame, int posX, int posY, unsigned int stateFlags);
+
+// Called when the mouse enters the window.
+void ta_on_mouse_enter(ta_game* pGame);
+
+// Called when the mouse leaves the window.
+void ta_on_mouse_leave(ta_game* pGame);
+
+// Called when a key is pressed.
+void ta_on_key_down(ta_game* pGame, ta_key key, unsigned int stateFlags);
+
+// Called when a key is released.
+void ta_on_key_up(ta_game* pGame, ta_key key, unsigned int stateFlags);
+
+// Called when a printable key is pressed or auto-repeated. Use this for text boxes.
+void ta_on_printable_key_down(ta_game* pGame, uint32_t utf32, unsigned int stateFlags);

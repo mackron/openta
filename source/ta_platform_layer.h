@@ -1,7 +1,39 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#define TA_WINDOW_CENTERED      0x0001
-#define TA_WINDOW_FULLSCREEN    0x0002
+#define TA_WINDOW_CENTERED          0x0001
+#define TA_WINDOW_FULLSCREEN        0x0002
+
+// Common mouse buttons.
+#define TA_MOUSE_BUTTON_LEFT        1
+#define TA_MOUSE_BUTTON_RIGHT       2
+#define TA_MOUSE_BUTTON_MIDDLE      3
+
+// Common key codes.
+#define TA_BACKSPACE                0x08
+#define TA_SHIFT                    0x10
+#define TA_ESCAPE                   0x1B
+#define TA_PAGE_UP                  0x21
+#define TA_PAGE_DOWN                0x22
+#define TA_END                      0x23
+#define TA_HOME                     0x24
+#define TA_ARROW_LEFT               0x25
+#define TA_ARROW_UP                 0x26
+#define TA_ARROW_DOWN               0x27
+#define TA_ARROW_RIGHT              0x28
+#define TA_DELETE                   0x2E
+
+// Key state flags.
+#define TA_MOUSE_BUTTON_LEFT_DOWN   (1 << 0)
+#define TA_MOUSE_BUTTON_RIGHT_DOWN  (1 << 1)
+#define TA_MOUSE_BUTTON_MIDDLE_DOWN (1 << 2)
+#define TA_MOUSE_BUTTON_4_DOWN      (1 << 3)
+#define TA_MOUSE_BUTTON_5_DOWN      (1 << 4)
+#define TA_KEY_STATE_SHIFT_DOWN     (1 << 5)        // Whether or not a shift key is down at the time the input event is handled.
+#define TA_KEY_STATE_CTRL_DOWN      (1 << 6)        // Whether or not a ctrl key is down at the time the input event is handled.
+#define TA_KEY_STATE_ALT_DOWN       (1 << 7)        // Whether or not an alt key is down at the time the input event is handled.
+#define TA_KEY_STATE_AUTO_REPEATED  (1 << 31)       // Whether or not the key press is generated due to auto-repeating. Only used with key down events.
+
+typedef uint32_t ta_key;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -17,7 +49,15 @@ typedef struct
     ta_game* pGame;
 
 #ifdef _WIN32
+    // The main Win32 window handle.
     HWND hWnd;
+
+    // The high-surrogate from a WM_CHAR message. This is used in order to build a surrogate pair from a couple of WM_CHAR messages. When
+    // a WM_CHAR message is received when code point is not a high surrogate, this is set to 0.
+    unsigned short utf16HighSurrogate;
+
+    // Keeps track of whether or not the cursor is over this window.
+    bool isCursorOver;
 #endif
 
 #ifdef __linux__

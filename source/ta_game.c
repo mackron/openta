@@ -220,8 +220,114 @@ void ta_game_render(ta_game* pGame)
         //}
 
         if (pGame->pTNT) {
-            ta_draw_subtexture(pGame->pTexture, false, 0, 0, pGame->pTNT->minimapWidth, pGame->pTNT->minimapHeight);
+            ta_draw_terrain(pGame->pGraphics, pGame->pTNT);
+
+            //ta_draw_subtexture(pGame->pTexture, false, 0, 0, pGame->pTNT->minimapWidth, pGame->pTNT->minimapHeight);
+            //ta_draw_texture(pGame->pTNT->ppTextures[1], false);
+/*
+            for (uint32_t iChunk = 0; iChunk < pGame->pTNT->chunkCountX*pGame->pTNT->chunkCountY; ++iChunk) {
+                ta_tnt_tile_chunk* pChunk = &pGame->pTNT->pChunks[iChunk];
+                if (pChunk->subchunkCount > 0) {    // ?? Wouldn't have thought this would ever be true, but it is.
+                    for (uint32_t iSubchunk = 0; iSubchunk < pChunk->subchunkCount; ++iSubchunk) {
+                        ta_draw_tnt_mesh(pChunk->pSubchunks[iSubchunk].pTexture, pChunk->pSubchunks[iSubchunk].pMesh);
+                    }
+                }
+            }
+            */
+            //ta_draw_tnt_mesh(pGame->pTNT->pChunks[1].pSubchunks[0].pTexture, pGame->pTNT->pChunks[1].pSubchunks[0].pMesh);
         }
     }
     ta_graphics_present(pGame->pGraphics, pGame->pWindow);
+}
+
+
+void ta_on_window_size(ta_game* pGame, unsigned int newWidth, unsigned int newHeight)
+{
+    assert(pGame != NULL);
+    ta_set_resolution(pGame->pGraphics, newWidth, newHeight);
+}
+
+void ta_on_mouse_button_down(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags)
+{
+    assert(pGame != NULL);
+    (void)pGame;
+    (void)button;
+    (void)posX;
+    (void)posY;
+    (void)stateFlags;
+}
+
+void ta_on_mouse_button_up(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags)
+{
+    assert(pGame != NULL);
+    (void)pGame;
+    (void)button;
+    (void)posX;
+    (void)posY;
+    (void)stateFlags;
+}
+
+void ta_on_mouse_button_dblclick(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags)
+{
+    assert(pGame != NULL);
+    (void)pGame;
+    (void)button;
+    (void)posX;
+    (void)posY;
+    (void)stateFlags;
+}
+
+void ta_on_mouse_wheel(ta_game* pGame, int delta, int posX, int posY, unsigned int stateFlags)
+{
+    assert(pGame != NULL);
+    (void)pGame;
+    (void)delta;
+    (void)posX;
+    (void)posY;
+    (void)stateFlags;
+}
+
+void ta_on_mouse_move(ta_game* pGame, int posX, int posY, unsigned int stateFlags)
+{
+    assert(pGame != NULL);
+    (void)pGame;
+    (void)posX;
+    (void)posY;
+    (void)stateFlags;
+}
+
+void ta_on_mouse_enter(ta_game* pGame)
+{
+    assert(pGame != NULL);
+    (void)pGame;
+}
+
+void ta_on_mouse_leave(ta_game* pGame)
+{
+    assert(pGame != NULL);
+    (void)pGame;
+}
+
+void ta_on_key_down(ta_game* pGame, ta_key key, unsigned int stateFlags)
+{
+    assert(pGame != NULL);
+    (void)pGame;
+    (void)key;
+    (void)stateFlags;
+}
+
+void ta_on_key_up(ta_game* pGame, ta_key key, unsigned int stateFlags)
+{
+    assert(pGame != NULL);
+    (void)pGame;
+    (void)key;
+    (void)stateFlags;
+}
+
+void ta_on_printable_key_down(ta_game* pGame, uint32_t utf32, unsigned int stateFlags)
+{
+    assert(pGame != NULL);
+    (void)pGame;
+    (void)utf32;
+    (void)stateFlags;
 }

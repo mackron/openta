@@ -38,6 +38,25 @@ void ta_delete_texture(ta_texture* pTexture);
 unsigned int ta_get_max_texture_size(ta_graphics_context* pGraphics);
 
 
+//// Drawing ////
+
+// Sets the resolution of the game. This should be called whenever the window changes size.
+void ta_set_resolution(ta_graphics_context* pGraphics, unsigned int resolutionX, unsigned int resolutionY);
+
+// Sets the position of the camera.
+void ta_set_camera_position(ta_graphics_context* pGraphics, int posX, int posY);
+
+// Translates the camera.
+void ta_translate_camera(ta_graphics_context* pGraphics, int offsetX, int offsetY);
+
+// Draws the terrain as defined by the given TNT file.
+//
+// This will be the first thing to be drawn when drawing the game world. The terrain will be offset based on the camera.
+void ta_draw_terrain(ta_graphics_context* pGraphics, ta_tnt* pTNT);
+
+
+
 // TESTING
 void ta_draw_texture(ta_texture* pTexture, bool transparent);
 void ta_draw_subtexture(ta_texture* pTexture, bool transparent, int offsetX, int offsetY, int width, int height);
+void ta_draw_tnt_mesh(ta_texture* pTexture, ta_tnt_mesh* pMesh);

@@ -3,6 +3,113 @@
 #ifdef _WIN32
 static const char* g_TAWndClassName = "TAMainWindow";
 
+#define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
+
+static void ta_win32_track_mouse_leave_event(HWND hWnd)
+{
+    TRACKMOUSEEVENT tme;
+    ZeroMemory(&tme, sizeof(tme));
+    tme.cbSize    = sizeof(tme);
+    tme.dwFlags   = TME_LEAVE;
+    tme.hwndTrack = hWnd;
+    TrackMouseEvent(&tme);
+}
+
+bool ta_is_win32_mouse_button_key_code(WPARAM wParam)
+{
+    return wParam == VK_LBUTTON || wParam == VK_RBUTTON || wParam == VK_MBUTTON || wParam == VK_XBUTTON1 || wParam == VK_XBUTTON2;
+}
+
+ta_key ta_win32_to_ta_key(WPARAM wParam)
+{
+    switch (wParam)
+    {
+    case VK_BACK:   return TA_BACKSPACE;
+    case VK_SHIFT:  return TA_SHIFT;
+    case VK_ESCAPE: return TA_ESCAPE;
+    case VK_PRIOR:  return TA_PAGE_UP;
+    case VK_NEXT:   return TA_PAGE_DOWN;
+    case VK_END:    return TA_END;
+    case VK_HOME:   return TA_HOME;
+    case VK_LEFT:   return TA_ARROW_LEFT;
+    case VK_UP:     return TA_ARROW_UP;
+    case VK_RIGHT:  return TA_ARROW_RIGHT;
+    case VK_DOWN:   return TA_ARROW_DOWN;
+    case VK_DELETE: return TA_DELETE;
+
+    default: break;
+    }
+
+    return (ta_key)wParam;
+}
+
+unsigned int ta_win32_get_modifier_key_state_flags()
+{
+    unsigned int stateFlags = 0;
+
+    SHORT keyState = GetAsyncKeyState(VK_SHIFT);
+    if (keyState & 0x8000) {
+        stateFlags |= TA_KEY_STATE_SHIFT_DOWN;
+    }
+
+    keyState = GetAsyncKeyState(VK_CONTROL);
+    if (keyState & 0x8000) {
+        stateFlags |= TA_KEY_STATE_CTRL_DOWN;
+    }
+
+    keyState = GetAsyncKeyState(VK_MENU);
+    if (keyState & 0x8000) {
+        stateFlags |= TA_KEY_STATE_ALT_DOWN;
+    }
+
+    return stateFlags;
+}
+
+unsigned int ta_win32_get_mouse_event_state_flags(WPARAM wParam)
+{
+    unsigned int stateFlags = 0;
+
+    if ((wParam & MK_LBUTTON) != 0) {
+        stateFlags |= TA_MOUSE_BUTTON_LEFT_DOWN;
+    }
+
+    if ((wParam & MK_RBUTTON) != 0) {
+        stateFlags |= TA_MOUSE_BUTTON_RIGHT_DOWN;
+    }
+
+    if ((wParam & MK_MBUTTON) != 0) {
+        stateFlags |= TA_MOUSE_BUTTON_MIDDLE_DOWN;
+    }
+
+    if ((wParam & MK_XBUTTON1) != 0) {
+        stateFlags |= TA_MOUSE_BUTTON_4_DOWN;
+    }
+
+    if ((wParam & MK_XBUTTON2) != 0) {
+        stateFlags |= TA_MOUSE_BUTTON_5_DOWN;
+    }
+
+
+    if ((wParam & MK_CONTROL) != 0) {
+        stateFlags |= TA_KEY_STATE_CTRL_DOWN;
+    }
+
+    if ((wParam & MK_SHIFT) != 0) {
+        stateFlags |= TA_KEY_STATE_SHIFT_DOWN;
+    }
+
+
+    SHORT keyState = GetAsyncKeyState(VK_MENU);
+    if (keyState & 0x8000) {
+        stateFlags |= TA_KEY_STATE_ALT_DOWN;
+    }
+
+
+    return stateFlags;
+}
+
+
 // This is the event handler for the main game window. The operating system will notify the application of events
 // through this function, such as when the mouse is moved over a window, a key is pressed, etc.
 static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -12,11 +119,199 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     {
         switch (msg)
         {
+            case WM_CREATE:
+            {
+                // This allows us to track mouse enter and leave events for the window.
+                ta_win32_track_mouse_leave_event(hWnd);
+                return 0;
+            }
+
             case WM_CLOSE:
             {
                 PostQuitMessage(0);
                 return 0;
             }
+
+
+
+            case WM_SIZE:
+            {
+                ta_on_window_size(pWindow->pGame, LOWORD(lParam), HIWORD(lParam));
+                break;
+            }
+
+
+
+            case WM_LBUTTONDOWN:
+            {
+                ta_on_mouse_button_down(pWindow->pGame, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
+                break;
+            }
+            case WM_LBUTTONUP:
+            {
+                ta_on_mouse_button_up(pWindow->pGame, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                break;
+            }
+            case WM_LBUTTONDBLCLK:
+            {
+                ta_on_mouse_button_down(pWindow->pGame, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
+                ta_on_mouse_button_dblclick(pWindow->pGame, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
+                break;
+            }
+
+
+            case WM_RBUTTONDOWN:
+            {
+                ta_on_mouse_button_down(pWindow->pGame, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
+                break;
+            }
+            case WM_RBUTTONUP:
+            {
+                ta_on_mouse_button_up(pWindow->pGame, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                break;
+            }
+            case WM_RBUTTONDBLCLK:
+            {
+                ta_on_mouse_button_down(pWindow->pGame, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
+                ta_on_mouse_button_dblclick(pWindow->pGame, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
+                break;
+            }
+
+
+            case WM_MBUTTONDOWN:
+            {
+                ta_on_mouse_button_down(pWindow->pGame, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
+                break;
+            }
+            case WM_MBUTTONUP:
+            {
+                ta_on_mouse_button_up(pWindow->pGame, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                break;
+            }
+            case WM_MBUTTONDBLCLK:
+            {
+                ta_on_mouse_button_down(pWindow->pGame, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
+                ta_on_mouse_button_dblclick(pWindow->pGame, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
+                break;
+            }
+
+
+            case WM_MOUSEWHEEL:
+            {
+                int delta = GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
+
+                POINT p;
+                p.x = GET_X_LPARAM(lParam);
+                p.y = GET_Y_LPARAM(lParam);
+                ScreenToClient(hWnd, &p);
+
+                ta_on_mouse_wheel(pWindow->pGame, delta, p.x, p.y, ta_win32_get_mouse_event_state_flags(wParam));
+                break;
+            }
+
+
+            case WM_MOUSELEAVE:
+            {
+                pWindow->isCursorOver = false;
+
+                ta_on_mouse_leave(pWindow->pGame);
+                break;
+            }
+
+            case WM_MOUSEMOVE:
+            {
+                // On Win32 we need to explicitly tell the operating system to post a WM_MOUSELEAVE event. The problem is that it needs to be re-issued when the
+                // mouse re-enters the window. The easiest way to do this is to just call it in response to every WM_MOUSEMOVE event.
+                if (!pWindow->isCursorOver)
+                {
+                    ta_win32_track_mouse_leave_event(hWnd);
+                    pWindow->isCursorOver = true;
+
+                    ta_on_mouse_enter(pWindow->pGame);
+                }
+
+                ta_on_mouse_move(pWindow->pGame, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                break;
+            }
+
+
+            case WM_KEYDOWN:
+            {
+                if (!ta_is_win32_mouse_button_key_code(wParam))
+                {
+                    unsigned int stateFlags = ta_win32_get_modifier_key_state_flags();
+                    if ((lParam & (1 << 30)) != 0) {
+                        stateFlags |= TA_KEY_STATE_AUTO_REPEATED;
+                    }
+
+                    ta_on_key_down(pWindow->pGame, ta_win32_to_ta_key(wParam), stateFlags);
+                }
+
+                break;
+            }
+
+            case WM_KEYUP:
+            {
+                if (!ta_is_win32_mouse_button_key_code(wParam))
+                {
+                    unsigned int stateFlags = ta_win32_get_modifier_key_state_flags();
+                    ta_on_key_up(pWindow->pGame, ta_win32_to_ta_key(wParam), stateFlags);
+                }
+
+                break;
+            }
+
+            // NOTE: WM_UNICHAR is not posted by Windows itself, but rather intended to be posted by applications. Thus, we need to use WM_CHAR. WM_CHAR
+            //       posts events as UTF-16 code points. When the code point is a surrogate pair, we need to store it and wait for the next WM_CHAR event
+            //       which will contain the other half of the pair.
+            case WM_CHAR:
+            {
+                // Windows will post WM_CHAR events for keys we don't particularly want. We'll filter them out here (they will be processed by WM_KEYDOWN).
+                if (wParam < 32 || wParam == 127)       // 127 = ASCII DEL (will be triggered by CTRL+Backspace)
+                {
+                    if (wParam != VK_TAB  &&
+                        wParam != VK_RETURN)    // VK_RETURN = Enter Key.
+                    {
+                        break;
+                    }
+                }
+
+
+                if ((lParam & (1U << 31)) == 0)     // Bit 31 will be 1 if the key was pressed, 0 if it was released.
+                {
+                    if (IS_HIGH_SURROGATE(wParam))
+                    {
+                        assert(pWindow->utf16HighSurrogate == 0);
+                        pWindow->utf16HighSurrogate = (unsigned short)wParam;
+                    }
+                    else
+                    {
+                        unsigned int character = (unsigned int)wParam;
+                        if (IS_LOW_SURROGATE(wParam))
+                        {
+                            assert(IS_HIGH_SURROGATE(pWindow->utf16HighSurrogate) != 0);
+                            character = dr_utf16pair_to_utf32_ch(pWindow->utf16HighSurrogate, (unsigned short)wParam);
+                        }
+
+                        pWindow->utf16HighSurrogate = 0;
+
+
+                        int repeatCount = lParam & 0x0000FFFF;
+                        for (int i = 0; i < repeatCount; ++i)
+                        {
+                            unsigned int stateFlags = ta_win32_get_modifier_key_state_flags();
+                            if ((lParam & (1 << 30)) != 0) {
+                                stateFlags |= TA_KEY_STATE_AUTO_REPEATED;
+                            }
+
+                            ta_on_printable_key_down(pWindow->pGame, character, stateFlags);
+                        }
+                    }
+                }
+
+                break;
+            }
+
 
             default: break;
         }
