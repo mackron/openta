@@ -201,7 +201,7 @@ ta_tnt* ta_load_tnt_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
     // For every chunk...
     for (uint32_t chunkY = 0; chunkY < pTNT->chunkCountY; ++chunkY) {
         for (uint32_t chunkX = 0; chunkX < pTNT->chunkCountX; ++chunkX) {
-            ta_tnt_tile_chunk* pChunk = pTNT->pChunks + ((chunkY*pTNT->chunkCountY) + chunkX);
+            ta_tnt_tile_chunk* pChunk = pTNT->pChunks + ((chunkY*pTNT->chunkCountX) + chunkX);
 
             // Create a sub-chunk for each texture atlas. Can likely optimize this because this is worst-case.
             pChunk->subchunkCount = pTNT->textureCount;
