@@ -468,6 +468,10 @@ int ta_main_loop(ta_game* pGame)
 
 HDC ta_get_window_hdc(ta_window* pWindow)
 {
+    if (pWindow == NULL) {
+        return NULL;
+    }
+
     return GetDC(pWindow->hWnd);
 }
 

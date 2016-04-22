@@ -17,11 +17,11 @@ void ta_graphics_delete_window(ta_graphics_context* pGraphics, ta_window* pWindo
 void ta_graphics_set_current_window(ta_graphics_context* pGraphics, ta_window* pWindow);
 
 
-// Enables v-sync.
-void ta_graphics_enable_vsync(ta_graphics_context* pGraphics);
+// Enables v-sync for the given window.
+void ta_graphics_enable_vsync(ta_graphics_context* pGraphics, ta_window* pWindow);
 
-// Disables v-sync.
-void ta_graphics_disable_vsync(ta_graphics_context* pGraphics);
+// Disables v-sync for the given window.
+void ta_graphics_disable_vsync(ta_graphics_context* pGraphics, ta_window* pWindow);
 
 // Presents the back buffer of the given window.
 void ta_graphics_present(ta_graphics_context* pGraphics, ta_window* pWindow);

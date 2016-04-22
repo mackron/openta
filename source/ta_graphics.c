@@ -303,25 +303,35 @@ void ta_graphics_set_current_window(ta_graphics_context* pGraphics, ta_window* p
 }
 
 
-void ta_graphics_enable_vsync(ta_graphics_context* pGraphics)
+void ta_graphics_enable_vsync(ta_graphics_context* pGraphics, ta_window* pWindow)
 {
     if (pGraphics == NULL) {
         return;
     }
 
     if (pGraphics->SwapIntervalEXT) {
+        ta_window* pPrevWindow = pGraphics->pCurrentWindow;
+        ta_graphics_set_current_window(pGraphics, pWindow);
+
         pGraphics->SwapIntervalEXT(1);
+
+        ta_graphics_set_current_window(pGraphics, pPrevWindow);
     }
 }
 
-void ta_graphics_disable_vsync(ta_graphics_context* pGraphics)
+void ta_graphics_disable_vsync(ta_graphics_context* pGraphics, ta_window* pWindow)
 {
     if (pGraphics == NULL) {
         return;
     }
 
     if (pGraphics->SwapIntervalEXT) {
+        ta_window* pPrevWindow = pGraphics->pCurrentWindow;
+        ta_graphics_set_current_window(pGraphics, pWindow);
+
         pGraphics->SwapIntervalEXT(0);
+
+        ta_graphics_set_current_window(pGraphics, pPrevWindow);
     }
 }
 
