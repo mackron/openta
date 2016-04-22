@@ -452,15 +452,15 @@ void ta_draw_subtexture(ta_texture* pTexture, bool transparent, int offsetX, int
     glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
     glBegin(GL_QUADS);
     {
-        float left = (float)offsetX / pTexture->width;
-        float top  = (float)offsetY / pTexture->height;
-        float right = (float)(offsetX + width) / pTexture->width;
-        float bottom = (float)(offsetY + height) / pTexture->height;
+        float uvleft   = (float)offsetX / pTexture->width;
+        float uvtop    = (float)offsetY / pTexture->height;
+        float uvright  = (float)(offsetX + width)  / pTexture->width;
+        float uvbottom = (float)(offsetY + height) / pTexture->height;
 
-        glTexCoord2f(left, top); glVertex3f(-1.0f, -1.0f,  1.0f);
-        glTexCoord2f(right, top); glVertex3f( 1.0f, -1.0f,  1.0f);
-        glTexCoord2f(right, bottom); glVertex3f( 1.0f,  1.0f,  1.0f);
-        glTexCoord2f(left, bottom); glVertex3f(-1.0f,  1.0f,  1.0f);
+        glTexCoord2f(uvleft, uvbottom); glVertex3f(-1.0f, -1.0f,  1.0f);
+        glTexCoord2f(uvright, uvbottom); glVertex3f( 1.0f, -1.0f,  1.0f);
+        glTexCoord2f(uvright, uvtop); glVertex3f( 1.0f,  1.0f,  1.0f);
+        glTexCoord2f(uvleft, uvtop); glVertex3f(-1.0f,  1.0f,  1.0f);
     }
     glEnd();
 

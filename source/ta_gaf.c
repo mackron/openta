@@ -6,7 +6,7 @@
 //  - Can probably avoid allocating memory for subframes - just build the frame in-place.
 //  - Improve atlas packing. Stop using stb_pack_rect - it's API doesn't really suit us.
 
-bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t* palette, bool flipped)
+bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t* palette)
 {
     // This function assumes the file is sitting on the first byte of the frame.
 
@@ -76,11 +76,6 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                     return false;
                 }
 
-                unsigned int yflipped = y;
-                if (flipped) {
-                    yflipped = (pFrame->height - y - 1);
-                }
-
                 if (rowSize > 0)
                 {
                     unsigned int x = 0;
@@ -99,7 +94,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                             // Transparent.
                             uint8_t repeat = (mask >> 1);
                             while (repeat > 0) {
-                                pFrame->pImageData[(yflipped*pFrame->width) + x] = TA_TRANSPARENT_COLOR;   // Fully transparent.
+                                pFrame->pImageData[(y*pFrame->width) + x] = TA_TRANSPARENT_COLOR;   // Fully transparent.
                                 x += 1;
                                 repeat -= 1;
                             }
@@ -121,7 +116,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                             }
 
                             while (repeat > 0) {
-                                pFrame->pImageData[(yflipped*pFrame->width) + x] = value;
+                                pFrame->pImageData[(y*pFrame->width) + x] = value;
                                 x += 1;
                                 repeat -= 1;
                             }
@@ -144,7 +139,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                                     value = 0;
                                 }
 
-                                pFrame->pImageData[(yflipped*pFrame->width) + x] = value;
+                                pFrame->pImageData[(y*pFrame->width) + x] = value;
 
                                 x += 1;
                                 repeat -= 1;
@@ -159,7 +154,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                 {
                     // rowSize == 0. Assume the whole row is transparent.
                     for (unsigned int x = 0; x < pFrame->width; ++x) {
-                        pFrame->pImageData[(yflipped*pFrame->width) + x] = TA_TRANSPARENT_COLOR;   // Fully transparent.
+                        pFrame->pImageData[(y*pFrame->width) + x] = TA_TRANSPARENT_COLOR;   // Fully transparent.
                     }
 
                     pFrame->isTransparent = true;
@@ -171,12 +166,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
             // Uncompressed.
             for (unsigned int y = 0; y < pFrame->height; ++y)
             {
-                unsigned int yflipped = y;
-                if (flipped) {
-                    yflipped = (pFrame->height - y - 1);
-                }
-
-                uint8_t* pRow = pFrame->pImageData + (yflipped*pFrame->width);
+                uint8_t* pRow = pFrame->pImageData + (y*pFrame->width);
 
                 if (!ta_hpi_read(pFile, pRow, pFrame->width, NULL)) {
                     free(pFrame->pImageData);
@@ -213,7 +203,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                 return false;
             }
 
-            if (!ta_gaf__read_frame(pFile, pFrame->pSubframes + iSubframe, palette, flipped))
+            if (!ta_gaf__read_frame(pFile, pFrame->pSubframes + iSubframe, palette))
             {
                 free(pFrame->pSubframes);
                 pFrame->pSubframes = NULL;
@@ -236,15 +226,12 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
 
             for (unsigned short srcY = 0; srcY < srcHeight; ++srcY)
             {
-                unsigned short srcYFlipped = srcY;
-                unsigned short dstYFlipped = offsetY + srcY;                
-                if (flipped) {
-                    srcYFlipped = (srcHeight - srcY - 1);
-                    dstYFlipped = (pFrame->height - dstYFlipped - 1);
-                }
+                //unsigned short srcYFlipped = srcY;
+                //unsigned short dstYFlipped = offsetY + srcY;                
 
-                uint8_t* pDstRow = pFrame->pImageData + (dstYFlipped * pFrame->width);
-                uint8_t* pSrcRow = pFrame->pSubframes[iSubframe].pImageData + (srcYFlipped * srcWidth);
+
+                uint8_t* pDstRow = pFrame->pImageData + (offsetY + srcY * pFrame->width);
+                uint8_t* pSrcRow = pFrame->pSubframes[iSubframe].pImageData + (srcY * srcWidth);
 
                 for (unsigned short srcX = 0; srcX < srcWidth; ++srcX)
                 {
@@ -262,7 +249,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
     return true;
 }
 
-ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics, uint32_t* palette, bool flipped)
+ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics, uint32_t* palette)
 {
     if (pFile == NULL) {
         return NULL;
@@ -364,7 +351,7 @@ ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
                 }
 
                 ta_gaf_entry_frame* pFrame = pGAF->pEntries[iEntry].pFrames + iFrame;
-                if (!ta_gaf__read_frame(pFile, pFrame, palette, flipped)) {
+                if (!ta_gaf__read_frame(pFile, pFrame, palette)) {
                     free(pFramePointers);
                     goto on_error;
                 }
@@ -490,14 +477,14 @@ ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
         }
 
         
-        pGAF->pTextureAtlases = realloc(pGAF->pTextureAtlases, sizeof(ta_texture*) * (pGAF->textureAtlasCount + 1));
-        if (pGAF->pTextureAtlases == NULL) {
+        pGAF->ppTextureAtlases = realloc(pGAF->ppTextureAtlases, sizeof(ta_texture*) * (pGAF->textureAtlasCount + 1));
+        if (pGAF->ppTextureAtlases == NULL) {
             free(pRects);
             free(pNodes);
             goto on_error;
         }
 
-        pGAF->pTextureAtlases[pGAF->textureAtlasCount] = pAtlas;
+        pGAF->ppTextureAtlases[pGAF->textureAtlasCount] = pAtlas;
         pGAF->textureAtlasCount += 1;
 
 
@@ -557,12 +544,12 @@ void ta_unload_gaf(ta_gaf* pGAF)
         free(pGAF->pEntries);
     }
 
-    if (pGAF->pTextureAtlases) {
+    if (pGAF->ppTextureAtlases) {
         for (unsigned int iTextureAtlas = 0; iTextureAtlas < pGAF->textureAtlasCount; ++iTextureAtlas) {
-            ta_delete_texture(pGAF->pTextureAtlases[iTextureAtlas]);
+            ta_delete_texture(pGAF->ppTextureAtlases[iTextureAtlas]);
         }
 
-        free(pGAF->pTextureAtlases);
+        free(pGAF->ppTextureAtlases);
     }
 
     

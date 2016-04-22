@@ -112,10 +112,10 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     ta_config_obj* pConfig = ta_parse_config(fileData);
 #endif
 
-#if 1
+#if 0
     ta_hpi_archive* pHPI = ta_open_hpi_from_file("totala1.hpi");
     ta_hpi_file* pFile = ta_hpi_open_file(pHPI, "anims/Archipelago.GAF");
-    ta_gaf* pGAF = ta_load_gaf_from_file(pFile, pGame->pGraphics, pGame->palette, true);    // <-- "true" = flipped.
+    ta_gaf* pGAF = ta_load_gaf_from_file(pFile, pGame->pGraphics, pGame->palette);
 
     ta_gaf_entry_frame* pFrame = &pGAF->pEntries[0].pFrames[0];
     //ta_gaf_entry* pEntry = ta_gaf_get_entry_by_name(pGAF, "Frond01CrispRec");
@@ -126,7 +126,15 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
     pGame->pFrame = &pGAF->pEntries[0].pFrames[0];
     pGame->pTexture = pGAF->pTextureAtlases[pGame->pFrame->atlasIndex];
-    
+#endif
+
+#if 1
+    ta_hpi_archive* pHPI = ta_open_hpi_from_file("totala2.hpi");
+    ta_hpi_file* pFile = ta_hpi_open_file(pHPI, "maps/The Pass.tnt");
+
+    ta_tnt* pTNT = ta_load_tnt_from_file(pFile, pGame->pGraphics);
+    pGame->pTexture = pTNT->pMinimapTexture;
+    pGame->pTNT = pTNT;
 #endif
 
 
@@ -206,7 +214,14 @@ void ta_game_render(ta_game* pGame)
     ta_graphics_set_current_window(pGame->pGraphics, pGame->pWindow);
     {
         //ta_draw_texture(pGame->pTexture, true);
-        ta_draw_subtexture(pGame->pTexture, pGame->pFrame, pGame->pFrame->atlasPosX, pGame->pFrame->atlasPosY, pGame->pFrame->width, pGame->pFrame->height);
+        
+        //if (pGame->pFrame) {
+        //    ta_draw_subtexture(pGame->pTexture, pGame->pFrame, pGame->pFrame->atlasPosX, pGame->pFrame->atlasPosY, pGame->pFrame->width, pGame->pFrame->height);
+        //}
+
+        if (pGame->pTNT) {
+            ta_draw_subtexture(pGame->pTexture, false, 0, 0, pGame->pTNT->minimapWidth, pGame->pTNT->minimapHeight);
+        }
     }
     ta_graphics_present(pGame->pGraphics, pGame->pWindow);
 }

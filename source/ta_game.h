@@ -27,6 +27,7 @@ struct ta_game
     // TEST TEXTURE
     ta_texture* pTexture;
     ta_gaf_entry_frame* pFrame;
+    ta_tnt* pTNT;
 };
 
 // Creates a game instance.

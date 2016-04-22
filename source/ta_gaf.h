@@ -87,7 +87,7 @@ typedef struct
     unsigned int textureAtlasCount;
 
     // The texture altas' containing the image data of each entry.
-    ta_texture** pTextureAtlases;
+    ta_texture** ppTextureAtlases;
 
 } ta_gaf;
 
@@ -99,7 +99,7 @@ typedef struct
 
 
 // Loads a GAF file.
-ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics, uint32_t* palette, bool flipped);
+ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics, uint32_t* palette);
 
 // Unloads the given GAF package.
 void ta_unload_gaf(ta_gaf* pGAF);
