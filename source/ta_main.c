@@ -26,15 +26,15 @@
 #define DR_WAV_NO_STDIO
 #define DR_FS_WIN32_USE_EVENT_MUTEX     // For better deadlock detection, but possibly less efficient (need to profile).
 
-#include "../dr_libs/dr_util.h"
-#include "../dr_libs/dr_path.h"
-#include "../dr_libs/dr_fs.h"
-#include "../dr_libs/dr_gui.h"
-#include "../dr_libs/dr_2d.h"
-#include "../dr_libs/dr_audio.h"
-#include "../dr_libs/dr_wav.h"
-#include "../dr_libs/dr_math.h"
-#include "../dr_libs/dr_pcx.h"
+#include "../../dr_libs/dr_util.h"
+#include "../../dr_libs/dr_path.h"
+#include "../../dr_libs/dr_fs.h"
+#include "../../dr_libs/dr_gui.h"
+#include "../../dr_libs/dr_2d.h"
+#include "../../dr_libs/dr_audio.h"
+#include "../../dr_libs/dr_wav.h"
+#include "../../dr_libs/dr_math.h"
+#include "../../dr_libs/dr_pcx.h"
 
 // dr_libs
 #define DR_UTIL_IMPLEMENTATION
@@ -47,15 +47,15 @@
 #define DR_MATH_IMPLEMENTATION
 #define DR_PCX_IMPLEMENTATION
 
-#include "../dr_libs/dr_util.h"
-#include "../dr_libs/dr_path.h"
-#include "../dr_libs/dr_fs.h"
-#include "../dr_libs/dr_gui.h"
-#include "../dr_libs/dr_2d.h"
-#include "../dr_libs/dr_audio.h"
-#include "../dr_libs/dr_wav.h"
-#include "../dr_libs/dr_math.h"
-#include "../dr_libs/dr_pcx.h"
+#include "../../dr_libs/dr_util.h"
+#include "../../dr_libs/dr_path.h"
+#include "../../dr_libs/dr_fs.h"
+#include "../../dr_libs/dr_gui.h"
+#include "../../dr_libs/dr_2d.h"
+#include "../../dr_libs/dr_audio.h"
+#include "../../dr_libs/dr_wav.h"
+#include "../../dr_libs/dr_math.h"
+#include "../../dr_libs/dr_pcx.h"
 
 // Total Annihilation headers.
 #include "ta_errors.h"
