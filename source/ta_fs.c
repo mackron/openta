@@ -19,7 +19,9 @@ FILE* ta_fopen(const char* filePath, const char* openMode)
 
 bool ta_fs__file_exists_in_list(const char* relativePath, size_t fileCount, ta_fs_file_info* pFiles)
 {
-    assert(pFiles != NULL);
+    if (pFiles == NULL) {
+        return false;
+    }
 
     for (size_t i = 0; i < fileCount; ++i) {
         if (_stricmp(pFiles[i].relativePath, relativePath) == 0) {    // <-- TA seems to be case insensitive.
@@ -67,23 +69,16 @@ void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRe
             continue;
         }
 
+        ta_fs_file_info fi;
+        fi.archiveRelativePath[0] = '\0';
+        drpath_copy_and_append(fi.relativePath, sizeof(fi.relativePath), directoryRelativePath, ffd.cFileName);
+        fi.isDirectory = (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+
         // Skip past the file if it's already in the list.
-        if (ta_fs__file_exists_in_list(ffd.cFileName, *pFileCountInOut, *ppFilesInOut)) {
+        if (ta_fs__file_exists_in_list(fi.relativePath, *pFileCountInOut, *ppFilesInOut)) {
             continue;
         }
 
-
-        ta_fs_file_info fi;
-
-        fi.archiveRelativePath[0] = '\0';
-        strncpy_s(fi.relativePath, sizeof(fi.relativePath), ffd.cFileName, _TRUNCATE);
-            
-        fi.isDirectory = (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-
-        ULARGE_INTEGER liSize;
-        liSize.LowPart  = ffd.nFileSizeLow;
-        liSize.HighPart = ffd.nFileSizeHigh;
-        fi.sizeInBytes = liSize.QuadPart;
 
 
         ta_fs_file_info* pNewFiles = realloc(*ppFilesInOut, ((*pFileCountInOut) + fileCount + 1) * sizeof(**ppFilesInOut));
@@ -104,6 +99,48 @@ void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRe
 #endif
 }
 
+
+typedef struct
+{
+    const char* archiveRelativePath;
+    const char* directoryRelativePath;
+    size_t prevFileCount;
+    size_t* pFileCountInOut;
+    ta_fs_file_info** ppFilesInOut;
+} ta_fs__gather_files_in_archive_directory_data;
+
+bool ta_fs__gather_files_in_archive_directory_traversal_proc(ta_hpi_central_dir_entry* pEntry, const char* filePath, void* pUserData)
+{
+    ta_fs__gather_files_in_archive_directory_data* pTraversalData = pUserData;
+    assert(pTraversalData != NULL);
+
+    size_t prevFileCount = pTraversalData->prevFileCount;
+    size_t* pFileCountInOut = pTraversalData->pFileCountInOut;
+    ta_fs_file_info** ppFilesInOut = pTraversalData->ppFilesInOut;
+
+    ta_fs_file_info fi;
+    strncpy_s(fi.archiveRelativePath, sizeof(fi.archiveRelativePath), pTraversalData->archiveRelativePath, _TRUNCATE);
+    //strncpy_s(fi.relativePath, sizeof(fi.relativePath), filePath, _TRUNCATE);
+    drpath_copy_and_append(fi.relativePath, sizeof(fi.relativePath), pTraversalData->directoryRelativePath, filePath);
+    fi.isDirectory = pEntry->isDirectory;
+
+    // Skip past the file if it's already in the list.
+    if (ta_fs__file_exists_in_list(fi.relativePath, prevFileCount, *ppFilesInOut)) {       // <-- use prevFileCount here to make this search more efficient.
+        return true;
+    }
+
+    ta_fs_file_info* pNewFiles = realloc(*ppFilesInOut, ((*pFileCountInOut) + 1) * sizeof(**ppFilesInOut));
+    if (pNewFiles == NULL) {
+        return false;
+    }
+
+    (*ppFilesInOut) = pNewFiles;
+    (*ppFilesInOut)[*pFileCountInOut] = fi;
+    *pFileCountInOut += 1;
+
+    return true;
+}
+
 void ta_fs__gather_files_in_archive_directory(ta_fs* pFS, const char* archiveRelativePath, const char* directoryRelativePath, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut)
 {
     assert(pFS != NULL);
@@ -111,7 +148,25 @@ void ta_fs__gather_files_in_archive_directory(ta_fs* pFS, const char* archiveRel
     assert(pFileCountInOut != NULL);
     assert(ppFilesInOut != NULL);
 
+    char archiveAbsolutePath[DRFS_MAX_PATH];
+    if (!drpath_copy_and_append(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, archiveRelativePath)) {
+        return;
+    }
 
+    ta_hpi_archive* pHPI = ta_open_hpi_from_file(archiveAbsolutePath);
+    if (pHPI == NULL) {
+        return;
+    }
+
+    ta_fs__gather_files_in_archive_directory_data traversalData;
+    traversalData.archiveRelativePath = archiveRelativePath;
+    traversalData.directoryRelativePath = directoryRelativePath;
+    traversalData.prevFileCount = *pFileCountInOut;
+    traversalData.pFileCountInOut = pFileCountInOut;
+    traversalData.ppFilesInOut = ppFilesInOut;
+    ta_hpi_traverse_directory(pHPI, directoryRelativePath, ta_fs__gather_files_in_archive_directory_traversal_proc, &traversalData);
+
+    ta_close_hpi(pHPI);
 }
 
 int ta_fs__file_info_qsort_callback(const void* a, const void* b)
@@ -467,6 +522,7 @@ ta_fs_iterator* ta_fs_begin(ta_fs* pFS, const char* directoryRelativePath)
         return NULL;
     }
 
+    pIter->pFS = pFS;
     pIter->_fileCount = ta_fs__gather_files_in_directory(pFS, directoryRelativePath, &pIter->_pFiles);
 
     return pIter;

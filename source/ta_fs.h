@@ -102,9 +102,6 @@ typedef struct
     // Whether or not the file is a directory.
     bool isDirectory;
 
-    // The size in bytes of the file.
-    uint64_t sizeInBytes;
-
 } ta_fs_file_info;
 
 typedef struct

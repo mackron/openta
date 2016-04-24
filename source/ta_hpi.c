@@ -69,15 +69,6 @@ typedef struct
 
 } ta_hpi__memory_stream;
 
-typedef struct
-{
-    uint32_t namePos;
-    uint32_t dataPos;
-    uint8_t  isDirectory;
-} ta_hpi__central_dir_entry;
-
-typedef bool (* ta_hpi__central_dir_traversal_proc)(ta_hpi__central_dir_entry* pEntry, const char* filePath, void* pUserData);
-
 
 static TA_INLINE void ta_hpi__decrypt(uint8_t* pData, size_t sizeInBytes, uint32_t decryptionKey, uint32_t firstBytePos)
 {
@@ -272,7 +263,7 @@ static size_t ta_hpi__read_from_memory(ta_hpi__memory_stream* pMemory, void* pDa
 }
 
 
-bool ta_hpi__traverse_central_dir_subdir(ta_hpi__memory_stream* pCentralDirData, uint32_t centralDirPosInArchive, const char* parentDir, ta_hpi__central_dir_traversal_proc callback, void* pUserData)
+bool ta_hpi__traverse_central_dir_subdir(ta_hpi__memory_stream* pCentralDirData, uint32_t centralDirPosInArchive, const char* parentDir, ta_hpi_central_dir_traversal_proc callback, void* pUserData)
 {
     uint32_t fileCount;
     if (ta_hpi__read_from_memory(pCentralDirData, &fileCount, 4) != 4) {
@@ -288,7 +279,7 @@ bool ta_hpi__traverse_central_dir_subdir(ta_hpi__memory_stream* pCentralDirData,
 
     for (uint32_t i = 0; i < fileCount; ++i)
     {
-        ta_hpi__central_dir_entry entry;
+        ta_hpi_central_dir_entry entry;
         if (ta_hpi__read_from_memory(pCentralDirData, &entry.namePos, 4) != 4) {
             return false;
         }
@@ -324,7 +315,7 @@ bool ta_hpi__traverse_central_dir_subdir(ta_hpi__memory_stream* pCentralDirData,
     return true;
 }
 
-bool ta_hpi__traverse_central_dir(const void* pCentralDirData, size_t centralDirSizeInBytes, uint32_t centralDirPosInArchive, ta_hpi__central_dir_traversal_proc callback, void* pUserData)
+bool ta_hpi__traverse_central_dir(const void* pCentralDirData, size_t centralDirSizeInBytes, uint32_t centralDirPosInArchive, ta_hpi_central_dir_traversal_proc callback, void* pUserData)
 {
     assert(pCentralDirData != NULL);
     assert(callback != NULL);
@@ -336,46 +327,7 @@ bool ta_hpi__traverse_central_dir(const void* pCentralDirData, size_t centralDir
     return ta_hpi__traverse_central_dir_subdir(&centralDirStream, centralDirPosInArchive, "", callback, pUserData);
 }
 
-bool ta_hpi__file_count_traversal_callback(ta_hpi__central_dir_entry* pEntry, const char* filePath, void* pUserData)
-{
-    (void)pEntry;
 
-    uint32_t* pCount = pUserData;
-    *pCount += 1;
-
-    return true;
-}
-
-typedef struct
-{
-    ta_hpi__central_dir_entry entry;
-    const char* filePath;
-    bool exists;
-} ta_hpi__ffi;
-
-bool ta_hpi__find_file_traversal_callback(ta_hpi__central_dir_entry* pEntry, const char* filePath, void* pUserData)
-{
-    ta_hpi__ffi* ffi = pUserData;
-
-    // It appears TA is not case sensitive.
-    //if (strcmp(filePath, ffi->filePath) == 0) {
-    if (_stricmp(filePath, ffi->filePath) == 0) {
-        ffi->entry = *pEntry;
-        ffi->exists = true;
-        return false;   // <-- Stop traversing at this point.
-    }
-
-    return true;
-}
-
-bool ta_hpi__find_file(ta_hpi_archive* pHPI, const char* filePath, ta_hpi__ffi* ffiOut)
-{
-    ffiOut->filePath = filePath;
-    ffiOut->exists = false;
-    ta_hpi__traverse_central_dir(pHPI->pExtraData, pHPI->header.directorySize, pHPI->header.startPos, ta_hpi__find_file_traversal_callback, ffiOut);
-
-    return ffiOut->exists;
-}
 
 ta_hpi_archive* ta_open_hpi(ta_read_proc onRead, ta_seek_proc onSeek, void* pUserData)
 {
@@ -474,8 +426,8 @@ ta_hpi_file* ta_hpi_open_file(ta_hpi_archive* pHPI, const char* fileName)
     }
 
     // The first thing we need to do is find the file.
-    ta_hpi__ffi ffi;
-    if (!ta_hpi__find_file(pHPI, fileName, &ffi)) {
+    ta_hpi_ffi ffi;
+    if (!ta_hpi_find_file(pHPI, fileName, &ffi)) {
         return NULL;
     }
 
@@ -633,4 +585,80 @@ uint64_t ta_hpi_size(ta_hpi_file* pFile)
     }
 
     return pFile->sizeInBytes;
+}
+
+
+
+bool ta_hpi__find_file_traversal_callback(ta_hpi_central_dir_entry* pEntry, const char* filePath, void* pUserData)
+{
+    ta_hpi_ffi* ffi = pUserData;
+
+    // It appears TA is not case sensitive.
+    //if (strcmp(filePath, ffi->filePath) == 0) {
+    if (_stricmp(filePath, ffi->filePath) == 0) {
+        ffi->entry = *pEntry;
+        ffi->exists = true;
+        return false;   // <-- Stop traversing at this point.
+    }
+
+    return true;
+}
+
+bool ta_hpi_find_file(ta_hpi_archive* pHPI, const char* filePath, ta_hpi_ffi* ffiOut)
+{
+    ffiOut->filePath = filePath;
+    ffiOut->exists = false;
+    ta_hpi__traverse_central_dir(pHPI->pExtraData, pHPI->header.directorySize, pHPI->header.startPos, ta_hpi__find_file_traversal_callback, ffiOut);
+
+    return ffiOut->exists;
+}
+
+
+bool ta_hpi_traverse_directory(ta_hpi_archive* pHPI, const char* directoryPath, ta_hpi_central_dir_traversal_proc callback, void* pUserData)
+{
+    ta_hpi_ffi ffi;
+    if (!ta_hpi_find_file(pHPI, directoryPath, &ffi)) {
+        return false;
+    }
+
+    ta_hpi__memory_stream centralDirStream;
+    centralDirStream.pData = pHPI->pExtraData;
+    centralDirStream.dataSize = pHPI->header.directorySize;
+    centralDirStream.currentReadPos = ffi.entry.dataPos - pHPI->header.startPos;
+
+    uint32_t fileCount;
+    if (ta_hpi__read_from_memory(&centralDirStream, &fileCount, 4) != 4) {
+        return false;
+    }
+
+    uint32_t entryOffset;
+    if (ta_hpi__read_from_memory(&centralDirStream, &entryOffset, 4) != 4) {
+        return false;
+    }
+
+    for (uint32_t i = 0; i < fileCount; ++i)
+    {
+        ta_hpi_central_dir_entry entry;
+        if (ta_hpi__read_from_memory(&centralDirStream, &entry.namePos, 4) != 4) {
+            return false;
+        }
+        if (ta_hpi__read_from_memory(&centralDirStream, &entry.dataPos, 4) != 4) {
+            return false;
+        }
+        if (ta_hpi__read_from_memory(&centralDirStream, &entry.isDirectory, 1) != 1) {
+            return false;
+        }
+
+
+        char filePath[TA_MAX_PATH];
+        if (strncpy_s(filePath, sizeof(filePath), (const char*)centralDirStream.pData + (entry.namePos - pHPI->header.startPos), _TRUNCATE) != 0) {
+            return false;
+        }
+
+        if (!callback(&entry, filePath, pUserData)) {
+            return false;
+        }
+    }
+
+    return true;
 }
