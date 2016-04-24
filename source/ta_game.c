@@ -1,31 +1,5 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-#if 0
-bool ta_load_palette(ta_hpi_archive* pHPI, const char* filePath, uint32_t* paletteOut)
-{
-    ta_hpi_file* pPaletteFile = ta_hpi_open_file(pHPI, filePath);
-    if (pPaletteFile == NULL) {
-        return false;
-    }
-
-    if (!ta_hpi_read(pPaletteFile, paletteOut, 1024, NULL)) {
-        ta_hpi_close_file(pPaletteFile);
-        return false;
-    }
-
-    ta_hpi_close_file(pPaletteFile);
-
-
-    // The palettes will include room for an alpha component, but it'll always be set to 0 (fully transparent). However, due
-    // to the way I'm doing things in this project it's better for us to convert all of them to fully opaque.
-    for (int i = 0; i < 256; ++i) {
-        paletteOut[i] |= 0xFF000000;
-    }
-
-    return true;
-}
-#endif
-
 bool ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut)
 {
     ta_file* pPaletteFile = ta_open_file(pFS, filePath);
@@ -50,6 +24,19 @@ bool ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut)
     return true;
 }
 
+bool ta_load_features(ta_game* pGame, const char* directoryPath)
+{
+    ta_fs_iterator* pIter = ta_fs_begin(pGame->pFS, directoryPath, true);
+    while (ta_fs_next(pIter)) {
+        if (!pIter->fileInfo.isDirectory) {
+            printf("FILE: %s/%s\n", pIter->fileInfo.archiveRelativePath, pIter->fileInfo.relativePath);
+        }
+    }
+    ta_fs_end(pIter);
+
+    return true;
+}
+
 ta_game* ta_create_game(dr_cmdline cmdline)
 {
     ta_game* pGame = calloc(1, sizeof(*pGame));
@@ -64,39 +51,6 @@ ta_game* ta_create_game(dr_cmdline cmdline)
         goto on_error;
     }
 
-#if 0
-    // File system. We want to set the working directory to the executable.
-    char exedir[TA_MAX_PATH];
-    if (!dr_get_executable_path(exedir, sizeof(exedir))) {
-        goto on_error;
-    }
-    drpath_remove_file_name(exedir);
-
-#ifdef _WIN32
-    _chdir(exedir);
-#else
-    chdir(exedir)
-#endif
-#endif
-
-    
-#if 0
-    ta_hpi_archive* pTotalA1HPI = ta_open_hpi_from_file("totala1.hpi");
-    if (pTotalA1HPI == NULL) {
-        goto on_error;
-    }
-
-    if (!ta_load_palette(pTotalA1HPI, "palettes/PALETTE.PAL", pGame->palette)) {
-        goto on_error;
-    }
-
-    if (!ta_load_palette(pTotalA1HPI, "palettes/GUIPAL.PAL", pGame->guipal)) {
-        goto on_error;
-    }
-
-    ta_close_hpi(pTotalA1HPI);
-    pTotalA1HPI = NULL;
-#endif
 
 
     // The palettes. The graphics system depends on these so they need to be loaded first.
@@ -133,6 +87,11 @@ ta_game* ta_create_game(dr_cmdline cmdline)
         goto on_error;
     }
 
+
+    // Features.
+    if (!ta_load_features(pGame, "features")) {
+        goto on_error;
+    }
 
 
 
@@ -185,10 +144,6 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     return pGame;
 
 on_error:
-//    if (pTotalA1HPI) {
-//        ta_close_hpi(pTotalA1HPI);
-//    }
-
     if (pGame != NULL) {
         if (pGame->pWindow != NULL) {
             ta_delete_window(pGame->pWindow);
