@@ -11,7 +11,6 @@
 // Platform headers. Never expose these publicly. Ever.
 #ifdef _WIN32
 #include <windows.h>
-#include <direct.h> // For _chdir(). This should be temp once we start using dr_fs.
 #endif
 
 // Platform libraries, for simplifying MSVC builds.
@@ -57,6 +56,16 @@
 #include "../../dr_libs/dr_math.h"
 #include "../../dr_libs/dr_pcx.h"
 
+
+// Options.
+
+// The color within the palette to use as the transparent pixel.
+#define TA_TRANSPARENT_COLOR 240
+
+// The maximum length of a path. This should rarely need to be increased, but try it if you encounter truncation issues.
+#define TA_MAX_PATH 128
+
+
 // Total Annihilation headers.
 #include "ta_errors.h"
 #include "ta_type_declarations.h"
@@ -64,6 +73,7 @@
 #include "ta_platform_layer.h"
 #include "ta_graphics.h"
 #include "ta_game.h"
+#include "ta_fs.h"
 #include "ta_hpi.h"
 #include "ta_gaf.h"
 #include "ta_tnt.h"
@@ -87,16 +97,13 @@
 #define STB_RECT_PACK_IMPLEMENTATION
 #include "stb_rect_pack.h"
 
-// Options.
-
-// The color within the palette to use as the transparent pixel.
-#define TA_TRANSPARENT_COLOR 240
 
 
 // Total Annihilation source files.
 #include "ta_platform_layer.c"
 #include "ta_graphics.c"
 #include "ta_game.c"
+#include "ta_fs.c"
 #include "ta_hpi.c"
 #include "ta_gaf.c"
 #include "ta_tnt.c"

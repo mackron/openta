@@ -1,5 +1,6 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
+#if 0
 bool ta_load_palette(ta_hpi_archive* pHPI, const char* filePath, uint32_t* paletteOut)
 {
     ta_hpi_file* pPaletteFile = ta_hpi_open_file(pHPI, filePath);
@@ -23,6 +24,31 @@ bool ta_load_palette(ta_hpi_archive* pHPI, const char* filePath, uint32_t* palet
 
     return true;
 }
+#endif
+
+bool ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut)
+{
+    ta_file* pPaletteFile = ta_open_file(pFS, filePath);
+    if (pPaletteFile == NULL) {
+        return false;
+    }
+
+    size_t bytesRead;
+    if (!ta_read_file(pPaletteFile, paletteOut, 1024, &bytesRead) || bytesRead != 1024) {
+        return false;
+    }
+
+    ta_close_file(pPaletteFile);
+
+
+    // The palettes will include room for an alpha component, but it'll always be set to 0 (fully transparent). However, due
+    // to the way I'm doing things in this project it's better for us to convert all of them to fully opaque.
+    for (int i = 0; i < 256; ++i) {
+        paletteOut[i] |= 0xFF000000;
+    }
+
+    return true;
+}
 
 ta_game* ta_create_game(dr_cmdline cmdline)
 {
@@ -33,8 +59,14 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
     pGame->cmdline = cmdline;
 
+    pGame->pFS = ta_create_file_system();
+    if (pGame->pFS == NULL) {
+        goto on_error;
+    }
+
+#if 0
     // File system. We want to set the working directory to the executable.
-    char exedir[DRFS_MAX_PATH];
+    char exedir[TA_MAX_PATH];
     if (!dr_get_executable_path(exedir, sizeof(exedir))) {
         goto on_error;
     }
@@ -45,9 +77,10 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 #else
     chdir(exedir)
 #endif
+#endif
 
-
-    // The palettes. The graphics system depends on these so they need to be loaded first.
+    
+#if 0
     ta_hpi_archive* pTotalA1HPI = ta_open_hpi_from_file("totala1.hpi");
     if (pTotalA1HPI == NULL) {
         goto on_error;
@@ -63,6 +96,17 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
     ta_close_hpi(pTotalA1HPI);
     pTotalA1HPI = NULL;
+#endif
+
+
+    // The palettes. The graphics system depends on these so they need to be loaded first.
+    if (!ta_load_palette(pGame->pFS, "palettes/PALETTE.PAL", pGame->palette)) {
+        goto on_error;
+    }
+
+    if (!ta_load_palette(pGame->pFS, "palettes/GUIPAL.PAL", pGame->guipal)) {
+        goto on_error;
+    }
 
     // Due to the way I'm doing a few things with the rendering, we want to use a specific entry in the palette to act as a
     // fully transparent value. For now I'll be using entry 240. Any non-transparent pixel that wants to use this entry will
@@ -129,10 +173,10 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 #endif
 
 #if 1
-    ta_hpi_archive* pHPI = ta_open_hpi_from_file("totala2.hpi");
-    ta_hpi_file* pFile = ta_hpi_open_file(pHPI, "maps/The Pass.tnt");
+    //ta_hpi_archive* pHPI = ta_open_hpi_from_file("totala2.hpi");
+    //ta_hpi_file* pFile = ta_hpi_open_file(pHPI, "maps/The Pass.tnt");
 
-    ta_tnt* pTNT = ta_load_tnt_from_file(pFile, pGame->pGraphics);
+    ta_tnt* pTNT = ta_load_tnt_from_file(pGame->pFS, "maps/The Pass.tnt", pGame->pGraphics);
     pGame->pTexture = pTNT->pMinimapTexture;
     pGame->pTNT = pTNT;
 #endif
@@ -141,9 +185,9 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     return pGame;
 
 on_error:
-    if (pTotalA1HPI) {
-        ta_close_hpi(pTotalA1HPI);
-    }
+//    if (pTotalA1HPI) {
+//        ta_close_hpi(pTotalA1HPI);
+//    }
 
     if (pGame != NULL) {
         if (pGame->pWindow != NULL) {
@@ -161,6 +205,10 @@ on_error:
         if (pGame->pTimer != NULL) {
             ta_delete_timer(pGame->pTimer);
         }
+
+        if (pGame->pFS != NULL) {
+            ta_delete_file_system(pGame->pFS);
+        }
     }
 
     return NULL;
@@ -176,6 +224,7 @@ void ta_delete_game(ta_game* pGame)
     ta_delete_graphics_context(pGame->pGraphics);
     draudio_delete_context(pGame->pAudioContext);
     ta_delete_timer(pGame->pTimer);
+    ta_delete_file_system(pGame->pFS);
     free(pGame);
 }
 

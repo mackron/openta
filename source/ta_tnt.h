@@ -84,7 +84,7 @@ struct ta_tnt
 };
 
 // Loads a TNT file.
-ta_tnt* ta_load_tnt_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics);
+ta_tnt* ta_load_tnt_from_file(ta_fs* pFS, const char* relativePath, ta_graphics_context* pGraphics);
 
 // Deletes the given TNT file.
 void ta_unload_tnt(ta_tnt* pTNT);

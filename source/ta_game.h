@@ -5,6 +5,9 @@ struct ta_game
     // The command line that was used to start up the game.
     dr_cmdline cmdline;
 
+    // The file system context.
+    ta_fs* pFS;
+
     // The graphics context.
     ta_graphics_context* pGraphics;
 

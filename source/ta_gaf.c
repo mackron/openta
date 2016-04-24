@@ -26,7 +26,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
         return false;
     }
 
-    if (!ta_hpi_seek(pFile, 1, ta_hpi_seek_origin_current)) {
+    if (!ta_hpi_seek(pFile, 1, ta_seek_origin_current)) {
         return false;
     }
 
@@ -39,7 +39,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
         return false;
     }
 
-    if (!ta_hpi_seek(pFile, 4, ta_hpi_seek_origin_current)) {
+    if (!ta_hpi_seek(pFile, 4, ta_seek_origin_current)) {
         return false;
     }
 
@@ -48,7 +48,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
         return false;
     }
 
-    if (!ta_hpi_seek(pFile, 4, ta_hpi_seek_origin_current)) {
+    if (!ta_hpi_seek(pFile, 4, ta_seek_origin_current)) {
         return false;
     }
 
@@ -58,7 +58,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
     if (pFrame->subframeCount == 0)
     {
         // No subframes. The next data to read is the raw image data.
-        if (!ta_hpi_seek(pFile, frameDataPtr, ta_hpi_seek_origin_start)) {
+        if (!ta_hpi_seek(pFile, frameDataPtr, ta_seek_origin_start)) {
             return false;
         }
 
@@ -190,7 +190,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
         {
             // <frameDataPtr> points to a list of pFrame->subframeCount pointers to frame headers.
             uint32_t framePtrPos = frameDataPtr + (iSubframe * 4);  // 4 = size of the pointer.
-            if (!ta_hpi_seek(pFile, framePtrPos, ta_hpi_seek_origin_start)) {
+            if (!ta_hpi_seek(pFile, framePtrPos, ta_seek_origin_start)) {
                 return false;
             }
 
@@ -199,7 +199,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                 return false;
             }
 
-            if (!ta_hpi_seek(pFile, frameStartPos, ta_hpi_seek_origin_start)) {
+            if (!ta_hpi_seek(pFile, frameStartPos, ta_seek_origin_start)) {
                 return false;
             }
 
@@ -305,7 +305,7 @@ ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
     for (uint32_t iEntry = 0; iEntry < entryCount; ++iEntry)
     {
         // Seek to the start of the entry...
-        if (!ta_hpi_seek(pFile, pEntryPointers[iEntry], ta_hpi_seek_origin_start)) {
+        if (!ta_hpi_seek(pFile, pEntryPointers[iEntry], ta_seek_origin_start)) {
             goto on_error;
         }
 
@@ -314,7 +314,7 @@ ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
         }
 
         // Don't care about the next 6 bytes.
-        if (!ta_hpi_seek(pFile, 6, ta_hpi_seek_origin_current)) {
+        if (!ta_hpi_seek(pFile, 6, ta_seek_origin_current)) {
             goto on_error;
         }
 
@@ -345,7 +345,7 @@ ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
             {
                 uint32_t framePointer = pFramePointers[iFrame] & 0xFFFFFFFF;
 
-                if (!ta_hpi_seek(pFile, framePointer, ta_hpi_seek_origin_start)) {
+                if (!ta_hpi_seek(pFile, framePointer, ta_seek_origin_start)) {
                     free(pFramePointers);
                     goto on_error;
                 }

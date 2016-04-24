@@ -300,7 +300,7 @@ bool ta_hpi__traverse_central_dir_subdir(ta_hpi__memory_stream* pCentralDirData,
         }
 
 
-        char filePath[DRFS_MAX_PATH];
+        char filePath[TA_MAX_PATH];
         drpath_copy_and_append(filePath, sizeof(filePath), parentDir, (const char*)pCentralDirData->pData + (entry.namePos - centralDirPosInArchive));
 
         if (!callback(&entry, filePath, pUserData)) {
@@ -575,10 +575,10 @@ bool ta_hpi_read(ta_hpi_file* pFile, void* pBufferOut, size_t bytesToRead, size_
     return true;
 }
 
-bool ta_hpi_seek(ta_hpi_file* pFile, int64_t bytesToSeek, ta_hpi_seek_origin origin)
+bool ta_hpi_seek(ta_hpi_file* pFile, int64_t bytesToSeek, ta_seek_origin origin)
 {
     uint64_t newPos = pFile->readPointer;
-    if (origin == ta_hpi_seek_origin_current)
+    if (origin == ta_seek_origin_current)
     {
         if ((int64_t)newPos + bytesToSeek >= 0) {
             newPos = (uint64_t)((int64_t)newPos + bytesToSeek);
@@ -587,12 +587,12 @@ bool ta_hpi_seek(ta_hpi_file* pFile, int64_t bytesToSeek, ta_hpi_seek_origin ori
             return false;
         }
     }
-    else if (origin == ta_hpi_seek_origin_start)
+    else if (origin == ta_seek_origin_start)
     {
         assert(bytesToSeek >= 0);
         newPos = (uint64_t)bytesToSeek;
     }
-    else if (origin == ta_hpi_seek_origin_end)
+    else if (origin == ta_seek_origin_end)
     {
         assert(bytesToSeek >= 0);
         if ((uint64_t)bytesToSeek <= pFile->sizeInBytes) {

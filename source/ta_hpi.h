@@ -61,7 +61,8 @@ typedef struct
 } ta_hpi_archive;
 
 // Structure representing a file within a HPI archive.
-typedef struct
+typedef struct ta_hpi_file ta_hpi_file;
+struct ta_hpi_file
 {
     // A pointer the archive that owns this file.
     ta_hpi_archive* pHPI;
@@ -75,15 +76,7 @@ typedef struct
     // The raw, uncompressed file data. For simplicity we just load the entire file at once onto the heap. This should not
     // be an issue on modern hardware.
     unsigned char pFileData[1];
-
-} ta_hpi_file;
-
-typedef enum
-{
-    ta_hpi_seek_origin_start,
-    ta_hpi_seek_origin_current,
-    ta_hpi_seek_origin_end,
-} ta_hpi_seek_origin;
+};
 
 
 // Opens the HPI file from the given callbacks.
@@ -109,7 +102,7 @@ void ta_hpi_close_file(ta_hpi_file* pFile);
 bool ta_hpi_read(ta_hpi_file* pFile, void* pBufferOut, size_t bytesToRead, size_t* pBytesReadOut);
 
 // Seeks the given file.
-bool ta_hpi_seek(ta_hpi_file* pFile, int64_t bytesToSeek, ta_hpi_seek_origin origin);
+bool ta_hpi_seek(ta_hpi_file* pFile, int64_t bytesToSeek, ta_seek_origin origin);
 
 // Retrieves the current read pointer.
 uint64_t ta_hpi_tell(ta_hpi_file* pFile);

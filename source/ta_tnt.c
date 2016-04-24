@@ -5,14 +5,19 @@
 // The number of tiles making up a chunk, on each dimension.
 #define TA_TNT_CHUNK_SIZE   16
 
-ta_tnt* ta_load_tnt_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics)
+ta_tnt* ta_load_tnt_from_file(ta_fs* pFS, const char* relativePath, ta_graphics_context* pGraphics)
 {
+    if (pFS == NULL || relativePath == NULL) {
+        return NULL;
+    }
+
+    ta_file* pFile = ta_open_file(pFS, relativePath);
     if (pFile == NULL) {
         return NULL;
     }
 
     uint32_t id;
-    if (!ta_hpi_read(pFile, &id, 4, NULL)) {
+    if (!ta_read_file(pFile, &id, 4, NULL)) {
         return NULL;
     }
 
@@ -22,63 +27,63 @@ ta_tnt* ta_load_tnt_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
 
 
     uint32_t width;
-    if (!ta_hpi_read(pFile, &width, 4, NULL)) {
+    if (!ta_read_file(pFile, &width, 4, NULL)) {
         return NULL;
     }
 
     uint32_t height;
-    if (!ta_hpi_read(pFile, &height, 4, NULL)) {
+    if (!ta_read_file(pFile, &height, 4, NULL)) {
         return NULL;
     }
 
 
     uint32_t mapdataPtr;
-    if (!ta_hpi_read(pFile, &mapdataPtr, 4, NULL)) {
+    if (!ta_read_file(pFile, &mapdataPtr, 4, NULL)) {
         return NULL;
     }
 
     uint32_t mapattrPtr;
-    if (!ta_hpi_read(pFile, &mapattrPtr, 4, NULL)) {
+    if (!ta_read_file(pFile, &mapattrPtr, 4, NULL)) {
         return NULL;
     }
 
     uint32_t tilegfxPtr;
-    if (!ta_hpi_read(pFile, &tilegfxPtr, 4, NULL)) {
+    if (!ta_read_file(pFile, &tilegfxPtr, 4, NULL)) {
         return NULL;
     }
 
     uint32_t tileCount;
-    if (!ta_hpi_read(pFile, &tileCount, 4, NULL)) {
+    if (!ta_read_file(pFile, &tileCount, 4, NULL)) {
         return NULL;
     }
 
     uint32_t specialItemsCount;
-    if (!ta_hpi_read(pFile, &specialItemsCount, 4, NULL)) {
+    if (!ta_read_file(pFile, &specialItemsCount, 4, NULL)) {
         return NULL;
     }
 
     uint32_t specialItemsPtr;
-    if (!ta_hpi_read(pFile, &specialItemsPtr, 4, NULL)) {
+    if (!ta_read_file(pFile, &specialItemsPtr, 4, NULL)) {
         return NULL;
     }
 
     int32_t seaLevel;
-    if (!ta_hpi_read(pFile, &seaLevel, 4, NULL)) {
+    if (!ta_read_file(pFile, &seaLevel, 4, NULL)) {
         return NULL;
     }
 
     uint32_t minimapPtr;
-    if (!ta_hpi_read(pFile, &minimapPtr, 4, NULL)) {
+    if (!ta_read_file(pFile, &minimapPtr, 4, NULL)) {
         return NULL;
     }
 
     uint32_t unknown;
-    if (!ta_hpi_read(pFile, &unknown, 4, NULL)) {
+    if (!ta_read_file(pFile, &unknown, 4, NULL)) {
         return NULL;
     }
 
     uint32_t padding[4];
-    if (!ta_hpi_read(pFile, padding, 4*4, NULL)) {
+    if (!ta_read_file(pFile, padding, 4*4, NULL)) {
         return NULL;
     }
 
@@ -101,7 +106,7 @@ ta_tnt* ta_load_tnt_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
     // within it. This property allows us to very easily determine which texture atlas a tile's graphics is contained in.
     //
     // Texture atlases are clamped to 1024x1024 in order to avoid too much waste, while also keeping the number of atlases down.
-    if (!ta_hpi_seek(pFile, tilegfxPtr, ta_hpi_seek_origin_start)) {
+    if (!ta_seek_file(pFile, tilegfxPtr, ta_seek_origin_start)) {
         goto on_error;
     }
 
@@ -150,7 +155,7 @@ ta_tnt* ta_load_tnt_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
             uint32_t atlasX = atlasTileCol * 32;
             uint32_t atlasY = atlasTileRow * 32;
 
-            if (!ta_hpi_read(pFile, pTileData, sizeof(pTileData), NULL)) {
+            if (!ta_read_file(pFile, pTileData, sizeof(pTileData), NULL)) {
                 free(pTextureData);
                 goto on_error;
             }
@@ -222,7 +227,7 @@ ta_tnt* ta_load_tnt_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
 
                 // Seek to the first tile in this row.
                 uint32_t firstTileOnRow = ((chunkY*TA_TNT_CHUNK_SIZE + tileY) * pTNT->width) + (chunkX*TA_TNT_CHUNK_SIZE);
-                if (!ta_hpi_seek(pFile, mapdataPtr + (firstTileOnRow * sizeof(uint16_t)), ta_hpi_seek_origin_start)) {
+                if (!ta_seek_file(pFile, mapdataPtr + (firstTileOnRow * sizeof(uint16_t)), ta_seek_origin_start)) {
                     goto on_error;
                 }
 
@@ -232,7 +237,7 @@ ta_tnt* ta_load_tnt_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
                     }
 
                     uint16_t tileIndex;
-                    if (!ta_hpi_read(pFile, &tileIndex, 2, NULL)) {
+                    if (!ta_read_file(pFile, &tileIndex, 2, NULL)) {
                         goto on_error;
                     }
 
@@ -284,17 +289,17 @@ ta_tnt* ta_load_tnt_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
 
     //// Features ////
 
-    if (!ta_hpi_seek(pFile, specialItemsPtr, ta_hpi_seek_origin_start)) {
+    if (!ta_seek_file(pFile, specialItemsPtr, ta_seek_origin_start)) {
         goto on_error;
     }
 
     for (uint32_t iSpecialItem = 0; iSpecialItem < specialItemsCount; ++iSpecialItem) {
-        if (!ta_hpi_seek(pFile, 4, ta_hpi_seek_origin_current)) {
+        if (!ta_seek_file(pFile, 4, ta_seek_origin_current)) {
             goto on_error;
         }
 
         char featureName[128];
-        if (!ta_hpi_read(pFile, featureName, 128, NULL)) {
+        if (!ta_read_file(pFile, featureName, 128, NULL)) {
             goto on_error;
         }
 
@@ -307,15 +312,15 @@ ta_tnt* ta_load_tnt_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
     //// Minimap ////
 
     // The minimap is a maximum of 252 x 252. We will use a 256x256 texture to keep it a power of 2.
-    if (!ta_hpi_seek(pFile, minimapPtr, ta_hpi_seek_origin_start)) {
+    if (!ta_seek_file(pFile, minimapPtr, ta_seek_origin_start)) {
         goto on_error;
     }
 
-    if (!ta_hpi_read(pFile, &pTNT->minimapWidth, 4, NULL)) {
+    if (!ta_read_file(pFile, &pTNT->minimapWidth, 4, NULL)) {
         goto on_error;
     }
 
-    if (!ta_hpi_read(pFile, &pTNT->minimapHeight, 4, NULL)) {
+    if (!ta_read_file(pFile, &pTNT->minimapHeight, 4, NULL)) {
         goto on_error;
     }
 
@@ -331,7 +336,7 @@ ta_tnt* ta_load_tnt_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
     // flip the image data because OpenGL...
     for (uint32_t y = 0; y < pTNT->minimapHeight; ++y) {
         uint8_t* pRow = pMinimapImageData + (y*minimapTextureWidth);
-        if (!ta_hpi_read(pFile, pRow, pTNT->minimapWidth, NULL)) {
+        if (!ta_read_file(pFile, pRow, pTNT->minimapWidth, NULL)) {
             free(pMinimapImageData);
             goto on_error;
         }
