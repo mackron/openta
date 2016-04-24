@@ -32,7 +32,7 @@ bool ta_fs__file_exists_in_list(const char* relativePath, size_t fileCount, ta_f
     return false;
 }
 
-void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRelativePath, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut)
+void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRelativePath, bool recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut)
 {
     assert(pFS != NULL);
     assert(directoryRelativePath != NULL);
@@ -90,6 +90,11 @@ void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRe
         (*ppFilesInOut)[*pFileCountInOut + fileCount] = fi;
         fileCount += 1;
 
+
+        if (recursive && ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            ta_fs__gather_files_in_native_directory(pFS, fi.relativePath, recursive, pFileCountInOut, ppFilesInOut);
+        }
+
     } while (FindNextFileA(hFind, &ffd));
 
     FindClose(hFind);
@@ -103,13 +108,15 @@ void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRe
 typedef struct
 {
     const char* archiveRelativePath;
-    const char* directoryRelativePath;
+    //const char* directoryRelativePath;
     size_t prevFileCount;
     size_t* pFileCountInOut;
     ta_fs_file_info** ppFilesInOut;
 } ta_fs__gather_files_in_archive_directory_data;
 
-bool ta_fs__gather_files_in_archive_directory_traversal_proc(ta_hpi_central_dir_entry* pEntry, const char* filePath, void* pUserData)
+void ta_fs__gather_files_in_archive_directory(ta_fs* pFS, const char* archiveRelativePath, const char* directoryRelativePath, bool recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut);
+
+bool ta_fs__gather_files_in_archive_directory_traversal_proc(ta_hpi_central_dir_entry* pEntry, const char* filePath, const char* directoryPath, void* pUserData)
 {
     ta_fs__gather_files_in_archive_directory_data* pTraversalData = pUserData;
     assert(pTraversalData != NULL);
@@ -120,8 +127,8 @@ bool ta_fs__gather_files_in_archive_directory_traversal_proc(ta_hpi_central_dir_
 
     ta_fs_file_info fi;
     strncpy_s(fi.archiveRelativePath, sizeof(fi.archiveRelativePath), pTraversalData->archiveRelativePath, _TRUNCATE);
-    //strncpy_s(fi.relativePath, sizeof(fi.relativePath), filePath, _TRUNCATE);
-    drpath_copy_and_append(fi.relativePath, sizeof(fi.relativePath), pTraversalData->directoryRelativePath, filePath);
+    //drpath_copy_and_append(fi.relativePath, sizeof(fi.relativePath), pTraversalData->directoryRelativePath, filePath);
+    drpath_copy_and_append(fi.relativePath, sizeof(fi.relativePath), directoryPath, filePath);
     fi.isDirectory = pEntry->isDirectory;
 
     // Skip past the file if it's already in the list.
@@ -141,7 +148,7 @@ bool ta_fs__gather_files_in_archive_directory_traversal_proc(ta_hpi_central_dir_
     return true;
 }
 
-void ta_fs__gather_files_in_archive_directory(ta_fs* pFS, const char* archiveRelativePath, const char* directoryRelativePath, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut)
+void ta_fs__gather_files_in_archive_directory(ta_fs* pFS, const char* archiveRelativePath, const char* directoryRelativePath, bool recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut)
 {
     assert(pFS != NULL);
     assert(directoryRelativePath != NULL);
@@ -160,11 +167,11 @@ void ta_fs__gather_files_in_archive_directory(ta_fs* pFS, const char* archiveRel
 
     ta_fs__gather_files_in_archive_directory_data traversalData;
     traversalData.archiveRelativePath = archiveRelativePath;
-    traversalData.directoryRelativePath = directoryRelativePath;
+    //traversalData.directoryRelativePath = directoryRelativePath;
     traversalData.prevFileCount = *pFileCountInOut;
     traversalData.pFileCountInOut = pFileCountInOut;
     traversalData.ppFilesInOut = ppFilesInOut;
-    ta_hpi_traverse_directory(pHPI, directoryRelativePath, ta_fs__gather_files_in_archive_directory_traversal_proc, &traversalData);
+    ta_hpi_traverse_directory(pHPI, directoryRelativePath, recursive, ta_fs__gather_files_in_archive_directory_traversal_proc, &traversalData);
 
     ta_close_hpi(pHPI);
 }
@@ -288,7 +295,7 @@ ta_fs* ta_create_file_system()
     // Now we need to search for .ufo files and register them. We only search the root directory for these.
     size_t fileCount = 0;
     ta_fs_file_info* pFiles = NULL;
-    ta_fs__gather_files_in_native_directory(pFS, "", &fileCount, &pFiles);
+    ta_fs__gather_files_in_native_directory(pFS, "", false, &fileCount, &pFiles);
     qsort(pFiles, fileCount, sizeof(*pFiles), ta_fs__file_info_qsort_callback);
 
     for (size_t iFile = 0; iFile < fileCount; ++iFile) {
@@ -487,7 +494,7 @@ bool ta_seek_file(ta_file* pFile, int64_t bytesToSeek, ta_seek_origin origin)
 
 //// Iteration ////
 
-size_t ta_fs__gather_files_in_directory(ta_fs* pFS, const char* directoryRelativePath, ta_fs_file_info** ppFilesInOut)
+size_t ta_fs__gather_files_in_directory(ta_fs* pFS, const char* directoryRelativePath, ta_fs_file_info** ppFilesInOut, bool recursive)
 {
     assert(pFS != NULL);
     assert(directoryRelativePath != NULL);
@@ -496,17 +503,17 @@ size_t ta_fs__gather_files_in_directory(ta_fs* pFS, const char* directoryRelativ
     size_t fileCount = 0;
 
     // Native directory has the highest priority.
-    ta_fs__gather_files_in_native_directory(pFS, directoryRelativePath, &fileCount, ppFilesInOut);
+    ta_fs__gather_files_in_native_directory(pFS, directoryRelativePath, recursive, &fileCount, ppFilesInOut);
     
     // Archives after the native directory.
     for (uint32_t iArchive = 0; iArchive < pFS->archiveCount; ++iArchive) {
-        ta_fs__gather_files_in_archive_directory(pFS, pFS->pArchives[iArchive].relativePath, directoryRelativePath, &fileCount, ppFilesInOut);
+        ta_fs__gather_files_in_archive_directory(pFS, pFS->pArchives[iArchive].relativePath, directoryRelativePath, recursive, &fileCount, ppFilesInOut);
     }
 
     return fileCount;
 }
 
-ta_fs_iterator* ta_fs_begin(ta_fs* pFS, const char* directoryRelativePath)
+ta_fs_iterator* ta_fs_begin(ta_fs* pFS, const char* directoryRelativePath, bool recursive)
 {
     if (pFS == NULL) {
         return NULL;
@@ -523,7 +530,7 @@ ta_fs_iterator* ta_fs_begin(ta_fs* pFS, const char* directoryRelativePath)
     }
 
     pIter->pFS = pFS;
-    pIter->_fileCount = ta_fs__gather_files_in_directory(pFS, directoryRelativePath, &pIter->_pFiles);
+    pIter->_fileCount = ta_fs__gather_files_in_directory(pFS, directoryRelativePath, &pIter->_pFiles, recursive);
 
     return pIter;
 }

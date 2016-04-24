@@ -294,7 +294,7 @@ bool ta_hpi__traverse_central_dir_subdir(ta_hpi__memory_stream* pCentralDirData,
         char filePath[TA_MAX_PATH];
         drpath_copy_and_append(filePath, sizeof(filePath), parentDir, (const char*)pCentralDirData->pData + (entry.namePos - centralDirPosInArchive));
 
-        if (!callback(&entry, filePath, pUserData)) {
+        if (!callback(&entry, filePath, "", pUserData)) {
             return false;
         }
 
@@ -589,8 +589,10 @@ uint64_t ta_hpi_size(ta_hpi_file* pFile)
 
 
 
-bool ta_hpi__find_file_traversal_callback(ta_hpi_central_dir_entry* pEntry, const char* filePath, void* pUserData)
+bool ta_hpi__find_file_traversal_callback(ta_hpi_central_dir_entry* pEntry, const char* filePath, const char* directoryPath, void* pUserData)
 {
+    (void)directoryPath;
+
     ta_hpi_ffi* ffi = pUserData;
 
     // It appears TA is not case sensitive.
@@ -614,7 +616,7 @@ bool ta_hpi_find_file(ta_hpi_archive* pHPI, const char* filePath, ta_hpi_ffi* ff
 }
 
 
-bool ta_hpi_traverse_directory(ta_hpi_archive* pHPI, const char* directoryPath, ta_hpi_central_dir_traversal_proc callback, void* pUserData)
+bool ta_hpi_traverse_directory(ta_hpi_archive* pHPI, const char* directoryPath, bool recursive, ta_hpi_central_dir_traversal_proc callback, void* pUserData)
 {
     ta_hpi_ffi ffi;
     if (!ta_hpi_find_file(pHPI, directoryPath, &ffi)) {
@@ -655,8 +657,19 @@ bool ta_hpi_traverse_directory(ta_hpi_archive* pHPI, const char* directoryPath, 
             return false;
         }
 
-        if (!callback(&entry, filePath, pUserData)) {
+        if (!callback(&entry, filePath, directoryPath, pUserData)) {
             return false;
+        }
+
+        if (recursive && entry.isDirectory) {
+            char subdirPath[TA_MAX_PATH];
+            if (!drpath_copy_and_append(subdirPath, sizeof(subdirPath), directoryPath, filePath)) {
+                return false;
+            }
+
+            if (!ta_hpi_traverse_directory(pHPI, subdirPath, recursive, callback, pUserData)) {
+                return false;
+            }
         }
     }
 

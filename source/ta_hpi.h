@@ -84,7 +84,7 @@ typedef struct
     uint32_t dataPos;
     uint8_t  isDirectory;
 } ta_hpi_central_dir_entry;
-typedef bool (* ta_hpi_central_dir_traversal_proc)(ta_hpi_central_dir_entry* pEntry, const char* filePath, void* pUserData);
+typedef bool (* ta_hpi_central_dir_traversal_proc)(ta_hpi_central_dir_entry* pEntry, const char* filePath, const char* directoryPath, void* pUserData);
 
 typedef struct
 {
@@ -130,5 +130,5 @@ uint64_t ta_hpi_size(ta_hpi_file* pFile);
 // Finds a file or directory in the given HPI archive.
 bool ta_hpi_find_file(ta_hpi_archive* pHPI, const char* filePath, ta_hpi_ffi* ffiOut);
 
-// Non-recursively traverses over every file and folder within the given folder.
-bool ta_hpi_traverse_directory(ta_hpi_archive* pHPI, const char* directoryPath, ta_hpi_central_dir_traversal_proc callback, void* pUserData);
+// Traverses over every file and folder within the given folder.
+bool ta_hpi_traverse_directory(ta_hpi_archive* pHPI, const char* directoryPath, bool recursive, ta_hpi_central_dir_traversal_proc callback, void* pUserData);

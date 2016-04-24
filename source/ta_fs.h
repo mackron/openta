@@ -121,7 +121,7 @@ typedef struct
 } ta_fs_iterator;
 
 // Begins iterating the contents of the given folder.
-ta_fs_iterator* ta_fs_begin(ta_fs* pFS, const char* directoryRelativePath);
+ta_fs_iterator* ta_fs_begin(ta_fs* pFS, const char* directoryRelativePath, bool recursive);
 
 // Ends the iteration.
 void ta_fs_end(ta_fs_iterator* pIter);
