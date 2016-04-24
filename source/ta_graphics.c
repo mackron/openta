@@ -5,6 +5,9 @@
 // Multitexture (at least 2 textures)
 // ARB_vertex_program / ARG_fragment_program
 
+// TODO:
+// - Experiment with alpha testing for handling transparency instead of alpha blending.
+
 #include <gl/gl.h>
 #include <gl/glext.h>
 
