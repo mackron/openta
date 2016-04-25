@@ -7,11 +7,6 @@
 // - The contents of an object are wrapped in { ... } pairs
 // - Each key/value pair is terminated with a semi-colon
 
-// TODO:
-// - Improve this by doing a single allocation of a mutable string and use offsets into this allocation
-//   for the name/value pairs. Place null terminators at ']', '=' and ';' characters. This will eliminate
-//   per-variable data movement.
-
 ta_config_obj* ta_allocate_config_object()
 {
     ta_config_obj* pObj = calloc(1, sizeof(*pObj));
@@ -27,6 +22,19 @@ bool ta_config_is_whitespace(char c)
     return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
 }
 
+char* ta_config_first_non_whitespace(char* str)
+{
+    if (str == NULL) {
+        return NULL;
+    }
+
+    while (str[0] != '\0' && !(str[0] != ' ' && str[0] != '\t' && str[0] != '\n' && str[0] != '\v' && str[0] != '\f' && str[0] != '\r')) {
+        str += 1;
+    }
+
+    return str;
+}
+
 bool ta_config_is_on_line_comment(const char* configString)
 {
     return configString[0] == '/' && configString[1] == '/';
@@ -37,7 +45,7 @@ bool ta_config_is_on_block_comment(const char* configString)
     return configString[0] == '/' && configString[1] == '*';
 }
 
-const char* ta_config_seek_to_end_of_line_comment(const char* configString)
+char* ta_config_seek_to_end_of_line_comment(char* configString)
 {
     while (*configString != '\0')
     {
@@ -49,7 +57,7 @@ const char* ta_config_seek_to_end_of_line_comment(const char* configString)
     return configString;
 }
 
-const char* ta_config_seek_to_end_of_block_comment(const char* configString)
+char* ta_config_seek_to_end_of_block_comment(char* configString)
 {
     while (*configString != '\0')
     {
@@ -64,12 +72,12 @@ const char* ta_config_seek_to_end_of_block_comment(const char* configString)
     return configString;
 }
 
-const char* ta_config_next_token(const char* configString)
+char* ta_config_next_token(char* configString)
 {
     while (*configString != '\0')
     {
         // Skip any whitespace.
-        configString = dr_first_non_whitespace(configString);
+        configString = ta_config_first_non_whitespace(configString);
         if (configString == NULL) {
             return NULL;
         }
@@ -99,11 +107,11 @@ const char* ta_config_next_token(const char* configString)
     return configString;
 }
 
-ta_config_var* ta_config_push_new_var(ta_config_obj* pParentObj, const char* nameBeg, const char* nameEnd, const char* valueBeg, const char* valueEnd)
+ta_config_var* ta_config_push_new_var(ta_config_obj* pParentObj, const char* name, const char* value)
 {
     assert(pParentObj != NULL);
-    assert(nameBeg != NULL);
-    assert(nameEnd != NULL);
+    assert(name != NULL);
+    assert(value != NULL);
 
     unsigned int chunkSize = 16;
     if (pParentObj->bufferSize <= pParentObj->varCount)
@@ -122,30 +130,29 @@ ta_config_var* ta_config_push_new_var(ta_config_obj* pParentObj, const char* nam
 
     ta_config_var* pVar = pParentObj->pVars + pParentObj->varCount;
     pVar->pObject = NULL;
-    strncpy_s(pVar->name, sizeof(pVar->name), nameBeg, nameEnd - nameBeg);
-
-    if (valueBeg) {
-        strncpy_s(pVar->value, sizeof(pVar->value), valueBeg, valueEnd - valueBeg);
-    } else {
-        pVar->value[0] = '\0';
-    }
+    pVar->name = name;
+    pVar->value = value;
     
     pParentObj->varCount += 1;
     return pVar;
 }
 
-ta_config_obj* ta_config_push_new_subobj(ta_config_obj* pParentObj, const char* nameBeg, const char* nameEnd)
+ta_config_obj* ta_config_push_new_subobj(ta_config_obj* pParentObj, const char* name, const char* value)
 {
     assert(pParentObj != NULL);
-    assert(nameBeg != NULL);
-    assert(nameEnd != NULL);
+    assert(name != NULL);
+    assert(value != NULL);
+
+    // The value should always be an empty string.
+    assert(value[0] == '\0');
+
 
     ta_config_obj* pSubObj = ta_allocate_config_object();
     if (pSubObj == NULL) {
         return NULL;
     }
 
-    ta_config_var* pVar = ta_config_push_new_var(pParentObj, nameBeg, nameEnd, NULL, NULL);
+    ta_config_var* pVar = ta_config_push_new_var(pParentObj, name, value);
     if (pVar == NULL) {
         return NULL;
     }
@@ -155,7 +162,7 @@ ta_config_obj* ta_config_push_new_subobj(ta_config_obj* pParentObj, const char* 
 }
 
 
-const char* ta_parse_config_object(const char* configString, ta_config_obj* pObj)
+char* ta_parse_config_object(char* configString, ta_config_obj* pObj)
 {
     // This is the where the real meat of the parsing is done. It assumes the config string is sitting on the byte just
     // after the opening curly bracket of the object.
@@ -176,8 +183,8 @@ const char* ta_parse_config_object(const char* configString, ta_config_obj* pObj
             // Beginning a sub-object. A sub-object is a variable of the parent object.
             configString += 1;  // Skip past the opening "["
 
-            const char* nameBeg = configString;
-            const char* nameEnd = nameBeg;
+            char* nameBeg = configString;
+            char* nameEnd = nameBeg;
             while (*nameEnd != ']') {
                 if (*nameEnd == '\0') {
                     return NULL;   // Unexpected end of file.
@@ -190,6 +197,9 @@ const char* ta_parse_config_object(const char* configString, ta_config_obj* pObj
                 }
                 nameEnd += 1;
             }
+
+            // Null terminate the name.
+            *nameEnd = '\0';
 
 
             // Expecting an opening curly bracket.
@@ -204,7 +214,7 @@ const char* ta_parse_config_object(const char* configString, ta_config_obj* pObj
 
 
             // We are beginning a sub-object so we'll need to call this recursively.
-            ta_config_obj* pSubObj = ta_config_push_new_subobj(pObj, nameBeg, nameEnd);
+            ta_config_obj* pSubObj = ta_config_push_new_subobj(pObj, nameBeg, nameEnd);     // <-- Set the value to "nameEnd" which simply makes it an empty string rather than NULL which is a bit safer.
             if (pSubObj == NULL) {
                 return NULL;    // Failed to allocate the sub-object.
             }
@@ -221,8 +231,8 @@ const char* ta_parse_config_object(const char* configString, ta_config_obj* pObj
                 return NULL;    // Unexpected token. Variables must begin with a character or underscore.
             }
 
-            const char* nameBeg = configString++;
-            const char* nameEnd = configString;
+            char* nameBeg = configString++;
+            char* nameEnd = configString;
             while (*configString != '=') {
                 if (*configString == '\0') {
                     return NULL;    // Unexpected end of file.
@@ -244,10 +254,14 @@ const char* ta_parse_config_object(const char* configString, ta_config_obj* pObj
                 return NULL;    // Expecting '='.
             }
 
-            configString += 1;  // Skip past the '='.
+            // Null terminate the name.
+            *nameEnd = '\0';
 
-            const char* valueBeg = configString++;
-            const char* valueEnd = configString;
+            // Skip past the '='.
+            configString += 1;
+
+            char* valueBeg = configString++;
+            char* valueEnd = configString;
             while (*configString != ';') {
                 if (*configString == '\0') {
                     return NULL;    // Unexpected end of file.
@@ -269,9 +283,13 @@ const char* ta_parse_config_object(const char* configString, ta_config_obj* pObj
                 return NULL;    // Expecting ';'.
             }
 
-            configString += 1;  // Skip past the ';'
+            // Null terminate the value.
+            *valueEnd = '\0';
 
-            ta_config_var* pVar = ta_config_push_new_var(pObj, nameBeg, nameEnd, valueBeg, valueEnd);
+            // Skip past the ';'
+            configString += 1;
+
+            ta_config_var* pVar = ta_config_push_new_var(pObj, nameBeg, valueBeg);
             if (pVar == NULL) {
                 return NULL;
             }
@@ -281,19 +299,29 @@ const char* ta_parse_config_object(const char* configString, ta_config_obj* pObj
     return configString;
 }
 
-ta_config_obj* ta_parse_config(const char* configString)
+ta_config_obj* ta_parse_config_from_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath)
 {
+    if (pFS == NULL || fileRelativePath == NULL) {
+        return NULL;
+    }
+
+    ta_config_obj* pConfig = ta_allocate_config_object();
+    if (pConfig == NULL) {
+        return NULL;
+    }
+
+    size_t configStringLength;
+    char* configString = ta_open_and_read_specific_text_file(pFS, archiveRelativePath, fileRelativePath, &configStringLength);
     if (configString == NULL) {
+        free(pConfig);
         return NULL;
     }
 
-    ta_config_obj* pRootObj = ta_allocate_config_object();
-    if (pRootObj == NULL) {
-        return NULL;
-    }
+    pConfig->_configString = configString;
+    pConfig->_ownsConfigString = true;
 
-    ta_parse_config_object(configString, pRootObj);
-    return pRootObj;
+    ta_parse_config_object(pConfig->_configString, pConfig);
+    return pConfig;
 }
 
 void ta_delete_config(ta_config_obj* pConfig)
@@ -301,6 +329,11 @@ void ta_delete_config(ta_config_obj* pConfig)
     if (pConfig == NULL) {
         return;
     }
+
+    if (pConfig->_configString != NULL && pConfig->_ownsConfigString) {
+        ta_fs_free(pConfig->_configString);
+    }
+
 
     // Sub objects need to be deleted recursively.
     for (unsigned int iVar = 0; iVar < pConfig->varCount; ++iVar) {

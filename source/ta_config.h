@@ -3,10 +3,10 @@
 struct ta_config_var
 {
     // The name of the variable.
-    char name[64];
+    const char* name;
 
     // The value of the variable, as a string. If it's an object, this will be an empty string.
-    char value[64];
+    const char* value;
 
     // A pointer to the sub-object, if applicable.
     ta_config_obj* pObject;
@@ -22,12 +22,19 @@ struct ta_config_obj
 
     // The list of variables making up the object.
     ta_config_var* pVars;
+
+
+    // Internal use only. The whole config string. This is only set for the root object.
+    char* _configString;
+    
+    // Internal use only. Whether or not the object owns the config string and is responsible for freeing it's memory when it's no longer needed.
+    bool _ownsConfigString;
 };
 
 // Parses a script.
 //
 // Configs are immutable after parsing.
-ta_config_obj* ta_parse_config(const char* configString);
+ta_config_obj* ta_parse_config_from_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath);
 
 // Deletes the given config object.
 void ta_delete_config(ta_config_obj* pConfig);
