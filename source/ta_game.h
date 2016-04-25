@@ -27,6 +27,12 @@ struct ta_game
     draudio_context* pAudioContext;
 
 
+    // The features library. This is initialized once at startup from every TDF file in the "features" directory, and it's sub-directories. The
+    // features library is immutable once it's initialized.
+    ta_features_library* pFeatures;
+
+
+
     // Whether or not the middle mouse button is down.
     bool isMMBDown;
 

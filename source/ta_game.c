@@ -24,18 +24,7 @@ bool ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut)
     return true;
 }
 
-bool ta_load_features(ta_game* pGame, const char* directoryPath)
-{
-    ta_fs_iterator* pIter = ta_fs_begin(pGame->pFS, directoryPath, true);
-    while (ta_fs_next(pIter)) {
-        if (!pIter->fileInfo.isDirectory) {
-            printf("FILE: %s/%s\n", pIter->fileInfo.archiveRelativePath, pIter->fileInfo.relativePath);
-        }
-    }
-    ta_fs_end(pIter);
 
-    return true;
-}
 
 ta_game* ta_create_game(dr_cmdline cmdline)
 {
@@ -89,7 +78,8 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
 
     // Features.
-    if (!ta_load_features(pGame, "features")) {
+    pGame->pFeatures = ta_create_features_library(pGame->pFS);
+    if (pGame->pFeatures == NULL) {
         goto on_error;
     }
 

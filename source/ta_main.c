@@ -63,7 +63,10 @@
 #define TA_TRANSPARENT_COLOR 240
 
 // The maximum length of a path. This should rarely need to be increased, but try it if you encounter truncation issues.
-#define TA_MAX_PATH 128
+#define TA_MAX_PATH 256
+
+// The maximum length of a feature name.
+#define TA_MAX_FEATURE_NAME 64
 
 
 // Total Annihilation headers.
@@ -78,6 +81,7 @@
 #include "ta_gaf.h"
 #include "ta_tnt.h"
 #include "ta_config.h"
+#include "ta_features.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -97,7 +101,8 @@
 #define STB_RECT_PACK_IMPLEMENTATION
 #include "stb_rect_pack.h"
 
-
+// Bob Jenkins' lookup3 hash
+#include "lookup3.c"
 
 // Total Annihilation source files.
 #include "ta_platform_layer.c"
@@ -108,6 +113,7 @@
 #include "ta_gaf.c"
 #include "ta_tnt.c"
 #include "ta_config.c"
+#include "ta_features.c"
 
 int ta_main(dr_cmdline cmdline)
 {
