@@ -65,3 +65,39 @@ static TA_INLINE uint32_t ta_next_power_of_2(uint32_t value)
         
     return value + 1;
 }
+
+
+//// Memory Stream ////
+
+typedef struct
+{
+    // A pointer to the start of the memory buffer.
+    char* pData;
+
+    // The size of the data.
+    size_t dataSize;
+
+    // The current read position.
+    size_t currentReadPos;
+
+} ta_memory_stream;
+
+// Creates a new memory stream.
+ta_memory_stream ta_create_memory_stream(void* pData, size_t dataSize);
+
+// Reads data from a memory stream.
+size_t ta_memory_stream_read(ta_memory_stream* pStream, void* pDataOut, size_t bytesToRead);
+
+// Reads data from a memory stream, but does not move thre read position.
+size_t ta_memory_stream_peek(ta_memory_stream* pStream, void* pDataOut, size_t bytesToRead);
+
+// Seeks to the given position.
+bool ta_memory_stream_seek(ta_memory_stream* pStream, int64_t bytesToSeek, ta_seek_origin origin);
+
+// A simple helper for retrieving the current read position of a memory stream.
+size_t ta_memory_stream_tell(ta_memory_stream* pStream);
+
+// Helper for writing a uint32 at the current position. This replaces the next 4 bytes of data - it does NOT insert it. This will move
+// the read position to past the value. This will fail if the stream is at the end and there is no room to fit the value. The stream
+// does not expand.
+bool ta_memory_stream_write_uint32(ta_memory_stream* pStream, uint32_t value);

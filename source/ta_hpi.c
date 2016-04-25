@@ -76,21 +76,6 @@ typedef struct
 } ta_hpi__memory_stream;
 
 
-static TA_INLINE void ta_hpi__decrypt(uint8_t* pData, size_t sizeInBytes, uint32_t decryptionKey, uint32_t firstBytePos)
-{
-    assert(pData != NULL);
-
-    if (decryptionKey != 0) {
-        for (size_t i = 0; i < sizeInBytes; ++i) {
-            pData[i] = (uint8_t)((firstBytePos + i) ^ decryptionKey) ^ ~pData[i];
-        }
-    } else {
-        for (size_t i = 0; i < sizeInBytes; ++i) {
-            pData[i] = pData[i];
-        }
-    }
-}
-
 static size_t ta_hpi__read_archive(ta_hpi_archive* pHPI, void* pBufferOut, size_t bytesToRead)
 {
     assert(pHPI != NULL);
@@ -101,7 +86,7 @@ static size_t ta_hpi__read_archive(ta_hpi_archive* pHPI, void* pBufferOut, size_
     // The data is encrypted which creates unnecessary inefficiency. Sigh.
     size_t bytesRead = pHPI->onRead(pHPI->pUserData, pBufferOut, bytesToRead);
     if (pHPI->header.key != 0) {
-        ta_hpi__decrypt(pBufferOut, bytesRead, pHPI->decryptionKey, pHPI->currentPos);
+        ta_hpi_decrypt(pBufferOut, bytesRead, pHPI->decryptionKey, pHPI->currentPos);
     }
     
 

@@ -1,16 +1,31 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-typedef enum
+#define TA_OPEN_FILE_WITH_NULL_TERMINATOR    0x0001      // Opens a file with a null terminator at the end.
+
+enum ta_seek_origin
 {
     ta_seek_origin_start,
     ta_seek_origin_current,
     ta_seek_origin_end,
-} ta_seek_origin;
+};
 
 typedef struct
 {
     // The relative path of the archive on the real file system. This is relative to the executable.
     char relativePath[TA_MAX_PATH];
+
+    // The decryption key.
+    uint32_t decryptionKey;
+
+    // The size in bytes of the central directory.
+    uint32_t centralDirectorySize;
+
+    // The archive's central directory. This is exactly as contained within the archive file, but with the name pointers
+    // adjusted such that they can be used as offsets into pCentralDirectory directly. When a file is being loaded, an
+    // archive's central directory is used to determine whether or not that file is contained within the archive. By
+    // keeping this in memory we can avoid unnecessarilly opening and decrypting the archive for whenever we need to
+    // check for a single file.
+    char* pCentralDirectory;
 
 } ta_fs_archive;
 
@@ -40,15 +55,32 @@ struct ta_fs
 
 struct ta_file
 {
+    // The memory stream that's used to from data from the file. Internal use only.
+    ta_memory_stream _stream;
+
+
     // The file system that owns this file.
     ta_fs* pFS;
 
+
     // A handle to the file if it is contained within a HPI archive. If it's a file on the real file system this will
     // be set to NULL and pSTDIOFile will be non-null.
-    ta_hpi_file* pHPIFile;
+    //ta_hpi_file* pHPIFile;
 
     // A handle to the file if it is contained within the real file system.
-    FILE* pSTDIOFile;
+    //FILE* pSTDIOFile;
+
+
+    
+
+    // The size of the file.
+    size_t sizeInBytes;
+
+    // The raw uncompressed and unencrypted file data. The rationale for keeping this on the heap is that it greatly
+    // simplifies the file system abstraction.
+    //
+    // The data is intentionally mutable so things can modify the data in-place if necessary.
+    char pFileData[1];
 };
 
 
@@ -60,10 +92,10 @@ void ta_delete_file_system(ta_fs* pFS);
 
 
 // Opens the file at the given path from the specified archive file.
-ta_file* ta_open_specific_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath);
+ta_file* ta_open_specific_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, unsigned int options);
 
 // Searches for the given file and opens the first occurance from the highest priority archive.
-ta_file* ta_open_file(ta_fs* pFS, const char* relativePath);
+ta_file* ta_open_file(ta_fs* pFS, const char* relativePath, unsigned int options);
 
 // Closes the given file.
 void ta_close_file(ta_file* pFile);
@@ -77,15 +109,15 @@ bool ta_seek_file(ta_file* pFile, int64_t offset, ta_seek_origin origin);
 
 
 // Optimized helper function for opening a file and reading it's contents. Free the returned buffer with ta_fs_free().
-void* ta_open_and_read_specific_binary_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, size_t* pSizeOut);
+//void* ta_open_and_read_specific_binary_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, size_t* pSizeOut);
 
 // Optimized helper function for opening a file and reading it's contents as a null terminated string. Free the
 // returned buffer with ta_fs_free().
-char* ta_open_and_read_specific_text_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, size_t* pLengthOut);
+//char* ta_open_and_read_specific_text_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, size_t* pLengthOut);
 
 
 // Free's memory that was allocated by the file system.
-void ta_fs_free(void* pBuffer);
+//void ta_fs_free(void* pBuffer);
 
 
 // Iteration should work like the following:
@@ -140,3 +172,22 @@ void ta_fs_end(ta_fs_iterator* pIter);
 
 // Goes to the next file itration.
 bool ta_fs_next(ta_fs_iterator* pIter);
+
+
+
+//// HPI Helpers ////
+
+// LZ77 decompression for HPI archives.
+bool ta_hpi_decompress_lz77(const unsigned char* pIn, uint32_t compressedSize, unsigned char* pOut, uint32_t uncompressedSize);
+
+// ZLib decompression for HPI archives.
+bool ta_hpi_decompress_zlib(const void* pIn, uint32_t compressedSize, void* pOut, uint32_t uncompressedSize);
+
+// Decrypts data from a HPI archive.
+void ta_hpi_decrypt(uint8_t* pData, size_t sizeInBytes, uint32_t decryptionKey, uint32_t firstBytePos);
+
+// Reads and decrypts data from a HPI archive file.
+size_t ta_hpi_read_and_decrypt(FILE* pFile, void* pBufferOut, size_t bytesToRead, uint32_t decryptionKey);
+
+// Reads, decrypts and decompresses data from a HPI archive file.
+size_t ta_hpi_read_and_decrypt_compressed(FILE* pFile, void* pBufferOut, size_t uncompressedBytesToRead, uint32_t decryptionKey);

@@ -105,6 +105,7 @@
 #include "lookup3.c"
 
 // Total Annihilation source files.
+#include "ta_misc.c"
 #include "ta_platform_layer.c"
 #include "ta_graphics.c"
 #include "ta_game.c"

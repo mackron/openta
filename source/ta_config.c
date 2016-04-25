@@ -310,17 +310,13 @@ ta_config_obj* ta_parse_config_from_file(ta_fs* pFS, const char* archiveRelative
         return NULL;
     }
 
-    size_t configStringLength;
-    char* configString = ta_open_and_read_specific_text_file(pFS, archiveRelativePath, fileRelativePath, &configStringLength);
-    if (configString == NULL) {
+    pConfig->_pFile = ta_open_specific_file(pFS, archiveRelativePath, fileRelativePath, TA_OPEN_FILE_WITH_NULL_TERMINATOR);
+    if (pConfig->_pFile == NULL) {
         free(pConfig);
         return NULL;
     }
 
-    pConfig->_configString = configString;
-    pConfig->_ownsConfigString = true;
-
-    ta_parse_config_object(pConfig->_configString, pConfig);
+    ta_parse_config_object(pConfig->_pFile->pFileData, pConfig);
     return pConfig;
 }
 
@@ -330,8 +326,8 @@ void ta_delete_config(ta_config_obj* pConfig)
         return;
     }
 
-    if (pConfig->_configString != NULL && pConfig->_ownsConfigString) {
-        ta_fs_free(pConfig->_configString);
+    if (pConfig->_pFile) {
+        ta_close_file(pConfig->_pFile);
     }
 
 

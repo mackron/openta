@@ -2,7 +2,7 @@
 
 bool ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut)
 {
-    ta_file* pPaletteFile = ta_open_file(pFS, filePath);
+    ta_file* pPaletteFile = ta_open_file(pFS, filePath, 0);
     if (pPaletteFile == NULL) {
         return false;
     }

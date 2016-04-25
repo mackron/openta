@@ -140,3 +140,8 @@ void* ta_hpi_open_and_read_binary_file(ta_hpi_archive* pHPI, const char* fileNam
 // Optimized helper function for opening a file and reading it's contents as a null terminated string. Free the
 // returned buffer with ta_hpi_free().
 char* ta_hpi_open_and_read_text_file(ta_hpi_archive* pHPI, const char* fileName, size_t* pLengthOut);
+
+
+
+// Helper for decrypting data in a HPI file.
+void ta_hpi_decrypt(uint8_t* pData, size_t sizeInBytes, uint32_t decryptionKey, uint32_t firstBytePos);

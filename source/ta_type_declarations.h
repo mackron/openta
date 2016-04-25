@@ -13,3 +13,5 @@ typedef struct ta_file ta_file;
 typedef struct ta_hpi_file ta_hpi_file;
 typedef struct ta_feature_desc ta_feature_desc;
 typedef struct ta_features_library ta_features_library;
+
+typedef enum ta_seek_origin ta_seek_origin;

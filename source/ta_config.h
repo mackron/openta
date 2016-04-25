@@ -24,11 +24,8 @@ struct ta_config_obj
     ta_config_var* pVars;
 
 
-    // Internal use only. The whole config string. This is only set for the root object.
-    char* _configString;
-    
-    // Internal use only. Whether or not the object owns the config string and is responsible for freeing it's memory when it's no longer needed.
-    bool _ownsConfigString;
+    // Internal use only. The file used to load the config. This is only set for the root object.
+    ta_file* _pFile;
 };
 
 // Parses a script.

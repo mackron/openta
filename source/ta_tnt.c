@@ -11,7 +11,7 @@ ta_tnt* ta_load_tnt_from_file(ta_fs* pFS, const char* relativePath, ta_graphics_
         return NULL;
     }
 
-    ta_file* pFile = ta_open_file(pFS, relativePath);
+    ta_file* pFile = ta_open_file(pFS, relativePath, 0);
     if (pFile == NULL) {
         return NULL;
     }
