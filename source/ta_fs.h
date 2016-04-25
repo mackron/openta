@@ -76,6 +76,18 @@ bool ta_read_file(ta_file* pFile, void* pBufferOut, size_t bytesToRead, size_t* 
 bool ta_seek_file(ta_file* pFile, int64_t offset, ta_seek_origin origin);
 
 
+// Optimized helper function for opening a file and reading it's contents. Free the returned buffer with ta_fs_free().
+void* ta_open_and_read_specific_binary_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, size_t* pSizeOut);
+
+// Optimized helper function for opening a file and reading it's contents as a null terminated string. Free the
+// returned buffer with ta_fs_free().
+char* ta_open_and_read_specific_text_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, size_t* pLengthOut);
+
+
+// Free's memory that was allocated by the file system.
+void ta_fs_free(void* pBuffer);
+
+
 // Iteration should work like the following:
 //
 // ta_fs_iterator* pIter = ta_fs_begin(pFS, "my/directory");

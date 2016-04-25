@@ -17,6 +17,24 @@ FILE* ta_fopen(const char* filePath, const char* openMode)
     return pFile;
 }
 
+int ta_fseek(FILE* pFile, int64_t offset, int origin)
+{
+#ifdef _WIN32
+        return _fseeki64(pFile, offset, origin) == 0;
+#else
+        return fseek64(pFile, offset, origin) == 0;
+#endif
+}
+
+int64_t ta_ftell(FILE* pFile)
+{
+#ifdef _WIN32
+    return _ftelli64(pFile) == 0;
+#else
+    return ftell64(pFile) == 0;
+#endif
+}
+
 bool ta_fs__file_exists_in_list(const char* relativePath, size_t fileCount, ta_fs_file_info* pFiles)
 {
     if (pFiles == NULL) {
@@ -483,12 +501,124 @@ bool ta_seek_file(ta_file* pFile, int64_t bytesToSeek, ta_seek_origin origin)
         default: break;
         }
 
-#ifdef _WIN32
-        return _fseeki64(pFile->pSTDIOFile, bytesToSeek, originSTDIO) == 0;
-#else
-        return fseek64(pFile->pSTDIOFile, bytesToSeek, originSTDIO) == 0;
-#endif
+        return ta_fseek(pFile->pSTDIOFile, bytesToSeek, originSTDIO) == 0;
     }
+}
+
+
+void* ta_open_and_read_specific_file__generic_stdio(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, size_t* pSizeOut, size_t extraBytes)
+{
+    assert(pFS != NULL);
+
+    // No archive file was specified. Try opening from the native file system.
+    char fileAbsolutePath[DRFS_MAX_PATH];
+    if (!drpath_copy_and_append(fileAbsolutePath, sizeof(fileAbsolutePath), pFS->rootDir, fileRelativePath)) {
+        return NULL;
+    }
+
+    FILE* pSTDIOFile = ta_fopen(fileAbsolutePath, "rb");
+    if (pSTDIOFile == NULL) {
+        return NULL;
+    }
+
+    ta_fseek(pSTDIOFile, 0, SEEK_END);
+    int64_t sizeInBytes = ta_ftell(pSTDIOFile);
+    ta_fseek(pSTDIOFile, 0, SEEK_SET);
+
+    if (sizeInBytes > (SIZE_MAX - extraBytes)) {
+        fclose(pSTDIOFile); // File's too big.
+        return NULL;
+    }
+
+    void* pData = malloc((size_t)sizeInBytes + extraBytes);
+    if (pData == NULL) {
+        fclose(pSTDIOFile); // Failed to allocate memory. Might have run out.
+        return NULL;
+    }
+
+    size_t bytesRead = fread(pData, 1, (size_t)sizeInBytes, pSTDIOFile);
+    fclose(pSTDIOFile);
+
+    if (pSizeOut) {
+        *pSizeOut = bytesRead;
+    }
+
+    return pData;
+}
+
+void* ta_open_and_read_specific_binary_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, size_t* pSizeOut)
+{
+    if (pFS == NULL) {
+        return NULL;
+    }
+
+    if (archiveRelativePath == NULL || archiveRelativePath[0] == '\0')
+    {
+        // No archive file was specified. Try opening from the native file system.
+        return ta_open_and_read_specific_file__generic_stdio(pFS, archiveRelativePath, fileRelativePath, pSizeOut, 0);
+    }
+    else
+    {
+        // An archive file was specified. Try opening from that archive.
+        char archiveAbsolutePath[DRFS_MAX_PATH];
+        if (!drpath_copy_and_append(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, archiveRelativePath)) {
+            return NULL;
+        }
+
+        ta_hpi_archive* pHPI = ta_open_hpi_from_file(archiveAbsolutePath);
+        if (pHPI == NULL) {
+            return NULL;
+        }
+
+        void* pFileData = ta_hpi_open_and_read_binary_file(pHPI, fileRelativePath, pSizeOut);
+        ta_close_hpi(pHPI);
+
+        return pFileData;
+    }
+}
+
+char* ta_open_and_read_specific_text_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, size_t* pLengthOut)
+{
+    if (pFS == NULL) {
+        return NULL;
+    }
+
+    if (archiveRelativePath == NULL || archiveRelativePath[0] == '\0')
+    {
+        // No archive file was specified. Try opening from the native file system.
+        char* pFileData = ta_open_and_read_specific_file__generic_stdio(pFS, archiveRelativePath, fileRelativePath, pLengthOut, 1);  // <-- '1' means allocate 1 extra byte at the end. Used for the null terminator.
+        if (pFileData == NULL) {
+            return NULL;
+        }
+
+        // Just need to null terminate.
+        pFileData[*pLengthOut] = '\0';
+        return pFileData;
+    }
+    else
+    {
+        // An archive file was specified. Try opening from that archive.
+        char archiveAbsolutePath[DRFS_MAX_PATH];
+        if (!drpath_copy_and_append(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, archiveRelativePath)) {
+            return NULL;
+        }
+
+        ta_hpi_archive* pHPI = ta_open_hpi_from_file(archiveAbsolutePath);
+        if (pHPI == NULL) {
+            return NULL;
+        }
+
+        char* pFileData = ta_hpi_open_and_read_text_file(pHPI, fileRelativePath, pLengthOut);
+        ta_close_hpi(pHPI);
+
+        return pFileData;
+    }
+}
+
+
+void ta_fs_free(void* pBuffer)
+{
+    free(pBuffer);
 }
 
 

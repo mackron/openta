@@ -1,9 +1,10 @@
 // Credits to http://units.tauniverse.com/tutorials/tadesign/tadesign/ta-hpi-fmt.txt for explaining the HPI format.
 
 // L7ZZ decompression.
-bool ta_hpi__decompress_lz77(const unsigned char* pIn, uint32_t compressedSize, unsigned char* pOut)
+bool ta_hpi__decompress_lz77(const unsigned char* pIn, uint32_t compressedSize, unsigned char* pOut, uint32_t uncompressedSize)
 {
     const unsigned char* pInEnd = pIn + compressedSize;
+    const unsigned char* pOutEnd = pOut + uncompressedSize;
 
     unsigned char block[4096];
     unsigned int iblock = 1;
@@ -24,6 +25,11 @@ bool ta_hpi__decompress_lz77(const unsigned char* pIn, uint32_t compressedSize, 
         {
             unsigned int offset = (pIn[1] << 4) | ((pIn[0] & 0xF0) >> 4);
             unsigned int length = (pIn[0] & 0x0F) + 2;
+
+            if (offset == 0) {
+                assert(pOut == pOutEnd);
+                break;    // Done.
+            }
 
             for (unsigned int i = 0; i < length; ++i)
             {
@@ -200,10 +206,10 @@ static bool ta_hpi__read_archive_compressed(ta_hpi_archive* pHPI, void* pBufferO
         {
             case 1: // LZ77
             {
-                if (!ta_hpi__decompress_lz77(pCompressedData, compressedSize, (char*)pBufferOut + (iChunk * 65536))) {
+                if (!ta_hpi__decompress_lz77(pCompressedData, compressedSize, (char*)pBufferOut + (iChunk * 65536), uncompressedSize)) {
                     free(pCompressedData);
                     result = false;
-            goto finished;
+                    goto finished;
                 }
             } break;
 
@@ -478,7 +484,7 @@ ta_hpi_file* ta_hpi_open_file(ta_hpi_archive* pHPI, const char* fileName)
     //  1 - LZ77
     //  2 - Zlib
     if (compressionType == 0) {
-        if (!ta_hpi__read_archive(pHPI, pFile->pFileData, pFile->sizeInBytes) != pFile->sizeInBytes) {
+        if (ta_hpi__read_archive(pHPI, pFile->pFileData, pFile->sizeInBytes) != pFile->sizeInBytes) {
             free(pFile);
             return NULL;
         }
@@ -674,4 +680,107 @@ bool ta_hpi_traverse_directory(ta_hpi_archive* pHPI, const char* directoryPath, 
     }
 
     return true;
+}
+
+
+void* ta_hpi__open_and_read_file__generic(ta_hpi_archive* pHPI, const char* fileName, size_t* pSizeOut, size_t extraBytes)
+{
+    if (pSizeOut) {
+        *pSizeOut = 0;
+    }
+
+    if (pHPI == NULL) {
+        return NULL;
+    }
+
+    // The first thing we need to do is find the file.
+    ta_hpi_ffi ffi;
+    if (!ta_hpi_find_file(pHPI, fileName, &ffi)) {
+        return NULL;
+    }
+
+    // We have found the file.
+    if (ffi.entry.isDirectory) {
+        return NULL;    // Don't want to try opening directories.
+    }
+
+
+    ta_hpi__memory_stream centralDirStream;
+    centralDirStream.pData = pHPI->pExtraData;
+    centralDirStream.dataSize = pHPI->header.directorySize;
+    centralDirStream.currentReadPos = ffi.entry.dataPos - pHPI->header.startPos;
+
+    uint32_t dataOffset;
+    if (ta_hpi__read_from_memory(&centralDirStream, &dataOffset, 4) != 4) {
+        return NULL;
+    }
+
+    uint32_t dataSize;
+    if (ta_hpi__read_from_memory(&centralDirStream, &dataSize, 4) != 4) {
+        return NULL;
+    }
+
+    if (dataSize > (SIZE_MAX - extraBytes)) {
+        return NULL;    // File's too big.
+    }
+
+
+    uint8_t compressionType;
+    if (ta_hpi__read_from_memory(&centralDirStream, &compressionType, 1) != 1) {
+        return NULL;
+    }
+
+
+    // Seek to the first byte of the file within the archive.
+    if (!ta_hpi__seek_archive(pHPI, dataOffset)) {
+        return NULL;
+    }
+
+
+    void* pFileData = malloc(dataSize + extraBytes);
+    if (pFileData == NULL) {
+        return NULL;
+    }
+
+    // Here is where we need to read the file data. There is 3 types of compression used.
+    //  0 - uncompressed
+    //  1 - LZ77
+    //  2 - Zlib
+    if (compressionType == 0) {
+        if (ta_hpi__read_archive(pHPI, pFileData, dataSize) != dataSize) {
+            free(pFileData);
+            return NULL;
+        }
+    } else {
+        if (!ta_hpi__read_archive_compressed(pHPI, pFileData, dataSize)) {
+            free(pFileData);
+            return NULL;
+        }
+    }
+
+
+    if (pSizeOut) {
+        *pSizeOut = dataSize;
+    }
+
+    
+
+    return pFileData;
+}
+
+void* ta_hpi_open_and_read_binary_file(ta_hpi_archive* pHPI, const char* fileName, size_t* pSizeOut)
+{
+    return ta_hpi__open_and_read_file__generic(pHPI, fileName, pSizeOut, 0);
+}
+
+char* ta_hpi_open_and_read_text_file(ta_hpi_archive* pHPI, const char* fileName, size_t* pLengthOut)
+{
+    char* pFileData = ta_hpi__open_and_read_file__generic(pHPI, fileName, pLengthOut, 1);   // <-- '1' means allocate 1 extra byte at the end. Used for the null terminator.
+    if (pFileData == NULL) {
+        return NULL;
+    }
+
+    // Just need to null terminate.
+    pFileData[*pLengthOut] = '\0';
+    return pFileData;
 }

@@ -132,3 +132,11 @@ bool ta_hpi_find_file(ta_hpi_archive* pHPI, const char* filePath, ta_hpi_ffi* ff
 
 // Traverses over every file and folder within the given folder.
 bool ta_hpi_traverse_directory(ta_hpi_archive* pHPI, const char* directoryPath, bool recursive, ta_hpi_central_dir_traversal_proc callback, void* pUserData);
+
+
+// Optimized helper function for opening a file and reading it's contents. Free the returned buffer with ta_hpi_free().
+void* ta_hpi_open_and_read_binary_file(ta_hpi_archive* pHPI, const char* fileName, size_t* pSizeOut);
+
+// Optimized helper function for opening a file and reading it's contents as a null terminated string. Free the
+// returned buffer with ta_hpi_free().
+char* ta_hpi_open_and_read_text_file(ta_hpi_archive* pHPI, const char* fileName, size_t* pLengthOut);
