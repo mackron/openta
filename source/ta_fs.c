@@ -262,13 +262,6 @@ ta_fs* ta_create_file_system()
     }
     drpath_remove_file_name(exedir);
 
-#if 0
-#ifdef _WIN32
-    _chdir(exedir);
-#else
-    chdir(exedir);
-#endif
-#endif
 
 
     ta_fs* pFS = calloc(1, sizeof(*pFS));
