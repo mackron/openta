@@ -6,49 +6,49 @@
 //  - Can probably avoid allocating memory for subframes - just build the frame in-place.
 //  - Improve atlas packing. Stop using stb_pack_rect - it's API doesn't really suit us.
 
-bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t* palette)
+bool ta_gaf__read_frame(ta_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t* palette)
 {
     // This function assumes the file is sitting on the first byte of the frame.
 
-    if (!ta_hpi_read(pFile, &pFrame->width, 2, NULL)) {
+    if (!ta_read_file(pFile, &pFrame->width, 2, NULL)) {
         return false;
     }
 
-    if (!ta_hpi_read(pFile, &pFrame->height, 2, NULL)) {
+    if (!ta_read_file(pFile, &pFrame->height, 2, NULL)) {
         return false;
     }
 
-    if (!ta_hpi_read(pFile, &pFrame->offsetX, 2, NULL)) {
+    if (!ta_read_file(pFile, &pFrame->offsetX, 2, NULL)) {
         return false;
     }
 
-    if (!ta_hpi_read(pFile, &pFrame->offsetY, 2, NULL)) {
+    if (!ta_read_file(pFile, &pFrame->offsetY, 2, NULL)) {
         return false;
     }
 
-    if (!ta_hpi_seek(pFile, 1, ta_seek_origin_current)) {
+    if (!ta_seek_file(pFile, 1, ta_seek_origin_current)) {
         return false;
     }
 
     uint8_t isCompressed;
-    if (!ta_hpi_read(pFile, &isCompressed, 1, NULL)) {
+    if (!ta_read_file(pFile, &isCompressed, 1, NULL)) {
         return false;
     }
 
-    if (!ta_hpi_read(pFile, &pFrame->subframeCount, 2, NULL)) {
+    if (!ta_read_file(pFile, &pFrame->subframeCount, 2, NULL)) {
         return false;
     }
 
-    if (!ta_hpi_seek(pFile, 4, ta_seek_origin_current)) {
+    if (!ta_seek_file(pFile, 4, ta_seek_origin_current)) {
         return false;
     }
 
     uint32_t frameDataPtr;
-    if (!ta_hpi_read(pFile, &frameDataPtr, 4, NULL)) {
+    if (!ta_read_file(pFile, &frameDataPtr, 4, NULL)) {
         return false;
     }
 
-    if (!ta_hpi_seek(pFile, 4, ta_seek_origin_current)) {
+    if (!ta_seek_file(pFile, 4, ta_seek_origin_current)) {
         return false;
     }
 
@@ -58,7 +58,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
     if (pFrame->subframeCount == 0)
     {
         // No subframes. The next data to read is the raw image data.
-        if (!ta_hpi_seek(pFile, frameDataPtr, ta_seek_origin_start)) {
+        if (!ta_seek_file(pFile, frameDataPtr, ta_seek_origin_start)) {
             return false;
         }
 
@@ -71,7 +71,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
             for (unsigned int y = 0; y < pFrame->height; ++y)
             {
                 uint16_t rowSize;
-                if (!ta_hpi_read(pFile, &rowSize, 2, NULL)) {
+                if (!ta_read_file(pFile, &rowSize, 2, NULL)) {
                     free(pFrame->pImageData);
                     return false;
                 }
@@ -84,7 +84,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                     while (bytesProcessed < rowSize)
                     {
                         uint8_t mask;
-                        if (!ta_hpi_read(pFile, &mask, 1, NULL)) {
+                        if (!ta_read_file(pFile, &mask, 1, NULL)) {
                             free(pFrame->pImageData);
                             return false;
                         }
@@ -106,7 +106,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                             // The next byte is repeated.
                             uint8_t repeat = (mask >> 2) + 1;
                             uint8_t value;
-                            if (!ta_hpi_read(pFile, &value, 1, NULL)) {
+                            if (!ta_read_file(pFile, &value, 1, NULL)) {
                                 free(pFrame->pImageData);
                                 return false;
                             }
@@ -130,7 +130,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
                             while (repeat > 0)
                             {
                                 uint8_t value;
-                                if (!ta_hpi_read(pFile, &value, 1, NULL)) {
+                                if (!ta_read_file(pFile, &value, 1, NULL)) {
                                     free(pFrame->pImageData);
                                     return false;
                                 }
@@ -168,7 +168,7 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
             {
                 uint8_t* pRow = pFrame->pImageData + (y*pFrame->width);
 
-                if (!ta_hpi_read(pFile, pRow, pFrame->width, NULL)) {
+                if (!ta_read_file(pFile, pRow, pFrame->width, NULL)) {
                     free(pFrame->pImageData);
                     return false;
                 }
@@ -190,16 +190,16 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
         {
             // <frameDataPtr> points to a list of pFrame->subframeCount pointers to frame headers.
             uint32_t framePtrPos = frameDataPtr + (iSubframe * 4);  // 4 = size of the pointer.
-            if (!ta_hpi_seek(pFile, framePtrPos, ta_seek_origin_start)) {
+            if (!ta_seek_file(pFile, framePtrPos, ta_seek_origin_start)) {
                 return false;
             }
 
             uint32_t frameStartPos;
-            if (!ta_hpi_read(pFile, &frameStartPos, 4, NULL)) {
+            if (!ta_read_file(pFile, &frameStartPos, 4, NULL)) {
                 return false;
             }
 
-            if (!ta_hpi_seek(pFile, frameStartPos, ta_seek_origin_start)) {
+            if (!ta_seek_file(pFile, frameStartPos, ta_seek_origin_start)) {
                 return false;
             }
 
@@ -249,14 +249,14 @@ bool ta_gaf__read_frame(ta_hpi_file* pFile, ta_gaf_entry_frame* pFrame, uint32_t
     return true;
 }
 
-ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics, uint32_t* palette)
+ta_gaf* ta_load_gaf_from_file(ta_file* pFile, ta_graphics_context* pGraphics, uint32_t* palette)
 {
     if (pFile == NULL) {
         return NULL;
     }
 
     uint32_t version;
-    if (!ta_hpi_read(pFile, &version, 4, NULL)) {
+    if (!ta_read_file(pFile, &version, 4, NULL)) {
         return NULL;    
     }
 
@@ -266,12 +266,12 @@ ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
 
 
     uint32_t entryCount;
-    if (!ta_hpi_read(pFile, &entryCount, 4, NULL)) {
+    if (!ta_read_file(pFile, &entryCount, 4, NULL)) {
         return NULL;
     }
 
     uint32_t unused;
-    if (!ta_hpi_read(pFile, &unused, 4, NULL)) {
+    if (!ta_read_file(pFile, &unused, 4, NULL)) {
         return NULL;
     }
 
@@ -281,7 +281,7 @@ ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
         return NULL;
     }
 
-    if (!ta_hpi_read(pFile, pEntryPointers, entryCount * sizeof(uint32_t), NULL)) {
+    if (!ta_read_file(pFile, pEntryPointers, entryCount * sizeof(uint32_t), NULL)) {
         goto on_error;
     }
 
@@ -305,20 +305,20 @@ ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
     for (uint32_t iEntry = 0; iEntry < entryCount; ++iEntry)
     {
         // Seek to the start of the entry...
-        if (!ta_hpi_seek(pFile, pEntryPointers[iEntry], ta_seek_origin_start)) {
+        if (!ta_seek_file(pFile, pEntryPointers[iEntry], ta_seek_origin_start)) {
             goto on_error;
         }
 
-        if (!ta_hpi_read(pFile, &pGAF->pEntries[iEntry].frameCount, 2, NULL)) {
+        if (!ta_read_file(pFile, &pGAF->pEntries[iEntry].frameCount, 2, NULL)) {
             goto on_error;
         }
 
         // Don't care about the next 6 bytes.
-        if (!ta_hpi_seek(pFile, 6, ta_seek_origin_current)) {
+        if (!ta_seek_file(pFile, 6, ta_seek_origin_current)) {
             goto on_error;
         }
 
-        if (!ta_hpi_read(pFile, pGAF->pEntries[iEntry].name, 32, NULL)) {
+        if (!ta_read_file(pFile, pGAF->pEntries[iEntry].name, 32, NULL)) {
             goto on_error;
         }
 
@@ -330,7 +330,7 @@ ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
                 goto on_error;
             }
 
-            if (!ta_hpi_read(pFile, pFramePointers, pGAF->pEntries[iEntry].frameCount * sizeof(uint64_t), NULL)) {
+            if (!ta_read_file(pFile, pFramePointers, pGAF->pEntries[iEntry].frameCount * sizeof(uint64_t), NULL)) {
                 free(pFramePointers);
                 goto on_error;
             }
@@ -345,7 +345,7 @@ ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
             {
                 uint32_t framePointer = pFramePointers[iFrame] & 0xFFFFFFFF;
 
-                if (!ta_hpi_seek(pFile, framePointer, ta_seek_origin_start)) {
+                if (!ta_seek_file(pFile, framePointer, ta_seek_origin_start)) {
                     free(pFramePointers);
                     goto on_error;
                 }
@@ -375,14 +375,6 @@ ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics
     //
     // We'll use a mostly trial-and-error system to figure out how big to make the texture atlas. The initial size will be based on the average
     // width and height of every frame of every entry.
-    
-#if 0
-    unsigned int avgWidth = totalWidth / totalFrameCount;
-    unsigned int avgHeight = totalHeight / totalFrameCount;
-
-    unsigned int atlasWidth = dr_clamp(avgWidth * (sqrt(totalFrameCount) + 1), 0, 2048);
-    unsigned int atlasHeight = atlasHeight;
-#endif
 
     // TEMP: For testing, just use 1024x1024 atlas sizes for now.
 

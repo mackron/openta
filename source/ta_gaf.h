@@ -99,7 +99,7 @@ typedef struct
 
 
 // Loads a GAF file.
-ta_gaf* ta_load_gaf_from_file(ta_hpi_file* pFile, ta_graphics_context* pGraphics, uint32_t* palette);
+ta_gaf* ta_load_gaf_from_file(ta_file* pFile, ta_graphics_context* pGraphics, uint32_t* palette);
 
 // Unloads the given GAF package.
 void ta_unload_gaf(ta_gaf* pGAF);

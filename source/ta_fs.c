@@ -1,4 +1,15 @@
 // Public domain. See "unlicense" statement at the end of this file.
+//
+// Credits to http://units.tauniverse.com/tutorials/tadesign/tadesign/ta-hpi-fmt.txt for details on the HPI format.
+
+typedef struct
+{
+    uint32_t marker;
+    uint32_t saveMarker;
+    uint32_t directorySize;
+    uint32_t key;
+    uint32_t startPos;
+} ta_hpi_header;
 
 FILE* ta_fopen(const char* filePath, const char* openMode)
 {
@@ -208,49 +219,6 @@ void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRe
 #endif
 }
 
-#if 0
-typedef struct
-{
-    const char* archiveRelativePath;
-    size_t prevFileCount;
-    size_t* pFileCountInOut;
-    ta_fs_file_info** ppFilesInOut;
-} ta_fs__gather_files_in_archive_directory_data;
-
-void ta_fs__gather_files_in_archive_directory(ta_fs* pFS, ta_fs_archive* pArchive, const char* directoryRelativePath, bool recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut);
-
-bool ta_fs__gather_files_in_archive_directory_traversal_proc(ta_hpi_central_dir_entry* pEntry, const char* filePath, const char* directoryPath, void* pUserData)
-{
-    ta_fs__gather_files_in_archive_directory_data* pTraversalData = pUserData;
-    assert(pTraversalData != NULL);
-
-    size_t prevFileCount = pTraversalData->prevFileCount;
-    size_t* pFileCountInOut = pTraversalData->pFileCountInOut;
-    ta_fs_file_info** ppFilesInOut = pTraversalData->ppFilesInOut;
-
-    ta_fs_file_info fi;
-    strncpy_s(fi.archiveRelativePath, sizeof(fi.archiveRelativePath), pTraversalData->archiveRelativePath, _TRUNCATE);
-    drpath_copy_and_append(fi.relativePath, sizeof(fi.relativePath), directoryPath, filePath);
-    fi.isDirectory = pEntry->isDirectory;
-
-    // Skip past the file if it's already in the list.
-    if (ta_fs__file_exists_in_list(fi.relativePath, prevFileCount, *ppFilesInOut)) {       // <-- use prevFileCount here to make this search more efficient.
-        return true;
-    }
-
-    ta_fs_file_info* pNewFiles = realloc(*ppFilesInOut, ((*pFileCountInOut) + 1) * sizeof(**ppFilesInOut));
-    if (pNewFiles == NULL) {
-        return false;
-    }
-
-    (*ppFilesInOut) = pNewFiles;
-    (*ppFilesInOut)[*pFileCountInOut] = fi;
-    *pFileCountInOut += 1;
-
-    return true;
-}
-#endif
-
 void ta_fs__gather_files_in_archive_directory_at_location(ta_fs* pFS, ta_fs_archive* pArchive, uint32_t directoryDataPos, const char* parentPath, bool recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut, uint32_t prevFileCount)
 {
     ta_memory_stream stream = ta_create_memory_stream(pArchive->pCentralDirectory, pArchive->centralDirectorySize);
@@ -328,28 +296,6 @@ void ta_fs__gather_files_in_archive_directory(ta_fs* pFS, ta_fs_archive* pArchiv
 
     // We found the directory, so now we need to gather the files within it.
     ta_fs__gather_files_in_archive_directory_at_location(pFS, pArchive, directoryDataPos, directoryRelativePath, recursive, pFileCountInOut, ppFilesInOut, *pFileCountInOut);
-
-
-#if 0
-    char archiveAbsolutePath[DRFS_MAX_PATH];
-    if (!drpath_copy_and_append(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, pArchive->relativePath)) {
-        return;
-    }
-
-    ta_hpi_archive* pHPI = ta_open_hpi_from_file(archiveAbsolutePath);
-    if (pHPI == NULL) {
-        return;
-    }
-
-    ta_fs__gather_files_in_archive_directory_data traversalData;
-    traversalData.archiveRelativePath = pArchive->relativePath;
-    traversalData.prevFileCount = *pFileCountInOut;
-    traversalData.pFileCountInOut = pFileCountInOut;
-    traversalData.ppFilesInOut = ppFilesInOut;
-    ta_hpi_traverse_directory(pHPI, directoryRelativePath, recursive, ta_fs__gather_files_in_archive_directory_traversal_proc, &traversalData);
-
-    ta_close_hpi(pHPI);
-#endif
 }
 
 int ta_fs__file_info_qsort_callback(const void* a, const void* b)
@@ -638,38 +584,6 @@ ta_file* ta_fs__open_file_from_archive(ta_fs* pFS, ta_fs_archive* pArchive, cons
 
     fclose(pSTDIOFile);
     return pFile;
-
-
-#if 0
-    char archiveAbsolutePath[DRFS_MAX_PATH];
-    if (!drpath_copy_and_append(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, pArchive->relativePath)) {
-        return NULL;
-    }
-
-    ta_hpi_archive* pHPI = ta_open_hpi_from_file(archiveAbsolutePath);
-    if (pHPI == NULL) {
-        return NULL;
-    }
-
-    ta_hpi_file* pHPIFile = ta_hpi_open_file(pHPI, fileRelativePath);
-    if (pHPIFile == NULL) {
-        ta_close_hpi(pHPI);
-        return NULL;
-    }
-
-    // We have a HPI file.
-    ta_file* pFile = malloc(sizeof(*pFile));
-    if (pFile == NULL) {
-        ta_hpi_close_file(pHPIFile);
-        ta_close_hpi(pHPI);
-    }
-
-    pFile->pFS = pFS;
-    pFile->pHPIFile = pHPIFile;
-    pFile->pSTDIOFile = NULL;
-        
-    return pFile;
-#endif
 }
 
 
@@ -863,18 +777,6 @@ void ta_close_file(ta_file* pFile)
         return;
     }
 
-#if 0
-    if (pFile->pHPIFile != NULL) {
-        assert(pFile->pSTDIOFile == NULL);
-        ta_hpi_close_file(pFile->pHPIFile);
-    }
-
-    if (pFile->pSTDIOFile != NULL) {
-        assert(pFile->pHPIFile == NULL);
-        fclose(pFile->pSTDIOFile);
-    }
-#endif
-
     free(pFile);
 }
 
@@ -884,27 +786,6 @@ bool ta_read_file(ta_file* pFile, void* pBufferOut, size_t bytesToRead, size_t* 
     if (pFile == NULL || pBufferOut == NULL) {
         return false;
     }
-
-#if 0
-    if (pFile->pHPIFile != NULL)
-    {
-        assert(pFile->pSTDIOFile == NULL);
-
-        return ta_hpi_read(pFile->pHPIFile, pBufferOut, bytesToRead, pBytesReadOut);
-    }
-    else
-    {
-        assert(pFile->pHPIFile == NULL);
-        assert(pFile->pSTDIOFile != NULL);
-
-        size_t bytesRead = fread(pBufferOut, 1, bytesToRead, pFile->pSTDIOFile);
-        if (pBytesReadOut) {
-            *pBytesReadOut = bytesRead;
-        }
-
-        return true;
-    }
-#endif
 
     size_t bytesRead = ta_memory_stream_read(&pFile->_stream, pBufferOut, bytesToRead);
     if (pBytesReadOut) {
@@ -920,149 +801,9 @@ bool ta_seek_file(ta_file* pFile, int64_t bytesToSeek, ta_seek_origin origin)
         return false;
     }
 
-#if 0
-    if (pFile->pHPIFile != NULL)
-    {
-        assert(pFile->pSTDIOFile == NULL);
-
-        return ta_hpi_seek(pFile->pHPIFile, bytesToSeek, origin);
-    }
-    else
-    {
-        assert(pFile->pHPIFile == NULL);
-        assert(pFile->pSTDIOFile != NULL);
-
-        int originSTDIO = SEEK_SET;
-        switch (origin)
-        {
-        case ta_seek_origin_current: originSTDIO = SEEK_CUR;
-        case ta_seek_origin_end: originSTDIO = SEEK_END;
-        default: break;
-        }
-
-        return ta_fseek(pFile->pSTDIOFile, bytesToSeek, originSTDIO) == 0;
-    }
-#endif
-
     return ta_memory_stream_seek(&pFile->_stream, bytesToSeek, origin);
 }
 
-#if 0
-void* ta_open_and_read_specific_file__generic_stdio(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, size_t* pSizeOut, size_t extraBytes)
-{
-    assert(pFS != NULL);
-
-    // No archive file was specified. Try opening from the native file system.
-    char fileAbsolutePath[DRFS_MAX_PATH];
-    if (!drpath_copy_and_append(fileAbsolutePath, sizeof(fileAbsolutePath), pFS->rootDir, fileRelativePath)) {
-        return NULL;
-    }
-
-    FILE* pSTDIOFile = ta_fopen(fileAbsolutePath, "rb");
-    if (pSTDIOFile == NULL) {
-        return NULL;
-    }
-
-    ta_fseek(pSTDIOFile, 0, SEEK_END);
-    int64_t sizeInBytes = ta_ftell(pSTDIOFile);
-    ta_fseek(pSTDIOFile, 0, SEEK_SET);
-
-    if (sizeInBytes > (SIZE_MAX - extraBytes)) {
-        fclose(pSTDIOFile); // File's too big.
-        return NULL;
-    }
-
-    void* pData = malloc((size_t)sizeInBytes + extraBytes);
-    if (pData == NULL) {
-        fclose(pSTDIOFile); // Failed to allocate memory. Might have run out.
-        return NULL;
-    }
-
-    size_t bytesRead = fread(pData, 1, (size_t)sizeInBytes, pSTDIOFile);
-    fclose(pSTDIOFile);
-
-    if (pSizeOut) {
-        *pSizeOut = bytesRead;
-    }
-
-    return pData;
-}
-
-void* ta_open_and_read_specific_binary_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, size_t* pSizeOut)
-{
-    if (pFS == NULL) {
-        return NULL;
-    }
-
-    if (archiveRelativePath == NULL || archiveRelativePath[0] == '\0')
-    {
-        // No archive file was specified. Try opening from the native file system.
-        return ta_open_and_read_specific_file__generic_stdio(pFS, archiveRelativePath, fileRelativePath, pSizeOut, 0);
-    }
-    else
-    {
-        // An archive file was specified. Try opening from that archive.
-        char archiveAbsolutePath[DRFS_MAX_PATH];
-        if (!drpath_copy_and_append(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, archiveRelativePath)) {
-            return NULL;
-        }
-
-        ta_hpi_archive* pHPI = ta_open_hpi_from_file(archiveAbsolutePath);
-        if (pHPI == NULL) {
-            return NULL;
-        }
-
-        void* pFileData = ta_hpi_open_and_read_binary_file(pHPI, fileRelativePath, pSizeOut);
-        ta_close_hpi(pHPI);
-
-        return pFileData;
-    }
-}
-
-char* ta_open_and_read_specific_text_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, size_t* pLengthOut)
-{
-    if (pFS == NULL) {
-        return NULL;
-    }
-
-    if (archiveRelativePath == NULL || archiveRelativePath[0] == '\0')
-    {
-        // No archive file was specified. Try opening from the native file system.
-        char* pFileData = ta_open_and_read_specific_file__generic_stdio(pFS, archiveRelativePath, fileRelativePath, pLengthOut, 1);  // <-- '1' means allocate 1 extra byte at the end. Used for the null terminator.
-        if (pFileData == NULL) {
-            return NULL;
-        }
-
-        // Just need to null terminate.
-        pFileData[*pLengthOut] = '\0';
-        return pFileData;
-    }
-    else
-    {
-        // An archive file was specified. Try opening from that archive.
-        char archiveAbsolutePath[DRFS_MAX_PATH];
-        if (!drpath_copy_and_append(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, archiveRelativePath)) {
-            return NULL;
-        }
-
-        ta_hpi_archive* pHPI = ta_open_hpi_from_file(archiveAbsolutePath);
-        if (pHPI == NULL) {
-            return NULL;
-        }
-
-        char* pFileData = ta_hpi_open_and_read_text_file(pHPI, fileRelativePath, pLengthOut);
-        ta_close_hpi(pHPI);
-
-        return pFileData;
-    }
-}
-
-
-void ta_fs_free(void* pBuffer)
-{
-    free(pBuffer);
-}
-#endif
 
 
 //// Iteration ////

@@ -10,7 +10,6 @@ typedef struct ta_tnt ta_tnt;
 typedef struct ta_tnt_mesh ta_tnt_mesh;
 typedef struct ta_fs ta_fs;
 typedef struct ta_file ta_file;
-typedef struct ta_hpi_file ta_hpi_file;
 typedef struct ta_feature_desc ta_feature_desc;
 typedef struct ta_features_library ta_features_library;
 
