@@ -70,6 +70,12 @@ struct ta_feature_desc
     ta_feature_category category;
 #endif
 
+    // The width of the object, in 16x16 tiles.
+    unsigned short footprintX;
+
+    // The height of the object, in 16x16 tiles.
+    unsigned short footprintY;
+
     // File .GAF file that contains the feature's graphics.
     char filename[64];
 

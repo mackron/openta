@@ -152,6 +152,15 @@ static bool ta_features_library__load_feature(ta_features_library* pLib, const c
         }
 #endif
 
+        if (_stricmp(pVar->name, "footprintx") == 0) {
+            pFeature->footprintX = (unsigned short)atoi(pVar->value);
+            continue;
+        }
+        if (_stricmp(pVar->name, "footprintz") == 0) {
+            pFeature->footprintY = (unsigned short)atoi(pVar->value);
+            continue;
+        }
+
         if (_stricmp(pVar->name, "filename") == 0) {
             strcpy_s(pFeature->filename, sizeof(pFeature->filename), pVar->value);
             continue;
@@ -262,7 +271,7 @@ static bool ta_features_library__load_and_parse_script(ta_features_library* pLib
     assert(pFS != NULL);
     assert(fileRelativePath != NULL);
 
-    ta_config_obj* pConfig = ta_parse_config_from_file(pFS, archiveRelativePath, fileRelativePath);
+    ta_config_obj* pConfig = ta_parse_config_from_specific_file(pFS, archiveRelativePath, fileRelativePath);
     if (pConfig == NULL) {
         return false;
     }

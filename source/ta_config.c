@@ -299,18 +299,16 @@ char* ta_parse_config_object(char* configString, ta_config_obj* pObj)
     return configString;
 }
 
-ta_config_obj* ta_parse_config_from_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath)
+ta_config_obj* ta_parse_config_from_open_file(ta_file* pFile)
 {
-    if (pFS == NULL || fileRelativePath == NULL) {
-        return NULL;
-    }
+    assert(pFile != NULL);
 
     ta_config_obj* pConfig = ta_allocate_config_object();
     if (pConfig == NULL) {
         return NULL;
     }
 
-    pConfig->_pFile = ta_open_specific_file(pFS, archiveRelativePath, fileRelativePath, TA_OPEN_FILE_WITH_NULL_TERMINATOR);
+    pConfig->_pFile = pFile;
     if (pConfig->_pFile == NULL) {
         free(pConfig);
         return NULL;
@@ -318,6 +316,34 @@ ta_config_obj* ta_parse_config_from_file(ta_fs* pFS, const char* archiveRelative
 
     ta_parse_config_object(pConfig->_pFile->pFileData, pConfig);
     return pConfig;
+}
+
+ta_config_obj* ta_parse_config_from_specific_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath)
+{
+    if (pFS == NULL || fileRelativePath == NULL) {
+        return NULL;
+    }
+
+    ta_file* pFile = ta_open_specific_file(pFS, archiveRelativePath, fileRelativePath, TA_OPEN_FILE_WITH_NULL_TERMINATOR);
+    if (pFile == NULL) {
+        return NULL;
+    }
+
+    return ta_parse_config_from_open_file(pFile);
+}
+
+ta_config_obj* ta_parse_config_from_file(ta_fs* pFS, const char* fileRelativePath)
+{
+    if (pFS == NULL || fileRelativePath == NULL) {
+        return NULL;
+    }
+
+    ta_file* pFile = ta_open_file(pFS, fileRelativePath, TA_OPEN_FILE_WITH_NULL_TERMINATOR);
+    if (pFile == NULL) {
+        return NULL;
+    }
+
+    return ta_parse_config_from_open_file(pFile);
 }
 
 void ta_delete_config(ta_config_obj* pConfig)

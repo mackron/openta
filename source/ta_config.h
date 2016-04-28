@@ -31,7 +31,8 @@ struct ta_config_obj
 // Parses a script.
 //
 // Configs are immutable after parsing.
-ta_config_obj* ta_parse_config_from_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath);
+ta_config_obj* ta_parse_config_from_specific_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath);
+ta_config_obj* ta_parse_config_from_file(ta_fs* pFS, const char* fileRelativePath);
 
 // Deletes the given config object.
 void ta_delete_config(ta_config_obj* pConfig);
