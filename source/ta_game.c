@@ -94,40 +94,10 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
 
     // TESTING
-#if 0
-    ta_hpi_archive* pHPI = ta_open_hpi_from_file("rev31.gp3");
-    ta_hpi_file* pFile = ta_hpi_open_file(pHPI, "gamedata/WEAPONS.TDF");
-
-    char* fileData = malloc(pFile->sizeInBytes + 1);
-    ta_hpi_read(pFile, fileData, pFile->sizeInBytes, NULL);
-    fileData[pFile->sizeInBytes] = '\0';
-
-    ta_config_obj* pConfig = ta_parse_config(fileData);
-#endif
-
-#if 0
-    ta_hpi_archive* pHPI = ta_open_hpi_from_file("totala1.hpi");
-    ta_hpi_file* pFile = ta_hpi_open_file(pHPI, "anims/Archipelago.GAF");
-    ta_gaf* pGAF = ta_load_gaf_from_file(pFile, pGame->pGraphics, pGame->palette);
-
-    ta_gaf_entry_frame* pFrame = &pGAF->pEntries[0].pFrames[0];
-    //ta_gaf_entry* pEntry = ta_gaf_get_entry_by_name(pGAF, "Frond01CrispRec");
-    //ta_gaf_entry_frame* pFrame = &pEntry->pFrames[0].pSubframes[1];
-    //ta_gaf_entry_frame* pFrame = &pEntry->pFrames[4];
-    //pGame->pTexture = ta_create_texture(pGame->pGraphics, pFrame->width, pFrame->height, 1, pFrame->pImageData);
-    //ta_unload_gaf(pGAF);
-
-    pGame->pFrame = &pGAF->pEntries[0].pFrames[0];
-    pGame->pTexture = pGAF->pTextureAtlases[pGame->pFrame->atlasIndex];
-#endif
-
 #if 1
-    //ta_hpi_archive* pHPI = ta_open_hpi_from_file("totala2.hpi");
-    //ta_hpi_file* pFile = ta_hpi_open_file(pHPI, "maps/The Pass.tnt");
-
-    ta_tnt* pTNT = ta_load_tnt_from_file(pGame->pFS, "maps/The Pass.tnt", pGame->pGraphics);
-    pGame->pTexture = pTNT->pMinimapTexture;
-    pGame->pTNT = pTNT;
+    //pGame->pCurrentMap = ta_load_map(pGame, "The Pass");
+    pGame->pCurrentMap = ta_load_map(pGame, "Red Hot Lava");
+    //pGame->pCurrentMap = ta_load_map(pGame, "Test0");
 #endif
 
 
@@ -135,6 +105,10 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
 on_error:
     if (pGame != NULL) {
+        if (pGame->pCurrentMap != NULL) {
+            ta_unload_map(pGame->pCurrentMap);
+        }
+
         if (pGame->pWindow != NULL) {
             ta_delete_window(pGame->pWindow);
         }
@@ -207,29 +181,11 @@ void ta_game_render(ta_game* pGame)
 
     ta_graphics_set_current_window(pGame->pGraphics, pGame->pWindow);
     {
-        //ta_draw_texture(pGame->pTexture, true);
-        
-        //if (pGame->pFrame) {
-        //    ta_draw_subtexture(pGame->pTexture, pGame->pFrame, pGame->pFrame->atlasPosX, pGame->pFrame->atlasPosY, pGame->pFrame->width, pGame->pFrame->height);
-        //}
-
-        if (pGame->pTNT) {
-            ta_draw_terrain(pGame->pGraphics, pGame->pTNT);
-
-            //ta_draw_subtexture(pGame->pTexture, false, 0, 0, pGame->pTNT->minimapWidth, pGame->pTNT->minimapHeight);
-            //ta_draw_texture(pGame->pTNT->ppTextures[1], false);
-/*
-            for (uint32_t iChunk = 0; iChunk < pGame->pTNT->chunkCountX*pGame->pTNT->chunkCountY; ++iChunk) {
-                ta_tnt_tile_chunk* pChunk = &pGame->pTNT->pChunks[iChunk];
-                if (pChunk->subchunkCount > 0) {    // ?? Wouldn't have thought this would ever be true, but it is.
-                    for (uint32_t iSubchunk = 0; iSubchunk < pChunk->subchunkCount; ++iSubchunk) {
-                        ta_draw_tnt_mesh(pChunk->pSubchunks[iSubchunk].pTexture, pChunk->pSubchunks[iSubchunk].pMesh);
-                    }
-                }
-            }
-            */
-            //ta_draw_tnt_mesh(pGame->pTNT->pChunks[1].pSubchunks[0].pTexture, pGame->pTNT->pChunks[1].pSubchunks[0].pMesh);
+        if (pGame->pCurrentMap) {
+            ta_draw_map(pGame->pGraphics, pGame->pCurrentMap);
         }
+
+        //ta_draw_texture(pGame->pCurrentMap->ppTextures[pGame->pCurrentMap->textureCount-1], false);
     }
     ta_graphics_present(pGame->pGraphics, pGame->pWindow);
 }

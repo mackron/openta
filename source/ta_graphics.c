@@ -231,16 +231,16 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
 
     
 
-
-
     // Default state.
     glEnable(GL_TEXTURE_2D);
     glShadeModel(GL_SMOOTH);
-    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
-    glDisable(GL_DEPTH_TEST);
+    
+    // Always using fragment programs.
+    glEnable(GL_FRAGMENT_PROGRAM_ARB);
 
     return pGraphics;
 
@@ -459,13 +459,15 @@ void ta_translate_camera(ta_graphics_context* pGraphics, int offsetX, int offset
 
     pGraphics->cameraPosX += offsetX;
     pGraphics->cameraPosY += offsetY;
+
+    //printf("Camera Pos: %d %d\n", pGraphics->cameraPosX, pGraphics->cameraPosY);
 }
 
-void ta_draw_terrain(ta_graphics_context* pGraphics, ta_tnt* pTNT)
+
+void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
 {
-    if (pGraphics == NULL || pTNT == NULL) {
-        return;
-    }
+    // Pre: The paletted fragment program should be bound.
+    // Pre: Fragment program should be enabled.
 
     // The terrain is the base layer so there's no need to clear the color buffer - we just draw over it anyway.
     glClearDepth(1.0f);
@@ -479,42 +481,94 @@ void ta_draw_terrain(ta_graphics_context* pGraphics, ta_tnt* pTNT)
     glLoadIdentity();
     glTranslatef((GLfloat)-pGraphics->cameraPosX, (GLfloat)-pGraphics->cameraPosY, 0);
 
-    
-    glEnable(GL_FRAGMENT_PROGRAM_ARB);
-    pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgram);
+
+    // The terrain will never be transparent.
+    glDisable(GL_BLEND);
 
 
     // TODO: Only draw visible chunks.
     // TODO: Stop using begin/end.
-    for (uint32_t iChunk = 0; iChunk < pTNT->chunkCountX*pTNT->chunkCountY; ++iChunk)
+    for (uint32_t iChunk = 0; iChunk < pMap->terrain.chunkCountX*pMap->terrain.chunkCountY; ++iChunk)
     {
-        ta_tnt_tile_chunk* pChunk = &pTNT->pChunks[iChunk];
-        if (pChunk->subchunkCount > 0)  // ?? Wouldn't have thought this would ever be true, but it is.
+        ta_map_terrain_chunk* pChunk = &pMap->terrain.pChunks[iChunk];
+        for (uint32_t iMesh = 0; iMesh < pChunk->meshCount; ++iMesh)
         {
-            for (uint32_t iSubchunk = 0; iSubchunk < pChunk->subchunkCount; ++iSubchunk)
+            ta_map_terrain_mesh* pMesh = &pChunk->pMeshes[iMesh];
+            ta_vertex_p2t2* pVertices = pMap->terrain.pVertexData;
+            uint32_t* pIndices = pMap->terrain.pIndexData + pMesh->indexOffset;
+
+            glBindTexture(GL_TEXTURE_2D, pMap->ppTextures[pChunk->pMeshes[iMesh].textureIndex]->objectGL);
+            glBegin(GL_QUADS);
             {
-                glBindTexture(GL_TEXTURE_2D, pChunk->pSubchunks[iSubchunk].pTexture->objectGL);
-                glBegin(GL_QUADS);
+                for (uint32_t iIndex = 0; iIndex < pMesh->indexCount; ++iIndex)
                 {
-                    for (uint32_t iVertex = 0; iVertex < pChunk->pSubchunks[iSubchunk].pMesh->quadCount * 4; ++iVertex)
-                    {
-                        ta_tnt_mesh_vertex* pVertex = pChunk->pSubchunks[iSubchunk].pMesh->pVertices + iVertex;
-                        glTexCoord2f(pVertex->u, pVertex->v); glVertex2f(pVertex->x, pVertex->y);
-                    }
+                    glTexCoord2f(pVertices[pIndices[iIndex]].u, pVertices[pIndices[iIndex]].v);
+                    glVertex2f(pVertices[pIndices[iIndex]].x, pVertices[pIndices[iIndex]].y);
                 }
-                glEnd();
             }
+            glEnd();
         }
     }
+}
 
-    // Restore default state.
-    glDisable(GL_FRAGMENT_PROGRAM_ARB);
+void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
+{
+    if (pGraphics == NULL || pMap == NULL) {
+        return;
+    }
+
+    glEnable(GL_FRAGMENT_PROGRAM_ARB);
+    pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgram);
+
+
+    // Terrain is always laid down first.
+    ta_draw_map_terrain(pGraphics, pMap);
+
+
+    // Features can be assumed to be transparent.
+    glEnable(GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    for (uint32_t iFeature = 0; iFeature < pMap->featureCount; ++iFeature)
+    {
+        ta_map_feature* pFeature = pMap->pFeatures + iFeature;
+        if (pFeature->pCurrentSequence != NULL)
+        {
+            ta_map_feature_frame* pFrame = pFeature->pCurrentSequence->pFrames + pFeature->currentFrameIndex;
+
+            // The position to draw the feature's graphic depends on it's position in the world and it's offset. Also, the y position
+            // needs to be adjusted based on the object's altitude to simulate perspective.
+            float posX = pFeature->posX - pFrame->offsetX;
+            float posY = pFeature->posY - pFrame->offsetY;
+            float posZ = pFeature->posZ;
+
+            // Perspective correction for the height.
+            posY -= (int)posZ/2;
+
+            
+            ta_texture* pTexture = pMap->ppTextures[pFeature->pCurrentSequence->pFrames[pFeature->currentFrameIndex].textureIndex];
+            glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
+            glBegin(GL_QUADS);
+            {
+                float uvleft   = (float)pFrame->texturePosX / pTexture->width;
+                float uvtop    = (float)pFrame->texturePosY / pTexture->height;
+                float uvright  = (float)(pFrame->texturePosX + pFrame->width)  / pTexture->width;
+                float uvbottom = (float)(pFrame->texturePosY + pFrame->height) / pTexture->height;
+
+                glTexCoord2f(uvleft, uvtop); glVertex2f(posX, posY);
+                glTexCoord2f(uvright, uvtop); glVertex2f(posX + pFrame->width, posY);
+                glTexCoord2f(uvright, uvbottom); glVertex2f(posX + pFrame->width, posY + pFrame->height);
+                glTexCoord2f(uvleft, uvbottom); glVertex2f(posX, posY + pFrame->height);
+            }
+            glEnd();
+        }
+    }
 }
 
 
 
 // TESTING
-void ta_draw_subtexture(ta_texture* pTexture, bool transparent, int offsetX, int offsetY, int width, int height)
+void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, bool transparent, int offsetX, int offsetY, int width, int height)
 {
     if (pTexture == NULL) {
         return;
@@ -573,7 +627,7 @@ void ta_draw_subtexture(ta_texture* pTexture, bool transparent, int offsetX, int
 
 
     // Restore default state.
-    glDisable(GL_FRAGMENT_PROGRAM_ARB);
+    glEnable(GL_FRAGMENT_PROGRAM_ARB);
     if (transparent) {
         glDisable(GL_BLEND);
     }
@@ -581,79 +635,5 @@ void ta_draw_subtexture(ta_texture* pTexture, bool transparent, int offsetX, int
 
 void ta_draw_texture(ta_texture* pTexture, bool transparent)
 {
-    ta_draw_subtexture(pTexture, transparent, 0, 0, pTexture->width, pTexture->height);
-}
-
-
-void ta_draw_tnt_mesh(ta_texture* pTexture, ta_tnt_mesh* pMesh)
-{
-    if (pTexture == NULL) {
-        return;
-    }
-
-    ta_graphics_context* pGraphics = pTexture->pGraphics;
-
-    GLenum error = glGetError();
-
-    // Clear first.
-    glClearDepth(1.0);
-    glClearColor(0, 0, 0.5, 1);
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-    glViewport(0, 0, 640*4, 480*4);
-
-    glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-    glOrtho(0, 640*4, 480*4, 0, 0, 1);
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-
-    glDisable(GL_BLEND);
-
-
-    // We need to use a different fragment program depending on whether or not we're using a paletted texture.
-    bool isPaletted = pTexture->components == 1;
-    if (isPaletted) {
-        glEnable(GL_FRAGMENT_PROGRAM_ARB);
-        pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgram);
-    } else {
-        glDisable(GL_FRAGMENT_PROGRAM_ARB);
-    }
-    
-
-    glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
-    glBegin(GL_QUADS);
-    {
-#if 1
-        for (uint32_t iQuad = 0; iQuad < pMesh->quadCount; ++iQuad)
-        {
-            ta_tnt_mesh_vertex* pQuad = pMesh->pVertices + (iQuad*4);
-
-            glTexCoord2f(pQuad[0].u, pQuad[0].v); glVertex3f(pQuad[0].x, pQuad[0].y, 0.0f);
-            glTexCoord2f(pQuad[1].u, pQuad[1].v); glVertex3f(pQuad[1].x, pQuad[1].y, 0.0f);
-            glTexCoord2f(pQuad[2].u, pQuad[2].v); glVertex3f(pQuad[2].x, pQuad[2].y, 0.0f);
-            glTexCoord2f(pQuad[3].u, pQuad[3].v); glVertex3f(pQuad[3].x, pQuad[3].y, 0.0f);
-        }
-#endif
-
-#if 0
-        float uvleft   = 0;
-        float uvtop    = 0;
-        float uvright  = 1;
-        float uvbottom = 1;
-
-        glTexCoord2f(0, 0); glVertex3f(0.0f, 0.0f,  0.0f);
-        glTexCoord2f(0, 0.03125f); glVertex3f(0.0f, -31.0f,  0.0f);
-        glTexCoord2f(0.03125f, 0.03125f); glVertex3f(31.0f,  -31.0f,  0.0f);
-        glTexCoord2f(0.03125f, 0.06250f); glVertex3f(31.0f,  0.0f,  0.0f);
-#endif
-    }
-    glEnd();
-
-    glDisable(GL_FRAGMENT_PROGRAM_ARB);
-
-    int a; a = 0;
+    ta_draw_subtexture(pTexture, 0, 0, transparent, 0, 0, pTexture->width, pTexture->height);
 }

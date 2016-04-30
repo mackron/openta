@@ -31,6 +31,9 @@ struct ta_game
     // features library is immutable once it's initialized.
     ta_features_library* pFeatures;
 
+    // The current map instance. Set to null when there is no map running.
+    ta_map_instance* pCurrentMap;
+
 
 
     // Whether or not the middle mouse button is down.
@@ -39,12 +42,6 @@ struct ta_game
     // The position of the mouse at the time it was clicked.
     int mouseDownPosX;
     int mouseDownPosY;
-
-
-    // TEST TEXTURE
-    ta_texture* pTexture;
-    ta_gaf_entry_frame* pFrame;
-    ta_tnt* pTNT;
 };
 
 // Creates a game instance.

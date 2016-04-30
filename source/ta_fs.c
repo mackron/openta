@@ -155,13 +155,13 @@ void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRe
     assert(ppFilesInOut != NULL);
 
 #ifdef _WIN32
-    char searchQuery[DRFS_MAX_PATH];
+    char searchQuery[TA_MAX_PATH];
     if (!drpath_copy_and_append(searchQuery, sizeof(searchQuery), pFS->rootDir, directoryRelativePath)) {
         return;
     }
 
     unsigned int searchQueryLength = (unsigned int)strlen(searchQuery);
-    if (searchQueryLength >= DRFS_MAX_PATH - 3) {
+    if (searchQueryLength >= TA_MAX_PATH - 3) {
         return;    // Path is too long.
     }
 
@@ -411,7 +411,7 @@ bool ta_fs__register_archive(ta_fs* pFS, const char* archiveRelativePath)
 
 
     // Before registering the archive we want to ensure it's valid. We just read the header for this.
-    char archiveAbsolutePath[DRFS_MAX_PATH];
+    char archiveAbsolutePath[TA_MAX_PATH];
     if (!drpath_copy_and_append(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, archiveRelativePath)) {
         return false;
     }
@@ -506,7 +506,7 @@ ta_file* ta_fs__open_file_from_archive(ta_fs* pFS, ta_fs_archive* pArchive, cons
     }
 
     // It's in this archive.
-    char archiveAbsolutePath[DRFS_MAX_PATH];
+    char archiveAbsolutePath[TA_MAX_PATH];
     if (!drpath_copy_and_append(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, pArchive->relativePath)) {
         return NULL;
     }
@@ -683,7 +683,7 @@ ta_file* ta_open_specific_file(ta_fs* pFS, const char* archiveRelativePath, cons
     if (archiveRelativePath == NULL || archiveRelativePath[0] == '\0')
     {
         // No archive file was specified. Try opening from the native file system.
-        char fileAbsolutePath[DRFS_MAX_PATH];
+        char fileAbsolutePath[TA_MAX_PATH];
         if (!drpath_copy_and_append(fileAbsolutePath, sizeof(fileAbsolutePath), pFS->rootDir, fileRelativePath)) {
             return NULL;
         }
@@ -802,6 +802,40 @@ bool ta_seek_file(ta_file* pFile, int64_t bytesToSeek, ta_seek_origin origin)
     }
 
     return ta_memory_stream_seek(&pFile->_stream, bytesToSeek, origin);
+}
+
+uint64_t ta_tell_file(ta_file* pFile)
+{
+    if (pFile == NULL) {
+        return false;
+    }
+
+    return (uint64_t)ta_memory_stream_tell(&pFile->_stream);
+}
+
+
+bool ta_read_file_uint32(ta_file* pFile, uint32_t* pBufferOut)
+{
+    size_t bytesRead;
+    return ta_read_file(pFile, pBufferOut, sizeof(uint32_t), &bytesRead) && bytesRead == sizeof(uint32_t);
+}
+
+bool ta_read_file_int32(ta_file* pFile, int32_t* pBufferOut)
+{
+    size_t bytesRead;
+    return ta_read_file(pFile, pBufferOut, sizeof(int32_t), &bytesRead) && bytesRead == sizeof(int32_t);
+}
+
+bool ta_read_file_uint16(ta_file* pFile, uint16_t* pBufferOut)
+{
+    size_t bytesRead;
+    return ta_read_file(pFile, pBufferOut, sizeof(uint16_t), &bytesRead) && bytesRead == sizeof(uint16_t);
+}
+
+bool ta_read_file_uint8(ta_file* pFile, uint8_t* pBufferOut)
+{
+    size_t bytesRead;
+    return ta_read_file(pFile, pBufferOut, sizeof(uint8_t), &bytesRead) && bytesRead == sizeof(uint8_t);
 }
 
 

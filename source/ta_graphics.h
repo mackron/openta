@@ -1,5 +1,14 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
+typedef struct
+{
+    float x;
+    float y;
+    float u;
+    float v;
+} ta_vertex_p2t2;
+
+
 // Creates a new graphics.
 ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette[256]);
 
@@ -49,14 +58,12 @@ void ta_set_camera_position(ta_graphics_context* pGraphics, int posX, int posY);
 // Translates the camera.
 void ta_translate_camera(ta_graphics_context* pGraphics, int offsetX, int offsetY);
 
-// Draws the terrain as defined by the given TNT file.
-//
-// This will be the first thing to be drawn when drawing the game world. The terrain will be offset based on the camera.
-void ta_draw_terrain(ta_graphics_context* pGraphics, ta_tnt* pTNT);
+
+// Draw the given given map.
+void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap);
 
 
 
 // TESTING
 void ta_draw_texture(ta_texture* pTexture, bool transparent);
-void ta_draw_subtexture(ta_texture* pTexture, bool transparent, int offsetX, int offsetY, int width, int height);
-void ta_draw_tnt_mesh(ta_texture* pTexture, ta_tnt_mesh* pMesh);
+void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, bool transparent, int offsetX, int offsetY, int width, int height);

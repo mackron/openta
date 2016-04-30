@@ -21,15 +21,10 @@
 #endif
 
 // dr_libs headers.
-#define DR_GUI_INCLUDE_WIP
 #define DR_WAV_NO_STDIO
-#define DR_FS_WIN32_USE_EVENT_MUTEX     // For better deadlock detection, but possibly less efficient (need to profile).
 
 #include "../../dr_libs/dr_util.h"
 #include "../../dr_libs/dr_path.h"
-#include "../../dr_libs/dr_fs.h"
-#include "../../dr_libs/dr_gui.h"
-#include "../../dr_libs/dr_2d.h"
 #include "../../dr_libs/dr_audio.h"
 #include "../../dr_libs/dr_wav.h"
 #include "../../dr_libs/dr_math.h"
@@ -38,9 +33,6 @@
 // dr_libs
 #define DR_UTIL_IMPLEMENTATION
 #define DR_PATH_IMPLEMENTATION
-#define DR_FS_IMPLEMENTATION
-#define DR_GUI_IMPLEMENTATION
-#define DR_2D_IMPLEMENTATION
 #define DR_AUDIO_IMPLEMENTATION
 #define DR_WAV_IMPLEMENTATION
 #define DR_MATH_IMPLEMENTATION
@@ -48,9 +40,6 @@
 
 #include "../../dr_libs/dr_util.h"
 #include "../../dr_libs/dr_path.h"
-#include "../../dr_libs/dr_fs.h"
-#include "../../dr_libs/dr_gui.h"
-#include "../../dr_libs/dr_2d.h"
 #include "../../dr_libs/dr_audio.h"
 #include "../../dr_libs/dr_wav.h"
 #include "../../dr_libs/dr_math.h"
@@ -62,7 +51,7 @@
 // The color within the palette to use as the transparent pixel.
 #define TA_TRANSPARENT_COLOR 240
 
-// The maximum length of a path. This should rarely need to be increased, but try it if you encounter truncation issues.
+// The maximum length of a path. This should rarely need to be increased, but try increasing it if you encounter truncation issues.
 #define TA_MAX_PATH 256
 
 // The maximum length of a feature name.
@@ -74,13 +63,14 @@
 #include "ta_type_declarations.h"
 #include "ta_misc.h"
 #include "ta_platform_layer.h"
+#include "ta_texture_packer.h"
 #include "ta_graphics.h"
 #include "ta_game.h"
 #include "ta_fs.h"
 #include "ta_gaf.h"
-#include "ta_tnt.h"
 #include "ta_config.h"
 #include "ta_features.h"
+#include "ta_map.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -96,23 +86,20 @@
 #define MINIZ_NO_STDIO
 #include "miniz.c"
 
-// stb_rect_pack
-#define STB_RECT_PACK_IMPLEMENTATION
-#include "stb_rect_pack.h"
-
 // Bob Jenkins' lookup3 hash
 #include "lookup3.c"
 
 // Total Annihilation source files.
 #include "ta_misc.c"
 #include "ta_platform_layer.c"
+#include "ta_texture_packer.c"
 #include "ta_graphics.c"
 #include "ta_game.c"
 #include "ta_fs.c"
 #include "ta_gaf.c"
-#include "ta_tnt.c"
 #include "ta_config.c"
 #include "ta_features.c"
+#include "ta_map.c"
 
 int ta_main(dr_cmdline cmdline)
 {

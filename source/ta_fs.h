@@ -96,6 +96,22 @@ bool ta_read_file(ta_file* pFile, void* pBufferOut, size_t bytesToRead, size_t* 
 // Seeks the given file.
 bool ta_seek_file(ta_file* pFile, int64_t offset, ta_seek_origin origin);
 
+// Retrieves the current read position of the file.
+uint64_t ta_tell_file(ta_file* pFile);
+
+
+// High level helper for reading an unsigned 32-bit integer.
+bool ta_read_file_uint32(ta_file* pFile, uint32_t* pBufferOut);
+
+// High level helper for reading a signed 32-bit integer.
+bool ta_read_file_int32(ta_file* pFile, int32_t* pBufferOut);
+
+// High level helper for reading an unsigned 16-bit integer.
+bool ta_read_file_uint16(ta_file* pFile, uint16_t* pBufferOut);
+
+// High level helper for reading an unsigned 8-bit integer.
+bool ta_read_file_uint8(ta_file* pFile, uint8_t* pBufferOut);
+
 
 // Iteration should work like the following:
 //
