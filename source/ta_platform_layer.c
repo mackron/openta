@@ -478,10 +478,10 @@ HDC ta_get_window_hdc(ta_window* pWindow)
 
 struct ta_timer
 {
-    /// The high performance counter frequency.
+    // The high performance counter frequency.
     LARGE_INTEGER frequency;
 
-    /// The timer counter at the point in the time the timer was last ticked.
+    // The timer counter at the point in the time the timer was last ticked.
     LARGE_INTEGER counter;
 };
 
