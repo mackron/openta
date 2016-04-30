@@ -23,6 +23,10 @@ typedef struct
     // The index of the texture atlas that the frame's graphic is contained in.
     uint16_t textureIndex;
 
+
+    //uint16_t pIndexData[4];
+    //ta_vertex_p2t2 pVertexData[4];
+
 } ta_map_feature_frame;
 
 typedef struct

@@ -442,7 +442,7 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
     }
 
     pMap->featureTypesCount = header.featureTypesCount;
-    pMap->pFeatureTypes = malloc(header.featureTypesCount * sizeof(*pMap->pFeatureTypes));
+    pMap->pFeatureTypes = calloc(header.featureTypesCount, sizeof(*pMap->pFeatureTypes));
     if (pMap->pFeatureTypes == NULL) {
         goto on_error;
     }
@@ -469,23 +469,32 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
     for (uint32_t iFeatureType = 0; iFeatureType < pMap->featureTypesCount; ++iFeatureType)
     {
         ta_map_feature_type* pFeatureType = &pMap->pFeatureTypes[iFeatureType];
-        if (pCurrentGAF == NULL || _stricmp(pCurrentGAF->filename, pFeatureType->pDesc->filename) != 0)
+        if (pFeatureType->pDesc->filename[0] != '\0')
         {
-            // A new GAF file needs to be loaded.
-            ta_close_gaf(pCurrentGAF);
-            pCurrentGAF = ta_open_gaf(pMap->pGame->pFS, pFeatureType->pDesc->filename);
-            if (pCurrentGAF == NULL) {
-                goto on_error;
+            if (pCurrentGAF == NULL || _stricmp(pCurrentGAF->filename, pFeatureType->pDesc->filename) != 0)
+            {
+                // A new GAF file needs to be loaded.
+                ta_close_gaf(pCurrentGAF);
+                pCurrentGAF = ta_open_gaf(pMap->pGame->pFS, pFeatureType->pDesc->filename);
+                if (pCurrentGAF == NULL) {
+                    goto on_error;
+                }
             }
-        }
 
-        // At this point the GAF file containing the feature should be loaded and we just need to read it's frame data for
-        // every required sequence.
-        pFeatureType->pSequenceDefault = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqname);
-        pFeatureType->pSequenceBurn = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqnameburn);
-        pFeatureType->pSequenceDie = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqnamedie);
-        pFeatureType->pSequenceReclamate = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqnamereclamate);
-        pFeatureType->pSequenceShadow = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqnameshadow);
+            // At this point the GAF file containing the feature should be loaded and we just need to read it's frame data for
+            // every required sequence.
+            pFeatureType->pSequenceDefault = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqname);
+            pFeatureType->pSequenceBurn = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqnameburn);
+            pFeatureType->pSequenceDie = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqnamedie);
+            pFeatureType->pSequenceReclamate = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqnamereclamate);
+            pFeatureType->pSequenceShadow = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqnameshadow);
+        }
+        else
+        {
+            // It's not a 2D feature so assume it's a 3D one.
+            
+            // TODO: Load 3DO file.
+        }
     }
 
     ta_close_gaf(pCurrentGAF);

@@ -76,6 +76,9 @@ void ta_delete_texture(ta_texture* pTexture);
 // Creates an immutable mesh.
 ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_index_format indexFormat, uint32_t indexCount, const void* pIndexData);
 
+// Creates a mutable mesh.
+ta_mesh* ta_create_mutable_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_index_format indexFormat, uint32_t indexCount, const void* pIndexData);
+
 // Deletes a mesh.
 void ta_delete_mesh(ta_mesh* pMesh);
 

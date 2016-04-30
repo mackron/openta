@@ -39,6 +39,10 @@ struct ta_graphics_context
     GLuint palettedFragmentProgramTransparent;
 
 
+    // A mesh for drawing features.
+    ta_mesh* pFeaturesMesh;
+
+
     // Platform Specific.
 #if _WIN32
     // The dummy window for creating the main rendering context.
@@ -95,7 +99,9 @@ struct ta_graphics_context
 
     // State
     ta_vertex_format currentMeshVertexFormat;
+    ta_texture* pCurrentTexture;
     ta_mesh* pCurrentMesh;
+    GLuint currentFragmentProgram;
 };
 
 struct ta_texture
@@ -347,6 +353,16 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
     // Always using fragment programs.
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
 
+
+
+    // Built-in resources.
+    uint16_t pFeaturesMeshIndices[4] = {0, 1, 2, 3};
+    pGraphics->pFeaturesMesh = ta_create_mutable_mesh(pGraphics, ta_primitive_type_quad, ta_vertex_format_p2t2, 4, NULL, ta_index_format_uint16, 4, pFeaturesMeshIndices);
+    if (pGraphics->pFeaturesMesh == NULL) {
+        goto on_error;
+    }
+
+
     return pGraphics;
 
 on_error:
@@ -522,13 +538,13 @@ void ta_delete_texture(ta_texture* pTexture)
 }
 
 
-ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_index_format indexFormat, uint32_t indexCount, const void* pIndexData)
+ta_mesh* ta_create_empty_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, ta_index_format indexFormat)
 {
-    if (pGraphics == NULL || pVertexData == NULL || pIndexData == NULL) {
+    if (pGraphics == NULL) {
         return NULL;
     }
 
-    ta_mesh* pMesh = malloc(sizeof(*pMesh));
+    ta_mesh* pMesh = calloc(1, sizeof(*pMesh));
     if (pMesh == NULL) {
         return NULL;
     }
@@ -551,6 +567,16 @@ ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primit
         pMesh->indexFormatGL = GL_UNSIGNED_SHORT;
     } else {
         pMesh->indexFormatGL = GL_UNSIGNED_INT;
+    }
+
+    return pMesh;
+}
+
+ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_index_format indexFormat, uint32_t indexCount, const void* pIndexData)
+{
+    ta_mesh* pMesh = ta_create_empty_mesh(pGraphics, primitiveType, vertexFormat, indexFormat);
+    if (pMesh == NULL) {
+        return NULL;
     }
 
 
@@ -608,6 +634,47 @@ ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primit
 
         memcpy(pMesh->pIndexData, pIndexData, indexBufferSize);
     }
+
+    return pMesh;
+}
+
+ta_mesh* ta_create_mutable_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_index_format indexFormat, uint32_t indexCount, const void* pIndexData)
+{
+    ta_mesh* pMesh = ta_create_empty_mesh(pGraphics, primitiveType, vertexFormat, indexFormat);
+    if (pMesh == NULL) {
+        return NULL;
+    }
+
+    uint32_t vertexBufferSize = vertexCount;
+    if (vertexFormat == ta_vertex_format_p2t2) {
+        vertexBufferSize *= sizeof(ta_vertex_p2t2);
+    } else {
+        vertexBufferSize *= sizeof(ta_vertex_p3t2);
+    }
+
+    pMesh->pVertexData = malloc(vertexBufferSize);
+    if (pMesh->pVertexData == NULL) {
+        free(pMesh);
+        return NULL;
+    }
+
+    if (pVertexData) {
+        memcpy(pMesh->pVertexData, pVertexData, vertexBufferSize);
+    }
+
+
+    uint32_t indexBufferSize = indexCount * ((uint32_t)indexFormat);
+    pMesh->pIndexData = malloc(indexBufferSize);
+    if (pMesh->pIndexData == NULL) {
+        free(pMesh->pVertexData);
+        free(pMesh);
+        return NULL;
+    }
+
+    if (pIndexData) {
+        memcpy(pMesh->pIndexData, pIndexData, indexBufferSize);
+    }
+
 
     return pMesh;
 }
@@ -685,8 +752,37 @@ void ta_translate_camera(ta_graphics_context* pGraphics, int offsetX, int offset
     //printf("Camera Pos: %d %d\n", pGraphics->cameraPosX, pGraphics->cameraPosY);
 }
 
+static TA_INLINE void ta_graphics__bind_texture(ta_graphics_context* pGraphics, ta_texture* pTexture)
+{
+    assert(pGraphics != NULL);
 
-void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_mesh* pMesh)
+    if (pGraphics->pCurrentTexture == pTexture) {
+        return;
+    }
+
+
+    if (pTexture != NULL) {
+        glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
+    } else {
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    pGraphics->pCurrentTexture = pTexture;
+}
+
+static TA_INLINE void ta_graphics__bind_fragment_program(ta_graphics_context* pGraphics, GLuint fragmentProgram)
+{
+    assert(pGraphics != NULL);
+
+    if (pGraphics->currentFragmentProgram == fragmentProgram) {
+        return;
+    }
+
+    pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, fragmentProgram);
+    pGraphics->currentFragmentProgram = fragmentProgram;
+}
+
+static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_mesh* pMesh)
 {
     assert(pGraphics != NULL);
     
@@ -740,7 +836,7 @@ void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_mesh* pMesh)
     pGraphics->pCurrentMesh = pMesh;
 }
 
-void ta_graphics__draw_mesh(ta_graphics_context* pGraphics, ta_mesh* pMesh, uint32_t indexCount, uint32_t indexOffset)
+static TA_INLINE void ta_graphics__draw_mesh(ta_graphics_context* pGraphics, ta_mesh* pMesh, uint32_t indexCount, uint32_t indexOffset)
 {
     // Pre: The mesh is assumed to be bound.
     assert(pGraphics != NULL);
@@ -784,12 +880,13 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     glDisable(GL_BLEND);
 
 
+    //ta_graphics__bind_fragment_program(pGraphics, pGraphics->palettedFragmentProgram);
+
     // The mesh must be bound before we can draw it.
     ta_graphics__bind_mesh(pGraphics, pMap->terrain.pMesh);
 
 
-    // TODO: Only draw visible chunks.
-
+    // Only draw visible chunks.
     int cameraLeft = pGraphics->cameraPosX;
     int cameraTop  = pGraphics->cameraPosY;
     int cameraRight = cameraLeft + pGraphics->resolutionX;
@@ -866,27 +963,40 @@ void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instanc
     posY -= (int)posZ/2;
 
 
+    int cameraLeft = pGraphics->cameraPosX;
+    int cameraTop  = pGraphics->cameraPosY;
+    int cameraRight = cameraLeft + pGraphics->resolutionX;
+    int cameraBottom = cameraTop + pGraphics->resolutionY;
+
+    if (posX > cameraRight  || posX + pFrame->width  < cameraLeft ||
+        posY > cameraBottom || posY + pFrame->height < cameraTop)
+    {
+        return;
+    }
+
+
     if (transparent) {
-        pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgramTransparent);
+        ta_graphics__bind_fragment_program(pGraphics, pGraphics->palettedFragmentProgramTransparent);
     } else {
-        pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgram);
+        ta_graphics__bind_fragment_program(pGraphics, pGraphics->palettedFragmentProgram);
     }
 
     ta_texture* pTexture = pMap->ppTextures[pFeature->pCurrentSequence->pFrames[pFeature->currentFrameIndex].textureIndex];
-    glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
-    glBegin(GL_QUADS);
-    {
-        float uvleft   = (float)pFrame->texturePosX / pTexture->width;
-        float uvtop    = (float)pFrame->texturePosY / pTexture->height;
-        float uvright  = (float)(pFrame->texturePosX + pFrame->width)  / pTexture->width;
-        float uvbottom = (float)(pFrame->texturePosY + pFrame->height) / pTexture->height;
+    ta_graphics__bind_texture(pGraphics, pTexture);
 
-        glTexCoord2f(uvleft, uvtop); glVertex2f(posX, posY);
-        glTexCoord2f(uvright, uvtop); glVertex2f(posX + pFrame->width, posY);
-        glTexCoord2f(uvright, uvbottom); glVertex2f(posX + pFrame->width, posY + pFrame->height);
-        glTexCoord2f(uvleft, uvbottom); glVertex2f(posX, posY + pFrame->height);
-    }
-    glEnd();
+
+    float uvleft   = (float)pFrame->texturePosX / pTexture->width;
+    float uvtop    = (float)pFrame->texturePosY / pTexture->height;
+    float uvright  = (float)(pFrame->texturePosX + pFrame->width)  / pTexture->width;
+    float uvbottom = (float)(pFrame->texturePosY + pFrame->height) / pTexture->height;
+
+    ta_vertex_p2t2* pVertexData = pGraphics->pFeaturesMesh->pVertexData;
+    pVertexData[0].x = posX;                 pVertexData[0].y = posY;                  pVertexData[0].u = uvleft;  pVertexData[0].v = uvtop;
+    pVertexData[1].x = posX + pFrame->width; pVertexData[1].y = posY;                  pVertexData[1].u = uvright; pVertexData[1].v = uvtop;
+    pVertexData[2].x = posX + pFrame->width; pVertexData[2].y = posY + pFrame->height; pVertexData[2].u = uvright; pVertexData[2].v = uvbottom;
+    pVertexData[3].x = posX;                 pVertexData[3].y = posY + pFrame->height; pVertexData[3].u = uvleft;  pVertexData[3].v = uvbottom;
+    ta_graphics__bind_mesh(pGraphics, pGraphics->pFeaturesMesh);
+    ta_graphics__draw_mesh(pGraphics, pGraphics->pFeaturesMesh, 4, 0);
 }
 
 void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
@@ -896,7 +1006,7 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     }
 
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
-    pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgram);
+    ta_graphics__bind_fragment_program(pGraphics, pGraphics->palettedFragmentProgram);
 
 
     // Terrain is always laid down first.
@@ -910,14 +1020,22 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     for (uint32_t iFeature = 0; iFeature < pMap->featureCount; ++iFeature)
     {
         ta_map_feature* pFeature = pMap->pFeatures + iFeature;
-        
-        // Draw the shadow if we have one.
-        if (pFeature->pType->pSequenceShadow != NULL && pGraphics->isShadowsEnabled) {
-            ta_draw_map_feature_sequance(pGraphics, pMap, pFeature, pFeature->pType->pSequenceShadow, 0, (pFeature->pType->pDesc->flags & TA_FEATURE_SHADOWTRANSPARENT) != 0);
-        }
+        if (pFeature->pType->pSequenceDefault)
+        {
+            // Draw the shadow if we have one.
+            if (pFeature->pType->pSequenceShadow != NULL && pGraphics->isShadowsEnabled) {
+                ta_draw_map_feature_sequance(pGraphics, pMap, pFeature, pFeature->pType->pSequenceShadow, 0, (pFeature->pType->pDesc->flags & TA_FEATURE_SHADOWTRANSPARENT) != 0);
+            }
 
-        if (pFeature->pCurrentSequence != NULL) {
-            ta_draw_map_feature_sequance(pGraphics, pMap, pFeature, pFeature->pCurrentSequence, pFeature->currentFrameIndex, false);    // "false" means don't use transparency.
+            if (pFeature->pCurrentSequence != NULL) {
+                ta_draw_map_feature_sequance(pGraphics, pMap, pFeature, pFeature->pCurrentSequence, pFeature->currentFrameIndex, false);    // "false" means don't use transparency.
+            }
+        }
+        else
+        {
+            // The feature has no default sequence which means it's probably a 3D object.
+
+            // TODO: Implement Me.
         }
     }
 }
@@ -982,13 +1100,13 @@ void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, bool transpare
     bool isPaletted = pTexture->components == 1;
     if (isPaletted) {
         glEnable(GL_FRAGMENT_PROGRAM_ARB);
-        pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgram);
+        ta_graphics__bind_fragment_program(pGraphics, pGraphics->palettedFragmentProgram);
     } else {
         glDisable(GL_FRAGMENT_PROGRAM_ARB);
     }
     
 
-    glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
+    ta_graphics__bind_texture(pGraphics, pTexture);
     glBegin(GL_QUADS);
     {
         float uvleft   = (float)offsetX / pTexture->width;
