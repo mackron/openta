@@ -1,7 +1,7 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
 // TODO:
-// - Use vertex buffers for the terrain mesh.
+// - Cull invisible terrain chunks.
 
 // The maximum size of the texture atlas. We don't really want to use the GPU's maximum texture size
 // because it can result in excessive wastage - modern GPUs support 16K textures, which is much more
@@ -240,13 +240,14 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
         goto on_error;
     }
 
-    pMap->terrain.pVertexData = malloc(totalTileCount*4 * sizeof(ta_vertex_p2t2));
-    if (pMap->terrain.pVertexData == NULL) {
+    ta_vertex_p2t2* pVertexData = malloc(totalTileCount*4 * sizeof(ta_vertex_p2t2));
+    if (pVertexData == NULL) {
         goto on_error;
     }
 
-    pMap->terrain.pIndexData = malloc(totalTileCount*4 * sizeof(uint32_t));
-    if (pMap->terrain.pIndexData == NULL) {
+    uint32_t* pIndexData = malloc(totalTileCount*4 * sizeof(uint32_t));
+    if (pIndexData == NULL) {
+        free(pVertexData);
         goto on_error;
     }
 
@@ -256,11 +257,16 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
     // so we can split the meshes properly.
     ta_tnt_tile_subimage* pTileSubImages = malloc(header.tileCount * sizeof(*pTileSubImages));
     if (pTileSubImages == NULL) {
+        free(pIndexData);
+        free(pVertexData);
         goto on_error;
     }
 
     // For every tile, pack it's graphic into a texture.
     if (!ta_seek_file(pTNT, header.tilegfxPtr, ta_seek_origin_start)) {
+        free(pIndexData);
+        free(pVertexData);
+        free(pTileSubImages);
         goto on_error;
     }
 
@@ -282,6 +288,8 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
             // We failed to pack the tile into the atlas. Likely we just ran out of room. Just commit that
             // texture and start a fresh one and try this tile again.
             if (!ta_map__create_and_push_texture(pMap, pPacker)) {  // <-- This will reset the texture packer.
+                free(pIndexData);
+                free(pVertexData);
                 free(pTileSubImages);
                 goto on_error;
             }
@@ -323,6 +331,8 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
                     // Seek to the first tile in this row.
                     uint32_t firstTileOnRow = ((chunkY*TA_TERRAIN_CHUNK_SIZE + tileY) * pMap->terrain.tileCountX) + (chunkX*TA_TERRAIN_CHUNK_SIZE);
                     if (!ta_seek_file(pTNT, header.mapdataPtr + (firstTileOnRow * sizeof(uint16_t)), ta_seek_origin_start)) {
+                        free(pIndexData);
+                        free(pVertexData);
                         free(pTileSubImages);
                         goto on_error;
                     }
@@ -331,6 +341,8 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
                     {
                         uint16_t tileIndex;
                         if (!ta_read_file_uint16(pTNT, &tileIndex)) {
+                            free(pIndexData);
+                            free(pVertexData);
                             free(pTileSubImages);
                             goto on_error;
                         }
@@ -341,8 +353,10 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
                             if (!isMeshAllocatedForThisTextures)
                             {
                                 // This is the first vertex for this texture so we'll need to allocate a mesh.
-                                ta_map_terrain_mesh* pNewMeshes = realloc(pChunk->pMeshes, (pChunk->meshCount+1) * sizeof(*pChunk->pMeshes));
+                                ta_map_terrain_submesh* pNewMeshes = realloc(pChunk->pMeshes, (pChunk->meshCount+1) * sizeof(*pChunk->pMeshes));
                                 if (pNewMeshes == NULL) {
+                                    free(pIndexData);
+                                    free(pVertexData);
                                     free(pTileSubImages);
                                     goto on_error;
                                 }
@@ -358,9 +372,9 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
                             }
                             
                             // We always add the vertex to the most recent mesh.
-                            ta_map_terrain_mesh* pMesh = pChunk->pMeshes + (pChunk->meshCount - 1);
+                            ta_map_terrain_submesh* pMesh = pChunk->pMeshes + (pChunk->meshCount - 1);
                             
-                            ta_vertex_p2t2* pQuad = pMap->terrain.pVertexData + chunkVertexOffset;
+                            ta_vertex_p2t2* pQuad = pVertexData + chunkVertexOffset;
 
                             float tileU = pTileSubImages[tileIndex].posX / (float)pPacker->width;
                             float tileV = pTileSubImages[tileIndex].posY / (float)pPacker->height;
@@ -391,7 +405,7 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
 
 
 
-                            uint32_t* pQuadIndices = pMap->terrain.pIndexData + chunkIndexOffset;
+                            uint32_t* pQuadIndices = pIndexData + chunkIndexOffset;
                             pQuadIndices[0] = chunkVertexOffset + 0;
                             pQuadIndices[1] = chunkVertexOffset + 1;
                             pQuadIndices[2] = chunkVertexOffset + 2;
@@ -409,6 +423,18 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
     }
 
     free(pTileSubImages);
+
+    // Finally we can create the terrains mesh.
+    pMap->terrain.pMesh = ta_create_mesh(pMap->pGame->pGraphics, ta_primitive_type_quad, ta_vertex_format_p2t2, totalTileCount*4, pVertexData, ta_index_format_uint32, totalTileCount*4, pIndexData);
+    if (pMap->terrain.pMesh == NULL) {
+        free(pIndexData);
+        free(pVertexData);
+        goto on_error;
+    }
+
+    free(pIndexData);
+    free(pVertexData);
+
 
 
     // At this point the graphics for the terrain will have been loaded, so now we need to move on to the features. The feature
@@ -618,109 +644,6 @@ ta_map_instance* ta_load_map(ta_game* pGame, const char* mapName)
     }
     
 
-#if 0
-    char filenameTNT[TA_MAX_PATH];
-    if (!drpath_copy_and_append(filenameTNT, sizeof(filenameTNT), "maps", mapName)) {
-        return NULL;
-    }
-    if (!drpath_append_extension(filenameTNT, sizeof(filenameTNT), "tnt")) {
-        return NULL;
-    }
-
-    ta_tnt* pTNT = ta_load_tnt_from_file(pGame->pFS, filenameTNT, pGame->pGraphics);
-    if (pTNT == NULL) {
-        return NULL;
-    }
-
-
-    char filenameOTA[TA_MAX_PATH];
-    if (!drpath_copy_and_append(filenameOTA, sizeof(filenameOTA), "maps", mapName)) {
-        return NULL;
-    }
-    if (!drpath_append_extension(filenameOTA, sizeof(filenameOTA), "ota")) {
-        return NULL;
-    }
-
-    // TODO: Load and handle OTA files.
-
-
-
-    ta_map_instance* pMap = calloc(1, sizeof(*pMap));
-    if (pMap == NULL) {
-        ta_unload_tnt(pTNT);
-        return NULL;
-    }
-
-    pMap->pGame = pGame;
-    pMap->pTNT = pTNT;
-
-    // Go through and load every required GAF file.
-    for (uint32_t iFeatureType = 0; iFeatureType < pMap->pTNT->featureTypesCount; ++iFeatureType)
-    {
-        ta_tnt_feature_type* pFeatureType = &pMap->pTNT->pFeatureTypes[iFeatureType];
-
-        // We need the descriptor in order to know the file name.
-        ta_feature_desc* pFeatureDesc = ta_find_feature_desc(pGame->pFeatures, pFeatureType->name);
-        if (pFeatureDesc == NULL) {
-            continue;   // Couldn't find the feature descriptor - just ignore it.
-        }
-
-        bool alreadyLoaded = false;
-        for (uint32_t iLoadedGAF = 0; iLoadedGAF < pMap->loadedGAFCount; ++iLoadedGAF)
-        {
-            if (_stricmp(pFeatureDesc->filename, pMap->pLoadedGAFs[iLoadedGAF].filename) == 0) {
-                alreadyLoaded = true;
-                break;
-            }
-        }
-
-        // Load the GAF if it's not already loaded.
-        if (!alreadyLoaded)
-        {
-            char filenameGAF[TA_MAX_PATH];
-            if (!drpath_copy_and_append(filenameGAF, sizeof(filenameGAF), "anims", pFeatureDesc->filename)) {
-                goto on_error;
-            }
-            if (!drpath_append_extension(filenameGAF, sizeof(filenameGAF), "gaf")) {
-                goto on_error;
-            }
-
-            ta_file* pGAFFile = ta_open_file(pGame->pFS, filenameGAF, 0);
-            if (pGAFFile == NULL) {
-                goto on_error;
-            }
-
-            ta_gaf* pGAF = ta_load_gaf_from_file(pGAFFile, pGame->pGraphics, pGame->palette);
-            if (pGAF == NULL) {
-                ta_close_file(pGAFFile);
-                goto on_error;
-            }
-
-            ta_close_file(pGAFFile);
-
-
-            ta_map_gaf* pNewLoadedGAFs = realloc(pMap->pLoadedGAFs, (pMap->loadedGAFCount + 1) * sizeof(*pNewLoadedGAFs));
-            if (pNewLoadedGAFs == NULL) {
-                ta_unload_gaf(pGAF);
-                goto on_error;
-            }
-
-            strcpy_s(pNewLoadedGAFs[pMap->loadedGAFCount].filename, TA_MAX_PATH, pFeatureDesc->filename);
-            pNewLoadedGAFs[pMap->loadedGAFCount].pGAF = pGAF;
-
-            pMap->pLoadedGAFs = pNewLoadedGAFs;
-            pMap->loadedGAFCount += 1;
-
-
-            printf("GAF: %s\n", pFeatureDesc->filename);
-        }
-    }
-
-
-    // Now we need to load every feature.
-
-#endif
-
     ta_texture_packer_uninit(&packer);
     return pMap;
 
@@ -739,8 +662,7 @@ void ta_unload_map(ta_map_instance* pMap)
 
     free(pMap->pFeatures);
     free(pMap->pFeatureTypes);
-    free(pMap->terrain.pVertexData);
-    free(pMap->terrain.pIndexData);
+    ta_delete_mesh(pMap->terrain.pMesh);
     free(pMap->terrain.pChunks);
     free(pMap);
 }

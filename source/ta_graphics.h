@@ -19,24 +19,24 @@ typedef struct
 
 typedef enum
 {
-    ta_mesh_vertex_format_unknown = 0,
-    ta_mesh_vertex_format_p2t2,
-    ta_mesh_vertex_format_p3t2
-} ta_mesh_vertex_format;
+    ta_vertex_format_unknown = 0,
+    ta_vertex_format_p2t2,
+    ta_vertex_format_p3t2
+} ta_vertex_format;
 
 typedef enum
 {
-    ta_mesh_index_format_uint16,
-    ta_mesh_index_format_uint32
-} ta_mesh_index_format;
+    ta_index_format_uint16 = 2,
+    ta_index_format_uint32 = 4
+} ta_index_format;  // Always make sure these ones are equal to the size in bytes of the respective type.
 
 typedef enum
 {
-    ta_mesh_primitive_type_point,
-    ta_mesh_primitive_type_line,
-    ta_mesh_primitive_type_triangle,
-    ta_mesh_primitive_type_quad
-} ta_mesh_primitive_type;
+    ta_primitive_type_point,
+    ta_primitive_type_line,
+    ta_primitive_type_triangle,
+    ta_primitive_type_quad
+} ta_primitive_type;
 
 
 // Creates a new graphics.
@@ -74,17 +74,18 @@ void ta_delete_texture(ta_texture* pTexture);
 
 
 // Creates an immutable mesh.
-ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_mesh_primitive_type primitiveType, ta_mesh_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_mesh_index_format indexFormat, uint32_t indexCount, const void* pIndexData);
+ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_index_format indexFormat, uint32_t indexCount, const void* pIndexData);
 
 // Deletes a mesh.
 void ta_delete_mesh(ta_mesh* pMesh);
 
 
-//// Limits ////
 
+//// Limits ////
 
 // Retrievs the maximum dimensions of a texture.
 unsigned int ta_get_max_texture_size(ta_graphics_context* pGraphics);
+
 
 
 //// Drawing ////

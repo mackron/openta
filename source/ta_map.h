@@ -96,7 +96,7 @@ typedef struct
     // The offset of the first index in the main index buffer.
     uint32_t indexOffset;
 
-} ta_map_terrain_mesh;
+} ta_map_terrain_submesh;
 
 // Structure containing information about a single chunk of terrain. A chunk is a square grouping of
 // tiles which make up the graphics of the terrain. Each individual tile is 32x32 pixels. A chunk is
@@ -108,7 +108,7 @@ typedef struct
 
     // The meshes making up this chunk. When the chunk is rendered, it will iterate over each of these
     // and draw them one-by-one.
-    ta_map_terrain_mesh* pMeshes;
+    ta_map_terrain_submesh* pMeshes;
 
 } ta_map_terrain_chunk;
 
@@ -127,14 +127,8 @@ typedef struct
     // The chunks making up the map. These are stored in linear order, row-by-row.
     ta_map_terrain_chunk* pChunks;
 
-    // The vertices making up the terrain's mesh data. The way this is referenced depends on each chunk. Each
-    // chunk is allocated a fixed number of vertices which it fills with the appropriate values in order for
-    // it to be rendered correctly.
-    ta_vertex_p2t2* pVertexData;
-
-    // The indices used for drawing the mesh. These are used as indexes into pVertexData. Each chunk is allocated
-    // their own group of vertices.
-    uint32_t* pIndexData;
+    // The mesh containing all of the terrains geometric detail. 
+    ta_mesh* pMesh;
 
 } ta_map_terrain;
 

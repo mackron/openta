@@ -1,9 +1,14 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-// HARDWARE REQUIREMENTS
+// REQUIRED HARDWARE REQUIREMENTS
 //
 // Multitexture (at least 2 textures)
 // ARB_vertex_program / ARG_fragment_program
+//
+//
+// OPTIONAL HARDWARE REQUIREMENTS
+//
+// Vertex Buffer Objects
 
 // TODO:
 // - Experiment with alpha testing for handling transparency instead of alpha blending.
@@ -64,6 +69,11 @@ struct ta_graphics_context
     PFNGLPROGRAMSTRINGARBPROC glProgramStringARB;
     PFNGLPROGRAMLOCALPARAMETER4FARBPROC glProgramLocalParameter4fARB;
 
+    PFNGLGENBUFFERSPROC glGenBuffers;
+    PFNGLDELETEBUFFERSPROC glDeleteBuffers;
+    PFNGLBINDBUFFERPROC glBindBuffer;
+    PFNGLBUFFERDATAPROC glBufferData;
+
 
     // Limits.
     GLint maxTextureSize;
@@ -84,7 +94,8 @@ struct ta_graphics_context
 
 
     // State
-    ta_mesh_vertex_format currentMeshVertexFormat;
+    ta_vertex_format currentMeshVertexFormat;
+    ta_mesh* pCurrentMesh;
 };
 
 struct ta_texture
@@ -114,9 +125,12 @@ struct ta_mesh
     GLenum primitiveTypeGL;
 
     // The format of the meshes vertex data.
-    ta_mesh_vertex_format vertexFormat;
+    ta_vertex_format vertexFormat;
 
     // The format of the index data.
+    ta_index_format indexFormat;
+
+    // The format of the index data for use by OpenGL.
     GLenum indexFormatGL;
 
 
@@ -230,6 +244,23 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
     pGraphics->glBindProgramARB = ta_get_gl_proc_address("glBindProgramARB");
     pGraphics->glProgramStringARB = ta_get_gl_proc_address("glProgramStringARB");
     pGraphics->glProgramLocalParameter4fARB = ta_get_gl_proc_address("glProgramLocalParameter4fARB");
+
+    // VBO
+    pGraphics->glGenBuffers = ta_get_gl_proc_address("glGenBuffers");
+    pGraphics->glDeleteBuffers = ta_get_gl_proc_address("glDeleteBuffers");
+    pGraphics->glBindBuffer = ta_get_gl_proc_address("glBindBuffer");
+    pGraphics->glBufferData = ta_get_gl_proc_address("glBufferData");
+    if (pGraphics->glGenBuffers == NULL)
+    {
+        // VBO's aren't supported in core, so try the extension APIs.
+        pGraphics->glGenBuffers = ta_get_gl_proc_address("glGenBuffersARB");
+        pGraphics->glDeleteBuffers = ta_get_gl_proc_address("glDeleteBuffersARB");
+        pGraphics->glBindBuffer = ta_get_gl_proc_address("glBindBufferARB");
+        pGraphics->glBufferData = ta_get_gl_proc_address("glBufferDataARB");
+    }
+
+    pGraphics->supportsVBO = pGraphics->glGenBuffers != NULL;
+
 
 
     // Limits.
@@ -491,7 +522,7 @@ void ta_delete_texture(ta_texture* pTexture)
 }
 
 
-ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_mesh_primitive_type primitiveType, ta_mesh_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_mesh_index_format indexFormat, uint32_t indexCount, const void* pIndexData)
+ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_index_format indexFormat, uint32_t indexCount, const void* pIndexData)
 {
     if (pGraphics == NULL || pVertexData == NULL || pIndexData == NULL) {
         return NULL;
@@ -504,18 +535,19 @@ ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_mesh_primitive_type p
 
     pMesh->pGraphics = pGraphics;
     pMesh->vertexFormat = vertexFormat;
+    pMesh->indexFormat = indexFormat;
 
-    if (primitiveType == ta_mesh_primitive_type_point) {
+    if (primitiveType == ta_primitive_type_point) {
         pMesh->primitiveTypeGL = GL_POINTS;
-    } else if (primitiveType == ta_mesh_primitive_type_line) {
+    } else if (primitiveType == ta_primitive_type_line) {
         pMesh->primitiveTypeGL = GL_LINES;
-    } else if (primitiveType == ta_mesh_primitive_type_triangle) {
+    } else if (primitiveType == ta_primitive_type_triangle) {
         pMesh->primitiveTypeGL = GL_TRIANGLES;
     } else {
         pMesh->primitiveTypeGL = GL_QUADS;
     }
 
-    if (indexFormat == ta_mesh_index_format_uint16) {
+    if (indexFormat == ta_index_format_uint16) {
         pMesh->indexFormatGL = GL_UNSIGNED_SHORT;
     } else {
         pMesh->indexFormatGL = GL_UNSIGNED_INT;
@@ -523,18 +555,13 @@ ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_mesh_primitive_type p
 
 
     uint32_t vertexBufferSize = vertexCount;
-    if (vertexFormat == ta_mesh_vertex_format_p2t2) {
+    if (vertexFormat == ta_vertex_format_p2t2) {
         vertexBufferSize *= sizeof(ta_vertex_p2t2);
     } else {
         vertexBufferSize *= sizeof(ta_vertex_p3t2);
     }
 
-    uint32_t indexBufferSize = indexCount;
-    if (indexFormat == ta_mesh_index_format_uint16) {
-        indexBufferSize *= sizeof(uint16_t);
-    } else {
-        indexBufferSize *= sizeof(uint32_t);
-    }
+    uint32_t indexBufferSize = indexCount * ((uint32_t)indexFormat);
 
 
     if (pGraphics->supportsVBO)
@@ -543,9 +570,19 @@ ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_mesh_primitive_type p
         pMesh->pVertexData = NULL;
         pMesh->pIndexData = NULL;
 
-        // TODO: Implement Me.
-        assert(false);
-        return NULL;
+        GLuint buffers[2];  // 0 = VBO; 1 = IBO.
+        pGraphics->glGenBuffers(2, buffers);
+
+
+        // Vertices.
+        pMesh->vertexObjectGL = buffers[0];
+        pGraphics->glBindBuffer(GL_ARRAY_BUFFER, pMesh->vertexObjectGL);
+        pGraphics->glBufferData(GL_ARRAY_BUFFER, vertexBufferSize, pVertexData, GL_STATIC_DRAW);
+
+        // Indices.
+        pMesh->indexObjectGL = buffers[1];
+        pGraphics->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pMesh->indexObjectGL);
+        pGraphics->glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferSize, pIndexData, GL_STATIC_DRAW);
     }
     else
     {
@@ -577,6 +614,24 @@ ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_mesh_primitive_type p
 
 void ta_delete_mesh(ta_mesh* pMesh)
 {
+    if (pMesh == NULL) {
+        return;
+    }
+
+    if (pMesh->vertexObjectGL) {
+        pMesh->pGraphics->glDeleteBuffers(1, &pMesh->vertexObjectGL);
+    }
+    if (pMesh->indexObjectGL) {
+        pMesh->pGraphics->glDeleteBuffers(1, &pMesh->indexObjectGL);
+    }
+
+    if (pMesh->pVertexData) {
+        free(pMesh->pVertexData);
+    }
+    if (pMesh->pIndexData) {
+        free(pMesh->pIndexData);
+    }
+
     free(pMesh);
 }
 
@@ -631,6 +686,76 @@ void ta_translate_camera(ta_graphics_context* pGraphics, int offsetX, int offset
 }
 
 
+void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_mesh* pMesh)
+{
+    assert(pGraphics != NULL);
+    
+    if (pGraphics->pCurrentMesh == pMesh) {
+        return;
+    }
+
+    if (pMesh != NULL)
+    {
+        if (pMesh->pVertexData != NULL)
+        {
+            // Using vertex arrays.
+            if (pGraphics->supportsVBO) {
+                pGraphics->glBindBuffer(GL_ARRAY_BUFFER, 0);
+                pGraphics->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+            }
+
+            if (pMesh->vertexFormat == ta_vertex_format_p2t2) {
+                glVertexPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), pMesh->pVertexData);
+                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), ((uint8_t*)pMesh->pVertexData) + (2*sizeof(float)));
+            } else {
+                glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2), pMesh->pVertexData);
+                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2), ((uint8_t*)pMesh->pVertexData) + (3*sizeof(float)));
+            }
+        }
+        else if (pMesh->vertexObjectGL)
+        {
+            pGraphics->glBindBuffer(GL_ARRAY_BUFFER, pMesh->vertexObjectGL);
+            pGraphics->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pMesh->indexObjectGL);
+
+            if (pMesh->vertexFormat == ta_vertex_format_p2t2) {
+                glVertexPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), 0);
+                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), (const GLvoid*)(2*sizeof(float)));
+            } else {
+                glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2), 0);
+                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2), (const GLvoid*)(3*sizeof(float)));
+            }
+        }
+    }
+    else
+    {
+        glVertexPointer(4, GL_FLOAT, 0, NULL);
+        glTexCoordPointer(4, GL_FLOAT, 0, NULL);
+
+        if (pGraphics->supportsVBO) {
+            pGraphics->glBindBuffer(GL_ARRAY_BUFFER, 0);
+            pGraphics->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        }
+    }
+
+    pGraphics->pCurrentMesh = pMesh;
+}
+
+void ta_graphics__draw_mesh(ta_graphics_context* pGraphics, ta_mesh* pMesh, uint32_t indexCount, uint32_t indexOffset)
+{
+    // Pre: The mesh is assumed to be bound.
+    assert(pGraphics != NULL);
+    assert(pGraphics->pCurrentMesh = pMesh);
+    assert(pMesh != NULL);
+
+    uint32_t byteOffset = indexOffset * ((uint32_t)pMesh->indexFormat);
+
+    if (pMesh->pIndexData != NULL) {
+        glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (uint8_t*)pMesh->pIndexData + byteOffset);
+    } else {
+        glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (const GLvoid*)byteOffset);
+    }
+}
+
 void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
 {
     // Pre: The paletted fragment program should be bound.
@@ -659,8 +784,9 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     glDisable(GL_BLEND);
 
 
-    glVertexPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), pMap->terrain.pVertexData);
-    glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), ((uint8_t*)pMap->terrain.pVertexData) + (2*sizeof(float)));
+    // The mesh must be bound before we can draw it.
+    ta_graphics__bind_mesh(pGraphics, pMap->terrain.pMesh);
+
 
     // TODO: Only draw visible chunks.
     // TODO: Stop using begin/end.
@@ -669,9 +795,9 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
         ta_map_terrain_chunk* pChunk = &pMap->terrain.pChunks[iChunk];
         for (uint32_t iMesh = 0; iMesh < pChunk->meshCount; ++iMesh)
         {
-            ta_map_terrain_mesh* pMesh = &pChunk->pMeshes[iMesh];
-            ta_vertex_p2t2* pVertices = pMap->terrain.pVertexData;
-            uint32_t* pIndices = pMap->terrain.pIndexData + pMesh->indexOffset;
+            ta_map_terrain_submesh* pMesh = &pChunk->pMeshes[iMesh];
+            ta_vertex_p2t2* pVertices = pMap->terrain.pMesh->pVertexData;
+            uint32_t* pIndices = (uint32_t*)pMap->terrain.pMesh->pIndexData + pMesh->indexOffset;
 
 #if 1
             glDrawElements(GL_QUADS, pMesh->indexCount, GL_UNSIGNED_INT, pIndices);
