@@ -212,7 +212,14 @@ ta_gaf* ta_open_gaf(ta_fs* pFS, const char* filename)
     return pGAF;
 
 on_error:
-    free(pGAF);
+    if (pGAF) {
+        if (pGAF->pFile) {
+            ta_close_file(pGAF->pFile);
+        }
+
+        free(pGAF);
+    }
+    
     return NULL;
 }
 
