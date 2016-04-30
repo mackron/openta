@@ -30,6 +30,9 @@ struct ta_graphics_context
     // The fragment program to use when drawing an object with a paletted texture.
     GLuint palettedFragmentProgram;
 
+    // The fragment program to use when drawing alpha transparent objects.
+    GLuint palettedFragmentProgramTransparent;
+
 
     // Platform Specific.
 #if _WIN32
@@ -73,6 +76,13 @@ struct ta_graphics_context
     // The position of the camera.
     int cameraPosX;
     int cameraPosY;
+
+
+
+    // Settings.
+    
+    // Are shadows enabled.
+    bool isShadowsEnabled;
 };
 
 struct ta_texture
@@ -127,6 +137,11 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
     pGraphics->pGame          = pGame;
     pGraphics->pCurrentWindow = NULL;
 
+    // Default settings.
+    pGraphics->isShadowsEnabled = true;
+
+
+    // Platform specific.
 #ifdef _WIN32
     pGraphics->hDummyHWND = NULL;
     pGraphics->hDummyDC   = NULL;
@@ -220,6 +235,28 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
     pGraphics->glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, sizeof(palettedFragmentProgramStr) - 1, palettedFragmentProgramStr);    // -1 to remove null terminator.
 
     GLint errorPos;
+    glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
+    if (errorPos != -1)
+    {
+        // Error.
+        printf("--- FRAGMENT SHADER ---\n%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+    }
+
+
+    pGraphics->glGenProgramsARB(1, &pGraphics->palettedFragmentProgramTransparent);
+    pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgramTransparent);
+
+    const char palettedFragmentProgramTransparentStr[] =
+        "!!ARBfp1.0\n"
+        "TEMP paletteIndex;\n"
+        "TEX paletteIndex, fragment.texcoord[0], texture[0], 2D;\n"
+        "TEMP color;"
+        "TEX color, paletteIndex, texture[1], 2D;\n"
+        "MUL result.color, color, {1.0, 1.0, 1.0, 0.5};\n"
+        "END";
+    pGraphics->glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, sizeof(palettedFragmentProgramTransparentStr) - 1, palettedFragmentProgramTransparentStr);    // -1 to remove null terminator.
+
+    errorPos;
     glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
     if (errorPos != -1)
     {
@@ -511,6 +548,47 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     }
 }
 
+void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_feature_sequence* pSequence, uint32_t frameIndex, bool transparent)
+{
+    if (pSequence == NULL) {
+        return;
+    }
+
+    ta_map_feature_frame* pFrame = pSequence->pFrames + frameIndex;
+
+    // The position to draw the feature's graphic depends on it's position in the world and it's offset. Also, the y position
+    // needs to be adjusted based on the object's altitude to simulate perspective.
+    float posX = pFeature->posX - pFrame->offsetX;
+    float posY = pFeature->posY - pFrame->offsetY;
+    float posZ = pFeature->posZ;
+
+    // Perspective correction for the height.
+    posY -= (int)posZ/2;
+
+
+    if (transparent) {
+        pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgramTransparent);
+    } else {
+        pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgram);
+    }
+
+    ta_texture* pTexture = pMap->ppTextures[pFeature->pCurrentSequence->pFrames[pFeature->currentFrameIndex].textureIndex];
+    glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
+    glBegin(GL_QUADS);
+    {
+        float uvleft   = (float)pFrame->texturePosX / pTexture->width;
+        float uvtop    = (float)pFrame->texturePosY / pTexture->height;
+        float uvright  = (float)(pFrame->texturePosX + pFrame->width)  / pTexture->width;
+        float uvbottom = (float)(pFrame->texturePosY + pFrame->height) / pTexture->height;
+
+        glTexCoord2f(uvleft, uvtop); glVertex2f(posX, posY);
+        glTexCoord2f(uvright, uvtop); glVertex2f(posX + pFrame->width, posY);
+        glTexCoord2f(uvright, uvbottom); glVertex2f(posX + pFrame->width, posY + pFrame->height);
+        glTexCoord2f(uvleft, uvbottom); glVertex2f(posX, posY + pFrame->height);
+    }
+    glEnd();
+}
+
 void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
 {
     if (pGraphics == NULL || pMap == NULL) {
@@ -532,37 +610,37 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     for (uint32_t iFeature = 0; iFeature < pMap->featureCount; ++iFeature)
     {
         ta_map_feature* pFeature = pMap->pFeatures + iFeature;
-        if (pFeature->pCurrentSequence != NULL)
-        {
-            ta_map_feature_frame* pFrame = pFeature->pCurrentSequence->pFrames + pFeature->currentFrameIndex;
+        
+        // Draw the shadow if we have one.
+        if (pFeature->pType->pSequenceShadow != NULL && pGraphics->isShadowsEnabled) {
+            ta_draw_map_feature_sequance(pGraphics, pMap, pFeature, pFeature->pType->pSequenceShadow, 0, (pFeature->pType->pDesc->flags & TA_FEATURE_SHADOWTRANSPARENT) != 0);
+        }
 
-            // The position to draw the feature's graphic depends on it's position in the world and it's offset. Also, the y position
-            // needs to be adjusted based on the object's altitude to simulate perspective.
-            float posX = pFeature->posX - pFrame->offsetX;
-            float posY = pFeature->posY - pFrame->offsetY;
-            float posZ = pFeature->posZ;
-
-            // Perspective correction for the height.
-            posY -= (int)posZ/2;
-
-            
-            ta_texture* pTexture = pMap->ppTextures[pFeature->pCurrentSequence->pFrames[pFeature->currentFrameIndex].textureIndex];
-            glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
-            glBegin(GL_QUADS);
-            {
-                float uvleft   = (float)pFrame->texturePosX / pTexture->width;
-                float uvtop    = (float)pFrame->texturePosY / pTexture->height;
-                float uvright  = (float)(pFrame->texturePosX + pFrame->width)  / pTexture->width;
-                float uvbottom = (float)(pFrame->texturePosY + pFrame->height) / pTexture->height;
-
-                glTexCoord2f(uvleft, uvtop); glVertex2f(posX, posY);
-                glTexCoord2f(uvright, uvtop); glVertex2f(posX + pFrame->width, posY);
-                glTexCoord2f(uvright, uvbottom); glVertex2f(posX + pFrame->width, posY + pFrame->height);
-                glTexCoord2f(uvleft, uvbottom); glVertex2f(posX, posY + pFrame->height);
-            }
-            glEnd();
+        if (pFeature->pCurrentSequence != NULL) {
+            ta_draw_map_feature_sequance(pGraphics, pMap, pFeature, pFeature->pCurrentSequence, pFeature->currentFrameIndex, false);    // "false" means don't use transparency.
         }
     }
+}
+
+
+//// Settings ////
+
+void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, bool isShadowsEnabled)
+{
+    if (pGraphics == NULL) {
+        return;
+    }
+
+    pGraphics->isShadowsEnabled = isShadowsEnabled;
+}
+
+bool ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
+{
+    if (pGraphics == NULL) {
+        return false;
+    }
+
+    return pGraphics->isShadowsEnabled;
 }
 
 
@@ -594,7 +672,7 @@ void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, bool transpare
 
     if (transparent) {
         glEnable(GL_BLEND);
-        glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     } else {
         glDisable(GL_BLEND);
     }
