@@ -795,26 +795,50 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     int cameraRight = cameraLeft + pGraphics->resolutionX;
     int cameraBottom = cameraTop + pGraphics->resolutionY;
 
-    int32_t chunkPixelWidth  = TA_TERRAIN_CHUNK_SIZE * 32;
-    int32_t chunkPixelHeight = TA_TERRAIN_CHUNK_SIZE * 32;
+    int chunkPixelWidth  = TA_TERRAIN_CHUNK_SIZE * 32;
+    int chunkPixelHeight = TA_TERRAIN_CHUNK_SIZE * 32;
 
-    int32_t firstVisibleChunkX = cameraLeft / chunkPixelWidth;
-    int32_t firstVisibleChunkY = cameraTop / chunkPixelHeight;
-    int32_t visibleChunkCountX = 1 + ((pGraphics->resolutionX - (firstVisibleChunkX*chunkPixelWidth  - cameraLeft)) / chunkPixelWidth  + 1);
-    int32_t visibleChunkCountY = 1 + ((pGraphics->resolutionY - (firstVisibleChunkY*chunkPixelHeight - cameraTop )) / chunkPixelHeight + 1);
+    // To determine the visible chunks we just need to find the left most and top most chunk. Then we just take the remining space on
+    // the screen on each axis to calculate how many visible chunks remain.
+    int firstChunkPosX = cameraLeft / chunkPixelWidth;
+    if (firstChunkPosX < 0) {
+        firstChunkPosX = 0;
+    }
 
-    if (firstVisibleChunkX < 0) {
-        firstVisibleChunkX = 0;
+    int firstChunkPosY = cameraTop / chunkPixelHeight;
+    if (firstChunkPosY < 0) {
+        firstChunkPosY = 0;
     }
-    if (firstVisibleChunkY < 0) {
-        firstVisibleChunkY = 0;
+
+    int pixelsRemainingX = pGraphics->resolutionX - ((firstChunkPosX*chunkPixelWidth  + chunkPixelWidth)  - cameraLeft);
+    int pixelsRemainingY = pGraphics->resolutionY - ((firstChunkPosY*chunkPixelHeight + chunkPixelHeight) - cameraTop);
+
+    int visibleChunkCountX = 0;
+    if (cameraRight > 0 && cameraLeft < (int)(pMap->terrain.tileCountX*32)) {
+        visibleChunkCountX = 1 + (pixelsRemainingX / chunkPixelWidth) + 1;
+        if (firstChunkPosX + visibleChunkCountX > (int)pMap->terrain.chunkCountX) {
+            visibleChunkCountX = pMap->terrain.chunkCountX - firstChunkPosX;
+        }
     }
+
+    int visibleChunkCountY = 0;
+    if (cameraBottom > 0 && cameraTop < (int)(pMap->terrain.tileCountY*32)) {
+        visibleChunkCountY = 1 + (pixelsRemainingY / chunkPixelHeight) + 1;
+        if (firstChunkPosY + visibleChunkCountY > (int)pMap->terrain.chunkCountY) {
+            visibleChunkCountY = pMap->terrain.chunkCountY - firstChunkPosY;
+        }
+    }
+
+    if (visibleChunkCountX == 0 || visibleChunkCountY == 0) {
+        return;
+    }
+
 
     for (int32_t chunkY = 0; chunkY < visibleChunkCountY; ++chunkY)
     {
         for (int32_t chunkX = 0; chunkX < visibleChunkCountX; ++chunkX)
         {
-            ta_map_terrain_chunk* pChunk =  &pMap->terrain.pChunks[((chunkY+firstVisibleChunkY) * pMap->terrain.chunkCountX) + (chunkX+firstVisibleChunkX)];
+            ta_map_terrain_chunk* pChunk =  &pMap->terrain.pChunks[((chunkY+firstChunkPosY) * pMap->terrain.chunkCountX) + (chunkX+firstChunkPosX)];
             for (uint32_t iMesh = 0; iMesh < pChunk->meshCount; ++iMesh)
             {
                 ta_map_terrain_submesh* pSubmesh = &pChunk->pMeshes[iMesh];
