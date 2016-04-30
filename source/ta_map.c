@@ -9,9 +9,6 @@
 // a power of 2.
 #define TA_MAX_TEXTURE_ATLAS_SIZE   4096
 
-// The number of tiles making up a chunk, on each dimension.
-#define TA_TERRAIN_CHUNK_SIZE   16
-
 typedef struct
 {
     uint32_t id;

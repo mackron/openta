@@ -789,32 +789,37 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
 
 
     // TODO: Only draw visible chunks.
-    // TODO: Stop using begin/end.
-    for (uint32_t iChunk = 0; iChunk < pMap->terrain.chunkCountX*pMap->terrain.chunkCountY; ++iChunk)
+
+    int cameraLeft = pGraphics->cameraPosX;
+    int cameraTop  = pGraphics->cameraPosY;
+    int cameraRight = cameraLeft + pGraphics->resolutionX;
+    int cameraBottom = cameraTop + pGraphics->resolutionY;
+
+    int32_t chunkPixelWidth  = TA_TERRAIN_CHUNK_SIZE * 32;
+    int32_t chunkPixelHeight = TA_TERRAIN_CHUNK_SIZE * 32;
+
+    int32_t firstVisibleChunkX = cameraLeft / chunkPixelWidth;
+    int32_t firstVisibleChunkY = cameraTop / chunkPixelHeight;
+    int32_t visibleChunkCountX = 1 + ((pGraphics->resolutionX - (firstVisibleChunkX*chunkPixelWidth  - cameraLeft)) / chunkPixelWidth  + 1);
+    int32_t visibleChunkCountY = 1 + ((pGraphics->resolutionY - (firstVisibleChunkY*chunkPixelHeight - cameraTop )) / chunkPixelHeight + 1);
+
+    if (firstVisibleChunkX < 0) {
+        firstVisibleChunkX = 0;
+    }
+    if (firstVisibleChunkY < 0) {
+        firstVisibleChunkY = 0;
+    }
+
+    for (int32_t chunkY = 0; chunkY < visibleChunkCountY; ++chunkY)
     {
-        ta_map_terrain_chunk* pChunk = &pMap->terrain.pChunks[iChunk];
-        for (uint32_t iMesh = 0; iMesh < pChunk->meshCount; ++iMesh)
+        for (int32_t chunkX = 0; chunkX < visibleChunkCountX; ++chunkX)
         {
-            ta_map_terrain_submesh* pMesh = &pChunk->pMeshes[iMesh];
-            ta_vertex_p2t2* pVertices = pMap->terrain.pMesh->pVertexData;
-            uint32_t* pIndices = (uint32_t*)pMap->terrain.pMesh->pIndexData + pMesh->indexOffset;
-
-#if 1
-            glDrawElements(GL_QUADS, pMesh->indexCount, GL_UNSIGNED_INT, pIndices);
-#endif
-
-#if 0
-            glBindTexture(GL_TEXTURE_2D, pMap->ppTextures[pChunk->pMeshes[iMesh].textureIndex]->objectGL);
-            glBegin(GL_QUADS);
+            ta_map_terrain_chunk* pChunk =  &pMap->terrain.pChunks[((chunkY+firstVisibleChunkY) * pMap->terrain.chunkCountX) + (chunkX+firstVisibleChunkX)];
+            for (uint32_t iMesh = 0; iMesh < pChunk->meshCount; ++iMesh)
             {
-                for (uint32_t iIndex = 0; iIndex < pMesh->indexCount; ++iIndex)
-                {
-                    glTexCoord2f(pVertices[pIndices[iIndex]].u, pVertices[pIndices[iIndex]].v);
-                    glVertex2f(pVertices[pIndices[iIndex]].x, pVertices[pIndices[iIndex]].y);
-                }
+                ta_map_terrain_submesh* pSubmesh = &pChunk->pMeshes[iMesh];
+                ta_graphics__draw_mesh(pGraphics, pMap->terrain.pMesh, pSubmesh->indexCount, pSubmesh->indexOffset);
             }
-            glEnd();
-#endif
         }
     }
 }

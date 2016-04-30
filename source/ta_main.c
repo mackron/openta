@@ -89,6 +89,13 @@
 // Bob Jenkins' lookup3 hash
 #include "lookup3.c"
 
+
+// Private Options
+
+// The number of tiles making up a chunk, on each dimension.
+#define TA_TERRAIN_CHUNK_SIZE   16
+
+
 // Total Annihilation source files.
 #include "ta_misc.c"
 #include "ta_platform_layer.c"
