@@ -223,12 +223,12 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
     pMap->terrain.tileCountY = header.height/2;
 
     pMap->terrain.chunkCountX = pMap->terrain.tileCountX / TA_TERRAIN_CHUNK_SIZE;
-    if ((pMap->terrain.chunkCountX & TA_TERRAIN_CHUNK_SIZE) > 0) {
+    if ((pMap->terrain.chunkCountX % TA_TERRAIN_CHUNK_SIZE) > 0) {
         pMap->terrain.chunkCountX += 1;
     }
 
     pMap->terrain.chunkCountY = pMap->terrain.tileCountY / TA_TERRAIN_CHUNK_SIZE;
-    if ((pMap->terrain.chunkCountY & TA_TERRAIN_CHUNK_SIZE) > 0) {
+    if ((pMap->terrain.chunkCountY % TA_TERRAIN_CHUNK_SIZE) > 0) {
         pMap->terrain.chunkCountY += 1;
     }
 
@@ -257,7 +257,7 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
     // We need to pack the tile graphics into textures before we can generate the terrain meshes. We
     // use the packer to do this. For each tile we pack we need to track a little bit of information
     // so we can split the meshes properly.
-    ta_tnt_tile_subimage* pTileSubImages = malloc(pMap->terrain.tileCountX*pMap->terrain.tileCountY * sizeof(*pTileSubImages));
+    ta_tnt_tile_subimage* pTileSubImages = malloc(header.tileCount * sizeof(*pTileSubImages));
     if (pTileSubImages == NULL) {
         goto on_error;
     }
