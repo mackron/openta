@@ -275,6 +275,8 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
+    glClearDepth(1.0f);
+    glClearColor(0, 0, 0, 0);
     
     // Always using fragment programs.
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
@@ -507,8 +509,14 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     // Pre: Fragment program should be enabled.
 
     // The terrain is the base layer so there's no need to clear the color buffer - we just draw over it anyway.
-    glClearDepth(1.0f);
-    glClear(GL_DEPTH_BUFFER_BIT);
+    GLbitfield clearFlags = GL_DEPTH_BUFFER_BIT;
+    if (pGraphics->cameraPosX < 0 || (uint32_t)pGraphics->cameraPosX + pGraphics->resolutionX > (pMap->terrain.tileCountX * 32) ||
+        pGraphics->cameraPosY < 0 || (uint32_t)pGraphics->cameraPosY + pGraphics->resolutionY > (pMap->terrain.tileCountY * 32)) {
+        clearFlags |= GL_COLOR_BUFFER_BIT;
+    }
+
+    glClear(clearFlags);
+
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
