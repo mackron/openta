@@ -283,6 +283,9 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     }
     pGraphics->glActiveTexture(GL_TEXTURE0 + 0);
     
@@ -1015,7 +1018,7 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
 
     // Features can be assumed to be transparent.
     glEnable(GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     for (uint32_t iFeature = 0; iFeature < pMap->featureCount; ++iFeature)
     {
