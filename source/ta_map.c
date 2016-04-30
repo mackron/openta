@@ -1,10 +1,7 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
 // TODO:
-// - This needs a big optimization:
-//   - Inline the TNT and GAF file loading - they're both pretty simple.
-//   - Only load the graphics for features that are actually used
-//   - Use vertex buffers for the terrain mesh.
+// - Use vertex buffers for the terrain mesh.
 
 // The maximum size of the texture atlas. We don't really want to use the GPU's maximum texture size
 // because it can result in excessive wastage - modern GPUs support 16K textures, which is much more
