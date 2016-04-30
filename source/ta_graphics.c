@@ -67,6 +67,7 @@ struct ta_graphics_context
 
     // Limits.
     GLint maxTextureSize;
+    GLboolean supportsVBO;
 
 
     // The current resolution.
@@ -78,11 +79,12 @@ struct ta_graphics_context
     int cameraPosY;
 
 
-
     // Settings.
-    
-    // Are shadows enabled.
     bool isShadowsEnabled;
+
+
+    // State
+    ta_mesh_vertex_format currentMeshVertexFormat;
 };
 
 struct ta_texture
@@ -101,6 +103,34 @@ struct ta_texture
 
     // The number of components in the texture. If this is set to 1, the texture will be treated as paletted.
     uint32_t components;
+};
+
+struct ta_mesh
+{
+    // The graphics context that owns this mesh.
+    ta_graphics_context* pGraphics;
+
+    // The type of primitive making up the mesh.
+    GLenum primitiveTypeGL;
+
+    // The format of the meshes vertex data.
+    ta_mesh_vertex_format vertexFormat;
+
+    // The format of the index data.
+    GLenum indexFormatGL;
+
+
+    // A pointer to the vertex data. If VBO's are being used this will be NULL.
+    void* pVertexData;
+
+    // A pointer to the index data. If VBO's are being used this will be NULL.
+    void* pIndexData;
+
+    // The buffer object for the vertex data. This is 0 if VBO's are not being used.
+    GLuint vertexObjectGL;
+
+    // The buffer object for the index data. This is 0 if VBO's are not being used.
+    GLuint indexObjectGL;
 };
 
 
@@ -277,6 +307,11 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
 
     glClearDepth(1.0f);
     glClearColor(0, 0, 0, 0);
+
+
+    // Always using vertex and texture coordinate arrays.
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     
     // Always using fragment programs.
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
@@ -456,6 +491,99 @@ void ta_delete_texture(ta_texture* pTexture)
 }
 
 
+ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_mesh_primitive_type primitiveType, ta_mesh_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_mesh_index_format indexFormat, uint32_t indexCount, const void* pIndexData)
+{
+    if (pGraphics == NULL || pVertexData == NULL || pIndexData == NULL) {
+        return NULL;
+    }
+
+    ta_mesh* pMesh = malloc(sizeof(*pMesh));
+    if (pMesh == NULL) {
+        return NULL;
+    }
+
+    pMesh->pGraphics = pGraphics;
+    pMesh->vertexFormat = vertexFormat;
+
+    if (primitiveType == ta_mesh_primitive_type_point) {
+        pMesh->primitiveTypeGL = GL_POINTS;
+    } else if (primitiveType == ta_mesh_primitive_type_line) {
+        pMesh->primitiveTypeGL = GL_LINES;
+    } else if (primitiveType == ta_mesh_primitive_type_triangle) {
+        pMesh->primitiveTypeGL = GL_TRIANGLES;
+    } else {
+        pMesh->primitiveTypeGL = GL_QUADS;
+    }
+
+    if (indexFormat == ta_mesh_index_format_uint16) {
+        pMesh->indexFormatGL = GL_UNSIGNED_SHORT;
+    } else {
+        pMesh->indexFormatGL = GL_UNSIGNED_INT;
+    }
+
+
+    uint32_t vertexBufferSize = vertexCount;
+    if (vertexFormat == ta_mesh_vertex_format_p2t2) {
+        vertexBufferSize *= sizeof(ta_vertex_p2t2);
+    } else {
+        vertexBufferSize *= sizeof(ta_vertex_p3t2);
+    }
+
+    uint32_t indexBufferSize = indexCount;
+    if (indexFormat == ta_mesh_index_format_uint16) {
+        indexBufferSize *= sizeof(uint16_t);
+    } else {
+        indexBufferSize *= sizeof(uint32_t);
+    }
+
+
+    if (pGraphics->supportsVBO)
+    {
+        // Use VBO's.
+        pMesh->pVertexData = NULL;
+        pMesh->pIndexData = NULL;
+
+        // TODO: Implement Me.
+        assert(false);
+        return NULL;
+    }
+    else
+    {
+        // Do not use VBO's.
+        pMesh->vertexObjectGL = 0;
+        pMesh->indexObjectGL = 0;
+
+        pMesh->pVertexData = malloc(vertexBufferSize);
+        if (pMesh->pVertexData == NULL) {
+            free(pMesh);
+            return NULL;
+        }
+
+        memcpy(pMesh->pVertexData, pVertexData, vertexBufferSize);
+
+
+        pMesh->pIndexData = malloc(indexBufferSize);
+        if (pMesh->pIndexData == NULL) {
+            free(pMesh->pVertexData);
+            free(pMesh);
+            return NULL;
+        }
+
+        memcpy(pMesh->pIndexData, pIndexData, indexBufferSize);
+    }
+
+    return pMesh;
+}
+
+void ta_delete_mesh(ta_mesh* pMesh)
+{
+    free(pMesh);
+}
+
+
+
+//// Limits ////
+
 unsigned int ta_get_max_texture_size(ta_graphics_context* pGraphics)
 {
     if (pGraphics == NULL) {
@@ -531,6 +659,9 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     glDisable(GL_BLEND);
 
 
+    glVertexPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), pMap->terrain.pVertexData);
+    glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), ((uint8_t*)pMap->terrain.pVertexData) + (2*sizeof(float)));
+
     // TODO: Only draw visible chunks.
     // TODO: Stop using begin/end.
     for (uint32_t iChunk = 0; iChunk < pMap->terrain.chunkCountX*pMap->terrain.chunkCountY; ++iChunk)
@@ -542,6 +673,11 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
             ta_vertex_p2t2* pVertices = pMap->terrain.pVertexData;
             uint32_t* pIndices = pMap->terrain.pIndexData + pMesh->indexOffset;
 
+#if 1
+            glDrawElements(GL_QUADS, pMesh->indexCount, GL_UNSIGNED_INT, pIndices);
+#endif
+
+#if 0
             glBindTexture(GL_TEXTURE_2D, pMap->ppTextures[pChunk->pMeshes[iMesh].textureIndex]->objectGL);
             glBegin(GL_QUADS);
             {
@@ -552,6 +688,7 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
                 }
             }
             glEnd();
+#endif
         }
     }
 }

@@ -8,6 +8,36 @@ typedef struct
     float v;
 } ta_vertex_p2t2;
 
+typedef struct
+{
+    float x;
+    float y;
+    float z;
+    float u;
+    float v;
+} ta_vertex_p3t2;
+
+typedef enum
+{
+    ta_mesh_vertex_format_unknown = 0,
+    ta_mesh_vertex_format_p2t2,
+    ta_mesh_vertex_format_p3t2
+} ta_mesh_vertex_format;
+
+typedef enum
+{
+    ta_mesh_index_format_uint16,
+    ta_mesh_index_format_uint32
+} ta_mesh_index_format;
+
+typedef enum
+{
+    ta_mesh_primitive_type_point,
+    ta_mesh_primitive_type_line,
+    ta_mesh_primitive_type_triangle,
+    ta_mesh_primitive_type_quad
+} ta_mesh_primitive_type;
+
 
 // Creates a new graphics.
 ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette[256]);
@@ -41,6 +71,16 @@ ta_texture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width
 
 // Deletes the given texture.
 void ta_delete_texture(ta_texture* pTexture);
+
+
+// Creates an immutable mesh.
+ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_mesh_primitive_type primitiveType, ta_mesh_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_mesh_index_format indexFormat, uint32_t indexCount, const void* pIndexData);
+
+// Deletes a mesh.
+void ta_delete_mesh(ta_mesh* pMesh);
+
+
+//// Limits ////
 
 
 // Retrievs the maximum dimensions of a texture.
