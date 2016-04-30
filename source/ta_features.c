@@ -134,7 +134,7 @@ static bool ta_features_library__load_feature(ta_features_library* pLib, const c
 
     ta_feature_desc* pFeature = pLib->pFeatures + pLib->featuresCount;
     memset(pFeature, 0, sizeof(*pFeature));
-    pFeature->hash = ta_features_library__hash_string(featureName);
+    strcpy_s(pFeature->name, sizeof(pFeature->name), featureName);
 
     for (uint32_t iVar = 0; iVar < pFeatureConfig->varCount; ++iVar)
     {
@@ -293,7 +293,7 @@ static void ta_features_library__optimize(ta_features_library* pLib)
 }
 
 
-static ta_feature_desc* ta_features_library__find_by_hash(ta_features_library* pLib, uint32_t hash)
+static ta_feature_desc* ta_features_library__find_by_name(ta_features_library* pLib, const char* name)
 {
     assert(pLib != NULL);
 
@@ -306,7 +306,7 @@ static ta_feature_desc* ta_features_library__find_by_hash(ta_features_library* p
     {
         // Linear search.
         for (uint32_t iFeature = 0; iFeature < pLib->featuresCount; ++iFeature) {
-            if (pLib->pFeatures[iFeature].hash == hash) {
+            if (_stricmp(pLib->pFeatures[iFeature].name, name) == 0) {
                 return pLib->pFeatures + iFeature;
             }
         }
@@ -364,5 +364,5 @@ void ta_delete_features_library(ta_features_library* pLib)
 
 ta_feature_desc* ta_find_feature_desc(ta_features_library* pLib, const char* featureName)
 {
-    return ta_features_library__find_by_hash(pLib, ta_features_library__hash_string(featureName));
+    return ta_features_library__find_by_name(pLib, featureName);
 }

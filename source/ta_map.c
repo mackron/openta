@@ -7,7 +7,7 @@
 // because it can result in excessive wastage - modern GPUs support 16K textures, which is much more
 // than we need and it's better to not needlessly waste the player's system resources. Keep this at
 // a power of 2.
-#define TA_MAX_TEXTURE_ATLAS_SIZE   4096
+#define TA_MAX_TEXTURE_ATLAS_SIZE   512 /*4096*/
 
 typedef struct
 {
@@ -70,6 +70,11 @@ int ta_map__sort_feature_types_by_filename(const void* a, const void* b)
 {
     const ta_map_feature_type* pFeatureTypeA = a;
     const ta_map_feature_type* pFeatureTypeB = b;
+
+    if (pFeatureTypeA->pDesc == NULL || pFeatureTypeB->pDesc == NULL) {
+        return -1;
+    }
+
     return strcmp(pFeatureTypeA->pDesc->filename, pFeatureTypeB->pDesc->filename);
 }
 

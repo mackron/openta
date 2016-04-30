@@ -58,8 +58,8 @@ typedef enum
 // Note that not every property is stored in this structure - only what we need.
 struct ta_feature_desc
 {
-    // The hash representing the feature descriptors name.
-    uint32_t hash;  // <-- If collisions becomes an issue when using a 32-bit hash, consider switching to 64-bit.
+    // The name of the feature. This is used when searching for the feature.
+    char name[64];
 
     // The description of the feature. This is shown at the bottom of the screen when the player places the mouse over the object.
     char description[64];

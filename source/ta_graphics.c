@@ -513,10 +513,13 @@ ta_texture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width
     glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, pImageData);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
-
     // Must use nearest/nearest filtering in order for palettes to work properly.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    if (pGraphics->pCurrentTexture) {
+        glBindTexture(GL_TEXTURE_2D, pGraphics->pCurrentTexture->objectGL);
+    }
 
 
     ta_texture* pTexture = malloc(sizeof(*pTexture));
@@ -942,6 +945,7 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
             for (uint32_t iMesh = 0; iMesh < pChunk->meshCount; ++iMesh)
             {
                 ta_map_terrain_submesh* pSubmesh = &pChunk->pMeshes[iMesh];
+                ta_graphics__bind_texture(pGraphics, pMap->ppTextures[pSubmesh->textureIndex]);
                 ta_graphics__draw_mesh(pGraphics, pMap->terrain.pMesh, pSubmesh->indexCount, pSubmesh->indexOffset);
             }
         }
@@ -984,7 +988,7 @@ void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instanc
         ta_graphics__bind_fragment_program(pGraphics, pGraphics->palettedFragmentProgram);
     }
 
-    ta_texture* pTexture = pMap->ppTextures[pFeature->pCurrentSequence->pFrames[pFeature->currentFrameIndex].textureIndex];
+    ta_texture* pTexture = pMap->ppTextures[pSequence->pFrames[pFeature->currentFrameIndex].textureIndex];
     ta_graphics__bind_texture(pGraphics, pTexture);
 
 
