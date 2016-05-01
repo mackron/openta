@@ -23,10 +23,6 @@ typedef struct
     // The index of the texture atlas that the frame's graphic is contained in.
     uint16_t textureIndex;
 
-
-    //uint16_t pIndexData[4];
-    //ta_vertex_p2t2 pVertexData[4];
-
 } ta_map_feature_frame;
 
 typedef struct
@@ -38,6 +34,11 @@ typedef struct
     ta_map_feature_frame pFrames[1];
 
 } ta_map_feature_sequence;
+
+typedef struct
+{
+    int temp;
+} ta_map_feature_3do;
 
 typedef struct
 {
@@ -80,7 +81,7 @@ typedef struct
     float posY;
     float posZ;
 
-    // The current sequence to show when drawing the feature.
+    // The current sequence to show when drawing the feature. This will be null if the object is 3D.
     ta_map_feature_sequence* pCurrentSequence;
 
     // The index of the current frame in the sequence. This is used for for determining which frame to draw at render time.

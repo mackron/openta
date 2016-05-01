@@ -497,8 +497,12 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
         else
         {
             // It's not a 2D feature so assume it's a 3D one.
-            
-            // TODO: Load 3DO file.
+            ta_3do* p3DO = ta_open_3do(pMap->pGame->pFS, pFeatureType->pDesc->object);
+            if (p3DO != NULL)
+            {
+                // TODO: Load 3DO file.
+                ta_close_3do(p3DO);
+            }
         }
     }
 
