@@ -38,8 +38,7 @@ bool ta_3do__read_object_header(ta_file* pFile, ta_3do_object_header* pHeader)
         !ta_read_file_uint32(pFile, &pHeader->vertexPtr) ||
         !ta_read_file_uint32(pFile, &pHeader->primitivePtr) ||
         !ta_read_file_uint32(pFile, &pHeader->nextSiblingPtr) ||
-        !ta_read_file_uint32(pFile, &pHeader->firstChildPtr))
-    {
+        !ta_read_file_uint32(pFile, &pHeader->firstChildPtr)) {
         return false;
     }
 
@@ -78,6 +77,9 @@ ta_3do* ta_open_3do(ta_fs* pFS, const char* fileName)
     if (!ta_3do__read_object_header(p3DO->pFile, &header)) {
         goto on_error;
     }
+
+
+
 
 
     return p3DO;
