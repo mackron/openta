@@ -95,21 +95,3 @@ void ta_window_release_mouse();
 
 // Runs the main application loop.
 int ta_main_loop(ta_game* pGame);
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// Timers
-//
-///////////////////////////////////////////////////////////////////////////////
-
-typedef struct ta_timer ta_timer;
-
-// Creates a high-resolution timer.
-ta_timer* ta_create_timer();
-
-// Deletes the given high-resolution timer.
-void ta_delete_timer(ta_timer* pTimer);
-
-// Ticks the timer and returns the number of seconds since the previous tick.
-double ta_tick_timer(ta_timer* pTimer);

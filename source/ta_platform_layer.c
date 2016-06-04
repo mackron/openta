@@ -474,46 +474,6 @@ HDC ta_get_window_hdc(ta_window* pWindow)
 
     return GetDC(pWindow->hWnd);
 }
-
-
-struct ta_timer
-{
-    // The high performance counter frequency.
-    LARGE_INTEGER frequency;
-
-    // The timer counter at the point in the time the timer was last ticked.
-    LARGE_INTEGER counter;
-};
-
-ta_timer* ta_create_timer()
-{
-    ta_timer* pTimer = malloc(sizeof(*pTimer));
-    if (pTimer == NULL) {
-        return NULL;
-    }
-
-    if (!QueryPerformanceFrequency(&pTimer->frequency) || !QueryPerformanceCounter(&pTimer->counter)) {
-        free(pTimer);
-        return NULL;
-    }
-
-    return pTimer;
-}
-
-void ta_delete_timer(ta_timer* pTimer)
-{
-    free(pTimer);
-}
-
-double ta_tick_timer(ta_timer* pTimer)
-{
-    LARGE_INTEGER oldCounter = pTimer->counter;
-    if (!QueryPerformanceCounter(&pTimer->counter)) {
-        return 0;
-    }
-
-    return (pTimer->counter.QuadPart - oldCounter.QuadPart) / (double)pTimer->frequency.QuadPart;
-}
 #endif
 
 #ifdef __linux__

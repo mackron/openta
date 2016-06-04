@@ -21,7 +21,7 @@ struct ta_game
     ta_window* pWindow;
 
     // The game timer for stepping the game.
-    ta_timer* pTimer;
+    dr_timer timer;
 
     // The audio context.
     draudio_context* pAudioContext;
@@ -42,6 +42,10 @@ struct ta_game
     // The position of the mouse at the time it was clicked.
     int mouseDownPosX;
     int mouseDownPosY;
+
+
+
+    ta_texture* pTexture;
 };
 
 // Creates a game instance.

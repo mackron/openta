@@ -23,7 +23,7 @@
 // dr_libs headers.
 #define DR_WAV_NO_STDIO
 
-#include "../../dr_libs/dr_util.h"
+#include "../../dr_libs/dr.h"
 #include "../../dr_libs/dr_path.h"
 #include "../../dr_libs/dr_audio.h"
 #include "../../dr_libs/dr_wav.h"
@@ -38,7 +38,7 @@
 #define DR_MATH_IMPLEMENTATION
 #define DR_PCX_IMPLEMENTATION
 
-#include "../../dr_libs/dr_util.h"
+#include "../../dr_libs/dr.h"
 #include "../../dr_libs/dr_path.h"
 #include "../../dr_libs/dr_audio.h"
 #include "../../dr_libs/dr_wav.h"

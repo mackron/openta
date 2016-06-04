@@ -86,10 +86,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
 
     // Initialize the timer last so that the first frame has as accurate of a delta time as possible.
-    pGame->pTimer = ta_create_timer();
-    if (pGame->pTimer == NULL) {
-        goto on_error;
-    }
+    dr_timer_init(&pGame->timer);
 
 
     ta_graphics_disable_vsync(pGame->pGraphics, pGame->pWindow);
@@ -126,10 +123,6 @@ on_error:
             draudio_delete_context(pGame->pAudioContext);
         }
 
-        if (pGame->pTimer != NULL) {
-            ta_delete_timer(pGame->pTimer);
-        }
-
         if (pGame->pFS != NULL) {
             ta_delete_file_system(pGame->pFS);
         }
@@ -147,7 +140,6 @@ void ta_delete_game(ta_game* pGame)
     ta_delete_window(pGame->pWindow);
     ta_delete_graphics_context(pGame->pGraphics);
     draudio_delete_context(pGame->pAudioContext);
-    ta_delete_timer(pGame->pTimer);
     ta_delete_file_system(pGame->pFS);
     free(pGame);
 }
@@ -177,7 +169,7 @@ void ta_game_step(ta_game* pGame)
 
     // The first thing we need to do is figure out the delta time. We use high-resolution timing for this so we can have good accuracy
     // at high frame rates.
-    const double dt = ta_tick_timer(pGame->pTimer);
+    const double dt = dr_timer_tick(&pGame->timer);
 }
 
 void ta_game_render(ta_game* pGame)
@@ -191,6 +183,7 @@ void ta_game_render(ta_game* pGame)
         }
 
         //ta_draw_texture(pGame->pCurrentMap->ppTextures[pGame->pCurrentMap->textureCount-1], false);
+        //ta_draw_texture(pGame->pTexture, false);
     }
     ta_graphics_present(pGame->pGraphics, pGame->pWindow);
 }
