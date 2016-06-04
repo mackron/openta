@@ -2,22 +2,17 @@
 //
 // Credits to http://units.tauniverse.com/tutorials/tadesign/tadesign/ta-3do-fmtV2.txt for the description of the 3DO file format.
 
-typedef struct
+bool ta_3do__init_object_from_header(ta_3do* p3DO, ta_3do_object* pObject, ta_3do_object_header* pHeader)
 {
-    uint32_t version;
-    uint32_t vertexCount;
-    uint32_t primitiveCount;
-    uint32_t selectionPrimitivePtr; // Only used by the root object.
-    int32_t  relativePosX;
-    int32_t  relativePosY;
-    int32_t  relativePosZ;
-    uint32_t namePtr;
-    uint32_t unused;
-    uint32_t vertexPtr;
-    uint32_t primitivePtr;
-    uint32_t nextSiblingPtr;
-    uint32_t firstChildPtr;
-} ta_3do_object_header;
+    assert(pObject != NULL);
+    memset(pObject, 0, sizeof(*pObject));
+
+    pObject->header = *pHeader;
+    pObject->name = p3DO->pFile->pFileData + pHeader->namePtr;
+
+    //printf("OBJECT: %s\n", pObject->name);
+    return true;
+}
 
 bool ta_3do__read_object_header(ta_file* pFile, ta_3do_object_header* pHeader)
 {
@@ -43,6 +38,60 @@ bool ta_3do__read_object_header(ta_file* pFile, ta_3do_object_header* pHeader)
     }
 
     return true;
+}
+
+ta_3do_object* ta_3do__load_object_recursive(ta_3do* p3DO)
+{
+    // PRE: The file must be sitting on the first byte of the object's header.
+
+    assert(p3DO != NULL);
+
+    ta_3do_object_header header;
+    if (!ta_3do__read_object_header(p3DO->pFile, &header)) {
+        return NULL;
+    }
+
+    ta_3do_object *pObject = (ta_3do_object*)malloc(sizeof(*pObject));
+    if (pObject == NULL) {
+        return NULL;
+    }
+
+    if (!ta_3do__init_object_from_header(p3DO, pObject, &header)) {
+        free(pObject);
+        return NULL;
+    }
+
+    // If the object has a sibling or child, they need to be loaded. The sibling comes first, but it doesn't really matter.
+
+    // Next sibling.
+    if (header.nextSiblingPtr != 0) {
+        if (!ta_seek_file(p3DO->pFile, header.nextSiblingPtr, ta_seek_origin_start)) {
+            free(pObject);
+            return NULL;
+        }
+
+        pObject->pNextSibling = ta_3do__load_object_recursive(p3DO);
+        if (pObject->pNextSibling == NULL) {
+            free(pObject);
+            return NULL;
+        }
+    }
+    
+    // First child.
+    if (header.firstChildPtr != 0) {
+        if (!ta_seek_file(p3DO->pFile, header.firstChildPtr, ta_seek_origin_start)) {
+            free(pObject);
+            return NULL;
+        }
+
+        pObject->pFirstChild = ta_3do__load_object_recursive(p3DO);
+        if (pObject->pFirstChild == NULL) {
+            free(pObject);
+            return NULL;
+        }
+    }
+
+    return pObject;
 }
 
 
@@ -73,13 +122,10 @@ ta_3do* ta_open_3do(ta_fs* pFS, const char* fileName)
     }
 
     
-    ta_3do_object_header header;
-    if (!ta_3do__read_object_header(p3DO->pFile, &header)) {
+    p3DO->pRootObject = ta_3do__load_object_recursive(p3DO);
+    if (p3DO->pRootObject == NULL) {
         goto on_error;
     }
-
-
-
 
 
     return p3DO;
@@ -97,4 +143,25 @@ void ta_close_3do(ta_3do* p3DO)
 
     ta_close_file(p3DO->pFile);
     free(p3DO);
+}
+
+
+bool ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* pHeaderOut)
+{
+    if (pFile == NULL || pHeaderOut == NULL) {
+        return false;
+    }
+
+    if (!ta_read_file_uint32(pFile, &pHeaderOut->colorIndex) ||
+        !ta_read_file_uint32(pFile, &pHeaderOut->indexCount) ||
+        !ta_read_file_uint32(pFile, &pHeaderOut->unused0) ||
+        !ta_read_file_uint32(pFile, &pHeaderOut->indexArrayPtr) ||
+        !ta_read_file_uint32(pFile, &pHeaderOut->textureNamePtr) ||
+        !ta_read_file_uint32(pFile, &pHeaderOut->unused1) ||
+        !ta_read_file_uint32(pFile, &pHeaderOut->unused2) ||
+        !ta_read_file_uint32(pFile, &pHeaderOut->unused3)) {
+        return false;
+    }
+
+    return true;
 }

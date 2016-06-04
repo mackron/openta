@@ -64,6 +64,8 @@ typedef struct
     // The sequence to use when drawing the shadow.
     ta_map_feature_sequence* pSequenceShadow;
 
+    // The 3DO object, if it has one. This can be null.
+    ta_3do* p3DO;
 
     // The original index of the feature. Internal use only.
     uint32_t _index;

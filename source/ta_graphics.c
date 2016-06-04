@@ -875,7 +875,7 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, 0, 1);
+    glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -1006,6 +1006,121 @@ void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instanc
     ta_graphics__draw_mesh(pGraphics, pGraphics->pFeaturesMesh, 4, 0);
 }
 
+void ta_draw_map_feature_3do_object_recursive(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_3do* p3DO, ta_3do_object* pObject)
+{
+    glDisable(GL_DEPTH_TEST);
+
+    glPushMatrix();
+    glTranslatef((float)pObject->header.relativePosX, (float)pObject->header.relativePosY, (float)pObject->header.relativePosZ);
+    glRotatef(27, 1, 0, 0);
+    {
+        // TEMP. Quad around the footprint to begin with for testing.
+        glDisable(GL_FRAGMENT_PROGRAM_ARB);
+        glDisable(GL_BLEND);
+
+#if 0
+        float quadX = -pFeature->pType->pDesc->footprintX/2.0f;
+        float quadY = -pFeature->pType->pDesc->footprintY/2.0f;
+        float quadSizeX = pFeature->pType->pDesc->footprintX * 16.0f;
+        float quadSizeY = pFeature->pType->pDesc->footprintY * 16.0f;
+
+        glColor3f(0, 1, 0);
+        glBegin(GL_QUADS);
+        {
+            glVertex2f(quadX, quadY);
+            glVertex2f(quadX + quadSizeX, quadY);
+            glVertex2f(quadX + quadSizeX, quadY + quadSizeY);
+            glVertex2f(quadX, quadY + quadSizeY);
+        }
+        glEnd();
+#else
+        // For each primitive...
+        for (uint32_t iPrim = 0; iPrim < pObject->header.primitiveCount; ++iPrim)
+        {
+            if (!ta_seek_file(p3DO->pFile, pObject->header.primitivePtr + (iPrim*sizeof(ta_3do_primitive_header)), ta_seek_origin_start)) {
+                break;
+            }
+
+            ta_3do_primitive_header header;
+            if (!ta_3do_read_primitive_header(p3DO->pFile, &header)) {
+                break;
+            }
+
+            // TODO: Add support for triangles and lines. Shouldn't need to draw points because I think they're only used as markers for key points on an object.
+            if (header.indexCount == 4)
+            {
+                uint16_t indices[4];
+                if (!ta_seek_file(p3DO->pFile, header.indexArrayPtr, ta_seek_origin_start)) {
+                    break;
+                }
+
+                if (!ta_read_file(p3DO->pFile, indices, sizeof(indices), NULL)) {
+                    break;
+                }
+
+
+                ta_3do_vec3 vertices[4] = {{0}};
+                for (int i = 0; i < 4; ++i)
+                {
+                    if (!ta_seek_file(p3DO->pFile, pObject->header.vertexPtr + (indices[i]*sizeof(long)*3), ta_seek_origin_start)) {
+                        break;
+                    }
+
+                    if (!ta_read_file(p3DO->pFile, &vertices[i].x, sizeof(long)*3, NULL)) {
+                        break;
+                    }
+                }
+
+                
+                glColor3f(0, 1, 0);
+                glBegin(GL_QUADS);
+                {
+                    for (int i = 0; i < 4; ++i) {
+                        glVertex3f((float)vertices[i].x/32768, (float)vertices[i].z/32768, (float)vertices[i].y/32768);
+                    }
+                }
+                glEnd();
+            }
+        }
+#endif
+        glEnable(GL_FRAGMENT_PROGRAM_ARB);
+        glEnable(GL_BLEND);
+
+
+
+        // Children before siblings, but it probably doesn't matter.
+        if (pObject->pFirstChild) {
+            ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, pObject->pFirstChild);
+        }
+        if (pObject->pNextSibling) {
+            ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, pObject->pNextSibling);
+        }
+    }
+    glPopMatrix();
+}
+
+void ta_draw_map_feature_3do(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_3do* p3DO)
+{
+    assert(pGraphics != NULL);
+    assert(pMap != NULL);
+    assert(p3DO != NULL);
+
+    float posX = pFeature->posX;
+    float posY = pFeature->posY;
+    float posZ = pFeature->posZ;
+
+    // Perspective correction for the height.
+    posY -= (int)posZ/2;
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glTranslatef(posX, posY, 0);
+    {
+        ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, p3DO->pRootObject);
+    }
+    glPopMatrix();
+}
+
 void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
 {
     if (pGraphics == NULL || pMap == NULL) {
@@ -1041,8 +1156,9 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
         else
         {
             // The feature has no default sequence which means it's probably a 3D object.
-
-            // TODO: Implement Me.
+            if (pFeature->pType->p3DO != NULL) {
+                ta_draw_map_feature_3do(pGraphics, pMap, pFeature, pFeature->pType->p3DO);
+            }
         }
     }
 }

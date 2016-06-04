@@ -65,7 +65,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     }
 
     // Create a show the window as soon as we can to make loading feel faster.
-    pGame->pWindow = ta_graphics_create_window(pGame->pGraphics, "Total Annihilation", 640, 480, TA_WINDOW_FULLSCREEN | TA_WINDOW_CENTERED);
+    pGame->pWindow = ta_graphics_create_window(pGame->pGraphics, "Total Annihilation", 1280, 720, TA_WINDOW_FULLSCREEN | TA_WINDOW_CENTERED);
     if (pGame->pWindow == NULL) {
         goto on_error;
     }
