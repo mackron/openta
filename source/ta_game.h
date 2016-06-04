@@ -24,7 +24,7 @@ struct ta_game
     dr_timer timer;
 
     // The audio context.
-    draudio_context* pAudioContext;
+    dra_context* pAudioContext;
 
 
     // The features library. This is initialized once at startup from every TDF file in the "features" directory, and it's sub-directories. The

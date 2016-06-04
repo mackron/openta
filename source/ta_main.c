@@ -20,29 +20,25 @@
 #endif
 #endif
 
-// dr_libs headers.
-#define DR_WAV_NO_STDIO
-
-#include "../../dr_libs/dr.h"
-#include "../../dr_libs/dr_path.h"
-#include "../../dr_libs/dr_audio.h"
-#include "../../dr_libs/dr_wav.h"
-#include "../../dr_libs/dr_math.h"
-#include "../../dr_libs/dr_pcx.h"
 
 // dr_libs
 #define DR_UTIL_IMPLEMENTATION
-#define DR_PATH_IMPLEMENTATION
-#define DR_AUDIO_IMPLEMENTATION
-#define DR_WAV_IMPLEMENTATION
-#define DR_MATH_IMPLEMENTATION
-#define DR_PCX_IMPLEMENTATION
-
 #include "../../dr_libs/dr.h"
+
+#define DR_PATH_IMPLEMENTATION
 #include "../../dr_libs/dr_path.h"
+
+#define DR_AUDIO_IMPLEMENTATION
 #include "../../dr_libs/dr_audio.h"
+
+#define DR_WAV_IMPLEMENTATION
+#define DR_WAV_NO_STDIO
 #include "../../dr_libs/dr_wav.h"
+
+#define DR_MATH_IMPLEMENTATION
 #include "../../dr_libs/dr_math.h"
+
+#define DR_PCX_IMPLEMENTATION
 #include "../../dr_libs/dr_pcx.h"
 
 

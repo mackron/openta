@@ -71,7 +71,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     }
 
     // Audio system.
-    pGame->pAudioContext = draudio_create_context();
+    pGame->pAudioContext = dra_context_create();
     if (pGame->pAudioContext == NULL) {
         goto on_error;
     }
@@ -120,7 +120,7 @@ on_error:
         }
 
         if (pGame->pAudioContext != NULL) {
-            draudio_delete_context(pGame->pAudioContext);
+            dra_context_delete(pGame->pAudioContext);
         }
 
         if (pGame->pFS != NULL) {
@@ -139,7 +139,7 @@ void ta_delete_game(ta_game* pGame)
 
     ta_delete_window(pGame->pWindow);
     ta_delete_graphics_context(pGame->pGraphics);
-    draudio_delete_context(pGame->pAudioContext);
+    dra_context_delete(pGame->pAudioContext);
     ta_delete_file_system(pGame->pFS);
     free(pGame);
 }
