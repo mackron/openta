@@ -37,8 +37,47 @@ typedef struct
 
 typedef struct
 {
-    int temp;
-} ta_map_feature_3do;
+    // The index of the texture to use when drawing the mesh.
+    uint16_t textureIndex;
+
+    // The mesh data.
+    ta_mesh* pMesh;
+
+} ta_map_3do_mesh;
+
+typedef struct
+{
+    float relativePosX;
+    float relativePosY;
+    float relativePosZ;
+
+    // The index of the next sibling.
+    uint32_t nextSiblingIndex;
+
+    // The index of the first child.
+    uint32_t firstChildIndex;
+
+    // The number of meshes making up the object. Meshes are split based on the texture index. 
+    size_t meshCount;
+
+} ta_map_3do_object;
+
+typedef struct
+{
+    // The number of objects making up the 3DO.
+    uint32_t objectCount;
+    
+    // The list of objects making up the 3DO. The root object is always at index 0.
+    ta_map_3do_object* pObjects;
+
+    // The number of meshes making up the geometric data of every object. There is usually one mesh per object,
+    // but there may be more if an object's mesh data is split over multiple texture atlases.
+    uint32_t meshCount;
+
+    // The list of meshes making up the geometric data of every object. These are grouped 
+    ta_map_3do_mesh* pMeshes;
+
+} ta_map_3do;
 
 typedef struct
 {
@@ -65,7 +104,7 @@ typedef struct
     ta_map_feature_sequence* pSequenceShadow;
 
     // The 3DO object, if it has one. This can be null.
-    ta_3do* p3DO;
+    ta_map_3do* p3DO;
 
     // The original index of the feature. Internal use only.
     uint32_t _index;

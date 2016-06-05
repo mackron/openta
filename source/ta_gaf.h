@@ -13,7 +13,7 @@ typedef struct
 
 } ta_gaf_entry;
 
-typedef struct
+struct ta_gaf
 {
     // The name of the file as specified by ta_open_gaf().
     char filename[TA_MAX_PATH];
@@ -30,7 +30,7 @@ typedef struct
     // Internal use only. The number of frames in the currently selected entry.
     uint32_t _entryFrameCount;
 
-} ta_gaf;
+};
 
 // Opens a GAF archive.
 ta_gaf* ta_open_gaf(ta_fs* pFS, const char* filename);

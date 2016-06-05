@@ -31,6 +31,21 @@ typedef struct
     uint32_t textureIndex;
 } ta_tnt_tile_subimage;
 
+typedef struct
+{
+    char name[256];
+    uint32_t posX;
+    uint32_t posY;
+    uint32_t sizeX;
+    uint32_t sizeY;
+    uint32_t textureIndex;
+} ta_map_loaded_texture;
+
+typedef struct
+{
+    uint32_t count;
+    ta_map_loaded_texture* pTextures;
+} ta_map_loaded_textures;
 
 bool ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_packer* pPacker)
 {
@@ -136,6 +151,116 @@ ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_tex
 
     return pSeq;
 }
+
+uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_file* pFile, ta_map_3do* p3DO, uint32_t nextObjectIndex)
+{
+    assert(pMap != NULL);
+    assert(pFile != NULL);
+    assert(p3DO != NULL);
+    assert(p3DO->objectCount > nextObjectIndex);
+
+    // The file should be sitting on the first byte of the header of the object.
+    ta_3do_object_header header;
+    if (!ta_3do_read_object_header(pFile, &header)) {
+        return 0;
+    }
+
+    uint32_t thisIndex = nextObjectIndex;
+    uint32_t firstChildIndex = thisIndex + 1;
+
+    p3DO->pObjects[thisIndex].meshCount = 0;
+    p3DO->pObjects[thisIndex].relativePosX = (float)header.relativePosX;
+    p3DO->pObjects[thisIndex].relativePosX = (float)header.relativePosY;
+    p3DO->pObjects[thisIndex].relativePosX = (float)header.relativePosZ;
+
+
+    // TODO: Implement Me.
+    p3DO->meshCount = 0;
+    p3DO->pMeshes = NULL;
+
+
+    uint32_t childCount = 0;
+    if (header.firstChildPtr != 0) {
+        p3DO->pObjects[thisIndex].firstChildIndex = firstChildIndex;
+        childCount = ta_map__load_3do_objects_recursive(pMap, pFile, p3DO, firstChildIndex);
+        if (childCount == 0) {
+            return 0;   // An error occured.
+        }
+    } else {
+        p3DO->pObjects[thisIndex].firstChildIndex = 0;
+    }
+    
+    uint32_t siblingCount = 0;
+    uint32_t nextSiblingIndex = firstChildIndex + childCount;
+    if (header.nextSiblingPtr != 0) {
+        p3DO->pObjects[thisIndex].nextSiblingIndex = nextSiblingIndex;
+        siblingCount = ta_map__load_3do_objects_recursive(pMap, pFile, p3DO, nextSiblingIndex);
+        if (siblingCount == 0) {
+            return 0;   // An error occured.
+        }
+    } else {
+        p3DO->pObjects[thisIndex].nextSiblingIndex = 0;
+    }
+    
+    return 1 + childCount + siblingCount;
+}
+
+ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, const char* objectName)
+{
+    // 3DO files are in the "objects" folder.
+    char fullFileName[TA_MAX_PATH];
+    if (!drpath_copy_and_append(fullFileName, sizeof(fullFileName), "objects", objectName)) {
+        return NULL;
+    }
+    if (!drpath_extension_equal(objectName, "3do")) {
+        if (!drpath_append_extension(fullFileName, sizeof(fullFileName), "3do")) {
+            return NULL;
+        }
+    }
+
+    ta_file* pFile = ta_open_file(pMap->pGame->pFS, fullFileName, 0);
+    if (pFile == NULL) {
+        return NULL;
+    }
+
+    uint32_t objectCount = ta_3do_count_objects(pFile);
+    if (objectCount == 0) {
+        ta_close_file(pFile);
+        return NULL;
+    }
+
+    ta_map_3do* p3DO = (ta_map_3do*)malloc(sizeof(*p3DO));
+    if (p3DO == NULL) {
+        ta_close_file(pFile);
+        return NULL;
+    }
+
+    p3DO->meshCount = 0;
+    p3DO->pMeshes = NULL;
+
+    p3DO->objectCount = objectCount;
+    p3DO->pObjects = (ta_map_3do_object*)malloc(objectCount * sizeof(*p3DO->pObjects));
+    if (p3DO->pObjects == NULL) {
+        ta_close_file(pFile);
+        free(p3DO);
+        return NULL;
+    }
+
+    ta_seek_file(pFile, 0, ta_seek_origin_start);
+
+    uint32_t objectsLoaded = ta_map__load_3do_objects_recursive(pMap, pFile, p3DO, 0);
+    if (objectsLoaded != p3DO->objectCount) {
+        ta_close_file(pFile);
+        free(p3DO->pMeshes);
+        free(p3DO->pObjects);
+        free(p3DO);
+        return NULL;
+    }
+
+    ta_close_file(pFile);
+    return p3DO;
+}
+
 
 void ta_map__calculate_object_position_xy(uint32_t tileX, uint32_t tileY, uint16_t objectFootprintX, uint16_t objectFootprintY, float* pPosXOut, float* pPosYOut)
 {
@@ -497,10 +622,15 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
         else
         {
             // It's not a 2D feature so assume it's a 3D one.
-            pFeatureType->p3DO = ta_open_3do(pMap->pGame->pFS, pFeatureType->pDesc->object);
+            pFeatureType->p3DO = ta_map__load_3do(pMap, pFeatureType->pDesc->object);
             if (pFeatureType->p3DO == NULL) {
                 goto on_error;
             }
+
+            //pFeatureType->p3DO = ta_open_3do(pMap->pGame->pFS, pFeatureType->pDesc->object);
+            //if (pFeatureType->p3DO == NULL) {
+            //    goto on_error;
+            //}
         }
     }
 

@@ -14,32 +14,6 @@ bool ta_3do__init_object_from_header(ta_3do* p3DO, ta_3do_object* pObject, ta_3d
     return true;
 }
 
-bool ta_3do__read_object_header(ta_file* pFile, ta_3do_object_header* pHeader)
-{
-    // PRE: The file must be sitting on the first byte of the header.
-
-    assert(pFile != NULL);
-    assert(pHeader != NULL);
-
-    if (!ta_read_file_uint32(pFile, &pHeader->version) || pHeader->version != 1 ||
-        !ta_read_file_uint32(pFile, &pHeader->vertexCount) ||
-        !ta_read_file_uint32(pFile, &pHeader->primitiveCount) ||
-        !ta_read_file_uint32(pFile, &pHeader->selectionPrimitivePtr) ||
-        !ta_read_file_int32( pFile, &pHeader->relativePosX) ||
-        !ta_read_file_int32( pFile, &pHeader->relativePosY) ||
-        !ta_read_file_int32( pFile, &pHeader->relativePosZ) ||
-        !ta_read_file_uint32(pFile, &pHeader->namePtr) ||
-        !ta_read_file_uint32(pFile, &pHeader->unused) ||
-        !ta_read_file_uint32(pFile, &pHeader->vertexPtr) ||
-        !ta_read_file_uint32(pFile, &pHeader->primitivePtr) ||
-        !ta_read_file_uint32(pFile, &pHeader->nextSiblingPtr) ||
-        !ta_read_file_uint32(pFile, &pHeader->firstChildPtr)) {
-        return false;
-    }
-
-    return true;
-}
-
 ta_3do_object* ta_3do__load_object_recursive(ta_3do* p3DO)
 {
     // PRE: The file must be sitting on the first byte of the object's header.
@@ -47,7 +21,7 @@ ta_3do_object* ta_3do__load_object_recursive(ta_3do* p3DO)
     assert(p3DO != NULL);
 
     ta_3do_object_header header;
-    if (!ta_3do__read_object_header(p3DO->pFile, &header)) {
+    if (!ta_3do_read_object_header(p3DO->pFile, &header)) {
         return NULL;
     }
 
@@ -145,6 +119,31 @@ void ta_close_3do(ta_3do* p3DO)
     free(p3DO);
 }
 
+bool ta_3do_read_object_header(ta_file* pFile, ta_3do_object_header* pHeader)
+{
+    // PRE: The file must be sitting on the first byte of the header.
+
+    assert(pFile != NULL);
+    assert(pHeader != NULL);
+
+    if (!ta_read_file_uint32(pFile, &pHeader->version) || pHeader->version != 1 ||
+        !ta_read_file_uint32(pFile, &pHeader->vertexCount) ||
+        !ta_read_file_uint32(pFile, &pHeader->primitiveCount) ||
+        !ta_read_file_uint32(pFile, &pHeader->selectionPrimitivePtr) ||
+        !ta_read_file_int32( pFile, &pHeader->relativePosX) ||
+        !ta_read_file_int32( pFile, &pHeader->relativePosY) ||
+        !ta_read_file_int32( pFile, &pHeader->relativePosZ) ||
+        !ta_read_file_uint32(pFile, &pHeader->namePtr) ||
+        !ta_read_file_uint32(pFile, &pHeader->unused) ||
+        !ta_read_file_uint32(pFile, &pHeader->vertexPtr) ||
+        !ta_read_file_uint32(pFile, &pHeader->primitivePtr) ||
+        !ta_read_file_uint32(pFile, &pHeader->nextSiblingPtr) ||
+        !ta_read_file_uint32(pFile, &pHeader->firstChildPtr)) {
+        return false;
+    }
+
+    return true;
+}
 
 bool ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* pHeaderOut)
 {
@@ -164,4 +163,35 @@ bool ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* pHead
     }
 
     return true;
+}
+
+uint32_t ta_3do_count_objects(ta_file* pFile)
+{
+    ta_3do_object_header header;
+    if (!ta_3do_read_object_header(pFile, &header)) {
+        return 0;
+    }
+
+    uint32_t count = 1;
+
+    // Siblings.
+    if (header.nextSiblingPtr != 0) {
+        if (!ta_seek_file(pFile, header.nextSiblingPtr, ta_seek_origin_start)) {
+            return 0;
+        }
+
+        count += ta_3do_count_objects(pFile);
+    }
+
+    // Children.
+    if (header.firstChildPtr != 0) {
+        if (!ta_seek_file(pFile, header.firstChildPtr, ta_seek_origin_start)) {
+            return 0;
+        }
+
+        count += ta_3do_count_objects(pFile);
+    }
+
+
+    return count;
 }

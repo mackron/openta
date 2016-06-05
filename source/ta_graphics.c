@@ -1006,8 +1006,22 @@ void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instanc
     ta_graphics__draw_mesh(pGraphics, pGraphics->pFeaturesMesh, 4, 0);
 }
 
-void ta_draw_map_feature_3do_object_recursive(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_3do* p3DO, ta_3do_object* pObject)
+void ta_draw_map_feature_3do_object_recursive(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_3do* p3DO, uint32_t objectIndex)
 {
+    ta_map_3do_object* pObject = &p3DO->pObjects[objectIndex];
+    assert(pObject != NULL);
+
+
+    // Children before siblings, but it doesn't really matter.
+    if (pObject->firstChildIndex != 0) {
+        ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, pObject->firstChildIndex);
+    }
+    if (pObject->nextSiblingIndex) {
+        ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, pObject->nextSiblingIndex);
+    }
+
+
+#if 0
     glDisable(GL_DEPTH_TEST);
 
     glPushMatrix();
@@ -1097,9 +1111,10 @@ void ta_draw_map_feature_3do_object_recursive(ta_graphics_context* pGraphics, ta
         }
     }
     glPopMatrix();
+#endif
 }
 
-void ta_draw_map_feature_3do(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_3do* p3DO)
+void ta_draw_map_feature_3do(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_3do* p3DO)
 {
     assert(pGraphics != NULL);
     assert(pMap != NULL);
@@ -1116,7 +1131,7 @@ void ta_draw_map_feature_3do(ta_graphics_context* pGraphics, ta_map_instance* pM
     glPushMatrix();
     glTranslatef(posX, posY, 0);
     {
-        ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, p3DO->pRootObject);
+        ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, 0);
     }
     glPopMatrix();
 }

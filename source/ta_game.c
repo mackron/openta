@@ -77,6 +77,33 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     }
 
 
+    // Texture GAFs. This is every GAF file contained in the "textures" directory. These are loaded in two passes. The first
+    // pass counts the number of GAF files, and the second pass opens them.
+    pGame->textureGAFCount = 0;
+    ta_fs_iterator* iGAF = ta_fs_begin(pGame->pFS, "textures", false);
+    while (ta_fs_next(iGAF)) {
+        if (drpath_extension_equal(iGAF->fileInfo.relativePath, "gaf")) {
+            pGame->textureGAFCount += 1;
+        }
+    }
+    ta_fs_end(iGAF);
+
+    pGame->ppTextureGAFs = (ta_gaf**)malloc(pGame->textureGAFCount * sizeof(*pGame->ppTextureGAFs));
+    if (pGame->ppTextureGAFs == NULL) {
+        goto on_error;  // Failed to load texture GAFs.
+    }
+
+    pGame->textureGAFCount = 0;
+    iGAF = ta_fs_begin(pGame->pFS, "textures", false);
+    while (ta_fs_next(iGAF)) {
+        if (drpath_extension_equal(iGAF->fileInfo.relativePath, "gaf")) {
+            pGame->ppTextureGAFs[pGame->textureGAFCount] = ta_open_gaf(pGame->pFS, iGAF->fileInfo.relativePath);
+            pGame->textureGAFCount += 1;
+        }
+    }
+
+
+
     // Features.
     pGame->pFeatures = ta_create_features_library(pGame->pFS);
     if (pGame->pFeatures == NULL) {

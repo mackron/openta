@@ -35,6 +35,12 @@ struct ta_game
     ta_map_instance* pCurrentMap;
 
 
+    // The number of opened texture GAFs.
+    uint32_t textureGAFCount;
+
+    // The list of GAF files containing textures. This is initialized when the game context is created.
+    ta_gaf** ppTextureGAFs;
+
 
     // Whether or not the middle mouse button is down.
     bool isMMBDown;
