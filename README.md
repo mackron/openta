@@ -3,9 +3,9 @@ get too excited just yet.
 
 #Building
 Building OpenTA is easy:
-  1) clone this repository
-  2) clone dr_libs (https://github.com/mackron/dr_libs) into the same root directory
-  3) compile ta_main.c using your favourite compiler
+- clone this repository
+- clone dr_libs (https://github.com/mackron/dr_libs) into the same root directory
+- compile ta_main.c using your favourite compiler
   
 You may need to link to a few ubiquitous system libraries, but there are no hard to build dependencies.
 
