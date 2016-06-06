@@ -43,9 +43,14 @@ typedef struct
 
 typedef struct
 {
-    uint32_t count;
-    ta_map_loaded_texture* pTextures;
-} ta_map_loaded_textures;
+    ta_texture_packer texturePacker;
+
+    size_t loadedTexturesBufferSize;
+    size_t loadedTexturesCount;
+    ta_map_loaded_texture* pLoadedTextures;
+
+
+} ta_map_load_context;
 
 bool ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_packer* pPacker)
 {
@@ -152,7 +157,79 @@ ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_tex
     return pSeq;
 }
 
-uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_file* pFile, ta_map_3do* p3DO, uint32_t nextObjectIndex)
+
+bool ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadContext, const char* textureName, ta_map_loaded_texture* pTextureOut)
+{
+    assert(pMap != NULL);
+    assert(pLoadContext != NULL);
+    assert(textureName != NULL);
+    assert(pTextureOut != NULL);
+
+    // If a texture of the same name has already been loaded, we just return that one.
+    for (size_t i = 0; i < pLoadContext->loadedTexturesCount; ++i) {
+        if (_stricmp(pLoadContext->pLoadedTextures[i].name, textureName) == 0) {
+            *pTextureOut = pLoadContext->pLoadedTextures[i];
+            return true;
+        }
+    }
+
+    if (pLoadContext->loadedTexturesCount == pLoadContext->loadedTexturesBufferSize)
+    {
+        size_t newBufferSize = (pLoadContext->loadedTexturesBufferSize == 0) ? 16 : pLoadContext->loadedTexturesBufferSize*2;
+        ta_map_loaded_texture* pNewTextures = (ta_map_loaded_texture*)realloc(pLoadContext->pLoadedTextures, newBufferSize * sizeof(*pNewTextures));
+        if (pNewTextures == NULL) {
+            return false;
+        }
+
+        pLoadContext->loadedTexturesBufferSize = newBufferSize;
+        pLoadContext->pLoadedTextures = pNewTextures;
+    }
+
+
+    // Here is where the texture is loaded. To load the texture we need to find it from the list of always-open GAF files managed by
+    // the game context.
+    size_t i = pLoadContext->loadedTexturesCount;
+    assert(i < pLoadContext->loadedTexturesBufferSize);
+
+    for (size_t iGAF = 0; iGAF < pMap->pGame->textureGAFCount; ++iGAF)
+    {
+        uint32_t frameCount;
+        if (ta_gaf_select_entry(pMap->pGame->ppTextureGAFs[iGAF], textureName, &frameCount))
+        {
+            uint32_t width;
+            uint32_t height;
+            uint32_t posX;
+            uint32_t posY;
+            uint8_t* pTextureData = ta_gaf_get_frame(pMap->pGame->ppTextureGAFs[iGAF], 0, &width, &height, &posX, &posY);
+            if (pTextureData == NULL) {
+                return false;
+            }
+
+            // The texture was successfully loaded, so now it needs to be packed into an atlas.
+            ta_texture_packer_slot subtextureSlot;
+            if (!ta_map__pack_subtexture(pMap, &pLoadContext->texturePacker, width, height, pTextureData, &subtextureSlot)) {
+                ta_gaf_free(pTextureData);
+                return false;
+            }
+
+            ta_gaf_free(pTextureData);
+
+
+            // The texture has been packed.
+            strncpy_s(pLoadContext->pLoadedTextures[i].name, sizeof(pLoadContext->pLoadedTextures[i].name), textureName, _TRUNCATE);
+            pLoadContext->pLoadedTextures[i].posX  = subtextureSlot.posX;
+            pLoadContext->pLoadedTextures[i].posY  = subtextureSlot.posY;
+            pLoadContext->pLoadedTextures[i].sizeX = subtextureSlot.width;
+            pLoadContext->pLoadedTextures[i].sizeY = subtextureSlot.height;
+            pLoadContext->pLoadedTextures[i].textureIndex = pMap->textureCount;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_context* pLoadContext, ta_file* pFile, ta_map_3do* p3DO, uint32_t nextObjectIndex)
 {
     assert(pMap != NULL);
     assert(pFile != NULL);
@@ -160,8 +237,8 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_file* pFil
     assert(p3DO->objectCount > nextObjectIndex);
 
     // The file should be sitting on the first byte of the header of the object.
-    ta_3do_object_header header;
-    if (!ta_3do_read_object_header(pFile, &header)) {
+    ta_3do_object_header objectHeader;
+    if (!ta_3do_read_object_header(pFile, &objectHeader)) {
         return 0;
     }
 
@@ -169,9 +246,62 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_file* pFil
     uint32_t firstChildIndex = thisIndex + 1;
 
     p3DO->pObjects[thisIndex].meshCount = 0;
-    p3DO->pObjects[thisIndex].relativePosX = (float)header.relativePosX;
-    p3DO->pObjects[thisIndex].relativePosX = (float)header.relativePosY;
-    p3DO->pObjects[thisIndex].relativePosX = (float)header.relativePosZ;
+    p3DO->pObjects[thisIndex].relativePosX = (float)objectHeader.relativePosX;
+    p3DO->pObjects[thisIndex].relativePosX = (float)objectHeader.relativePosY;
+    p3DO->pObjects[thisIndex].relativePosX = (float)objectHeader.relativePosZ;
+
+
+    // Objects are made up of a bunch of primitives (points, lines, triangles and quads), with each individual primitive identifying
+    // the texture to use with it. The texture needs to be loaded, but we need to ensure we don't load multiple copies of the same
+    // texture. Unfortunately, there doesn't appear to be an easy way of pre-loading each texture before loading primitives, so texture
+    // loading needs to be done per-primitive.
+    //
+    // When loading a new texture it may need to be placed in a different atlas to the others. In this case the object needs to be
+    // split into multiple meshes.
+
+    // Primitives.
+    if (!ta_seek_file(pFile, objectHeader.primitivePtr, ta_seek_origin_start)) {
+        return 0;
+    }
+
+    for (uint32_t iPrim = 0; iPrim < objectHeader.primitiveCount; ++iPrim)
+    {
+        // The first thing to do is load the texture. We need to do this so we can know whether or not we should add the primitive to
+        // an already-in-progress mesh or to start a new one. This is based on the index of the texture atlas the texture is contained
+        // in.
+        ta_3do_primitive_header primHeader;
+        if (!ta_3do_read_primitive_header(pFile, &primHeader)) {
+            return 0;
+        }
+
+        ta_map_loaded_texture texture;
+        if (primHeader.textureNamePtr != 0)
+        {
+            const char* textureName = pFile->pFileData + primHeader.textureNamePtr;
+            if (!ta_map__load_texture(pMap, pLoadContext, textureName, &texture)) {
+                return 0;   // Failed to load the texture.
+            }
+        }
+        else
+        {
+            // There is no texture. Need to handle this case, but not sure how... Draw it as a solid color using the color index? In this
+            // case we could use a 1x1 texture that's located somewhere in the first 16x16 pixels of the first texture atlas.
+            //
+            // Don't forget about the isColored attribute. It's value seems inconsistent...
+
+            // TODO: Implement me.
+        }
+
+
+        if (primHeader.textureNamePtr != 0) // <-- Remove this branch once the above TODO is implemented. Just keeping this here to get the initial implementation done.
+        {
+            // TODO: Add support for lines and triangles. Points will need to be stored, but they shouldn't need to have a graphics representation.
+            if (primHeader.indexCount == 4)
+            {
+                // TODO: Convert to triangles.
+            }
+        }
+    }
 
 
     // TODO: Implement Me.
@@ -180,9 +310,9 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_file* pFil
 
 
     uint32_t childCount = 0;
-    if (header.firstChildPtr != 0) {
+    if (objectHeader.firstChildPtr != 0) {
         p3DO->pObjects[thisIndex].firstChildIndex = firstChildIndex;
-        childCount = ta_map__load_3do_objects_recursive(pMap, pFile, p3DO, firstChildIndex);
+        childCount = ta_map__load_3do_objects_recursive(pMap, pLoadContext, pFile, p3DO, firstChildIndex);
         if (childCount == 0) {
             return 0;   // An error occured.
         }
@@ -192,9 +322,9 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_file* pFil
     
     uint32_t siblingCount = 0;
     uint32_t nextSiblingIndex = firstChildIndex + childCount;
-    if (header.nextSiblingPtr != 0) {
+    if (objectHeader.nextSiblingPtr != 0) {
         p3DO->pObjects[thisIndex].nextSiblingIndex = nextSiblingIndex;
-        siblingCount = ta_map__load_3do_objects_recursive(pMap, pFile, p3DO, nextSiblingIndex);
+        siblingCount = ta_map__load_3do_objects_recursive(pMap, pLoadContext, pFile, p3DO, nextSiblingIndex);
         if (siblingCount == 0) {
             return 0;   // An error occured.
         }
@@ -205,7 +335,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_file* pFil
     return 1 + childCount + siblingCount;
 }
 
-ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, const char* objectName)
+ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadContext, const char* objectName)
 {
     // 3DO files are in the "objects" folder.
     char fullFileName[TA_MAX_PATH];
@@ -248,7 +378,7 @@ ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, const char* objectName)
 
     ta_seek_file(pFile, 0, ta_seek_origin_start);
 
-    uint32_t objectsLoaded = ta_map__load_3do_objects_recursive(pMap, pFile, p3DO, 0);
+    uint32_t objectsLoaded = ta_map__load_3do_objects_recursive(pMap, pLoadContext, pFile, p3DO, 0);
     if (objectsLoaded != p3DO->objectCount) {
         ta_close_file(pFile);
         free(p3DO->pMeshes);
@@ -325,11 +455,11 @@ bool ta_map__read_tnt_header(ta_file* pTNT, ta_tnt_header* pHeader)
     return true;
 }
 
-bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_packer* pPacker)
+bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_load_context* pLoadContext)
 {
     assert(pMap != NULL);
     assert(mapName != NULL);
-    assert(pPacker != NULL);
+    assert(pLoadContext != NULL);
 
     ta_file* pTNT = ta_map__open_tnt_file(pMap->pGame->pFS, mapName);
     if (pTNT == NULL) {
@@ -402,7 +532,7 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
         char* pTileImageData = pTNT->pFileData + ta_tell_file(pTNT) + (iTile*32*32);
 
         ta_texture_packer_slot slot;
-        if (ta_texture_packer_pack_subtexture(pPacker, 32, 32, pTileImageData, &slot))
+        if (ta_texture_packer_pack_subtexture(&pLoadContext->texturePacker, 32, 32, pTileImageData, &slot))
         {
             pTileSubImages[iTile].posX = slot.posX;
             pTileSubImages[iTile].posY = slot.posY;
@@ -414,7 +544,7 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
         {
             // We failed to pack the tile into the atlas. Likely we just ran out of room. Just commit that
             // texture and start a fresh one and try this tile again.
-            if (!ta_map__create_and_push_texture(pMap, pPacker)) {  // <-- This will reset the texture packer.
+            if (!ta_map__create_and_push_texture(pMap, &pLoadContext->texturePacker)) {  // <-- This will reset the texture packer.
                 free(pIndexData);
                 free(pVertexData);
                 free(pTileSubImages);
@@ -503,8 +633,8 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
                             
                             ta_vertex_p2t2* pQuad = pVertexData + chunkVertexOffset;
 
-                            float tileU = pTileSubImages[tileIndex].posX / (float)pPacker->width;
-                            float tileV = pTileSubImages[tileIndex].posY / (float)pPacker->height;
+                            float tileU = pTileSubImages[tileIndex].posX / (float)pLoadContext->texturePacker.width;
+                            float tileV = pTileSubImages[tileIndex].posY / (float)pLoadContext->texturePacker.height;
                             
                             // Top left.
                             pQuad[0].x = (float)(chunkX*TA_TERRAIN_CHUNK_SIZE + tileX) * 32.0f;
@@ -516,19 +646,19 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
                             pQuad[1].x = pQuad[0].x;
                             pQuad[1].y = pQuad[0].y + 32;
                             pQuad[1].u = pQuad[0].u;
-                            pQuad[1].v = pQuad[0].v + (32.0f / pPacker->height);
+                            pQuad[1].v = pQuad[0].v + (32.0f / pLoadContext->texturePacker.height);
 
                             // Bottom right
                             pQuad[2].x = pQuad[1].x + 32;
                             pQuad[2].y = pQuad[1].y;
-                            pQuad[2].u = pQuad[1].u + (32.0f / pPacker->width);
+                            pQuad[2].u = pQuad[1].u + (32.0f / pLoadContext->texturePacker.width);
                             pQuad[2].v = pQuad[1].v;
 
                             // Top right
                             pQuad[3].x = pQuad[2].x;
                             pQuad[3].y = pQuad[2].y - 32;
                             pQuad[3].u = pQuad[2].u;
-                            pQuad[3].v = pQuad[2].v - (32.0f / pPacker->height);
+                            pQuad[3].v = pQuad[2].v - (32.0f / pLoadContext->texturePacker.height);
 
 
 
@@ -603,9 +733,14 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
         {
             if (pCurrentGAF == NULL || _stricmp(pCurrentGAF->filename, pFeatureType->pDesc->filename) != 0)
             {
-                // A new GAF file needs to be loaded.
+                // A new GAF file needs to be loaded. These will be in the "anims" directory.
+                char filename[TA_MAX_PATH];
+                if (!drpath_copy_and_append(filename, sizeof(filename), "anims", pFeatureType->pDesc->filename)) {
+                    goto on_error;
+                }
+
                 ta_close_gaf(pCurrentGAF);
-                pCurrentGAF = ta_open_gaf(pMap->pGame->pFS, pFeatureType->pDesc->filename);
+                pCurrentGAF = ta_open_gaf(pMap->pGame->pFS, filename);
                 if (pCurrentGAF == NULL) {
                     goto on_error;
                 }
@@ -613,16 +748,16 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_texture_pac
 
             // At this point the GAF file containing the feature should be loaded and we just need to read it's frame data for
             // every required sequence.
-            pFeatureType->pSequenceDefault = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqname);
-            pFeatureType->pSequenceBurn = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqnameburn);
-            pFeatureType->pSequenceDie = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqnamedie);
-            pFeatureType->pSequenceReclamate = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqnamereclamate);
-            pFeatureType->pSequenceShadow = ta_map__load_gaf_sequence(pMap, pPacker, pCurrentGAF, pFeatureType->pDesc->seqnameshadow);
+            pFeatureType->pSequenceDefault = ta_map__load_gaf_sequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqname);
+            pFeatureType->pSequenceBurn = ta_map__load_gaf_sequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqnameburn);
+            pFeatureType->pSequenceDie = ta_map__load_gaf_sequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqnamedie);
+            pFeatureType->pSequenceReclamate = ta_map__load_gaf_sequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqnamereclamate);
+            pFeatureType->pSequenceShadow = ta_map__load_gaf_sequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqnameshadow);
         }
         else
         {
             // It's not a 2D feature so assume it's a 3D one.
-            pFeatureType->p3DO = ta_map__load_3do(pMap, pFeatureType->pDesc->object);
+            pFeatureType->p3DO = ta_map__load_3do(pMap, pLoadContext, pFeatureType->pDesc->object);
             if (pFeatureType->p3DO == NULL) {
                 goto on_error;
             }
@@ -742,11 +877,13 @@ bool ta_map__load_ota(ta_map_instance* pMap, const char* mapName)
 }
 
 
-ta_map_instance* ta_load_map(ta_game* pGame, const char* mapName)
+bool ta_map_load_context_init(ta_map_load_context* pLoadContext, ta_game* pGame)
 {
-    if (pGame == NULL || mapName == NULL) {
-        return NULL;
+    if (pLoadContext == NULL || pGame == NULL) {
+        return false;
     }
+
+    memset(pLoadContext, 0, sizeof(*pLoadContext));
 
     // Clamp the texture size to avoid excessive wastage. Modern GPUs support 16K textures which is way more than we need, and
     // I'd rather avoid wasting the player's system resources.
@@ -756,21 +893,43 @@ ta_map_instance* ta_load_map(ta_game* pGame, const char* mapName)
     }
 
     // We'll need a texture packer to help us pack images into atlases.
-    ta_texture_packer packer;
-    if (!ta_texture_packer_init(&packer, maxTextureSize, maxTextureSize, 1)) {
+    if (!ta_texture_packer_init(&pLoadContext->texturePacker, maxTextureSize, maxTextureSize, 1)) {
+        return false;
+    }
+
+    return true;
+}
+
+void ta_map_load_context_uninit(ta_map_load_context* pLoadContext)
+{
+    if (pLoadContext == NULL) {
+        return;
+    }
+
+    ta_texture_packer_uninit(&pLoadContext->texturePacker);
+}
+
+
+ta_map_instance* ta_load_map(ta_game* pGame, const char* mapName)
+{
+    if (pGame == NULL || mapName == NULL) {
         return NULL;
     }
 
+    ta_map_load_context loadContext;
+    if (!ta_map_load_context_init(&loadContext, pGame)) {
+        return NULL;
+    }
 
     ta_map_instance* pMap = calloc(1, sizeof(*pMap));
     if (pMap == NULL) {
-        ta_texture_packer_uninit(&packer);
+        ta_map_load_context_uninit(&loadContext);
         return NULL;
     }
 
     pMap->pGame = pGame;
 
-    if (!ta_map__load_tnt(pMap, mapName, &packer)) {
+    if (!ta_map__load_tnt(pMap, mapName, &loadContext)) {
         goto on_error;
     }
 
@@ -780,19 +939,19 @@ ta_map_instance* ta_load_map(ta_game* pGame, const char* mapName)
 
     
     // At the end of loading everything there could be a texture still sitting in the packer which needs to be created.
-    if (packer.cursorPosX != 0 || packer.cursorPosY != 0) {
-        if (!ta_map__create_and_push_texture(pMap, &packer)) {  // <-- This will reset the texture packer.
+    if (loadContext.texturePacker.cursorPosX != 0 || loadContext.texturePacker.cursorPosY != 0) {
+        if (!ta_map__create_and_push_texture(pMap, &loadContext.texturePacker)) {  // <-- This will reset the texture packer.
             goto on_error;
         }
     }
     
 
-    ta_texture_packer_uninit(&packer);
+    ta_map_load_context_uninit(&loadContext);
     return pMap;
 
 
 on_error:
-    ta_texture_packer_uninit(&packer);
+    ta_map_load_context_uninit(&loadContext);
     ta_unload_map(pMap);
     return NULL;
 }

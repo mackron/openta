@@ -60,6 +60,9 @@ typedef struct
     // The number of meshes making up the object. Meshes are split based on the texture index. 
     size_t meshCount;
 
+    // The index of the first mesh within the main array of the ta_map_3do object that owns this.
+    size_t firstMeshIndex;
+
 } ta_map_3do_object;
 
 typedef struct
@@ -74,7 +77,7 @@ typedef struct
     // but there may be more if an object's mesh data is split over multiple texture atlases.
     uint32_t meshCount;
 
-    // The list of meshes making up the geometric data of every object. These are grouped 
+    // The list of meshes making up the geometric data of every object. These are grouped per-object.
     ta_map_3do_mesh* pMeshes;
 
 } ta_map_3do;

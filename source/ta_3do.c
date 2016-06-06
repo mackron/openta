@@ -158,7 +158,7 @@ bool ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* pHead
         !ta_read_file_uint32(pFile, &pHeaderOut->textureNamePtr) ||
         !ta_read_file_uint32(pFile, &pHeaderOut->unused1) ||
         !ta_read_file_uint32(pFile, &pHeaderOut->unused2) ||
-        !ta_read_file_uint32(pFile, &pHeaderOut->unused3)) {
+        !ta_read_file_uint32(pFile, &pHeaderOut->isColored)) {
         return false;
     }
 

@@ -18,7 +18,7 @@ typedef struct
     uint32_t textureNamePtr;
     uint32_t unused1;
     uint32_t unused2;
-    uint32_t unused3;
+    uint32_t isColored;
 } ta_3do_primitive_header;
 
 typedef struct
