@@ -17,11 +17,24 @@ typedef struct
     float v;
 } ta_vertex_p3t2;
 
+typedef struct
+{
+    float x;
+    float y;
+    float z;
+    float u;
+    float v;
+    float nx;
+    float ny;
+    float nz;
+} ta_vertex_p3t2n3;
+
 typedef enum
 {
     ta_vertex_format_unknown = 0,
     ta_vertex_format_p2t2,
-    ta_vertex_format_p3t2
+    ta_vertex_format_p3t2,
+    ta_vertex_format_p3t2n3
 } ta_vertex_format;
 
 typedef enum

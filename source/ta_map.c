@@ -332,7 +332,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                     pLoadContext->meshBuildersBufferSize = newMeshBuildersBufferSize;
                     pLoadContext->pMeshBuilders = pNewMeshBuilders;
 
-                    ta_mesh_builder_init(&pLoadContext->pMeshBuilders[pLoadContext->meshBuildersCount], sizeof(ta_vertex_p3t2));
+                    ta_mesh_builder_init(&pLoadContext->pMeshBuilders[pLoadContext->meshBuildersCount], sizeof(ta_vertex_p3t2n3));
                 }
 
                 size_t iMeshBuilder = pLoadContext->meshBuildersCount;
@@ -358,7 +358,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                 float uvRight  = (texture.posX + texture.sizeX) / (float)pLoadContext->texturePacker.width;
                 float uvTop    = (texture.posY + texture.sizeY) / (float)pLoadContext->texturePacker.height;
 
-                ta_vertex_p3t2 vertices[4];
+                ta_vertex_p3t2n3 vertices[4];
                 for (int i = 0; i < 4; ++i) {
                     int32_t position[3];
                     memcpy(position, pFile->pFileData + objectHeader.vertexPtr + (indices[i]*sizeof(int32_t)*3), sizeof(int32_t)*3);
@@ -378,9 +378,14 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                 vertices[2].u = uvRight;
                 vertices[2].v = uvTop;
 
+                // TODO: Calculate face normal.
+                vec3 normal = vec3_triangle_normal(vec3v(&vertices[0].x), vec3v(&vertices[1].x), vec3v(&vertices[2].x));
 
                 // TODO: Convert to triangles so that triangle and quad geometry can use the same meshes.
                 for (int i = 0; i < 4; ++i) {
+                    vertices[i].nx = normal.x;
+                    vertices[i].ny = normal.y;
+                    vertices[i].nz = normal.z;
                     ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[i]);
                 }
             }
@@ -403,7 +408,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
 
         p3DO->pMeshes[p3DO->meshCount + iMesh].textureIndex = pMeshBuilder->textureIndex;
         p3DO->pMeshes[p3DO->meshCount + iMesh].pMesh = ta_create_mesh(pMap->pGame->pGraphics, ta_primitive_type_quad,
-            ta_vertex_format_p3t2,  pMeshBuilder->vertexCount, pMeshBuilder->pVertexData,
+            ta_vertex_format_p3t2n3,  pMeshBuilder->vertexCount, pMeshBuilder->pVertexData,
             ta_index_format_uint32, pMeshBuilder->indexCount,  pMeshBuilder->pIndexData);
         if (p3DO->pMeshes[p3DO->meshCount + iMesh].pMesh == NULL) {
             return 0;

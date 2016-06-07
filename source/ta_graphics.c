@@ -592,8 +592,10 @@ ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primit
     uint32_t vertexBufferSize = vertexCount;
     if (vertexFormat == ta_vertex_format_p2t2) {
         vertexBufferSize *= sizeof(ta_vertex_p2t2);
-    } else {
+    } else if (vertexFormat == ta_vertex_format_p3t2) {
         vertexBufferSize *= sizeof(ta_vertex_p3t2);
+    } else {
+        vertexBufferSize *= sizeof(ta_vertex_p3t2n3);
     }
 
     uint32_t indexBufferSize = indexCount * ((uint32_t)indexFormat);
@@ -657,8 +659,10 @@ ta_mesh* ta_create_mutable_mesh(ta_graphics_context* pGraphics, ta_primitive_typ
     uint32_t vertexBufferSize = vertexCount;
     if (vertexFormat == ta_vertex_format_p2t2) {
         vertexBufferSize *= sizeof(ta_vertex_p2t2);
-    } else {
+    } else if (vertexFormat == ta_vertex_format_p3t2) {
         vertexBufferSize *= sizeof(ta_vertex_p3t2);
+    } else {
+        vertexBufferSize *= sizeof(ta_vertex_p3t2n3);
     }
 
     pMesh->pVertexData = malloc(vertexBufferSize);
@@ -812,9 +816,13 @@ static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_
             if (pMesh->vertexFormat == ta_vertex_format_p2t2) {
                 glVertexPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), pMesh->pVertexData);
                 glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), ((uint8_t*)pMesh->pVertexData) + (2*sizeof(float)));
-            } else {
+            } else if (pMesh->vertexFormat == ta_vertex_format_p3t2) {
                 glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2), pMesh->pVertexData);
                 glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2), ((uint8_t*)pMesh->pVertexData) + (3*sizeof(float)));
+            } else {
+                glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2n3), pMesh->pVertexData);
+                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2n3), ((uint8_t*)pMesh->pVertexData) + (3*sizeof(float)));
+                glNormalPointer(GL_FLOAT, sizeof(ta_vertex_p3t2n3), ((uint8_t*)pMesh->pVertexData) + (5*sizeof(float)));
             }
         }
         else if (pMesh->vertexObjectGL)
@@ -825,9 +833,13 @@ static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_
             if (pMesh->vertexFormat == ta_vertex_format_p2t2) {
                 glVertexPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), 0);
                 glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), (const GLvoid*)(2*sizeof(float)));
-            } else {
+            } else if (pMesh->vertexFormat == ta_vertex_format_p3t2) {
                 glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2), 0);
                 glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2), (const GLvoid*)(3*sizeof(float)));
+            } else {
+                glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2n3), 0);
+                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2n3), (const GLvoid*)(3*sizeof(float)));
+                glNormalPointer(GL_FLOAT, sizeof(ta_vertex_p3t2n3), (const GLvoid*)(5*sizeof(float)));
             }
         }
     }
@@ -835,6 +847,7 @@ static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_
     {
         glVertexPointer(4, GL_FLOAT, 0, NULL);
         glTexCoordPointer(4, GL_FLOAT, 0, NULL);
+        glNormalPointer(GL_FLOAT, 0, NULL);
 
         if (pGraphics->supportsVBO) {
             pGraphics->glBindBuffer(GL_ARRAY_BUFFER, 0);
