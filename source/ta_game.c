@@ -116,7 +116,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     dr_timer_init(&pGame->timer);
 
 
-    ta_graphics_disable_vsync(pGame->pGraphics, pGame->pWindow);
+    //ta_graphics_disable_vsync(pGame->pGraphics, pGame->pWindow);
 
 
     // TESTING

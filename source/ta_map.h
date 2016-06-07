@@ -43,6 +43,13 @@ typedef struct
     // The mesh data.
     ta_mesh* pMesh;
 
+    // The index count.
+    uint32_t indexCount;
+
+    // The index offset. A mesh can be contained within a larger monolithic mesh. This property keeps track of the position
+    // within that mesh where this submesh begins.
+    uint32_t indexOffset;
+
 } ta_map_3do_mesh;
 
 typedef struct

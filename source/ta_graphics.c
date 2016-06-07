@@ -345,6 +345,9 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
     glClearDepth(1.0f);
     glClearColor(0, 0, 0, 0);
 
@@ -1011,11 +1014,54 @@ void ta_draw_map_feature_3do_object_recursive(ta_graphics_context* pGraphics, ta
     ta_map_3do_object* pObject = &p3DO->pObjects[objectIndex];
     assert(pObject != NULL);
 
+    glPushMatrix();
+    glTranslatef((float)pObject->relativePosX, (float)pObject->relativePosY, (float)pObject->relativePosZ);
+    {
+#if 0
+        // TEMP. Quad around the footprint to begin with for testing.
+        glDisable(GL_FRAGMENT_PROGRAM_ARB);
 
-    // Children before siblings, but it doesn't really matter.
-    if (pObject->firstChildIndex != 0) {
-        ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, pObject->firstChildIndex);
+        float quadX = -pFeature->pType->pDesc->footprintX/2.0f;
+        float quadY = -pFeature->pType->pDesc->footprintY/2.0f;
+        float quadSizeX = pFeature->pType->pDesc->footprintX * 16.0f;
+        float quadSizeY = pFeature->pType->pDesc->footprintY * 16.0f;
+
+        glColor3f(0, 1, 0);
+        glBegin(GL_QUADS);
+        {
+            glVertex2f(quadX, quadY);
+            glVertex2f(quadX + quadSizeX, quadY);
+            glVertex2f(quadX + quadSizeX, quadY + quadSizeY);
+            glVertex2f(quadX, quadY + quadSizeY);
+        }
+        glEnd();
+
+        glEnable(GL_FRAGMENT_PROGRAM_ARB);
+#else
+        glEnable(GL_DEPTH_TEST);
+
+        ta_graphics__bind_fragment_program(pGraphics, pGraphics->palettedFragmentProgram);
+
+        for (size_t iMesh = 0; iMesh < pObject->meshCount; ++iMesh) {
+            ta_map_3do_mesh* p3DOMesh = &p3DO->pMeshes[pObject->firstMeshIndex + iMesh];
+
+            ta_graphics__bind_texture(pGraphics, pMap->ppTextures[p3DOMesh->textureIndex]);
+            ta_graphics__bind_mesh(pGraphics, p3DOMesh->pMesh);
+
+            ta_graphics__draw_mesh(pGraphics, p3DOMesh->pMesh, p3DOMesh->indexCount, p3DOMesh->indexOffset);
+        }
+
+        glDisable(GL_DEPTH_TEST);
+#endif
+    
+        // Children.
+        if (pObject->firstChildIndex != 0) {
+            ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, pObject->firstChildIndex);
+        }
     }
+    glPopMatrix();
+
+    // Siblings.
     if (pObject->nextSiblingIndex) {
         ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, pObject->nextSiblingIndex);
     }
@@ -1129,9 +1175,14 @@ void ta_draw_map_feature_3do(ta_graphics_context* pGraphics, ta_map_instance* pM
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-    glTranslatef(posX, posY, 0);
+    glTranslatef(posX, posY, posZ);
+    glScalef(1, 1, 1);
+    glRotatef(20, 1, 0, 0);
     {
+        // This disable/enable pair can be made more efficient. Consider splitting 2D and 3D objects and render in separate loops.
+        glDisable(GL_BLEND);
         ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, 0);
+        glEnable(GL_BLEND);
     }
     glPopMatrix();
 }

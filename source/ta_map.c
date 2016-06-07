@@ -49,7 +49,9 @@ typedef struct
     size_t loadedTexturesCount;
     ta_map_loaded_texture* pLoadedTextures;
 
-
+    size_t meshBuildersBufferSize;
+    size_t meshBuildersCount;
+    ta_mesh_builder* pMeshBuilders;
 } ta_map_load_context;
 
 bool ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_packer* pPacker)
@@ -107,6 +109,15 @@ int ta_map__sort_feature_types_by_index(const void* a, const void* b)
     if (pFeatureTypeA->_index >  pFeatureTypeB->_index) return +1;
 
     return 0;
+}
+
+void ta_map__reset_mesh_builders(ta_map_load_context* pLoadContext)
+{
+    for (size_t i = 0; i < pLoadContext->meshBuildersCount; ++i) {
+        ta_mesh_builder_reset(&pLoadContext->pMeshBuilders[i]);
+    }
+
+    pLoadContext->meshBuildersCount = 0;
 }
 
 ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_texture_packer* pPacker, ta_gaf* pGAF, const char* sequenceName)
@@ -222,6 +233,8 @@ bool ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadConte
             pLoadContext->pLoadedTextures[i].sizeX = subtextureSlot.width;
             pLoadContext->pLoadedTextures[i].sizeY = subtextureSlot.height;
             pLoadContext->pLoadedTextures[i].textureIndex = pMap->textureCount;
+
+            *pTextureOut = pLoadContext->pLoadedTextures[i];
             return true;
         }
     }
@@ -246,9 +259,9 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
     uint32_t firstChildIndex = thisIndex + 1;
 
     p3DO->pObjects[thisIndex].meshCount = 0;
-    p3DO->pObjects[thisIndex].relativePosX = (float)objectHeader.relativePosX;
-    p3DO->pObjects[thisIndex].relativePosX = (float)objectHeader.relativePosY;
-    p3DO->pObjects[thisIndex].relativePosX = (float)objectHeader.relativePosZ;
+    p3DO->pObjects[thisIndex].relativePosX = objectHeader.relativePosX /  65536.0f;
+    p3DO->pObjects[thisIndex].relativePosY = objectHeader.relativePosZ / -65536.0f;
+    p3DO->pObjects[thisIndex].relativePosZ = objectHeader.relativePosY /  65536.0f;
 
 
     // Objects are made up of a bunch of primitives (points, lines, triangles and quads), with each individual primitive identifying
@@ -258,6 +271,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
     //
     // When loading a new texture it may need to be placed in a different atlas to the others. In this case the object needs to be
     // split into multiple meshes.
+    ta_map__reset_mesh_builders(pLoadContext);
 
     // Primitives.
     if (!ta_seek_file(pFile, objectHeader.primitivePtr, ta_seek_origin_start)) {
@@ -295,22 +309,120 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
 
         if (primHeader.textureNamePtr != 0) // <-- Remove this branch once the above TODO is implemented. Just keeping this here to get the initial implementation done.
         {
+            // We need to find the mesh builder that's tied to the texture index. If it doesn't exist we'll need to create a new one.
+            ta_mesh_builder* pMeshBuilder = NULL;
+            for (size_t i = 0; i < pLoadContext->meshBuildersCount; ++i) {
+                if (pLoadContext->pMeshBuilders[i].textureIndex == texture.textureIndex) {
+                    pMeshBuilder = &pLoadContext->pMeshBuilders[i];
+                    break;
+                }
+            }
+
+            if (pMeshBuilder == NULL)
+            {
+                // There is no mesh builder associated with the texture index, so a fresh one will need to be created.
+                if (pLoadContext->meshBuildersCount == pLoadContext->meshBuildersBufferSize)
+                {
+                    size_t newMeshBuildersBufferSize = pLoadContext->meshBuildersCount + 1;
+                    ta_mesh_builder* pNewMeshBuilders = (ta_mesh_builder*)realloc(pLoadContext->pMeshBuilders, newMeshBuildersBufferSize * sizeof(*pNewMeshBuilders));
+                    if (pNewMeshBuilders == NULL) {
+                        return 0;
+                    }
+
+                    pLoadContext->meshBuildersBufferSize = newMeshBuildersBufferSize;
+                    pLoadContext->pMeshBuilders = pNewMeshBuilders;
+
+                    ta_mesh_builder_init(&pLoadContext->pMeshBuilders[pLoadContext->meshBuildersCount], sizeof(ta_vertex_p3t2));
+                }
+
+                size_t iMeshBuilder = pLoadContext->meshBuildersCount;
+                assert(iMeshBuilder < pLoadContext->meshBuildersBufferSize);
+
+                pLoadContext->pMeshBuilders[iMeshBuilder].textureIndex = texture.textureIndex;
+                pLoadContext->meshBuildersCount += 1;
+
+                pMeshBuilder = &pLoadContext->pMeshBuilders[iMeshBuilder];
+            }
+
+            assert(pMeshBuilder != NULL);
+
+
             // TODO: Add support for lines and triangles. Points will need to be stored, but they shouldn't need to have a graphics representation.
             if (primHeader.indexCount == 4)
             {
-                // TODO: Convert to triangles.
+                uint16_t indices[4];
+                memcpy(indices, pFile->pFileData + primHeader.indexArrayPtr, sizeof(uint16_t)*4);   // <-- seek + read is safer than a memcpy()...
+
+                float uvLeft   = texture.posX / (float)pLoadContext->texturePacker.width;
+                float uvBottom = texture.posY / (float)pLoadContext->texturePacker.height;
+                float uvRight  = (texture.posX + texture.sizeX) / (float)pLoadContext->texturePacker.width;
+                float uvTop    = (texture.posY + texture.sizeY) / (float)pLoadContext->texturePacker.height;
+
+                ta_vertex_p3t2 vertices[4];
+                for (int i = 0; i < 4; ++i) {
+                    int32_t position[3];
+                    memcpy(position, pFile->pFileData + objectHeader.vertexPtr + (indices[i]*sizeof(int32_t)*3), sizeof(int32_t)*3);
+
+                    // Note that the Y and Z positions are intentionally swapped.
+                    vertices[i].x = position[0] /  65536.0f;
+                    vertices[i].y = position[2] / -65536.0f;
+                    vertices[i].z = position[1] /  65536.0f;
+                }
+
+                vertices[0].u = uvLeft;
+                vertices[0].v = uvBottom;
+                vertices[1].u = uvRight;
+                vertices[1].v = uvBottom;
+                vertices[3].u = uvLeft;
+                vertices[3].v = uvTop;
+                vertices[2].u = uvRight;
+                vertices[2].v = uvTop;
+
+
+                // TODO: Convert to triangles so that triangle and quad geometry can use the same meshes.
+                for (int i = 0; i < 4; ++i) {
+                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[3 - i]);
+                }
             }
         }
     }
 
 
-    // TODO: Implement Me.
-    p3DO->meshCount = 0;
-    p3DO->pMeshes = NULL;
+    // Here is where we convert the mesh builders to actual meshes. The meshes are stored in an array in the main 3DO object.
+    size_t objectMeshCount = pLoadContext->meshBuildersCount;
+    p3DO->pObjects[thisIndex].meshCount = objectMeshCount;
+    p3DO->pObjects[thisIndex].firstMeshIndex = p3DO->meshCount;
+
+    p3DO->pMeshes = (ta_map_3do_mesh*)realloc(p3DO->pMeshes, (p3DO->meshCount + objectMeshCount) * sizeof(*p3DO->pMeshes));
+    if (p3DO->pMeshes == NULL) {
+        return 0;
+    }
+
+    for (size_t iMesh = 0; iMesh < objectMeshCount; ++iMesh) {
+        ta_mesh_builder* pMeshBuilder = &pLoadContext->pMeshBuilders[iMesh];
+
+        p3DO->pMeshes[p3DO->meshCount + iMesh].textureIndex = pMeshBuilder->textureIndex;
+        p3DO->pMeshes[p3DO->meshCount + iMesh].pMesh = ta_create_mesh(pMap->pGame->pGraphics, ta_primitive_type_quad,
+            ta_vertex_format_p3t2,  pMeshBuilder->vertexCount, pMeshBuilder->pVertexData,
+            ta_index_format_uint32, pMeshBuilder->indexCount,  pMeshBuilder->pIndexData);
+        if (p3DO->pMeshes[p3DO->meshCount + iMesh].pMesh == NULL) {
+            return 0;
+        }
+
+        p3DO->pMeshes[p3DO->meshCount + iMesh].indexCount = pMeshBuilder->indexCount;
+        p3DO->pMeshes[p3DO->meshCount + iMesh].indexOffset = 0; // <-- When 3DO's are constructed from larger monolithic meshes we'll want to change this.
+    }
+
+    p3DO->meshCount += objectMeshCount;
+
 
 
     uint32_t childCount = 0;
     if (objectHeader.firstChildPtr != 0) {
+        if (!ta_seek_file(pFile, objectHeader.firstChildPtr, ta_seek_origin_start)) {
+            return 0;
+        }
+
         p3DO->pObjects[thisIndex].firstChildIndex = firstChildIndex;
         childCount = ta_map__load_3do_objects_recursive(pMap, pLoadContext, pFile, p3DO, firstChildIndex);
         if (childCount == 0) {
@@ -323,6 +435,10 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
     uint32_t siblingCount = 0;
     uint32_t nextSiblingIndex = firstChildIndex + childCount;
     if (objectHeader.nextSiblingPtr != 0) {
+        if (!ta_seek_file(pFile, objectHeader.nextSiblingPtr, ta_seek_origin_start)) {
+            return 0;
+        }
+
         p3DO->pObjects[thisIndex].nextSiblingIndex = nextSiblingIndex;
         siblingCount = ta_map__load_3do_objects_recursive(pMap, pLoadContext, pFile, p3DO, nextSiblingIndex);
         if (siblingCount == 0) {
@@ -337,9 +453,9 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
 
 ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadContext, const char* objectName)
 {
-    // 3DO files are in the "objects" folder.
+    // 3DO files are in the "objects3d" folder.
     char fullFileName[TA_MAX_PATH];
-    if (!drpath_copy_and_append(fullFileName, sizeof(fullFileName), "objects", objectName)) {
+    if (!drpath_copy_and_append(fullFileName, sizeof(fullFileName), "objects3d", objectName /*"armgate"*/)) {
         return NULL;
     }
     if (!drpath_extension_equal(objectName, "3do")) {

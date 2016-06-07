@@ -15,6 +15,15 @@ typedef struct
     // A pointer to the vertex data.
     void* pVertexData;
 
+    // The size of the index buffer, in uint32_t's.
+    size_t indexBufferSize;
+
+    // The number of indices.
+    uint32_t indexCount;
+
+    // A pointer to the index data.
+    uint32_t* pIndexData;
+
     // The texture index for use by loaders. This isn't actually used by the mesh builder, but is included here in order
     // to avoid a wrapper when loading building a mesh from ta_load_map().
     uint32_t textureIndex;
