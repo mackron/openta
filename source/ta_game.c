@@ -124,8 +124,9 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     //pGame->pCurrentMap = ta_load_map(pGame, "The Pass");
     //pGame->pCurrentMap = ta_load_map(pGame, "Red Hot Lava");
     //pGame->pCurrentMap = ta_load_map(pGame, "Test0");
-    pGame->pCurrentMap = ta_load_map(pGame, "AC01");    // <-- Includes 3DO features.
+    //pGame->pCurrentMap = ta_load_map(pGame, "AC01");    // <-- Includes 3DO features.
     //pGame->pCurrentMap = ta_load_map(pGame, "AC06");    // <-- Good profiling test.
+    pGame->pCurrentMap = ta_load_map(pGame, "AC20");
     //pGame->pCurrentMap = ta_load_map(pGame, "CC25");
 #endif
 

@@ -304,6 +304,8 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
             // Don't forget about the isColored attribute. It's value seems inconsistent...
 
             // TODO: Implement me.
+            static int count = 0;
+            printf("No texture: %d %d\n", count++, primHeader.indexCount);
         }
 
 
@@ -388,6 +390,10 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                     vertices[i].nz = normal.z;
                     ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[i]);
                 }
+            }
+            else
+            {
+                printf("index count = %d\n", primHeader.indexCount);
             }
         }
     }
@@ -882,11 +888,6 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_load_co
             if (pFeatureType->p3DO == NULL) {
                 goto on_error;
             }
-
-            //pFeatureType->p3DO = ta_open_3do(pMap->pGame->pFS, pFeatureType->pDesc->object);
-            //if (pFeatureType->p3DO == NULL) {
-            //    goto on_error;
-            //}
         }
     }
 

@@ -402,7 +402,7 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
         "ATTRIB iPos = fragment.position;\n"
         "ATTRIB iTex = fragment.texcoord[0];\n"
         "ATTRIB iNor = fragment.texcoord[1];\n"
-        "PARAM L = {0.408248276, 0.408248276, -0.816496551, 1};"
+        "PARAM L = {0.408248276, -0.408248276, -0.816496551, 1};"
         "\n"
         "TEMP N;"
         "DP3 N.w, iNor, iNor;\n"                      // Normalize
@@ -416,9 +416,10 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
         "\n"
         "TEMP NdotL;\n"
         "DP3 NdotL, N, L;\n"
+        "MUL NdotL, NdotL, {1.75, 1.75, 1.75, 1};\n"
         "\n"
         "MUL color, color, NdotL;\n"
-        "ADD result.color, color, {0.25, 0.25, 0.25, 0};\n"
+        "ADD result.color, color, {0.1, 0.1, 0.1, 0};\n"
         "END";
     if (!ta_graphics__compile_shader(pGraphics, &pGraphics->palettedShader3D, palettedVertexProgram3DStr, palettedFragmentProgram3DStr, shaderOutputLog, sizeof(shaderOutputLog))) {
         printf(shaderOutputLog);
