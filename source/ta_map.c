@@ -259,9 +259,9 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
     uint32_t firstChildIndex = thisIndex + 1;
 
     p3DO->pObjects[thisIndex].meshCount = 0;
-    p3DO->pObjects[thisIndex].relativePosX = objectHeader.relativePosX /  65536.0f;
-    p3DO->pObjects[thisIndex].relativePosY = objectHeader.relativePosZ / -65536.0f;
-    p3DO->pObjects[thisIndex].relativePosZ = objectHeader.relativePosY /  65536.0f;
+    p3DO->pObjects[thisIndex].relativePosX = objectHeader.relativePosX / 65536.0f;
+    p3DO->pObjects[thisIndex].relativePosY = objectHeader.relativePosZ / 65536.0f;
+    p3DO->pObjects[thisIndex].relativePosZ = objectHeader.relativePosY / 65536.0f;
 
 
     // Objects are made up of a bunch of primitives (points, lines, triangles and quads), with each individual primitive identifying
@@ -364,9 +364,9 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                     memcpy(position, pFile->pFileData + objectHeader.vertexPtr + (indices[i]*sizeof(int32_t)*3), sizeof(int32_t)*3);
 
                     // Note that the Y and Z positions are intentionally swapped.
-                    vertices[i].x = position[0] /  65536.0f;
-                    vertices[i].y = position[2] / -65536.0f;
-                    vertices[i].z = position[1] /  65536.0f;
+                    vertices[i].x = position[0] / 65536.0f;
+                    vertices[i].y = position[2] / 65536.0f;
+                    vertices[i].z = position[1] / 65536.0f;
                 }
 
                 vertices[0].u = uvLeft;
@@ -381,7 +381,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
 
                 // TODO: Convert to triangles so that triangle and quad geometry can use the same meshes.
                 for (int i = 0; i < 4; ++i) {
-                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[3 - i]);
+                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[i]);
                 }
             }
         }
