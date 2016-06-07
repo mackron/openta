@@ -373,10 +373,10 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                 vertices[0].v = uvBottom;
                 vertices[1].u = uvRight;
                 vertices[1].v = uvBottom;
-                vertices[3].u = uvLeft;
-                vertices[3].v = uvTop;
                 vertices[2].u = uvRight;
                 vertices[2].v = uvTop;
+                vertices[3].u = uvLeft;
+                vertices[3].v = uvTop;
 
                 // TODO: Calculate face normal.
                 vec3 normal = vec3_triangle_normal(vec3v(&vertices[0].x), vec3v(&vertices[1].x), vec3v(&vertices[2].x));

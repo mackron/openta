@@ -20,6 +20,12 @@
 #include <GL/wglext.h>
 #endif
 
+typedef struct
+{
+    GLuint vertexProgram;
+    GLuint fragmentProgram;
+} ta_graphics_shader;
+
 struct ta_graphics_context
 {
     // A pointer to the game that owns this renderer.
@@ -32,11 +38,14 @@ struct ta_graphics_context
     // The texture containing the palette.
     GLuint paletteTextureGL;
 
-    // The fragment program to use when drawing an object with a paletted texture.
-    GLuint palettedFragmentProgram;
+    // The shader to use when drawing an object with a paletted texture.
+    ta_graphics_shader palettedShader;
 
-    // The fragment program to use when drawing alpha transparent objects.
-    GLuint palettedFragmentProgramTransparent;
+    // The shader to use when drawing alpha transparent objects.
+    ta_graphics_shader palettedShaderTransparent;
+
+    // The shader to use when drawing an object with a paletted texture.
+    ta_graphics_shader palettedShader3D;
 
 
     // A mesh for drawing features.
@@ -101,6 +110,7 @@ struct ta_graphics_context
     ta_vertex_format currentMeshVertexFormat;
     ta_texture* pCurrentTexture;
     ta_mesh* pCurrentMesh;
+    GLuint currentVertexProgram;
     GLuint currentFragmentProgram;
 };
 
@@ -155,7 +165,6 @@ struct ta_mesh
 
 
 
-
 #ifdef _WIN32
 static LRESULT DummyWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -169,6 +178,50 @@ void* ta_get_gl_proc_address(const char* name)
 #ifdef _WIN32
     return wglGetProcAddress(name);
 #endif
+}
+
+
+// Creates a shader from both a vertex and fragment shader string.
+bool ta_graphics__compile_shader(ta_graphics_context* pGraphics, ta_graphics_shader* pShader, const char* vertexStr, const char* fragmentStr, char* pOutputLog, size_t outputLogSize)
+{
+    if (pGraphics == NULL || pShader == NULL) {
+        return false;
+    }
+
+    // Vertex shader.
+    if (vertexStr != NULL) {
+        pGraphics->glGenProgramsARB(1, &pShader->vertexProgram);
+        pGraphics->glBindProgramARB(GL_VERTEX_PROGRAM_ARB, pShader->vertexProgram);
+        pGraphics->glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(vertexStr), vertexStr);    // -1 to remove null terminator.
+
+        GLint errorPos;
+        glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
+        if (errorPos != -1) {
+            snprintf(pOutputLog, outputLogSize, "--- VERTEX SHADER ---\n%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+            return false;
+        }
+    } else {
+        pShader->vertexProgram = 0;
+    }
+
+
+    // Fragment shader.
+    if (fragmentStr != NULL) {
+        pGraphics->glGenProgramsARB(1, &pShader->fragmentProgram);
+        pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pShader->fragmentProgram);
+        pGraphics->glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(fragmentStr), fragmentStr);    // -1 to remove null terminator.
+
+        GLint errorPos;
+        glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
+        if (errorPos != -1) {
+            snprintf(pOutputLog, outputLogSize, "--- FRAGMENT SHADER ---\n%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+            return false;
+        }
+    } else {
+        pShader->fragmentProgram = 0;
+    }
+
+    return true;
 }
 
 
@@ -293,8 +346,7 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
 
 
     // Create all of the necessary shaders up front.
-    pGraphics->glGenProgramsARB(1, &pGraphics->palettedFragmentProgram);
-    pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgram);
+    char shaderOutputLog[4096];
 
     const char palettedFragmentProgramStr[] =
         "!!ARBfp1.0\n"
@@ -302,19 +354,10 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
         "TEX paletteIndex, fragment.texcoord[0], texture[0], 2D;\n"
         "TEX result.color, paletteIndex, texture[1], 2D;\n"
         "END";
-    pGraphics->glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, sizeof(palettedFragmentProgramStr) - 1, palettedFragmentProgramStr);    // -1 to remove null terminator.
-
-    GLint errorPos;
-    glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
-    if (errorPos != -1)
-    {
-        // Error.
-        printf("--- FRAGMENT SHADER ---\n%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+    if (!ta_graphics__compile_shader(pGraphics, &pGraphics->palettedShader, NULL, palettedFragmentProgramStr, shaderOutputLog, sizeof(shaderOutputLog))) {
+        printf(shaderOutputLog);
     }
-
-
-    pGraphics->glGenProgramsARB(1, &pGraphics->palettedFragmentProgramTransparent);
-    pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pGraphics->palettedFragmentProgramTransparent);
+    
 
     const char palettedFragmentProgramTransparentStr[] =
         "!!ARBfp1.0\n"
@@ -324,19 +367,62 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
         "TEX color, paletteIndex, texture[1], 2D;\n"
         "MUL result.color, color, {1.0, 1.0, 1.0, 0.5};\n"
         "END";
-    pGraphics->glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, sizeof(palettedFragmentProgramTransparentStr) - 1, palettedFragmentProgramTransparentStr);    // -1 to remove null terminator.
-
-    errorPos;
-    glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
-    if (errorPos != -1)
-    {
-        // Error.
-        printf("--- FRAGMENT SHADER ---\n%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+    if (!ta_graphics__compile_shader(pGraphics, &pGraphics->palettedShaderTransparent, NULL, palettedFragmentProgramTransparentStr, shaderOutputLog, sizeof(shaderOutputLog))) {
+        printf(shaderOutputLog);
     }
 
-
-
     
+
+    const char palettedVertexProgram3DStr[] =
+        "!!ARBvp1.0\n"
+        "ATTRIB iPos = vertex.position;\n"
+        "ATTRIB iTex = vertex.texcoord[0];\n"
+        "ATTRIB iNor = vertex.normal;\n"
+        "OUTPUT oPos = result.position;\n"
+        "OUTPUT oTex = result.texcoord[0];\n"
+        "OUTPUT oNor = result.texcoord[1];\n"
+        "\n"
+        "PARAM mvp[4]  = {state.matrix.mvp};\n"
+        "PARAM mvIT[4] = {state.matrix.modelview.invtrans};\n"
+        "\n"
+        "DP4 oPos.x, vertex.position, mvp[0];\n"
+        "DP4 oPos.y, vertex.position, mvp[1];\n"
+        "DP4 oPos.z, vertex.position, mvp[2];\n"
+        "DP4 oPos.w, vertex.position, mvp[3];\n"
+        "\n"
+        "MOV oTex, vertex.texcoord[0];\n"
+        "\n"
+        "DP3 oNor.x, vertex.normal, mvIT[0];\n"     // Inverse-transform of the model-view matrix.
+        "DP3 oNor.y, vertex.normal, mvIT[1];\n"
+        "DP3 oNor.z, vertex.normal, mvIT[2];\n"
+        "END";
+
+    const char palettedFragmentProgram3DStr[] =
+        "!!ARBfp1.0\n"
+        "ATTRIB iPos = fragment.position;\n"
+        "ATTRIB iTex = fragment.texcoord[0];\n"
+        "ATTRIB iNor = fragment.texcoord[1];\n"
+        "PARAM L = {0.408248276, 0.408248276, -0.816496551, 1};"
+        "\n"
+        "TEMP N;"
+        "DP3 N.w, iNor, iNor;\n"                      // Normalize
+        "RSQ N.w, N.w;\n"
+        "MUL N, iNor, N.w;\n"
+        "\n"
+        "TEMP paletteIndex;\n"
+        "TEX paletteIndex, iTex, texture[0], 2D;\n"
+        "TEMP color;"
+        "TEX color, paletteIndex, texture[1], 2D;\n"
+        "\n"
+        "TEMP NdotL;\n"
+        "DP3 NdotL, N, L;\n"
+        "\n"
+        "MUL color, color, NdotL;\n"
+        "ADD result.color, color, {0.25, 0.25, 0.25, 0};\n"
+        "END";
+    if (!ta_graphics__compile_shader(pGraphics, &pGraphics->palettedShader3D, palettedVertexProgram3DStr, palettedFragmentProgram3DStr, shaderOutputLog, sizeof(shaderOutputLog))) {
+        printf(shaderOutputLog);
+    }
 
     // Default state.
     glEnable(GL_TEXTURE_2D);
@@ -355,6 +441,7 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
     // Always using vertex and texture coordinate arrays.
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
     
     // Always using fragment programs.
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
@@ -783,6 +870,24 @@ static TA_INLINE void ta_graphics__bind_texture(ta_graphics_context* pGraphics, 
     pGraphics->pCurrentTexture = pTexture;
 }
 
+static TA_INLINE void ta_graphics__bind_vertex_program(ta_graphics_context* pGraphics, GLuint vertexProgram)
+{
+    assert(pGraphics != NULL);
+
+    if (pGraphics->currentVertexProgram == vertexProgram) {
+        return;
+    }
+
+    if (vertexProgram == 0) {
+        glDisable(GL_VERTEX_PROGRAM_ARB);
+    } else {
+        glEnable(GL_VERTEX_PROGRAM_ARB);
+    }
+
+    pGraphics->glBindProgramARB(GL_VERTEX_PROGRAM_ARB, vertexProgram);
+    pGraphics->currentVertexProgram = vertexProgram;
+}
+
 static TA_INLINE void ta_graphics__bind_fragment_program(ta_graphics_context* pGraphics, GLuint fragmentProgram)
 {
     assert(pGraphics != NULL);
@@ -791,9 +896,30 @@ static TA_INLINE void ta_graphics__bind_fragment_program(ta_graphics_context* pG
         return;
     }
 
+    if (fragmentProgram == 0) {
+        glDisable(GL_FRAGMENT_PROGRAM_ARB);
+    } else {
+        glEnable(GL_FRAGMENT_PROGRAM_ARB);
+    }
+
     pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, fragmentProgram);
     pGraphics->currentFragmentProgram = fragmentProgram;
 }
+
+static TA_INLINE void ta_graphics__bind_shader(ta_graphics_context* pGraphics, ta_graphics_shader* pShader)
+{
+    assert(pGraphics != NULL);
+
+    if (pShader != NULL) {
+        ta_graphics__bind_vertex_program(pGraphics, pShader->vertexProgram);
+        ta_graphics__bind_fragment_program(pGraphics, pShader->fragmentProgram);
+    } else {
+        ta_graphics__bind_vertex_program(pGraphics, 0);
+        ta_graphics__bind_fragment_program(pGraphics, 0);
+    }
+}
+
+
 
 static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_mesh* pMesh)
 {
@@ -805,6 +931,8 @@ static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_
 
     if (pMesh != NULL)
     {
+        glDisableClientState(GL_NORMAL_ARRAY);
+
         if (pMesh->pVertexData != NULL)
         {
             // Using vertex arrays.
@@ -820,6 +948,7 @@ static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_
                 glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2), pMesh->pVertexData);
                 glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2), ((uint8_t*)pMesh->pVertexData) + (3*sizeof(float)));
             } else {
+                glEnableClientState(GL_NORMAL_ARRAY);
                 glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2n3), pMesh->pVertexData);
                 glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2n3), ((uint8_t*)pMesh->pVertexData) + (3*sizeof(float)));
                 glNormalPointer(GL_FLOAT, sizeof(ta_vertex_p3t2n3), ((uint8_t*)pMesh->pVertexData) + (5*sizeof(float)));
@@ -837,6 +966,7 @@ static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_
                 glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2), 0);
                 glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2), (const GLvoid*)(3*sizeof(float)));
             } else {
+                glEnableClientState(GL_NORMAL_ARRAY);
                 glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2n3), 0);
                 glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2n3), (const GLvoid*)(3*sizeof(float)));
                 glNormalPointer(GL_FLOAT, sizeof(ta_vertex_p3t2n3), (const GLvoid*)(5*sizeof(float)));
@@ -997,9 +1127,9 @@ void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instanc
 
 
     if (transparent) {
-        ta_graphics__bind_fragment_program(pGraphics, pGraphics->palettedFragmentProgramTransparent);
+        ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShaderTransparent);
     } else {
-        ta_graphics__bind_fragment_program(pGraphics, pGraphics->palettedFragmentProgram);
+        ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader);
     }
 
     ta_texture* pTexture = pMap->ppTextures[pSequence->pFrames[pFeature->currentFrameIndex].textureIndex];
@@ -1028,9 +1158,7 @@ void ta_draw_map_feature_3do_object_recursive(ta_graphics_context* pGraphics, ta
     glPushMatrix();
     glTranslatef((float)pObject->relativePosX, (float)pObject->relativePosY, (float)pObject->relativePosZ);
     {
-        
-
-        ta_graphics__bind_fragment_program(pGraphics, pGraphics->palettedFragmentProgram);
+        ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader3D);
 
         for (size_t iMesh = 0; iMesh < pObject->meshCount; ++iMesh) {
             ta_map_3do_mesh* p3DOMesh = &p3DO->pMeshes[pObject->firstMeshIndex + iMesh];
@@ -1091,7 +1219,7 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     }
 
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
-    ta_graphics__bind_fragment_program(pGraphics, pGraphics->palettedFragmentProgram);
+    ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader);
 
 
     // Terrain is always laid down first.
@@ -1186,7 +1314,7 @@ void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, bool transpare
     bool isPaletted = pTexture->components == 1;
     if (isPaletted) {
         glEnable(GL_FRAGMENT_PROGRAM_ARB);
-        ta_graphics__bind_fragment_program(pGraphics, pGraphics->palettedFragmentProgram);
+        ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader);
     } else {
         glDisable(GL_FRAGMENT_PROGRAM_ARB);
     }
