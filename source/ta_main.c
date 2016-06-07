@@ -22,7 +22,7 @@
 
 
 // dr_libs
-#define DR_UTIL_IMPLEMENTATION
+#define DR_IMPLEMENTATION
 #include "../../dr_libs/dr.h"
 
 #define DR_PATH_IMPLEMENTATION
@@ -60,6 +60,7 @@
 #include "ta_misc.h"
 #include "ta_platform_layer.h"
 #include "ta_texture_packer.h"
+#include "ta_mesh_builder.h"
 #include "ta_graphics.h"
 #include "ta_game.h"
 #include "ta_fs.h"
@@ -97,6 +98,7 @@
 #include "ta_misc.c"
 #include "ta_platform_layer.c"
 #include "ta_texture_packer.c"
+#include "ta_mesh_builder.c"
 #include "ta_graphics.c"
 #include "ta_game.c"
 #include "ta_fs.c"
