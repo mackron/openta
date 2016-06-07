@@ -929,10 +929,10 @@ static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_
         return;
     }
 
+    glDisableClientState(GL_NORMAL_ARRAY);
+
     if (pMesh != NULL)
     {
-        glDisableClientState(GL_NORMAL_ARRAY);
-
         if (pMesh->pVertexData != NULL)
         {
             // Using vertex arrays.
@@ -1143,9 +1143,9 @@ void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instanc
 
     ta_vertex_p2t2* pVertexData = pGraphics->pFeaturesMesh->pVertexData;
     pVertexData[0].x = posX;                 pVertexData[0].y = posY;                  pVertexData[0].u = uvleft;  pVertexData[0].v = uvtop;
-    pVertexData[1].x = posX + pFrame->width; pVertexData[1].y = posY;                  pVertexData[1].u = uvright; pVertexData[1].v = uvtop;
+    pVertexData[1].x = posX;                 pVertexData[1].y = posY + pFrame->height; pVertexData[1].u = uvleft;  pVertexData[1].v = uvbottom;
     pVertexData[2].x = posX + pFrame->width; pVertexData[2].y = posY + pFrame->height; pVertexData[2].u = uvright; pVertexData[2].v = uvbottom;
-    pVertexData[3].x = posX;                 pVertexData[3].y = posY + pFrame->height; pVertexData[3].u = uvleft;  pVertexData[3].v = uvbottom;
+    pVertexData[3].x = posX + pFrame->width; pVertexData[3].y = posY;                  pVertexData[3].u = uvright; pVertexData[3].v = uvtop;
     ta_graphics__bind_mesh(pGraphics, pGraphics->pFeaturesMesh);
     ta_graphics__draw_mesh(pGraphics, pGraphics->pFeaturesMesh, 4, 0);
 }
@@ -1218,7 +1218,6 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
         return;
     }
 
-    glEnable(GL_FRAGMENT_PROGRAM_ARB);
     ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader);
 
 

@@ -518,11 +518,11 @@ void ta_map__calculate_object_position_xy(uint32_t tileX, uint32_t tileY, uint16
     assert(pPosXOut != NULL);
     assert(pPosYOut != NULL);
 
-    float tileCenterX = (tileX * 16.0f) + 8.0f;
-    float tileCenterY = (tileY * 16.0f) + 8.0f;
+    float tileCenterX = (tileX * 16.0f);// + 8.0f;
+    float tileCenterY = (tileY * 16.0f);// + 8.0f;
 
     *pPosXOut = tileCenterX + (objectFootprintX/2 * 16);
-    *pPosYOut = tileCenterY + (objectFootprintX/2 * 16);
+    *pPosYOut = tileCenterY + (objectFootprintY/2 * 16);
 }
 
 
