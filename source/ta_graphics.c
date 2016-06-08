@@ -392,7 +392,7 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
         "\n"
         "MOV oTex, vertex.texcoord[0];\n"
         "\n"
-        "DP3 oNor.x, vertex.normal, mvIT[0];\n"     // Inverse-transform of the model-view matrix.
+        "DP3 oNor.x, vertex.normal, mvIT[0];\n"     // Inverse-transpose of the model-view matrix.
         "DP3 oNor.y, vertex.normal, mvIT[1];\n"
         "DP3 oNor.z, vertex.normal, mvIT[2];\n"
         "END";
