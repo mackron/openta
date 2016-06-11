@@ -131,7 +131,7 @@ ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_tex
         return NULL;
     }
 
-    ta_map_feature_sequence* pSeq = malloc(sizeof(*pSeq) - sizeof(pSeq->pFrames) + (frameCount * sizeof(ta_map_feature_frame)));
+    ta_map_feature_sequence* pSeq = malloc(sizeof(*pSeq) + (frameCount * sizeof(ta_map_feature_frame)));
     if (pSeq == NULL) {
         return NULL;
     }

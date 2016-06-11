@@ -548,7 +548,7 @@ ta_file* ta_fs__open_file_from_archive(ta_fs* pFS, ta_fs_archive* pArchive, cons
     }
     
 
-    ta_file* pFile = malloc(sizeof(*pFile) - sizeof(pFile->pFileData) + dataSize + extraBytes);
+    ta_file* pFile = malloc(sizeof(*pFile) + dataSize + extraBytes);
     if (pFile == NULL) {
         fclose(pSTDIOFile);
         return NULL;
@@ -709,7 +709,7 @@ ta_file* ta_open_specific_file(ta_fs* pFS, const char* archiveRelativePath, cons
         }
 
 
-        ta_file* pFile = malloc(sizeof(*pFile) - sizeof(pFile->pFileData) + (size_t)sizeInBytes + extraBytes);
+        ta_file* pFile = malloc(sizeof(*pFile) + (size_t)sizeInBytes + extraBytes);
         if (pFile == NULL) {
             fclose(pSTDIOFile);
             return NULL;
