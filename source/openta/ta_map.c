@@ -44,6 +44,7 @@ typedef struct
 typedef struct
 {
     ta_texture_packer texturePacker;
+    ta_texture_packer_slot paletteTextureSlot;
 
     size_t loadedTexturesBufferSize;
     size_t loadedTexturesCount;
@@ -288,6 +289,9 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
             return 0;
         }
 
+        ta_bool32 isClear = TA_FALSE;
+        ta_bool32 isColor = TA_FALSE;
+
         ta_map_loaded_texture texture;
         if (primHeader.textureNamePtr != 0)
         {
@@ -302,15 +306,20 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
             // case we could use a 1x1 texture that's located somewhere in the first 16x16 pixels of the first texture atlas.
             //
             // Don't forget about the isColored attribute. It's value seems inconsistent...
+            isColor = primHeader.isColored != 0;
+            if (!isColor) {
+                isClear = TA_TRUE;
+            }
 
-            // TODO: Implement me.
-            static int count = 0;
-            printf("No texture: %d %d\n", count++, primHeader.indexCount);
+            texture.textureIndex = 0;
+            texture.posX = pLoadContext->paletteTextureSlot.posX;
+            texture.posY = pLoadContext->paletteTextureSlot.posY;
+            texture.sizeX = 1;
+            texture.sizeY = 1;
         }
 
 
-        if (primHeader.textureNamePtr != 0) // <-- Remove this branch once the above TODO is implemented. Just keeping this here to get the initial implementation done.
-        {
+        if (!isClear) {
             // We need to find the mesh builder that's tied to the texture index. If it doesn't exist we'll need to create a new one.
             ta_mesh_builder* pMeshBuilder = NULL;
             for (size_t i = 0; i < pLoadContext->meshBuildersCount; ++i) {
@@ -348,11 +357,25 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
 
             assert(pMeshBuilder != NULL);
 
-
-            // TODO: Add support for lines and triangles. Points will need to be stored, but they shouldn't need to have a graphics representation.
             if (primHeader.indexCount >= 3) {
                 uint16_t* indices = (uint16_t*)(pFile->pFileData + primHeader.indexArrayPtr);
 
+                float uvLeft;
+                float uvBottom;
+                float uvRight;
+                float uvTop;
+                if (isColor) {
+                    uvLeft   = pLoadContext->paletteTextureSlot.posX + (primHeader.colorIndex % 16) / (float)pLoadContext->texturePacker.width;
+                    uvBottom = pLoadContext->paletteTextureSlot.posY + (primHeader.colorIndex / 16) / (float)pLoadContext->texturePacker.height;
+                    uvRight  = uvLeft;
+                    uvTop    = uvBottom;
+                } else {
+                    uvLeft   = texture.posX / (float)pLoadContext->texturePacker.width;
+                    uvBottom = texture.posY / (float)pLoadContext->texturePacker.height;
+                    uvRight  = (texture.posX + texture.sizeX) / (float)pLoadContext->texturePacker.width;
+                    uvTop    = (texture.posY + texture.sizeY) / (float)pLoadContext->texturePacker.height;
+                }
+                
                 // Special case for quads because of how they are UV mapped. Not sure how UV mapping works for other polygons.
                 if (primHeader.indexCount == 4)
                 {
@@ -366,11 +389,6 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                         vertices[i].y = position[2] / 65536.0f;
                         vertices[i].z = position[1] / 65536.0f;
                     }
-
-                    float uvLeft   = texture.posX / (float)pLoadContext->texturePacker.width;
-                    float uvBottom = texture.posY / (float)pLoadContext->texturePacker.height;
-                    float uvRight  = (texture.posX + texture.sizeX) / (float)pLoadContext->texturePacker.width;
-                    float uvTop    = (texture.posY + texture.sizeY) / (float)pLoadContext->texturePacker.height;
 
                     vertices[0].u = uvLeft;
                     vertices[0].v = uvBottom;
@@ -422,6 +440,9 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                             vertices[i].nx = normal.x;
                             vertices[i].ny = normal.y;
                             vertices[i].nz = normal.z;
+
+                            vertices[i].u = uvLeft;
+                            vertices[i].v = uvTop;
                         }
 
                         ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[0]);
@@ -429,9 +450,16 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                         ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[2]);
                     }
 
-                    //printf("index count = %d\n", primHeader.indexCount);
+                    if (primHeader.colorIndex == 13) {
+                        printf("Color Index: %d\n", primHeader.colorIndex);
+                    }
+
+                    if (!isColor) {
+                        printf("index count = %d\n", primHeader.indexCount);
+                    }
                 }
             } else {
+                // TODO: Add support for lines and triangles. Points will need to be stored, but they shouldn't need to have a graphics representation.
                 printf("Line or Point: %d\n", primHeader.indexCount);
             }
         }
@@ -1089,6 +1117,14 @@ ta_map_instance* ta_load_map(ta_game* pGame, const char* mapName)
     }
 
     pMap->pGame = pGame;
+
+    // The first 16x16 texture needs to be set to the palette.
+    uint8_t paletteIndices[256];
+    for (int i = 0; i < 256; ++i) {
+        paletteIndices[i] = (uint8_t)i;
+    }
+
+    ta_map__pack_subtexture(pMap, &loadContext.texturePacker, 16, 16, paletteIndices, &loadContext.paletteTextureSlot);
 
     if (!ta_map__load_tnt(pMap, mapName, &loadContext)) {
         goto on_error;
