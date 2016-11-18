@@ -23,20 +23,25 @@
 
 // dr_libs
 #define DR_IMPLEMENTATION
-#include "../../../dr_libs/dr.h"
-
 #define DR_AUDIO_IMPLEMENTATION
-#include "../../../dr_libs/dr_audio.h"
-
 #define DR_WAV_IMPLEMENTATION
 #define DR_WAV_NO_STDIO
-#include "../../../dr_libs/dr_wav.h"
-
 #define DR_MATH_IMPLEMENTATION
-#include "../../../dr_libs/dr_math.h"
-
 #define DR_PCX_IMPLEMENTATION
+#ifdef TA_USE_EXTERNAL_DR_LIBS
+#include "../../../dr_libs/dr.h"
+#include "../../../dr_libs/dr_audio.h"
+#include "../../../dr_libs/dr_wav.h"
+#include "../../../dr_libs/dr_math.h"
 #include "../../../dr_libs/dr_pcx.h"
+#else
+#include "../external/dr_libs/dr.h"
+#include "../external/dr_libs/dr_audio.h"
+#include "../external/dr_libs/dr_wav.h"
+#include "../external/dr_libs/dr_math.h"
+#include "../external/dr_libs/dr_pcx.h"
+#endif
+
 
 
 // Options.
