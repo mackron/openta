@@ -385,9 +385,9 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                         memcpy(position, pFile->pFileData + objectHeader.vertexPtr + (indices[i]*sizeof(int32_t)*3), sizeof(int32_t)*3);
 
                         // Note that the Y and Z positions are intentionally swapped.
-                        vertices[i].x = position[0] / 65536.0f;
-                        vertices[i].y = position[2] / 65536.0f;
-                        vertices[i].z = position[1] / 65536.0f;
+                        vertices[i].x = position[0] / -65536.0f;
+                        vertices[i].y = position[2] /  65536.0f;
+                        vertices[i].z = position[1] /  65536.0f;
                     }
 
                     vertices[0].u = uvLeft;
@@ -399,7 +399,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                     vertices[3].u = uvLeft;
                     vertices[3].v = uvTop;
 
-                    vec3 normal = vec3_triangle_normal(vec3v(&vertices[0].x), vec3v(&vertices[1].x), vec3v(&vertices[2].x));
+                    vec3 normal = vec3_triangle_normal(vec3v(&vertices[0].x), vec3v(&vertices[2].x), vec3v(&vertices[1].x));
                     for (int i = 0; i < 4; ++i) {
                         vertices[i].nx = normal.x;
                         vertices[i].ny = normal.y;
@@ -407,12 +407,12 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                     }
 
                     ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[0]);
-                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[1]);
                     ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[2]);
+                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[1]);
 
                     ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[0]);
-                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[2]);
                     ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[3]);
+                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[2]);
                 }
                 else
                 {
@@ -425,17 +425,17 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                         int32_t* position2 = (int32_t*)(pFile->pFileData + objectHeader.vertexPtr + (indices[iVertex+2]*sizeof(int32_t)*3));
 
                         // Note that the Y and Z positions are intentionally swapped.
-                        vertices[0].x = position0[0] / 65536.0f;
-                        vertices[0].y = position0[2] / 65536.0f;
-                        vertices[0].z = position0[1] / 65536.0f;
-                        vertices[1].x = position1[0] / 65536.0f;
-                        vertices[1].y = position1[2] / 65536.0f;
-                        vertices[1].z = position1[1] / 65536.0f;
-                        vertices[2].x = position2[0] / 65536.0f;
-                        vertices[2].y = position2[2] / 65536.0f;
-                        vertices[2].z = position2[1] / 65536.0f;
+                        vertices[0].x = position0[0] / -65536.0f;
+                        vertices[0].y = position0[2] /  65536.0f;
+                        vertices[0].z = position0[1] /  65536.0f;
+                        vertices[1].x = position1[0] / -65536.0f;
+                        vertices[1].y = position1[2] /  65536.0f;
+                        vertices[1].z = position1[1] /  65536.0f;
+                        vertices[2].x = position2[0] / -65536.0f;
+                        vertices[2].y = position2[2] /  65536.0f;
+                        vertices[2].z = position2[1] /  65536.0f;
 
-                        vec3 normal = vec3_triangle_normal(vec3v(&vertices[0].x), vec3v(&vertices[1].x), vec3v(&vertices[2].x));
+                        vec3 normal = vec3_triangle_normal(vec3v(&vertices[0].x), vec3v(&vertices[2].x), vec3v(&vertices[1].x));
                         for (int i = 0; i < 3; ++i) {
                             vertices[i].nx = normal.x;
                             vertices[i].ny = normal.y;
@@ -446,16 +446,8 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                         }
 
                         ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[0]);
-                        ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[1]);
                         ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[2]);
-                    }
-
-                    if (primHeader.colorIndex == 13) {
-                        printf("Color Index: %d\n", primHeader.colorIndex);
-                    }
-
-                    if (!isColor) {
-                        printf("index count = %d\n", primHeader.indexCount);
+                        ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[1]);
                     }
                 }
             } else {
@@ -964,7 +956,7 @@ ta_bool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_lo
 
     // Features are loaded by iterating over each 16x16 tile. The type of each feature is determine based on an index, however
     // remember from earlier that we sorted the features which means those indexes are no longer valid. To address this we just
-    // sort it back to it's original original order.
+    // sort it back to it's original order.
     qsort(pMap->pFeatureTypes, pMap->featureTypesCount, sizeof(*pMap->pFeatureTypes), ta_map__sort_feature_types_by_index);
 
     if (!ta_seek_file(pTNT, header.mapattrPtr, ta_seek_origin_start)) {
