@@ -52,7 +52,7 @@ typedef struct
 
 
 // Initializes the given texture packer. The minimum and maximum size should be a power of 2.
-bool ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t bytesPerPixel);
+ta_bool32 ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t bytesPerPixel);
 
 // Uninitializes the given texture packer.
 void ta_texture_packer_uninit(ta_texture_packer* pPacker);
@@ -61,5 +61,5 @@ void ta_texture_packer_uninit(ta_texture_packer* pPacker);
 // and re-initialize it.
 void ta_texture_packer_reset(ta_texture_packer* pPacker);
 
-// Packs a sub-texture into the packer. If there is no room this will simply return false.
-bool ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut);
+// Packs a sub-texture into the packer. If there is no room this will simply return TA_FALSE.
+ta_bool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut);

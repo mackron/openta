@@ -17,7 +17,7 @@ ta_config_obj* ta_allocate_config_object()
     return pObj;
 }
 
-bool ta_config_is_whitespace(char c)
+ta_bool32 ta_config_is_whitespace(char c)
 {
     return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
 }
@@ -35,12 +35,12 @@ char* ta_config_first_non_whitespace(char* str)
     return str;
 }
 
-bool ta_config_is_on_line_comment(const char* configString)
+ta_bool32 ta_config_is_on_line_comment(const char* configString)
 {
     return configString[0] == '/' && configString[1] == '/';
 }
 
-bool ta_config_is_on_block_comment(const char* configString)
+ta_bool32 ta_config_is_on_block_comment(const char* configString)
 {
     return configString[0] == '/' && configString[1] == '*';
 }

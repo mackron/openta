@@ -112,10 +112,10 @@ static ta_feature_category ta_parse_feature_category(const char* featureStr)
 }
 #endif
 
-static bool ta_features_library__load_feature(ta_features_library* pLib, const char* featureName, ta_config_obj* pFeatureConfig)
+static ta_bool32 ta_features_library__load_feature(ta_features_library* pLib, const char* featureName, ta_config_obj* pFeatureConfig)
 {
     if (pLib == NULL || pFeatureConfig == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     // Add the feature to the list.
@@ -125,7 +125,7 @@ static bool ta_features_library__load_feature(ta_features_library* pLib, const c
         uint32_t newBufferSize = pLib->featuresBufferSize + TA_FEATURE_CHUNK_SIZE;
         ta_feature_desc* pNewFeatures = realloc(pLib->pFeatures, newBufferSize * sizeof(*pLib->pFeatures));
         if (pNewFeatures == NULL) {
-            return false;   // Failed to allocate memory.
+            return TA_FALSE;   // Failed to allocate memory.
         }
 
         pLib->featuresBufferSize = newBufferSize;
@@ -243,21 +243,21 @@ static bool ta_features_library__load_feature(ta_features_library* pLib, const c
     pLib->featuresCount += 1;
 
     // When a new feature is added, the library is no longer in an optimized state.
-    pLib->isOptimized = false;
+    pLib->isOptimized = TA_FALSE;
 
-    return true;
+    return TA_TRUE;
 }
 
-static bool ta_features_library__load_features_from_config(ta_features_library* pLib, ta_config_obj* pConfig)
+static ta_bool32 ta_features_library__load_features_from_config(ta_features_library* pLib, ta_config_obj* pConfig)
 {
     if (pLib == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
-    bool result = true;
+    ta_bool32 result = TA_TRUE;
     for (unsigned int iVar = 0; iVar < pConfig->varCount; ++iVar) {
         if (!ta_features_library__load_feature(pLib, pConfig->pVars[iVar].name, pConfig->pVars[iVar].pObject)) {
-            result = false;
+            result = TA_FALSE;
             break;
         }
     }
@@ -265,7 +265,7 @@ static bool ta_features_library__load_features_from_config(ta_features_library* 
     return result;
 }
 
-static bool ta_features_library__load_and_parse_script(ta_features_library* pLib, ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath)
+static ta_bool32 ta_features_library__load_and_parse_script(ta_features_library* pLib, ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath)
 {
     assert(pLib != NULL);
     assert(pFS != NULL);
@@ -273,10 +273,10 @@ static bool ta_features_library__load_and_parse_script(ta_features_library* pLib
 
     ta_config_obj* pConfig = ta_parse_config_from_specific_file(pFS, archiveRelativePath, fileRelativePath);
     if (pConfig == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
-    bool result = ta_features_library__load_features_from_config(pLib, pConfig);
+    ta_bool32 result = ta_features_library__load_features_from_config(pLib, pConfig);
     //printf("FILE: %s/%s\n", archiveRelativePath, fileRelativePath);
 
     ta_delete_config(pConfig);
@@ -288,7 +288,7 @@ static void ta_features_library__optimize(ta_features_library* pLib)
 {
     assert(pLib != NULL);
 
-    // TODO: Sort by hash; optimize buffer, set pLib->isOptimized to true.
+    // TODO: Sort by hash; optimize buffer, set pLib->isOptimized to TA_TRUE.
     (void)pLib;
 }
 
@@ -336,7 +336,7 @@ ta_features_library* ta_create_features_library(ta_fs* pFS)
         return NULL;
     }
 
-    ta_fs_iterator* pIter = ta_fs_begin(pFS, "features", true);     // <-- "true" means to search recursively.
+    ta_fs_iterator* pIter = ta_fs_begin(pFS, "features", TA_TRUE);     // <-- "TA_TRUE" means to search recursively.
     while (ta_fs_next(pIter)) {
         if (!pIter->fileInfo.isDirectory && drpath_extension_equal(pIter->fileInfo.relativePath, "tdf")) {
             ta_features_library__load_and_parse_script(pLib, pFS, pIter->fileInfo.archiveRelativePath, pIter->fileInfo.relativePath);

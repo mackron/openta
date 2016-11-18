@@ -39,7 +39,7 @@ ta_gaf* ta_open_gaf(ta_fs* pFS, const char* filename);
 void ta_close_gaf(ta_gaf* pGAF);
 
 // Selects the entry with the given name. After calling this you can get information about each frame in an entry.
-bool ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFrameCountOut);
+ta_bool32 ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFrameCountOut);
 
 // Retrieves the image data of the frame at the given index of the currently selected entry. Free the returned
 // pointer with ta_gaf_free().

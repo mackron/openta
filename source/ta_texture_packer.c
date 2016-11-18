@@ -1,13 +1,13 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-bool ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t* pPosXOut, uint32_t* pPosYOut)
+ta_bool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t* pPosXOut, uint32_t* pPosYOut)
 {
     assert(pPacker != NULL);
     assert(pPosXOut != NULL);
     assert(pPosYOut != NULL);
 
     if (width > pPacker->width || height > pPacker->height) {
-        return false;
+        return TA_FALSE;
     }
 
 
@@ -29,12 +29,12 @@ bool ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t width, ui
                 pPacker->currentRowHeight = height;
             }
 
-            return true;
+            return TA_TRUE;
         }
         else
         {
             // There is not enough room on the y axis. If it can't fit at this point it will never fit.
-            return false;
+            return TA_FALSE;
         }
     }
     else
@@ -52,17 +52,17 @@ bool ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t width, ui
             pPacker->cursorPosX += width;
             pPacker->currentRowHeight = height;
 
-            return true;
+            return TA_TRUE;
         }
         else
         {
             // Going to the next row will not leave enough room. It will never fit.
-            return false;
+            return TA_FALSE;
         }
     }
 }
 
-bool ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, ta_texture_packer_slot* pSlot, const uint8_t* pSubTextureData)
+ta_bool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, ta_texture_packer_slot* pSlot, const uint8_t* pSubTextureData)
 {
     assert(pPacker != NULL);
     assert(pSlot != NULL);
@@ -78,14 +78,14 @@ bool ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, ta_texture_p
         memcpy(pDstRow + pSlot->posX, pSrcRow, srcStride);
     }
 
-    return true;
+    return TA_TRUE;
 }
 
 
-bool ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t bytesPerPixel)
+ta_bool32 ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t bytesPerPixel)
 {
     if (pPacker == NULL || width == 0 || height == 0) {
-        return false;
+        return TA_FALSE;
     }
 
     memset(pPacker, 0, sizeof(*pPacker));
@@ -94,10 +94,10 @@ bool ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uint32_t
     pPacker->bpp = bytesPerPixel;
     pPacker->pImageData = calloc(1, width * height * bytesPerPixel);   // <-- calloc this so the background is black. Important for debugging.
     if (pPacker->pImageData == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
-    return true;
+    return TA_TRUE;
 }
 
 void ta_texture_packer_uninit(ta_texture_packer* pPacker)
@@ -123,21 +123,21 @@ void ta_texture_packer_reset(ta_texture_packer* pPacker)
     memset(pPacker->pImageData, 0, pPacker->width * pPacker->height * pPacker->bpp);
 }
 
-bool ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut)
+ta_bool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut)
 {
     if (pPacker == NULL || pSubTextureData == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     ta_texture_packer_slot slot;
     if (!ta_texture_packer__find_slot(pPacker, width, height, &slot.posX, &slot.posY)) {
-        return false;
+        return TA_FALSE;
     }
 
     slot.width = width;
     slot.height = height;
     if (!ta_texture_packer__copy_image_data(pPacker, &slot, pSubTextureData)) {
-        return false;
+        return TA_FALSE;
     }
 
 
@@ -145,5 +145,5 @@ bool ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t widt
         *pSlotOut = slot;
     }
 
-    return true;
+    return TA_TRUE;
 }

@@ -47,7 +47,7 @@ int64_t ta_ftell(FILE* pFile)
 }
 
 
-bool ta_fs__find_file_in_archive(ta_fs* pFS, ta_fs_archive* pArchive, const char* fileRelativePath, uint32_t* pDataPosOut)
+ta_bool32 ta_fs__find_file_in_archive(ta_fs* pFS, ta_fs_archive* pArchive, const char* fileRelativePath, uint32_t* pDataPosOut)
 {
     assert(pFS != NULL);
     assert(pArchive != NULL);
@@ -60,7 +60,7 @@ bool ta_fs__find_file_in_archive(ta_fs* pFS, ta_fs_archive* pArchive, const char
     // either find the file or don't find a segment.
     drpath_iterator pathseg;
     if (!drpath_first(fileRelativePath, &pathseg)) {
-        return false;
+        return TA_FALSE;
     }
 
     do
@@ -68,53 +68,53 @@ bool ta_fs__find_file_in_archive(ta_fs* pFS, ta_fs_archive* pArchive, const char
         // At this point we will be sitting on the first byte of the sub-directory.
         uint32_t fileCount;
         if (ta_memory_stream_read(&stream, &fileCount, 4) != 4) {
-            return false;
+            return TA_FALSE;
         }
 
         uint32_t entryOffset;
         if (ta_memory_stream_read(&stream, &entryOffset, 4) != 4) {
-            return false;
+            return TA_FALSE;
         }
 
-        bool subdirExists = false;
+        ta_bool32 subdirExists = TA_FALSE;
         for (uint32_t iFile = 0; iFile < fileCount; ++iFile)
         {
             uint32_t namePos;
             if (ta_memory_stream_read(&stream, &namePos, 4) != 4) {
-                return false;
+                return TA_FALSE;
             }
 
             uint32_t dataPos;
             if (ta_memory_stream_read(&stream, &dataPos, 4) != 4) {
-                return false;
+                return TA_FALSE;
             }
 
             uint8_t isDirectory;
             if (ta_memory_stream_read(&stream, &isDirectory, 1) != 1) {
-                return false;
+                return TA_FALSE;
             }
 
 
             if (_strnicmp(pArchive->pCentralDirectory + namePos, pathseg.path + pathseg.segment.offset, pathseg.segment.length) == 0)
             {
-                subdirExists = true;
+                subdirExists = TA_TRUE;
 
                 // If it's not a directory, but we've still got segments left in the path then there's an error.
                 if (pathseg.path[pathseg.segment.offset + pathseg.segment.length] == '\0')
                 {
                     // It's the last segment - this is the file we're after.
                     *pDataPosOut = dataPos;
-                    return true;
+                    return TA_TRUE;
                 }
                 else
                 {
                     if (!isDirectory) {
-                        return false;   // We have path segments remaining, but we found a file (not a folder) in the listing. This is erroneous.
+                        return TA_FALSE;   // We have path segments remaining, but we found a file (not a folder) in the listing. This is erroneous.
                     }
 
                     // Before continuing we need to move the streamer to the start of the sub-directory.
                     if (!ta_memory_stream_seek(&stream, dataPos, ta_seek_origin_start)) {
-                        return false;
+                        return TA_FALSE;
                     }
                 }
 
@@ -123,31 +123,31 @@ bool ta_fs__find_file_in_archive(ta_fs* pFS, ta_fs_archive* pArchive, const char
         }
 
         if (!subdirExists) {
-            return false;
+            return TA_FALSE;
         }
 
     } while (drpath_next(&pathseg));
 
-    return false;
+    return TA_FALSE;
 }
 
 
-bool ta_fs__file_exists_in_list(const char* relativePath, size_t fileCount, ta_fs_file_info* pFiles)
+ta_bool32 ta_fs__file_exists_in_list(const char* relativePath, size_t fileCount, ta_fs_file_info* pFiles)
 {
     if (pFiles == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     for (size_t i = 0; i < fileCount; ++i) {
         if (_stricmp(pFiles[i].relativePath, relativePath) == 0) {    // <-- TA seems to be case insensitive.
-            return true;
+            return TA_TRUE;
         }
     }
 
-    return false;
+    return TA_FALSE;
 }
 
-void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRelativePath, bool recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut)
+void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRelativePath, ta_bool32 recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut)
 {
     assert(pFS != NULL);
     assert(directoryRelativePath != NULL);
@@ -219,7 +219,7 @@ void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRe
 #endif
 }
 
-void ta_fs__gather_files_in_archive_directory_at_location(ta_fs* pFS, ta_fs_archive* pArchive, uint32_t directoryDataPos, const char* parentPath, bool recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut, uint32_t prevFileCount)
+void ta_fs__gather_files_in_archive_directory_at_location(ta_fs* pFS, ta_fs_archive* pArchive, uint32_t directoryDataPos, const char* parentPath, ta_bool32 recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut, uint32_t prevFileCount)
 {
     ta_memory_stream stream = ta_create_memory_stream(pArchive->pCentralDirectory, pArchive->centralDirectorySize);
     if (!ta_memory_stream_seek(&stream, directoryDataPos, ta_seek_origin_start)) {
@@ -281,7 +281,7 @@ void ta_fs__gather_files_in_archive_directory_at_location(ta_fs* pFS, ta_fs_arch
     }
 }
 
-void ta_fs__gather_files_in_archive_directory(ta_fs* pFS, ta_fs_archive* pArchive, const char* directoryRelativePath, bool recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut)
+void ta_fs__gather_files_in_archive_directory(ta_fs* pFS, ta_fs_archive* pArchive, const char* directoryRelativePath, ta_bool32 recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut)
 {
     assert(pFS != NULL);
     assert(directoryRelativePath != NULL);
@@ -307,18 +307,18 @@ int ta_fs__file_info_qsort_callback(const void* a, const void* b)
 }
 
 
-bool ta_fs__adjust_central_dir_name_pointers_recursive(ta_memory_stream* pStream, uint32_t negativeOffset)
+ta_bool32 ta_fs__adjust_central_dir_name_pointers_recursive(ta_memory_stream* pStream, uint32_t negativeOffset)
 {
     assert(pStream != NULL);
 
     uint32_t fileCount;
     if (ta_memory_stream_read(pStream, &fileCount, 4) != 4) {
-        return false;
+        return TA_FALSE;
     }
 
     uint32_t entryOffset;
     if (ta_memory_stream_peek(pStream, &entryOffset, 4) != 4) {     // <-- Note that it's a peek and not a read. Reason is because this value is going to be replaced.
-        return false;
+        return TA_FALSE;
     }
 
     // The entry offset is within the central directory. Need to adjust this pointer by simply subtracting negativeOffset.
@@ -328,14 +328,14 @@ bool ta_fs__adjust_central_dir_name_pointers_recursive(ta_memory_stream* pStream
 
     // Now we need to seek to each file and do the same offsetting for them.
     if (!ta_memory_stream_seek(pStream, entryOffset, ta_seek_origin_start)) {
-        return false;
+        return TA_FALSE;
     }
 
     for (uint32_t i = 0; i < fileCount; ++i)
     {
         uint32_t namePos;
         if (ta_memory_stream_peek(pStream, &namePos, 4) != 4) {     // <-- Note that it's a peek and not a read. Reason is because this value is going to be replaced.
-            return false;
+            return TA_FALSE;
         }
 
         assert(namePos >= negativeOffset);
@@ -345,7 +345,7 @@ bool ta_fs__adjust_central_dir_name_pointers_recursive(ta_memory_stream* pStream
 
         uint32_t dataPos;
         if (ta_memory_stream_peek(pStream, &dataPos, 4) != 4) {     // <-- Note that it's a peek and not a read. Reason is because this value is going to be replaced.
-            return false;
+            return TA_FALSE;
         }
 
         assert(dataPos >= negativeOffset);
@@ -355,7 +355,7 @@ bool ta_fs__adjust_central_dir_name_pointers_recursive(ta_memory_stream* pStream
 
         uint8_t isDirectory;
         if (ta_memory_stream_read(pStream, &isDirectory, 1) != 1) {
-            return false;
+            return TA_FALSE;
         }
 
         // If it's a directory we need to call this recursively. The current read position of the stream needs to be saved and restored in order for
@@ -366,26 +366,26 @@ bool ta_fs__adjust_central_dir_name_pointers_recursive(ta_memory_stream* pStream
 
             // Before traversing the sub-directory we need to seek to it.
             if (!ta_memory_stream_seek(pStream, dataPos, ta_seek_origin_start)) {
-                return false;
+                return TA_FALSE;
             }
 
             if (!ta_fs__adjust_central_dir_name_pointers_recursive(pStream, negativeOffset)) {
-                return false;
+                return TA_FALSE;
             }
 
             
             // We're done with the sub-directory, but traversing that will have changed the read position of the memory stream, so that will need
             // to be restored before continuing.
             if (!ta_memory_stream_seek(pStream, currentReadPos, ta_seek_origin_start)) {
-                return false;
+                return TA_FALSE;
             }
         }
     }
 
-    return true;
+    return TA_TRUE;
 }
 
-bool ta_fs__adjust_central_dir_name_pointers(char* pCentralDirectory, uint32_t centralDirectorySize, uint32_t negativeOffset)
+ta_bool32 ta_fs__adjust_central_dir_name_pointers(char* pCentralDirectory, uint32_t centralDirectorySize, uint32_t negativeOffset)
 {
     assert(pCentralDirectory != NULL);
     assert(negativeOffset > 0);
@@ -397,7 +397,7 @@ bool ta_fs__adjust_central_dir_name_pointers(char* pCentralDirectory, uint32_t c
     return ta_fs__adjust_central_dir_name_pointers_recursive(&stream, negativeOffset);
 }
 
-bool ta_fs__register_archive(ta_fs* pFS, const char* archiveRelativePath)
+ta_bool32 ta_fs__register_archive(ta_fs* pFS, const char* archiveRelativePath)
 {
     assert(pFS != NULL);
     assert(archiveRelativePath != NULL);
@@ -405,7 +405,7 @@ bool ta_fs__register_archive(ta_fs* pFS, const char* archiveRelativePath)
     // If an archive of the same path already exists, ignore it.
     for (size_t iArchive = 0; iArchive < pFS->archiveCount; ++iArchive) {
         if (_stricmp(pFS->pArchives[iArchive].relativePath, archiveRelativePath) == 0) {    // <-- TA seems to be case insensitive.
-            return true;
+            return TA_TRUE;
         }
     }
 
@@ -413,12 +413,12 @@ bool ta_fs__register_archive(ta_fs* pFS, const char* archiveRelativePath)
     // Before registering the archive we want to ensure it's valid. We just read the header for this.
     char archiveAbsolutePath[TA_MAX_PATH];
     if (!drpath_copy_and_append(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, archiveRelativePath)) {
-        return false;
+        return TA_FALSE;
     }
 
     FILE* pFile = ta_fopen(archiveAbsolutePath, "rb");
     if (pFile == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
 
@@ -426,12 +426,12 @@ bool ta_fs__register_archive(ta_fs* pFS, const char* archiveRelativePath)
     ta_hpi_header header;
     if (fread(&header, 1, sizeof(header), pFile) != sizeof(header)) {
         fclose(pFile);
-        return false;
+        return TA_FALSE;
     }
 
     if (header.marker != 'IPAH') {
         fclose(pFile);
-        return false;    // Not a HPI file.
+        return TA_FALSE;    // Not a HPI file.
     }
 
 
@@ -439,7 +439,7 @@ bool ta_fs__register_archive(ta_fs* pFS, const char* archiveRelativePath)
     ta_fs_archive* pNewArchives = realloc(pFS->pArchives, (pFS->archiveCount + 1) * sizeof(*pNewArchives));
     if (pNewArchives == NULL) {
         fclose(pFile);
-        return false;
+        return TA_FALSE;
     }
 
     pFS->pArchives = pNewArchives;
@@ -448,7 +448,7 @@ bool ta_fs__register_archive(ta_fs* pFS, const char* archiveRelativePath)
     ta_fs_archive* pArchive = pNewArchives + pFS->archiveCount;
     if (strncpy_s(pArchive->relativePath, sizeof(pArchive->relativePath), archiveRelativePath, _TRUNCATE) != 0) {
         fclose(pFile);
-        return false;
+        return TA_FALSE;
     }
 
     if (header.key == 0) {
@@ -463,19 +463,19 @@ bool ta_fs__register_archive(ta_fs* pFS, const char* archiveRelativePath)
 
     if (ta_fseek(pFile, header.startPos, SEEK_SET) != 0) {
         fclose(pFile);
-        return false;
+        return TA_FALSE;
     }
 
     pArchive->pCentralDirectory = malloc(pArchive->centralDirectorySize);
     if (pArchive->pCentralDirectory == NULL) {
         fclose(pFile);
-        return false;
+        return TA_FALSE;
     }
 
     if (fread(pArchive->pCentralDirectory, 1, pArchive->centralDirectorySize, pFile) != pArchive->centralDirectorySize) {
         free(pArchive->pCentralDirectory);
         fclose(pFile);
-        return false;
+        return TA_FALSE;
     }
     
     fclose(pFile);
@@ -489,12 +489,12 @@ bool ta_fs__register_archive(ta_fs* pFS, const char* archiveRelativePath)
     // future traversals.
     if (!ta_fs__adjust_central_dir_name_pointers(pArchive->pCentralDirectory, pArchive->centralDirectorySize, header.startPos)) {
         free(pArchive->pCentralDirectory);
-        return false;
+        return TA_FALSE;
     }
 
     
     pFS->archiveCount += 1;
-    return true;
+    return TA_TRUE;
 }
 
 
@@ -618,7 +618,7 @@ ta_fs* ta_create_file_system()
         !ta_fs__register_archive(pFS, "totala2.hpi"))
     {
         ta_delete_file_system(pFS);
-        return false;
+        return TA_FALSE;
     }
 
     // Optional packages.
@@ -640,7 +640,7 @@ ta_fs* ta_create_file_system()
     // Now we need to search for .ufo files and register them. We only search the root directory for these.
     size_t fileCount = 0;
     ta_fs_file_info* pFiles = NULL;
-    ta_fs__gather_files_in_native_directory(pFS, "", false, &fileCount, &pFiles);
+    ta_fs__gather_files_in_native_directory(pFS, "", TA_FALSE, &fileCount, &pFiles);
     qsort(pFiles, fileCount, sizeof(*pFiles), ta_fs__file_info_qsort_callback);
 
     for (size_t iFile = 0; iFile < fileCount; ++iFile) {
@@ -781,10 +781,10 @@ void ta_close_file(ta_file* pFile)
 }
 
 
-bool ta_read_file(ta_file* pFile, void* pBufferOut, size_t bytesToRead, size_t* pBytesReadOut)
+ta_bool32 ta_read_file(ta_file* pFile, void* pBufferOut, size_t bytesToRead, size_t* pBytesReadOut)
 {
     if (pFile == NULL || pBufferOut == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     size_t bytesRead = ta_memory_stream_read(&pFile->_stream, pBufferOut, bytesToRead);
@@ -792,13 +792,13 @@ bool ta_read_file(ta_file* pFile, void* pBufferOut, size_t bytesToRead, size_t* 
         *pBytesReadOut = bytesRead;
     }
 
-    return true;
+    return TA_TRUE;
 }
 
-bool ta_seek_file(ta_file* pFile, int64_t bytesToSeek, ta_seek_origin origin)
+ta_bool32 ta_seek_file(ta_file* pFile, int64_t bytesToSeek, ta_seek_origin origin)
 {
     if (pFile == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     return ta_memory_stream_seek(&pFile->_stream, bytesToSeek, origin);
@@ -807,32 +807,32 @@ bool ta_seek_file(ta_file* pFile, int64_t bytesToSeek, ta_seek_origin origin)
 uint64_t ta_tell_file(ta_file* pFile)
 {
     if (pFile == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     return (uint64_t)ta_memory_stream_tell(&pFile->_stream);
 }
 
 
-bool ta_read_file_uint32(ta_file* pFile, uint32_t* pBufferOut)
+ta_bool32 ta_read_file_uint32(ta_file* pFile, uint32_t* pBufferOut)
 {
     size_t bytesRead;
     return ta_read_file(pFile, pBufferOut, sizeof(uint32_t), &bytesRead) && bytesRead == sizeof(uint32_t);
 }
 
-bool ta_read_file_int32(ta_file* pFile, int32_t* pBufferOut)
+ta_bool32 ta_read_file_int32(ta_file* pFile, int32_t* pBufferOut)
 {
     size_t bytesRead;
     return ta_read_file(pFile, pBufferOut, sizeof(int32_t), &bytesRead) && bytesRead == sizeof(int32_t);
 }
 
-bool ta_read_file_uint16(ta_file* pFile, uint16_t* pBufferOut)
+ta_bool32 ta_read_file_uint16(ta_file* pFile, uint16_t* pBufferOut)
 {
     size_t bytesRead;
     return ta_read_file(pFile, pBufferOut, sizeof(uint16_t), &bytesRead) && bytesRead == sizeof(uint16_t);
 }
 
-bool ta_read_file_uint8(ta_file* pFile, uint8_t* pBufferOut)
+ta_bool32 ta_read_file_uint8(ta_file* pFile, uint8_t* pBufferOut)
 {
     size_t bytesRead;
     return ta_read_file(pFile, pBufferOut, sizeof(uint8_t), &bytesRead) && bytesRead == sizeof(uint8_t);
@@ -842,7 +842,7 @@ bool ta_read_file_uint8(ta_file* pFile, uint8_t* pBufferOut)
 
 //// Iteration ////
 
-size_t ta_fs__gather_files_in_directory(ta_fs* pFS, const char* directoryRelativePath, ta_fs_file_info** ppFilesInOut, bool recursive)
+size_t ta_fs__gather_files_in_directory(ta_fs* pFS, const char* directoryRelativePath, ta_fs_file_info** ppFilesInOut, ta_bool32 recursive)
 {
     assert(pFS != NULL);
     assert(directoryRelativePath != NULL);
@@ -861,7 +861,7 @@ size_t ta_fs__gather_files_in_directory(ta_fs* pFS, const char* directoryRelativ
     return fileCount;
 }
 
-ta_fs_iterator* ta_fs_begin(ta_fs* pFS, const char* directoryRelativePath, bool recursive)
+ta_fs_iterator* ta_fs_begin(ta_fs* pFS, const char* directoryRelativePath, ta_bool32 recursive)
 {
     if (pFS == NULL) {
         return NULL;
@@ -893,10 +893,10 @@ void ta_fs_end(ta_fs_iterator* pIter)
     free(pIter);
 }
 
-bool ta_fs_next(ta_fs_iterator* pIter)
+ta_bool32 ta_fs_next(ta_fs_iterator* pIter)
 {
     if (pIter == NULL || pIter->_iFile >= pIter->_fileCount) {
-        return false;
+        return TA_FALSE;
     }
 
     assert(pIter->_pFiles != NULL);
@@ -904,14 +904,14 @@ bool ta_fs_next(ta_fs_iterator* pIter)
     pIter->fileInfo = pIter->_pFiles[pIter->_iFile];
     pIter->_iFile += 1;
 
-    return true;
+    return TA_TRUE;
 }
 
 
 
 //// HPI Helpers ////
 
-bool ta_hpi_decompress_lz77(const unsigned char* pIn, uint32_t compressedSize, unsigned char* pOut, uint32_t uncompressedSize)
+ta_bool32 ta_hpi_decompress_lz77(const unsigned char* pIn, uint32_t compressedSize, unsigned char* pOut, uint32_t uncompressedSize)
 {
     const unsigned char* pInEnd = pIn + compressedSize;
     const unsigned char* pOutEnd = pOut + uncompressedSize;
@@ -961,10 +961,10 @@ bool ta_hpi_decompress_lz77(const unsigned char* pIn, uint32_t compressedSize, u
         }
     }
 
-    return true;
+    return TA_TRUE;
 }
 
-bool ta_hpi_decompress_zlib(const void* pIn, uint32_t compressedSize, void* pOut, uint32_t uncompressedSize)
+ta_bool32 ta_hpi_decompress_zlib(const void* pIn, uint32_t compressedSize, void* pOut, uint32_t uncompressedSize)
 {
     return mz_uncompress(pOut, &uncompressedSize, pIn, compressedSize) == MZ_OK;
 }
@@ -1011,13 +1011,13 @@ size_t ta_hpi_read_and_decrypt_compressed(FILE* pFile, void* pBufferOut, size_t 
         chunkCount += 1;
     }
 
-    bool result = false;
+    ta_bool32 result = TA_FALSE;
     size_t* pChunkSizes = malloc(chunkCount * sizeof(*pChunkSizes));
 
     for (size_t iChunk = 0; iChunk < chunkCount; ++iChunk)
     {
         if (ta_hpi_read_and_decrypt(pFile, &pChunkSizes[iChunk], 4, decryptionKey) != 4) {
-            result = false;
+            result = TA_FALSE;
             goto finished;
         }
     }
@@ -1027,43 +1027,43 @@ size_t ta_hpi_read_and_decrypt_compressed(FILE* pFile, void* pBufferOut, size_t 
     {
         uint32_t marker = 0;
         if (ta_hpi_read_and_decrypt(pFile, &marker, 4, decryptionKey) != 4 || marker != 'HSQS') {
-            result = false;
+            result = TA_FALSE;
             goto finished;
         }
 
         uint8_t unused;
         if (ta_hpi_read_and_decrypt(pFile, &unused, 1, decryptionKey) != 1) {
-            result = false;
+            result = TA_FALSE;
             goto finished;
         }
 
         uint8_t compressionType;
         if (ta_hpi_read_and_decrypt(pFile, &compressionType, 1, decryptionKey) != 1) {
-            result = false;
+            result = TA_FALSE;
             goto finished;
         }
 
         uint8_t encrypted;
         if (ta_hpi_read_and_decrypt(pFile, &encrypted, 1, decryptionKey) != 1) {
-            result = false;
+            result = TA_FALSE;
             goto finished;
         }
 
         uint32_t compressedSize;
         if (ta_hpi_read_and_decrypt(pFile, &compressedSize, 4, decryptionKey) != 4) {
-            result = false;
+            result = TA_FALSE;
             goto finished;
         }
 
         uint32_t uncompressedSize;
         if (ta_hpi_read_and_decrypt(pFile, &uncompressedSize, 4, decryptionKey) != 4) {
-            result = false;
+            result = TA_FALSE;
             goto finished;
         }
 
         uint32_t checksum;
         if (ta_hpi_read_and_decrypt(pFile, &checksum, 4, decryptionKey) != 4) {
-            result = false;
+            result = TA_FALSE;
             goto finished;
         }
 
@@ -1071,7 +1071,7 @@ size_t ta_hpi_read_and_decrypt_compressed(FILE* pFile, void* pBufferOut, size_t 
         unsigned char* pCompressedData = malloc(compressedSize);
         if (ta_hpi_read_and_decrypt(pFile, pCompressedData, compressedSize, decryptionKey) != compressedSize) {
             free(pCompressedData);
-            result = false;
+            result = TA_FALSE;
             goto finished;
         }
 
@@ -1091,7 +1091,7 @@ size_t ta_hpi_read_and_decrypt_compressed(FILE* pFile, void* pBufferOut, size_t 
 
         if (checksum != checksum2) {
             free(pCompressedData);
-            result = false;
+            result = TA_FALSE;
             goto finished;
         }
 
@@ -1103,7 +1103,7 @@ size_t ta_hpi_read_and_decrypt_compressed(FILE* pFile, void* pBufferOut, size_t 
             {
                 if (!ta_hpi_decompress_lz77(pCompressedData, compressedSize, (char*)pBufferOut + (iChunk * 65536), uncompressedSize)) {
                     free(pCompressedData);
-                    result = false;
+                    result = TA_FALSE;
                     goto finished;
                 }
             } break;
@@ -1112,7 +1112,7 @@ size_t ta_hpi_read_and_decrypt_compressed(FILE* pFile, void* pBufferOut, size_t 
             {
                 if (!ta_hpi_decompress_zlib(pCompressedData, compressedSize, (char*)pBufferOut + (iChunk * 65536), uncompressedSize)) {
                     free(pCompressedData);
-                    result = false;
+                    result = TA_FALSE;
                     goto finished;
                 }
             } break;
@@ -1122,7 +1122,7 @@ size_t ta_hpi_read_and_decrypt_compressed(FILE* pFile, void* pBufferOut, size_t 
         free(pCompressedData);
     }
 
-    result = true;
+    result = TA_TRUE;
 
 
 finished:

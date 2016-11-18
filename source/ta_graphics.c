@@ -103,7 +103,7 @@ struct ta_graphics_context
 
 
     // Settings.
-    bool isShadowsEnabled;
+    ta_bool32 isShadowsEnabled;
 
 
     // State
@@ -182,10 +182,10 @@ void* ta_get_gl_proc_address(const char* name)
 
 
 // Creates a shader from both a vertex and fragment shader string.
-bool ta_graphics__compile_shader(ta_graphics_context* pGraphics, ta_graphics_shader* pShader, const char* vertexStr, const char* fragmentStr, char* pOutputLog, size_t outputLogSize)
+ta_bool32 ta_graphics__compile_shader(ta_graphics_context* pGraphics, ta_graphics_shader* pShader, const char* vertexStr, const char* fragmentStr, char* pOutputLog, size_t outputLogSize)
 {
     if (pGraphics == NULL || pShader == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     // Vertex shader.
@@ -198,7 +198,7 @@ bool ta_graphics__compile_shader(ta_graphics_context* pGraphics, ta_graphics_sha
         glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
         if (errorPos != -1) {
             snprintf(pOutputLog, outputLogSize, "--- VERTEX SHADER ---\n%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
-            return false;
+            return TA_FALSE;
         }
     } else {
         pShader->vertexProgram = 0;
@@ -215,13 +215,13 @@ bool ta_graphics__compile_shader(ta_graphics_context* pGraphics, ta_graphics_sha
         glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
         if (errorPos != -1) {
             snprintf(pOutputLog, outputLogSize, "--- FRAGMENT SHADER ---\n%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
-            return false;
+            return TA_FALSE;
         }
     } else {
         pShader->fragmentProgram = 0;
     }
 
-    return true;
+    return TA_TRUE;
 }
 
 
@@ -241,7 +241,7 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
     pGraphics->pCurrentWindow = NULL;
 
     // Default settings.
-    pGraphics->isShadowsEnabled = true;
+    pGraphics->isShadowsEnabled = TA_TRUE;
 
 
     // Platform specific.
@@ -1097,7 +1097,7 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     }
 }
 
-void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_feature_sequence* pSequence, uint32_t frameIndex, bool transparent)
+void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_feature_sequence* pSequence, uint32_t frameIndex, ta_bool32 transparent)
 {
     if (pSequence == NULL) {
         return;
@@ -1241,7 +1241,7 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
             }
 
             if (pFeature->pCurrentSequence != NULL) {
-                ta_draw_map_feature_sequance(pGraphics, pMap, pFeature, pFeature->pCurrentSequence, pFeature->currentFrameIndex, false);    // "false" means don't use transparency.
+                ta_draw_map_feature_sequance(pGraphics, pMap, pFeature, pFeature->pCurrentSequence, pFeature->currentFrameIndex, TA_FALSE);    // "TA_FALSE" means don't use transparency.
             }
         }
         else
@@ -1257,7 +1257,7 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
 
 //// Settings ////
 
-void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, bool isShadowsEnabled)
+void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, ta_bool32 isShadowsEnabled)
 {
     if (pGraphics == NULL) {
         return;
@@ -1266,10 +1266,10 @@ void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, bool isShado
     pGraphics->isShadowsEnabled = isShadowsEnabled;
 }
 
-bool ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
+ta_bool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
 {
     if (pGraphics == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     return pGraphics->isShadowsEnabled;
@@ -1278,7 +1278,7 @@ bool ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
 
 
 // TESTING
-void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, bool transparent, int offsetX, int offsetY, int width, int height)
+void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, ta_bool32 transparent, int offsetX, int offsetY, int width, int height)
 {
     if (pTexture == NULL) {
         return;
@@ -1311,7 +1311,7 @@ void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, bool transpare
 
 
     // We need to use a different fragment program depending on whether or not we're using a paletted texture.
-    bool isPaletted = pTexture->components == 1;
+    ta_bool32 isPaletted = pTexture->components == 1;
     if (isPaletted) {
         glEnable(GL_FRAGMENT_PROGRAM_ARB);
         ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader);
@@ -1343,7 +1343,7 @@ void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, bool transpare
     }
 }
 
-void ta_draw_texture(ta_texture* pTexture, bool transparent)
+void ta_draw_texture(ta_texture* pTexture, ta_bool32 transparent)
 {
     ta_draw_subtexture(pTexture, 0, 0, transparent, 0, 0, pTexture->width, pTexture->height);
 }

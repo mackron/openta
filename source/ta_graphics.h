@@ -124,13 +124,13 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap);
 //// Settings ////
 
 // Sets whether or not shadows are enabled.
-void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, bool isShadowsEnabled);
+void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, ta_bool32 isShadowsEnabled);
 
 // Determines whether or not shadows are enabled.
-bool ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics);
+ta_bool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics);
 
 
 
 // TESTING
-void ta_draw_texture(ta_texture* pTexture, bool transparent);
-void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, bool transparent, int offsetX, int offsetY, int width, int height);
+void ta_draw_texture(ta_texture* pTexture, ta_bool32 transparent);
+void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, ta_bool32 transparent, int offsetX, int offsetY, int width, int height);

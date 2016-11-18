@@ -1,14 +1,14 @@
 
-bool ta_mesh_builder_init(ta_mesh_builder* pBuilder, size_t vertexSize)
+ta_bool32 ta_mesh_builder_init(ta_mesh_builder* pBuilder, size_t vertexSize)
 {
     if (pBuilder == NULL || vertexSize == 0) {
-        return false;
+        return TA_FALSE;
     }
 
     dr_zero_object(pBuilder);
     pBuilder->vertexSize = vertexSize;
 
-    return true;
+    return TA_TRUE;
 }
 
 void ta_mesh_builder_uninit(ta_mesh_builder* pBuilder)
@@ -22,10 +22,10 @@ void ta_mesh_builder_uninit(ta_mesh_builder* pBuilder)
 }
 
 
-bool ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVertexData)
+ta_bool32 ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVertexData)
 {
     if (pBuilder == NULL || pVertexData == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     // Index.
@@ -34,7 +34,7 @@ bool ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVertex
         size_t newIndexBufferSize = (pBuilder->indexBufferSize == 0) ? 128 : pBuilder->indexBufferSize*2;
         void* pNewIndexData = realloc(pBuilder->pIndexData, newIndexBufferSize * sizeof(uint32_t));
         if (pNewIndexData == NULL) {
-            return false;
+            return TA_FALSE;
         }
 
         pBuilder->indexBufferSize = newIndexBufferSize;
@@ -53,7 +53,7 @@ bool ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVertex
         size_t newVertexBufferSize = (pBuilder->vertexBufferSize == 0) ? 128 : pBuilder->vertexBufferSize*2;
         void* pNewVertexData = realloc(pBuilder->pVertexData, newVertexBufferSize * pBuilder->vertexSize);
         if (pNewVertexData == NULL) {
-            return false;
+            return TA_FALSE;
         }
 
         pBuilder->vertexBufferSize = newVertexBufferSize;
@@ -65,7 +65,7 @@ bool ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVertex
     memcpy((uint8_t*)pBuilder->pVertexData + pBuilder->vertexCount*pBuilder->vertexSize, pVertexData, pBuilder->vertexSize);
     pBuilder->vertexCount += 1;
 
-    return true;
+    return TA_TRUE;
 }
 
 

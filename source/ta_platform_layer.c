@@ -16,7 +16,7 @@ static void ta_win32_track_mouse_leave_event(HWND hWnd)
     TrackMouseEvent(&tme);
 }
 
-bool ta_is_win32_mouse_button_key_code(WPARAM wParam)
+ta_bool32 ta_is_win32_mouse_button_key_code(WPARAM wParam)
 {
     return wParam == VK_LBUTTON || wParam == VK_RBUTTON || wParam == VK_MBUTTON || wParam == VK_XBUTTON1 || wParam == VK_XBUTTON2;
 }
@@ -212,7 +212,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
             case WM_MOUSELEAVE:
             {
-                pWindow->isCursorOver = false;
+                pWindow->isCursorOver = TA_FALSE;
 
                 ta_on_mouse_leave(pWindow->pGame);
                 break;
@@ -225,7 +225,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 if (!pWindow->isCursorOver)
                 {
                     ta_win32_track_mouse_leave_event(hWnd);
-                    pWindow->isCursorOver = true;
+                    pWindow->isCursorOver = TA_TRUE;
 
                     ta_on_mouse_enter(pWindow->pGame);
                 }
@@ -320,7 +320,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     return DefWindowProcA(hWnd, msg, wParam, lParam);
 }
 
-bool ta_init_window_system()
+ta_bool32 ta_init_window_system()
 {
     // The Windows operating system likes to automatically change the size of the game window when DPI scaling is
     // used. For example, if the user has their DPI set to 200%, the operating system will try to be helpful and
@@ -340,10 +340,10 @@ bool ta_init_window_system()
     wc.hCursor       = LoadCursorA(NULL, MAKEINTRESOURCEA(32512));
     wc.style         = CS_OWNDC | CS_DBLCLKS;
     if (!RegisterClassExA(&wc)) {
-        return false;
+        return TA_FALSE;
     }
 
-    return true;
+    return TA_TRUE;
 }
 
 void ta_uninit_window_system()
@@ -477,10 +477,10 @@ HDC ta_get_window_hdc(ta_window* pWindow)
 #endif
 
 #ifdef __linux__
-bool ta_init_window_system()
+ta_bool32 ta_init_window_system()
 {
     // TODO: Implement Me.
-    return false;
+    return TA_FALSE;
 }
 
 void ta_uninit_window_system()

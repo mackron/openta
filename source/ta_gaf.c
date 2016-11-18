@@ -14,7 +14,7 @@ typedef struct
     uint32_t dataPtr;
 } ta_gaf_frame_header;
 
-bool ta_gaf__read_frame_header(ta_gaf* pGAF, ta_gaf_frame_header* pHeader)
+ta_bool32 ta_gaf__read_frame_header(ta_gaf* pGAF, ta_gaf_frame_header* pHeader)
 {
     assert(pGAF != NULL);
     assert(pHeader != NULL);
@@ -22,47 +22,47 @@ bool ta_gaf__read_frame_header(ta_gaf* pGAF, ta_gaf_frame_header* pHeader)
     // This function assumes the file is sitting on the first byte of the header.
 
     if (!ta_read_file_uint16(pGAF->pFile, &pHeader->width)) {
-        return false;
+        return TA_FALSE;
     }
     if (!ta_read_file_uint16(pGAF->pFile, &pHeader->height)) {
-        return false;
+        return TA_FALSE;
     }
     if (!ta_read_file_uint16(pGAF->pFile, &pHeader->offsetX)) {
-        return false;
+        return TA_FALSE;
     }
     if (!ta_read_file_uint16(pGAF->pFile, &pHeader->offsetY)) {
-        return false;
+        return TA_FALSE;
     }
     if (!ta_seek_file(pGAF->pFile, 1, ta_seek_origin_current)) {
-        return false;
+        return TA_FALSE;
     }
     if (!ta_read_file_uint8(pGAF->pFile, &pHeader->isCompressed)) {
-        return false;
+        return TA_FALSE;
     }
     if (!ta_read_file_uint16(pGAF->pFile, &pHeader->subframeCount)) {
-        return false;
+        return TA_FALSE;
     }
     if (!ta_seek_file(pGAF->pFile, 4, ta_seek_origin_current)) {
-        return false;
+        return TA_FALSE;
     }
     if (!ta_read_file_uint32(pGAF->pFile, &pHeader->dataPtr)) {
-        return false;
+        return TA_FALSE;
     }
     if (!ta_seek_file(pGAF->pFile, 4, ta_seek_origin_current)) {
-        return false;
+        return TA_FALSE;
     }
 
-    return true;
+    return TA_TRUE;
 }
 
-bool ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHeader, uint16_t dstWidth, uint16_t dstHeight, uint16_t dstOffsetX, uint16_t dstOffsetY, uint8_t* pDstImageData)
+ta_bool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHeader, uint16_t dstWidth, uint16_t dstHeight, uint16_t dstOffsetX, uint16_t dstOffsetY, uint8_t* pDstImageData)
 {
     assert(pGAF != NULL);
     assert(pFrameHeader != NULL);
     assert(pDstImageData != NULL);
 
     if (!ta_seek_file(pGAF->pFile, pFrameHeader->dataPtr, ta_seek_origin_start)) {
-        return false;
+        return TA_FALSE;
     }
 
     uint16_t offsetX = dstOffsetX - pFrameHeader->offsetX;
@@ -74,7 +74,7 @@ bool ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHeader, 
         {
             uint16_t rowSize;
             if (!ta_read_file_uint16(pGAF->pFile, &rowSize)) {
-                return false;
+                return TA_FALSE;
             }
 
             uint8_t* pDstRow = pDstImageData + ((offsetY + y) * dstWidth);
@@ -87,7 +87,7 @@ bool ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHeader, 
                 {
                     uint8_t mask;
                     if (!ta_read_file_uint8(pGAF->pFile, &mask)) {
-                        return false;
+                        return TA_FALSE;
                     }
 
                     if ((mask & 0x01) == 0x01)
@@ -102,7 +102,7 @@ bool ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHeader, 
                         uint8_t repeat = (mask >> 2) + 1;
                         uint8_t value;
                         if (!ta_read_file_uint8(pGAF->pFile, &value)) {
-                            return false;
+                            return TA_FALSE;
                         }
 
                         if (value == TA_TRANSPARENT_COLOR) {
@@ -125,7 +125,7 @@ bool ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHeader, 
                         {
                             uint8_t value;
                             if (!ta_read_file_uint8(pGAF->pFile, &value)) {
-                                return false;
+                                return TA_FALSE;
                             }
 
                             if (value == TA_TRANSPARENT_COLOR) {
@@ -155,13 +155,13 @@ bool ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHeader, 
         {
             uint8_t* pDstRow = pDstImageData + ((offsetY + y) * dstWidth);
             if (!ta_read_file(pGAF->pFile, pDstRow + offsetX, pFrameHeader->width, NULL)) {
-                return false;
+                return TA_FALSE;
             }
         }
     }
 
 
-    return true;
+    return TA_TRUE;
 }
 
 
@@ -172,7 +172,7 @@ ta_gaf* ta_open_gaf(ta_fs* pFS, const char* filename)
     }
 
     char fullFileName[TA_MAX_PATH];
-    if (drpath_strcpy(fullFileName, sizeof(fullFileName), filename) != 0) {
+    if (dr_strcpy_s(fullFileName, sizeof(fullFileName), filename) != 0) {
         return NULL;
     }
 
@@ -239,10 +239,10 @@ void ta_close_gaf(ta_gaf* pGAF)
 }
 
 
-bool ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFrameCountOut)
+ta_bool32 ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFrameCountOut)
 {
     if (pGAF == NULL || entryName == NULL || pFrameCountOut == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     // We need to find the entry which we do by simply iterating over each one and comparing it's name.
@@ -250,26 +250,26 @@ bool ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFrameCo
     {
         // The entry pointers are located at byte position 12.
         if (!ta_seek_file(pGAF->pFile, 12 + (iEntry * sizeof(uint32_t)), ta_seek_origin_start)) {
-            return false;
+            return TA_FALSE;
         }
 
         uint32_t entryPointer;
         if (!ta_read_file_uint32(pGAF->pFile, &entryPointer)) {
-            return false;
+            return TA_FALSE;
         }
 
         if (!ta_seek_file(pGAF->pFile, entryPointer, ta_seek_origin_start)) {
-            return false;
+            return TA_FALSE;
         }
 
 
         uint16_t frameCount;
         if (!ta_read_file_uint16(pGAF->pFile, &frameCount)) {
-            return false;
+            return TA_FALSE;
         }
 
         if (!ta_seek_file(pGAF->pFile, 6, ta_seek_origin_current)) {
-            return false;
+            return TA_FALSE;
         }
 
         // The file will be sitting on the entry name, so we just need to compare. If they're not equal just try the next entry.
@@ -280,11 +280,11 @@ bool ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFrameCo
             pGAF->_entryFrameCount = frameCount;
 
             *pFrameCountOut = frameCount;
-            return true;
+            return TA_TRUE;
         }
     }
     
-    return false;
+    return TA_FALSE;
 }
 
 uint8_t* ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOut, uint32_t* pHeightOut, int32_t* pPosXOut, int32_t* pPosYOut)
@@ -356,7 +356,7 @@ uint8_t* ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOut
             uint32_t subframePointer;
             if (!ta_read_file_uint32(pGAF->pFile, &subframePointer)) {
                 free(pImageData);
-                return false;
+                return TA_FALSE;
             }
 
             if (!ta_seek_file(pGAF->pFile, subframePointer, ta_seek_origin_start)) {

@@ -54,35 +54,35 @@ typedef struct
     ta_mesh_builder* pMeshBuilders;
 } ta_map_load_context;
 
-bool ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_packer* pPacker)
+ta_bool32 ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_packer* pPacker)
 {
     ta_texture* pNewTexture = ta_create_texture(pMap->pGame->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
     if (pNewTexture == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     ta_texture** ppNewTextures = realloc(pMap->ppTextures, (pMap->textureCount + 1) * sizeof(*pMap->ppTextures));
     if (ppNewTextures == NULL) {
         ta_delete_texture(pNewTexture);
-        return false;
+        return TA_FALSE;
     }
 
     pMap->ppTextures = ppNewTextures;
     pMap->ppTextures[pMap->textureCount++] = pNewTexture;
 
     ta_texture_packer_reset(pPacker);
-    return true;
+    return TA_TRUE;
 }
 
-bool ta_map__pack_subtexture(ta_map_instance* pMap, ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pImageData, ta_texture_packer_slot* pSlotOut)
+ta_bool32 ta_map__pack_subtexture(ta_map_instance* pMap, ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pImageData, ta_texture_packer_slot* pSlotOut)
 {
     // If we can't pack the image we just create a new texture on the graphics system and then reset the packer and try again.
     if (ta_texture_packer_pack_subtexture(pPacker, width, height, pImageData, pSlotOut)) {
-        return true;
+        return TA_TRUE;
     }
 
     if (!ta_map__create_and_push_texture(pMap, pPacker)) {  // <-- This will reset the texture packer.
-        return false;
+        return TA_FALSE;
     }
 
     return ta_texture_packer_pack_subtexture(pPacker, width, height, pImageData, pSlotOut);
@@ -169,7 +169,7 @@ ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_tex
 }
 
 
-bool ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadContext, const char* textureName, ta_map_loaded_texture* pTextureOut)
+ta_bool32 ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadContext, const char* textureName, ta_map_loaded_texture* pTextureOut)
 {
     assert(pMap != NULL);
     assert(pLoadContext != NULL);
@@ -180,7 +180,7 @@ bool ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadConte
     for (size_t i = 0; i < pLoadContext->loadedTexturesCount; ++i) {
         if (_stricmp(pLoadContext->pLoadedTextures[i].name, textureName) == 0) {
             *pTextureOut = pLoadContext->pLoadedTextures[i];
-            return true;
+            return TA_TRUE;
         }
     }
 
@@ -189,7 +189,7 @@ bool ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadConte
         size_t newBufferSize = (pLoadContext->loadedTexturesBufferSize == 0) ? 16 : pLoadContext->loadedTexturesBufferSize*2;
         ta_map_loaded_texture* pNewTextures = (ta_map_loaded_texture*)realloc(pLoadContext->pLoadedTextures, newBufferSize * sizeof(*pNewTextures));
         if (pNewTextures == NULL) {
-            return false;
+            return TA_FALSE;
         }
 
         pLoadContext->loadedTexturesBufferSize = newBufferSize;
@@ -213,14 +213,14 @@ bool ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadConte
             uint32_t posY;
             uint8_t* pTextureData = ta_gaf_get_frame(pMap->pGame->ppTextureGAFs[iGAF], 0, &width, &height, &posX, &posY);
             if (pTextureData == NULL) {
-                return false;
+                return TA_FALSE;
             }
 
             // The texture was successfully loaded, so now it needs to be packed into an atlas.
             ta_texture_packer_slot subtextureSlot;
             if (!ta_map__pack_subtexture(pMap, &pLoadContext->texturePacker, width, height, pTextureData, &subtextureSlot)) {
                 ta_gaf_free(pTextureData);
-                return false;
+                return TA_FALSE;
             }
 
             ta_gaf_free(pTextureData);
@@ -235,11 +235,11 @@ bool ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadConte
             pLoadContext->pLoadedTextures[i].textureIndex = pMap->textureCount;
 
             *pTextureOut = pLoadContext->pLoadedTextures[i];
-            return true;
+            return TA_TRUE;
         }
     }
 
-    return false;
+    return TA_FALSE;
 }
 
 uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_context* pLoadContext, ta_file* pFile, ta_map_3do* p3DO, uint32_t nextObjectIndex)
@@ -550,17 +550,17 @@ void ta_map__close_tnt_file(ta_file* pTNT)
     ta_close_file(pTNT);
 }
 
-bool ta_map__read_tnt_header(ta_file* pTNT, ta_tnt_header* pHeader)
+ta_bool32 ta_map__read_tnt_header(ta_file* pTNT, ta_tnt_header* pHeader)
 {
     assert(pTNT != NULL);
     assert(pHeader != NULL);
 
     if (!ta_read_file_uint32(pTNT, &pHeader->id)) {
-        return false;
+        return TA_FALSE;
     }
 
     if (pHeader->id != 8192) {
-        return false;   // Not a TNT file.
+        return TA_FALSE;   // Not a TNT file.
     }
 
 
@@ -576,13 +576,13 @@ bool ta_map__read_tnt_header(ta_file* pTNT, ta_tnt_header* pHeader)
         !ta_read_file_uint32(pTNT, &pHeader->minimapPtr) ||
         !ta_seek_file(pTNT, 20, ta_seek_origin_current))    // <-- Last 20 bytes are unused.
     {
-        return false;
+        return TA_FALSE;
     }
 
-    return true;
+    return TA_TRUE;
 }
 
-bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_load_context* pLoadContext)
+ta_bool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_load_context* pLoadContext)
 {
     assert(pMap != NULL);
     assert(mapName != NULL);
@@ -590,13 +590,13 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_load_co
 
     ta_file* pTNT = ta_map__open_tnt_file(pMap->pGame->pFS, mapName);
     if (pTNT == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     // Header.
     ta_tnt_header header;
     if (!ta_map__read_tnt_header(pTNT, &header)) {
-        return false;
+        return TA_FALSE;
     }
 
 
@@ -707,7 +707,7 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_load_co
             // We want to group each mesh in the chunk by texture...
             for (uint32_t iTexture = 0; iTexture < pMap->textureCount+1; ++iTexture)    // <-- +1 because there is a texture sitting in the packer that hasn't yet been added to the list.
             {
-                bool isMeshAllocatedForThisTextures = false;
+                ta_bool32 isMeshAllocatedForThisTextures = TA_FALSE;
                 
                 // For every tile in the chunk...
                 for (uint32_t tileY = 0; tileY < chunkTileCountY; ++tileY)
@@ -752,7 +752,7 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_load_co
                                 pChunk->pMeshes = pNewMeshes;
                                 pChunk->meshCount += 1;
 
-                                isMeshAllocatedForThisTextures = true;
+                                isMeshAllocatedForThisTextures = TA_TRUE;
                             }
                             
                             // We always add the vertex to the most recent mesh.
@@ -958,12 +958,12 @@ bool ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_load_co
     
     
     ta_map__close_tnt_file(pTNT);
-    return true;
+    return TA_TRUE;
 
 
 on_error:
     ta_map__close_tnt_file(pTNT);
-    return false;
+    return TA_FALSE;
 }
 
 
@@ -985,24 +985,24 @@ void ta_map__close_ota_file(ta_config_obj* pOTA)
     ta_delete_config(pOTA);
 }
 
-bool ta_map__load_ota(ta_map_instance* pMap, const char* mapName)
+ta_bool32 ta_map__load_ota(ta_map_instance* pMap, const char* mapName)
 {
     ta_config_obj* pOTA = ta_map__open_ota_file(pMap->pGame->pFS, mapName);
     if (pOTA == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     // TODO: Do something.
 
     ta_map__close_ota_file(pOTA);
-    return true;
+    return TA_TRUE;
 }
 
 
-bool ta_map_load_context_init(ta_map_load_context* pLoadContext, ta_game* pGame)
+ta_bool32 ta_map_load_context_init(ta_map_load_context* pLoadContext, ta_game* pGame)
 {
     if (pLoadContext == NULL || pGame == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     memset(pLoadContext, 0, sizeof(*pLoadContext));
@@ -1016,10 +1016,10 @@ bool ta_map_load_context_init(ta_map_load_context* pLoadContext, ta_game* pGame)
 
     // We'll need a texture packer to help us pack images into atlases.
     if (!ta_texture_packer_init(&pLoadContext->texturePacker, maxTextureSize, maxTextureSize, 1)) {
-        return false;
+        return TA_FALSE;
     }
 
-    return true;
+    return TA_TRUE;
 }
 
 void ta_map_load_context_uninit(ta_map_load_context* pLoadContext)

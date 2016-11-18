@@ -43,7 +43,7 @@ struct ta_game
 
 
     // Whether or not the middle mouse button is down.
-    bool isMMBDown;
+    ta_bool32 isMMBDown;
 
     // The position of the mouse at the time it was clicked.
     int mouseDownPosX;

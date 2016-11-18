@@ -25,9 +25,6 @@
 #define DR_IMPLEMENTATION
 #include "../../dr_libs/dr.h"
 
-#define DR_PATH_IMPLEMENTATION
-#include "../../dr_libs/dr_path.h"
-
 #define DR_AUDIO_IMPLEMENTATION
 #include "../../dr_libs/dr_audio.h"
 
@@ -52,6 +49,33 @@
 
 // The maximum length of a feature name.
 #define TA_MAX_FEATURE_NAME 64
+
+
+// Basic types.
+#if defined(_MSC_VER) && _MSC_VER < 1600
+typedef   signed char    ta_int8;
+typedef unsigned char    ta_uint8;
+typedef   signed short   ta_int16;
+typedef unsigned short   ta_uint16;
+typedef   signed int     ta_int32;
+typedef unsigned int     ta_uint32;
+typedef   signed __int64 ta_int64;
+typedef unsigned __int64 ta_uint64;
+#else
+#include <stdint.h>
+typedef int8_t           ta_int8;
+typedef uint8_t          ta_uint8;
+typedef int16_t          ta_int16;
+typedef uint16_t         ta_uint16;
+typedef int32_t          ta_int32;
+typedef uint32_t         ta_uint32;
+typedef int64_t          ta_int64;
+typedef uint64_t         ta_uint64;
+#endif
+typedef ta_int8          ta_bool8;
+typedef ta_int32         ta_bool32;
+#define TA_TRUE          1
+#define TA_FALSE         0
 
 
 // Total Annihilation headers.

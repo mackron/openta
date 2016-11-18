@@ -1,15 +1,15 @@
 // Public domain. See "unlicense" statement at the end of this file.
 
-bool ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut)
+ta_bool32 ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut)
 {
     ta_file* pPaletteFile = ta_open_file(pFS, filePath, 0);
     if (pPaletteFile == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     size_t bytesRead;
     if (!ta_read_file(pPaletteFile, paletteOut, 1024, &bytesRead) || bytesRead != 1024) {
-        return false;
+        return TA_FALSE;
     }
 
     ta_close_file(pPaletteFile);
@@ -21,7 +21,7 @@ bool ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut)
         paletteOut[i] |= 0xFF000000;
     }
 
-    return true;
+    return TA_TRUE;
 }
 
 
@@ -71,7 +71,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     }
 
     // Audio system.
-    pGame->pAudioContext = dra_context_create();
+    dra_context_create(&pGame->pAudioContext);
     if (pGame->pAudioContext == NULL) {
         goto on_error;
     }
@@ -80,7 +80,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     // Texture GAFs. This is every GAF file contained in the "textures" directory. These are loaded in two passes. The first
     // pass counts the number of GAF files, and the second pass opens them.
     pGame->textureGAFCount = 0;
-    ta_fs_iterator* iGAF = ta_fs_begin(pGame->pFS, "textures", false);
+    ta_fs_iterator* iGAF = ta_fs_begin(pGame->pFS, "textures", TA_FALSE);
     while (ta_fs_next(iGAF)) {
         if (drpath_extension_equal(iGAF->fileInfo.relativePath, "gaf")) {
             pGame->textureGAFCount += 1;
@@ -94,7 +94,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     }
 
     pGame->textureGAFCount = 0;
-    iGAF = ta_fs_begin(pGame->pFS, "textures", false);
+    iGAF = ta_fs_begin(pGame->pFS, "textures", TA_FALSE);
     while (ta_fs_next(iGAF)) {
         if (drpath_extension_equal(iGAF->fileInfo.relativePath, "gaf")) {
             pGame->ppTextureGAFs[pGame->textureGAFCount] = ta_open_gaf(pGame->pFS, iGAF->fileInfo.relativePath);
@@ -210,8 +210,8 @@ void ta_game_render(ta_game* pGame)
             ta_draw_map(pGame->pGraphics, pGame->pCurrentMap);
         }
 
-        //ta_draw_texture(pGame->pCurrentMap->ppTextures[pGame->pCurrentMap->textureCount-1], false);
-        //ta_draw_texture(pGame->pTexture, false);
+        //ta_draw_texture(pGame->pCurrentMap->ppTextures[pGame->pCurrentMap->textureCount-1], TA_FALSE);
+        //ta_draw_texture(pGame->pTexture, TA_FALSE);
     }
     ta_graphics_present(pGame->pGraphics, pGame->pWindow);
 }
@@ -248,7 +248,7 @@ void ta_on_mouse_button_down(ta_game* pGame, int button, int posX, int posY, uns
     // TODO: Properly handle mouse capture with respect to all mouse buttons.
 
     if (button == TA_MOUSE_BUTTON_MIDDLE) {
-        pGame->isMMBDown = true;
+        pGame->isMMBDown = TA_TRUE;
         pGame->mouseDownPosX = posX;
         pGame->mouseDownPosY = posY;
         ta_capture_mouse(pGame);
@@ -265,7 +265,7 @@ void ta_on_mouse_button_up(ta_game* pGame, int button, int posX, int posY, unsig
     // TODO: Properly handle mouse capture with respect to all mouse buttons.
 
     if (button == TA_MOUSE_BUTTON_MIDDLE) {
-        pGame->isMMBDown = false;
+        pGame->isMMBDown = TA_FALSE;
         ta_release_mouse(pGame);
     }
 }

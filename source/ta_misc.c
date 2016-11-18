@@ -44,7 +44,7 @@ size_t ta_memory_stream_peek(ta_memory_stream* pStream, void* pDataOut, size_t b
     return bytesToRead;
 }
 
-bool ta_memory_stream_seek(ta_memory_stream* pStream, int64_t bytesToSeek, ta_seek_origin origin)
+ta_bool32 ta_memory_stream_seek(ta_memory_stream* pStream, int64_t bytesToSeek, ta_seek_origin origin)
 {
     uint64_t newPos = pStream->currentReadPos;
     if (origin == ta_seek_origin_current)
@@ -53,7 +53,7 @@ bool ta_memory_stream_seek(ta_memory_stream* pStream, int64_t bytesToSeek, ta_se
             newPos = (uint64_t)((int64_t)newPos + bytesToSeek);
         } else {
             // Trying to seek to before the beginning of the file.
-            return false;
+            return TA_FALSE;
         }
     }
     else if (origin == ta_seek_origin_start)
@@ -68,22 +68,22 @@ bool ta_memory_stream_seek(ta_memory_stream* pStream, int64_t bytesToSeek, ta_se
             newPos = pStream->dataSize - (uint64_t)bytesToSeek;
         } else {
             // Trying to seek to before the beginning of the file.
-            return false;
+            return TA_FALSE;
         }
     }
     else
     {
         // Should never get here.
-        return false;
+        return TA_FALSE;
     }
 
 
     if (newPos > pStream->dataSize) {
-        return false;
+        return TA_FALSE;
     }
 
     pStream->currentReadPos = (size_t)newPos;
-    return true;
+    return TA_TRUE;
 }
 
 size_t ta_memory_stream_tell(ta_memory_stream* pStream)
@@ -95,18 +95,18 @@ size_t ta_memory_stream_tell(ta_memory_stream* pStream)
     return pStream->currentReadPos;
 }
 
-bool ta_memory_stream_write_uint32(ta_memory_stream* pStream, uint32_t value)
+ta_bool32 ta_memory_stream_write_uint32(ta_memory_stream* pStream, uint32_t value)
 {
     if (pStream == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     if ((pStream->dataSize - pStream->currentReadPos) < 4) {
-        return false;
+        return TA_FALSE;
     }
 
     *((uint32_t*)(pStream->pData + pStream->currentReadPos)) = value;
     pStream->currentReadPos += sizeof(uint32_t);
 
-    return true;
+    return TA_TRUE;
 }

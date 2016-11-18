@@ -2,7 +2,7 @@
 //
 // Credits to http://units.tauniverse.com/tutorials/tadesign/tadesign/ta-3do-fmtV2.txt for the description of the 3DO file format.
 
-bool ta_3do__init_object_from_header(ta_3do* p3DO, ta_3do_object* pObject, ta_3do_object_header* pHeader)
+ta_bool32 ta_3do__init_object_from_header(ta_3do* p3DO, ta_3do_object* pObject, ta_3do_object_header* pHeader)
 {
     assert(pObject != NULL);
     memset(pObject, 0, sizeof(*pObject));
@@ -11,7 +11,7 @@ bool ta_3do__init_object_from_header(ta_3do* p3DO, ta_3do_object* pObject, ta_3d
     pObject->name = p3DO->pFile->pFileData + pHeader->namePtr;
 
     //printf("OBJECT: %s\n", pObject->name);
-    return true;
+    return TA_TRUE;
 }
 
 ta_3do_object* ta_3do__load_object_recursive(ta_3do* p3DO)
@@ -119,7 +119,7 @@ void ta_close_3do(ta_3do* p3DO)
     free(p3DO);
 }
 
-bool ta_3do_read_object_header(ta_file* pFile, ta_3do_object_header* pHeader)
+ta_bool32 ta_3do_read_object_header(ta_file* pFile, ta_3do_object_header* pHeader)
 {
     // PRE: The file must be sitting on the first byte of the header.
 
@@ -139,16 +139,16 @@ bool ta_3do_read_object_header(ta_file* pFile, ta_3do_object_header* pHeader)
         !ta_read_file_uint32(pFile, &pHeader->primitivePtr) ||
         !ta_read_file_uint32(pFile, &pHeader->nextSiblingPtr) ||
         !ta_read_file_uint32(pFile, &pHeader->firstChildPtr)) {
-        return false;
+        return TA_FALSE;
     }
 
-    return true;
+    return TA_TRUE;
 }
 
-bool ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* pHeaderOut)
+ta_bool32 ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* pHeaderOut)
 {
     if (pFile == NULL || pHeaderOut == NULL) {
-        return false;
+        return TA_FALSE;
     }
 
     if (!ta_read_file_uint32(pFile, &pHeaderOut->colorIndex) ||
@@ -159,10 +159,10 @@ bool ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* pHead
         !ta_read_file_uint32(pFile, &pHeaderOut->unused1) ||
         !ta_read_file_uint32(pFile, &pHeaderOut->unused2) ||
         !ta_read_file_uint32(pFile, &pHeaderOut->isColored)) {
-        return false;
+        return TA_FALSE;
     }
 
-    return true;
+    return TA_TRUE;
 }
 
 uint32_t ta_3do_count_objects(ta_file* pFile)

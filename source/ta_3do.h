@@ -72,12 +72,12 @@ void ta_close_3do(ta_3do* p3DO);
 // Reads the header of the next object.
 //
 // This function assumes the file is sitting on the first byte of the object header.
-bool ta_3do_read_object_header(ta_file* pFile, ta_3do_object_header* pHeader);
+ta_bool32 ta_3do_read_object_header(ta_file* pFile, ta_3do_object_header* pHeader);
 
 // Loads the primitive header from the given 3DO file.
 //
 // This function assumes the file is sitting on the first byte of the primitive header.
-bool ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* pHeaderOut);
+ta_bool32 ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* pHeaderOut);
 
 // Counts the number of objects in the given 3DO file.
 //
