@@ -23,20 +23,20 @@
 
 // dr_libs
 #define DR_IMPLEMENTATION
-#include "../../dr_libs/dr.h"
+#include "../../../dr_libs/dr.h"
 
 #define DR_AUDIO_IMPLEMENTATION
-#include "../../dr_libs/dr_audio.h"
+#include "../../../dr_libs/dr_audio.h"
 
 #define DR_WAV_IMPLEMENTATION
 #define DR_WAV_NO_STDIO
-#include "../../dr_libs/dr_wav.h"
+#include "../../../dr_libs/dr_wav.h"
 
 #define DR_MATH_IMPLEMENTATION
-#include "../../dr_libs/dr_math.h"
+#include "../../../dr_libs/dr_math.h"
 
 #define DR_PCX_IMPLEMENTATION
-#include "../../dr_libs/dr_pcx.h"
+#include "../../../dr_libs/dr_pcx.h"
 
 
 // Options.
@@ -106,10 +106,10 @@ typedef ta_int32         ta_bool32;
 // miniz
 #define MINIZ_NO_ARCHIVE_APIS
 #define MINIZ_NO_STDIO
-#include "miniz.c"
+#include "../external/miniz.c"
 
 // Bob Jenkins' lookup3 hash
-#include "lookup3.c"
+#include "../external/lookup3.c"
 
 
 // Private Options
