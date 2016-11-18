@@ -350,50 +350,54 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
 
 
             // TODO: Add support for lines and triangles. Points will need to be stored, but they shouldn't need to have a graphics representation.
-            if (primHeader.indexCount == 4)
-            {
-                uint16_t indices[4];
-                memcpy(indices, pFile->pFileData + primHeader.indexArrayPtr, sizeof(uint16_t)*4);   // <-- seek + read is safer than a memcpy()...
+            if (primHeader.indexCount >= 3) {
+                if (primHeader.indexCount == 4)
+                {
+                    uint16_t indices[4];
+                    memcpy(indices, pFile->pFileData + primHeader.indexArrayPtr, sizeof(uint16_t)*4);   // <-- seek + read is safer than a memcpy()...
 
-                float uvLeft   = texture.posX / (float)pLoadContext->texturePacker.width;
-                float uvBottom = texture.posY / (float)pLoadContext->texturePacker.height;
-                float uvRight  = (texture.posX + texture.sizeX) / (float)pLoadContext->texturePacker.width;
-                float uvTop    = (texture.posY + texture.sizeY) / (float)pLoadContext->texturePacker.height;
+                    float uvLeft   = texture.posX / (float)pLoadContext->texturePacker.width;
+                    float uvBottom = texture.posY / (float)pLoadContext->texturePacker.height;
+                    float uvRight  = (texture.posX + texture.sizeX) / (float)pLoadContext->texturePacker.width;
+                    float uvTop    = (texture.posY + texture.sizeY) / (float)pLoadContext->texturePacker.height;
 
-                ta_vertex_p3t2n3 vertices[4];
-                for (int i = 0; i < 4; ++i) {
-                    int32_t position[3];
-                    memcpy(position, pFile->pFileData + objectHeader.vertexPtr + (indices[i]*sizeof(int32_t)*3), sizeof(int32_t)*3);
+                    ta_vertex_p3t2n3 vertices[4];
+                    for (int i = 0; i < 4; ++i) {
+                        int32_t position[3];
+                        memcpy(position, pFile->pFileData + objectHeader.vertexPtr + (indices[i]*sizeof(int32_t)*3), sizeof(int32_t)*3);
 
-                    // Note that the Y and Z positions are intentionally swapped.
-                    vertices[i].x = position[0] / 65536.0f;
-                    vertices[i].y = position[2] / 65536.0f;
-                    vertices[i].z = position[1] / 65536.0f;
+                        // Note that the Y and Z positions are intentionally swapped.
+                        vertices[i].x = position[0] / 65536.0f;
+                        vertices[i].y = position[2] / 65536.0f;
+                        vertices[i].z = position[1] / 65536.0f;
+                    }
+
+                    vertices[0].u = uvLeft;
+                    vertices[0].v = uvBottom;
+                    vertices[1].u = uvRight;
+                    vertices[1].v = uvBottom;
+                    vertices[2].u = uvRight;
+                    vertices[2].v = uvTop;
+                    vertices[3].u = uvLeft;
+                    vertices[3].v = uvTop;
+
+                    // TODO: Calculate face normal.
+                    vec3 normal = vec3_triangle_normal(vec3v(&vertices[0].x), vec3v(&vertices[1].x), vec3v(&vertices[2].x));
+
+                    // TODO: Convert to triangles so that triangle and quad geometry can use the same meshes.
+                    for (int i = 0; i < 4; ++i) {
+                        vertices[i].nx = normal.x;
+                        vertices[i].ny = normal.y;
+                        vertices[i].nz = normal.z;
+                        ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[i]);
+                    }
                 }
-
-                vertices[0].u = uvLeft;
-                vertices[0].v = uvBottom;
-                vertices[1].u = uvRight;
-                vertices[1].v = uvBottom;
-                vertices[2].u = uvRight;
-                vertices[2].v = uvTop;
-                vertices[3].u = uvLeft;
-                vertices[3].v = uvTop;
-
-                // TODO: Calculate face normal.
-                vec3 normal = vec3_triangle_normal(vec3v(&vertices[0].x), vec3v(&vertices[1].x), vec3v(&vertices[2].x));
-
-                // TODO: Convert to triangles so that triangle and quad geometry can use the same meshes.
-                for (int i = 0; i < 4; ++i) {
-                    vertices[i].nx = normal.x;
-                    vertices[i].ny = normal.y;
-                    vertices[i].nz = normal.z;
-                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[i]);
+                else
+                {
+                    printf("index count = %d\n", primHeader.indexCount);
                 }
-            }
-            else
-            {
-                printf("index count = %d\n", primHeader.indexCount);
+            } else {
+                printf("Line or Point: %d\n", primHeader.indexCount);
             }
         }
     }
