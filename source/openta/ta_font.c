@@ -1,4 +1,4 @@
-// Public domain. See "unlicense" statement at the end of this file.
+// Copyright (C) 2016 David Reid. See included LICENSE file.
 
 #define TA_MAX_FONT_SIZE    64     // <-- Don't make this too big otherwise you'll end up using too much stack space. Can probably improve this later.
 

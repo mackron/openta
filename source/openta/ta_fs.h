@@ -1,4 +1,4 @@
-// Public domain. See "unlicense" statement at the end of this file.
+// Copyright (C) 2016 David Reid. See included LICENSE file.
 
 #define TA_OPEN_FILE_WITH_NULL_TERMINATOR    0x0001      // Opens a file with a null terminator at the end.
 

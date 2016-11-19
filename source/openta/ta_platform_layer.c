@@ -1,4 +1,4 @@
-// Public domain. See "unlicense" statement at the end of this file.
+// Copyright (C) 2016 David Reid. See included LICENSE file.
 
 #ifdef _WIN32
 static const char* g_TAWndClassName = "TAMainWindow";

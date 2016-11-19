@@ -1,4 +1,4 @@
-// Public domain. See "unlicense" statement at the end of this file.
+// Copyright (C) 2016 David Reid. See included LICENSE file.
 
 ta_bool32 ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut)
 {

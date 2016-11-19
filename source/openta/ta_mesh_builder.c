@@ -1,3 +1,4 @@
+// Copyright (C) 2016 David Reid. See included LICENSE file.
 
 ta_bool32 ta_mesh_builder_init(ta_mesh_builder* pBuilder, size_t vertexSize)
 {

@@ -1,4 +1,4 @@
-// Public domain. See "unlicense" statement at the end of this file.
+// Copyright (C) 2016 David Reid. See included LICENSE file.
 
 // GAF files are just a collection of relatively small images. Often they are used in animations, but they
 // are also used more generically for things like icons and textures.

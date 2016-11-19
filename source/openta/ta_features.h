@@ -1,4 +1,4 @@
-// Public domain. See "unlicense" statement at the end of this file.
+// Copyright (C) 2016 David Reid. See included LICENSE file.
 
 #define TA_FEATURE_ANIMATING            0x0001
 #define TA_FEATURE_ANIMTRANS            0x0002
