@@ -1297,7 +1297,6 @@ void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 color
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     
-    // TODO: Use a font shader with a uniform variable for controlling the color.
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
     ta_graphics__bind_shader(pGraphics, &pGraphics->textShader);
     pGraphics->glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f);
