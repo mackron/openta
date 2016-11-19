@@ -116,6 +116,10 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     dr_timer_init(&pGame->timer);
 
 
+    
+    ta_font_load(pGame, "fonts/HATT12.FNT", &pGame->font);
+
+
     //ta_graphics_disable_vsync(pGame->pGraphics, pGame->pWindow);
 
 
@@ -124,9 +128,9 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     //pGame->pCurrentMap = ta_load_map(pGame, "The Pass");
     //pGame->pCurrentMap = ta_load_map(pGame, "Red Hot Lava");
     //pGame->pCurrentMap = ta_load_map(pGame, "Test0");
-    //pGame->pCurrentMap = ta_load_map(pGame, "AC01");    // <-- Includes 3DO features.
+    pGame->pCurrentMap = ta_load_map(pGame, "AC01");    // <-- Includes 3DO features.
     //pGame->pCurrentMap = ta_load_map(pGame, "AC06");    // <-- Good profiling test.
-    pGame->pCurrentMap = ta_load_map(pGame, "AC20");
+    //pGame->pCurrentMap = ta_load_map(pGame, "AC20");
     //pGame->pCurrentMap = ta_load_map(pGame, "CC25");
 #endif
 
@@ -210,6 +214,9 @@ void ta_game_render(ta_game* pGame)
             ta_draw_map(pGame->pGraphics, pGame->pCurrentMap);
         }
 
+        ta_draw_text(pGame->pGraphics, &pGame->font, 255, 64, 64, "Hello, World!");
+
+        //ta_draw_texture(pGame->font.pTexture, TA_TRUE);
         //ta_draw_texture(pGame->pCurrentMap->ppTextures[pGame->pCurrentMap->textureCount-1], TA_FALSE);
         //ta_draw_texture(pGame->pTexture, TA_FALSE);
     }

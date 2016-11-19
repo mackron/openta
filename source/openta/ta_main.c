@@ -83,6 +83,9 @@ typedef ta_int32         ta_bool32;
 #define TA_FALSE         0
 
 
+#define ta_zero_object(p) memset((p), 0, sizeof(*(p)))
+
+
 // Total Annihilation headers.
 #include "ta_errors.h"
 #include "ta_type_declarations.h"
@@ -91,6 +94,7 @@ typedef ta_int32         ta_bool32;
 #include "ta_texture_packer.h"
 #include "ta_mesh_builder.h"
 #include "ta_graphics.h"
+#include "ta_font.h"
 #include "ta_game.h"
 #include "ta_fs.h"
 #include "ta_gaf.h"
@@ -129,6 +133,7 @@ typedef ta_int32         ta_bool32;
 #include "ta_texture_packer.c"
 #include "ta_mesh_builder.c"
 #include "ta_graphics.c"
+#include "ta_font.c"
 #include "ta_game.c"
 #include "ta_fs.c"
 #include "ta_gaf.c"

@@ -47,6 +47,9 @@ struct ta_graphics_context
     // The shader to use when drawing an object with a paletted texture.
     ta_graphics_shader palettedShader3D;
 
+    // The shader to use when drawing text.
+    ta_graphics_shader textShader;
+
 
     // A mesh for drawing features.
     ta_mesh* pFeaturesMesh;
@@ -424,6 +427,29 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
     if (!ta_graphics__compile_shader(pGraphics, &pGraphics->palettedShader3D, palettedVertexProgram3DStr, palettedFragmentProgram3DStr, shaderOutputLog, sizeof(shaderOutputLog))) {
         printf(shaderOutputLog);
     }
+
+
+    // For text:
+    // - Pixels will be either 0 or 1
+    // - When set to 0 it means the pixel is transparent otherwise it's visible.
+    // - The shader will subtract 1 from the input pixel to determine whether or not it should be
+    //   set to the transparent color.
+    // - Local parameter 0 is the text color. Parameter 1 is the transparent color.
+    const char textFragmentProgramStr[] =
+        "!!ARBfp1.0\n"
+        "PARAM textColor = program.local[0];\n"
+        "PARAM transparentColor = program.local[1];\n"
+        "\n"
+        "TEMP paletteIndex;\n"
+        "TEX paletteIndex, fragment.texcoord[0], texture[0], 2D;\n"
+        "ADD paletteIndex, paletteIndex, {-1, -1, -1, -1};\n"
+        "CMP paletteIndex, paletteIndex, transparentColor, textColor;\n"
+        "TEX result.color, paletteIndex, texture[1], 2D;\n"
+        "END";
+    if (!ta_graphics__compile_shader(pGraphics, &pGraphics->textShader, NULL, textFragmentProgramStr, shaderOutputLog, sizeof(shaderOutputLog))) {
+        printf(shaderOutputLog);
+    }
+
 
     // Default state.
     glEnable(GL_TEXTURE_2D);
@@ -1252,6 +1278,65 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
             }
         }
     }
+}
+
+void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 colorIndex, float posX, float posY, const char* text)
+{
+    if (pGraphics == NULL || pFont == NULL || text == NULL) {
+        return;
+    }
+
+    glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+    glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    
+    // TODO: Use a font shader with a uniform variable for controlling the color.
+    glEnable(GL_FRAGMENT_PROGRAM_ARB);
+    ta_graphics__bind_shader(pGraphics, &pGraphics->textShader);
+    pGraphics->glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f);
+    pGraphics->glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 1, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f);
+
+    ta_graphics__bind_texture(pGraphics, pFont->pTexture);
+
+    // Immediate mode will do for now, but might want to use vertex arrays later.
+    float penPosX = posX;
+    float penPosY = posY;
+
+    glBegin(GL_QUADS);
+    for (;;) {
+        unsigned char c = (unsigned char)*text++;
+        if (c == '\0') {
+            break;
+        }
+
+        ta_font_glyph glyph = pFont->glyphs[c];
+        float glyphSizeX = glyph.width;
+        float glyphSizeY = pFont->height;
+
+        float uvleft   = (float)glyph.u;
+        float uvtop    = (float)glyph.v;
+        float uvright  = uvleft + (glyphSizeX / pFont->pTexture->width);
+        float uvbottom = uvtop  + (glyphSizeY / pFont->pTexture->height);
+
+        glTexCoord2f(uvleft,  uvbottom); glVertex3f(penPosX,              penPosY + glyphSizeY, 0.0f);
+        glTexCoord2f(uvright, uvbottom); glVertex3f(penPosX + glyphSizeX, penPosY + glyphSizeY, 0.0f);
+        glTexCoord2f(uvright, uvtop);    glVertex3f(penPosX + glyphSizeX, penPosY,              0.0f);
+        glTexCoord2f(uvleft,  uvtop);    glVertex3f(penPosX,              penPosY,              0.0f);
+        
+        penPosX += glyphSizeX;
+        if (c == '\n') {
+            penPosY += pFont->height;
+            penPosX  = posX;
+        }
+    }
+    glEnd();
 }
 
 

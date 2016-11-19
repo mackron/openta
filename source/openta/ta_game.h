@@ -52,6 +52,7 @@ struct ta_game
 
 
     ta_texture* pTexture;
+    ta_font font;
 };
 
 // Creates a game instance.

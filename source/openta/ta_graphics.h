@@ -116,8 +116,11 @@ void ta_set_camera_position(ta_graphics_context* pGraphics, int posX, int posY);
 void ta_translate_camera(ta_graphics_context* pGraphics, int offsetX, int offsetY);
 
 
-// Draw the given given map.
+// Draws the given given map.
 void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap);
+
+// Draws a string of text.
+void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 colorIndex, float posX, float posY, const char* text);
 
 
 
