@@ -1132,14 +1132,20 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
                         charPosX += textPosX;
                         charPosY += textPosY;
 
+                        ta_uint32 underlineRGBA = pGraphics->pGame->palette[2];
+                        float underlineR = ((underlineRGBA & 0x00FF0000) >> 16) / 255.0f;
+                        float underlineG = ((underlineRGBA & 0x0000FF00) >>  8) / 255.0f;
+                        float underlineB = ((underlineRGBA & 0x000000FF) >>  0) / 255.0f;
+
                         ta_graphics__bind_shader(pGraphics, NULL);
                         ta_graphics__bind_texture(pGraphics, NULL);
                         glBegin(GL_QUADS);
                         {
-                            glColor3f(1, 1, 1); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
-                            glColor3f(1, 1, 1); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
-                            glColor3f(1, 1, 1); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY,                 0.0f);
-                            glColor3f(1, 1, 1); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY,                 0.0f);
+                            glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
+                            glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
+                            glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY,                 0.0f);
+                            glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY,                 0.0f);
+                            glColor3f(1, 1, 1);
                         }
                         glEnd();
                     }
