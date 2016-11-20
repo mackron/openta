@@ -279,7 +279,7 @@ void ta_game_render(ta_game* pGame)
 
         ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->mainMenu);
 
-        ta_draw_text(pGame->pGraphics, &pGame->font, 255, 2, 64, 64, "Hello, World!@!@!@!@");
+        //ta_draw_text(pGame->pGraphics, &pGame->font, 255, 2, 64, 64, "Hello, World!@!@!@!@");
 
         //ta_draw_texture(pGame->font.pTexture, TA_TRUE);
         //ta_draw_texture(pGame->pCurrentMap->ppTextures[pGame->pCurrentMap->textureCount-1], TA_FALSE);
