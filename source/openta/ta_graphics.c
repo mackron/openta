@@ -1113,41 +1113,49 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
         {
             case TA_GUI_GADGET_TYPE_BUTTON:
             {
-                float textSizeX;
-                float textSizeY;
-                ta_font_measure_text(&pGraphics->pGame->font, scale, pGadget->button.text, &textSizeX, &textSizeY);
+                ta_subtexture_metrics subtexture;
+                ta_texture* pBackgroundTexture = ta_get_gui_button_texture(pGraphics->pGame, pGadget->width, pGadget->height, TA_GUI_BUTTON_STATE_NORMAL, &subtexture);
+                if (pBackgroundTexture != NULL) {
+                    ta_draw_subtexture(pBackgroundTexture, (int)posX, (int)posY, TA_FALSE, (int)subtexture.texturePosX, (int)subtexture.texturePosY, (int)subtexture.width, (int)subtexture.height);
+                }
 
-                float textPosX = posX + (sizeX - textSizeX)/2;
-                float textPosY = /*posY + (sizeY - textSizeY)/2;*/ posY - (2*scale);    // <-- Should probably improve this a bit.
-                ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, textPosX, textPosY, pGadget->button.text);
+                if (!ta_is_string_null_or_empty(pGadget->button.text)) {
+                    float textSizeX;
+                    float textSizeY;
+                    ta_font_measure_text(&pGraphics->pGame->font, scale, pGadget->button.text, &textSizeX, &textSizeY);
 
-                if (pGadget->button.quickkey != 0) {
-                    float charPosX;
-                    float charPosY;
-                    float charSizeX;
-                    float charSizeY;
-                    if (ta_font_find_character_metrics(&pGraphics->pGame->font, scale, pGadget->button.text, pGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
-                        float underlineHeight = roundf(1*scale);
-                        float underlineOffsetY = roundf(0*scale);
-                        charPosX += textPosX;
-                        charPosY += textPosY;
+                    float textPosX = posX + (sizeX - textSizeX)/2;
+                    float textPosY = /*posY + (sizeY - textSizeY)/2;*/ posY - (2*scale);    // <-- Should probably improve this a bit.
+                    ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, textPosX, textPosY, pGadget->button.text);
 
-                        ta_uint32 underlineRGBA = pGraphics->pGame->palette[2];
-                        float underlineR = ((underlineRGBA & 0x00FF0000) >> 16) / 255.0f;
-                        float underlineG = ((underlineRGBA & 0x0000FF00) >>  8) / 255.0f;
-                        float underlineB = ((underlineRGBA & 0x000000FF) >>  0) / 255.0f;
+                    if (pGadget->button.quickkey != 0) {
+                        float charPosX;
+                        float charPosY;
+                        float charSizeX;
+                        float charSizeY;
+                        if (ta_font_find_character_metrics(&pGraphics->pGame->font, scale, pGadget->button.text, pGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
+                            float underlineHeight = roundf(1*scale);
+                            float underlineOffsetY = roundf(0*scale);
+                            charPosX += textPosX;
+                            charPosY += textPosY;
 
-                        ta_graphics__bind_shader(pGraphics, NULL);
-                        ta_graphics__bind_texture(pGraphics, NULL);
-                        glBegin(GL_QUADS);
-                        {
-                            glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
-                            glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
-                            glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY,                 0.0f);
-                            glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY,                 0.0f);
-                            glColor3f(1, 1, 1);
+                            ta_uint32 underlineRGBA = pGraphics->pGame->palette[2];
+                            float underlineR = ((underlineRGBA & 0x00FF0000) >> 16) / 255.0f;
+                            float underlineG = ((underlineRGBA & 0x0000FF00) >>  8) / 255.0f;
+                            float underlineB = ((underlineRGBA & 0x000000FF) >>  0) / 255.0f;
+
+                            ta_graphics__bind_shader(pGraphics, NULL);
+                            ta_graphics__bind_texture(pGraphics, NULL);
+                            glBegin(GL_QUADS);
+                            {
+                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
+                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
+                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY,                 0.0f);
+                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY,                 0.0f);
+                                glColor3f(1, 1, 1);
+                            }
+                            glEnd();
                         }
-                        glEnd();
                     }
                 }
             } break;

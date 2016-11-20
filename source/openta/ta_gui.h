@@ -13,6 +13,10 @@
 #define TA_GUI_SCROLLBAR_TYPE_HORIZONTAL    1
 #define TA_GUI_SCROLLBAR_TYPE_VERTICAL      2
 
+#define TA_GUI_BUTTON_STATE_NORMAL          0
+#define TA_GUI_BUTTON_STATE_PRESSED         1
+#define TA_GUI_BUTTON_STATE_DISABLED        2
+
 // TODO: Change these strings to dynamic strings. Can allocate these from a single pool.
 typedef struct
 {
@@ -115,3 +119,27 @@ struct ta_gui
 
 ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI);
 ta_result ta_gui_unload(ta_gui* pGUI);
+
+
+
+typedef struct
+{
+    char* sequenceName;
+    ta_uint32 frameIndex;
+    ta_texture* pTexture;
+    ta_subtexture_metrics metrics;
+} ta_common_gui_texture;
+
+typedef struct
+{
+    ta_game* pGame;
+
+    ta_uint32 subTextureCount;
+    ta_common_gui_texture* pSubTextures;    // An offset of _pPayload.
+
+    // The block of memory used for the common GUI package.
+    ta_uint8* _pPayload;
+} ta_common_gui;
+
+ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI);
+ta_result ta_common_gui_unload(ta_common_gui* pCommonGUI);

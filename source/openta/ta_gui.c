@@ -224,3 +224,26 @@ ta_result ta_gui_unload(ta_gui* pGUI)
 
     return TA_SUCCESS;
 }
+
+
+// Common GUI
+// ==========
+
+ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI)
+{
+    if (pCommonGUI == NULL) return TA_INVALID_ARGS;
+    ta_zero_object(pCommonGUI);
+
+    pCommonGUI->pGame = pGame;
+
+    return TA_SUCCESS;
+}
+
+ta_result ta_common_gui_unload(ta_common_gui* pCommonGUI)
+{
+    if (pCommonGUI == NULL) return TA_INVALID_ARGS;
+
+    free(pCommonGUI->_pPayload);
+
+    return TA_SUCCESS;
+}

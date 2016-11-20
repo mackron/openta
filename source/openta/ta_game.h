@@ -48,6 +48,12 @@ struct ta_game
     // The common GUI GAF.
     ta_gaf* pCommonGUIGAF;
 
+    // The main font to use for basically all GUI text.
+    ta_font font;
+
+    // The main menu.
+    ta_gui mainMenu;
+    
 
     // Whether or not the middle mouse button is down.
     ta_bool32 isMMBDown;
@@ -57,11 +63,7 @@ struct ta_game
     int mouseDownPosY;
 
 
-    ta_gui mainMenu;
-
-
     ta_texture* pTexture;
-    ta_font font;
 };
 
 // Creates a game instance.
@@ -103,6 +105,17 @@ void ta_release_mouse(ta_game* pGame);
 
 // Creates a texture from a file.
 ta_texture* ta_load_image(ta_game* pGame, const char* filePath);
+
+
+//// GUI ////
+
+// Retrieves the texture to use for the background of a button with the given dimensions and state.
+//
+// Button graphics are handled a bit strangely in Total Annihilation because they are selected based on the dimensions
+// of the button.
+//
+// The <state> parameter should be set to one of the TA_GUI_BUTTON_STATE_* values.
+ta_texture* ta_get_gui_button_texture(ta_game* pGame, ta_uint32 width, ta_uint32 height, ta_uint32 state, ta_subtexture_metrics* pMetrics);
 
 
 //// Events from Window ////

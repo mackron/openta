@@ -29,6 +29,14 @@ typedef struct
     float nz;
 } ta_vertex_p3t2n3;
 
+typedef struct
+{
+    float texturePosX;  // The position of the subtexture within the main texture atlas.
+    float texturePosY;
+    float width;
+    float height;
+} ta_subtexture_metrics;
+
 typedef enum
 {
     ta_vertex_format_unknown = 0,

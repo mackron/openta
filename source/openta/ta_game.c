@@ -87,11 +87,21 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
 
 
+    // GUI
+    // ===
+
     // There are a few required resources that are hard coded from what I can tell.
     pGame->pCommonGUIGAF = ta_open_gaf(pGame->pFS, "anims/commongui.GAF");
     if (pGame->pCommonGUIGAF == NULL) {
         goto on_error;
     }
+
+    //ta_font_load(pGame, "fonts/HATT12.FNT", &pGame->font);
+    ta_font_load(pGame, "anims/hattfont12.GAF/Haettenschweiler (120)", &pGame->font);
+
+    
+
+
 
 
     // Texture GAFs. This is every GAF file contained in the "textures" directory. These are loaded in two passes. The first
@@ -143,8 +153,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
 
     
-    //ta_font_load(pGame, "fonts/HATT12.FNT", &pGame->font);
-    ta_font_load(pGame, "anims/hattfont12.GAF/Haettenschweiler (120)", &pGame->font);
+    
 
 
     //ta_graphics_disable_vsync(pGame->pGraphics, pGame->pWindow);
@@ -329,6 +338,17 @@ ta_texture* ta_load_image(ta_game* pGame, const char* filePath)
     }
 
     // Failed to open file.
+    return NULL;
+}
+
+
+//// GUI ////
+
+ta_texture* ta_get_gui_button_texture(ta_game* pGame, ta_uint32 width, ta_uint32 height, ta_uint32 state, ta_subtexture_metrics* pMetrics)
+{
+    if (pMetrics) ta_zero_object(pMetrics);
+    if (pGame == NULL) return NULL;
+
     return NULL;
 }
 
