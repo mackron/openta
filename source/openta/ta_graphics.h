@@ -124,7 +124,7 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI);
 void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap);
 
 // Draws a string of text.
-void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 colorIndex, float posX, float posY, const char* text);
+void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 colorIndex, float scale, float posX, float posY, const char* text);
 
 
 

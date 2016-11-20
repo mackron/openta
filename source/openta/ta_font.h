@@ -17,3 +17,4 @@ struct ta_font
 
 ta_result ta_font_load(ta_game* pGame, const char* filePath, ta_font* pFont);
 ta_result ta_font_unload(ta_font* pFont);
+ta_result ta_font_measure_text(ta_font* pFont, float scale, const char* text, float* pSizeX, float* pSizeY);

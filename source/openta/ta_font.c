@@ -108,3 +108,32 @@ ta_result ta_font_unload(ta_font* pFont)
 
     return TA_SUCCESS;
 }
+
+ta_result ta_font_measure_text(ta_font* pFont, float scale, const char* text, float* pSizeX, float* pSizeY)
+{
+    if (pSizeX) *pSizeX = 0;
+    if (pSizeY) *pSizeY = 0;
+    if (pFont == NULL || text == NULL) return TA_INVALID_ARGS;
+
+    // The height is always at least the height of the font itself at a minimum, event for an empty string.
+    if (pSizeY) *pSizeY = pFont->height*scale;
+
+    float currentLineSizeX = 0;
+    for (;;) {
+        char c = *text++;
+        if (c == '\0') {
+            break;
+        }
+
+        if (c == '\n') {
+            if (pSizeY) *pSizeY += pFont->height*scale;
+            if (pSizeX && *pSizeX < currentLineSizeX) *pSizeX = currentLineSizeX;
+            currentLineSizeX = 0;
+        } else {
+            currentLineSizeX += pFont->glyphs[c].width*scale;
+        }
+    }
+
+    if (pSizeX && *pSizeX < currentLineSizeX) *pSizeX = currentLineSizeX;
+    return TA_SUCCESS;
+}

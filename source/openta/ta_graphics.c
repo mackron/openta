@@ -1081,9 +1081,9 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    if (pGUI->pBackgroundTexture != NULL) {
-        glDisable(GL_BLEND);
+    glDisable(GL_BLEND);
 
+    if (pGUI->pBackgroundTexture != NULL) {
         ta_graphics__bind_shader(pGraphics, NULL);
         ta_graphics__bind_texture(pGraphics, pGUI->pBackgroundTexture);
         glBegin(GL_QUADS);
@@ -1099,6 +1099,31 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
             glTexCoord2f(uvleft,  uvtop);    glVertex3f(quadLeft,  quadTop,    0.0f);
         }
         glEnd();
+    }
+
+    // Gadgets, not including the root.
+    for (ta_uint32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {   // <-- Start at 1 to skip the root gadget.
+        ta_gui_gadget* pGadget = pGUI->pGadgets + iGadget;
+        float posX  = pGadget->xpos   * scale + offsetX;
+        float posY  = pGadget->ypos   * scale + offsetY;
+        float sizeX = pGadget->width  * scale;
+        float sizeY = pGadget->height * scale;
+
+        switch (pGadget->id)
+        {
+            case TA_GUI_GADGET_TYPE_BUTTON:
+            {
+                float textSizeX;
+                float textSizeY;
+                ta_font_measure_text(&pGraphics->pGame->font, scale, pGadget->button.text, &textSizeX, &textSizeY);
+
+                float textPosX = posX + (sizeX - textSizeX)/2;
+                float textPosY = posY + (sizeY - textSizeY)/2;
+                ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, textPosX, textPosY, pGadget->button.text);
+            } break;
+
+            default: break;
+        }
     }
 }
 
@@ -1353,7 +1378,7 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     }
 }
 
-void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 colorIndex, float posX, float posY, const char* text)
+void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 colorIndex, float scale, float posX, float posY, const char* text)
 {
     if (pGraphics == NULL || pFont == NULL || text == NULL) {
         return;
@@ -1397,14 +1422,14 @@ void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 color
         float uvright  = uvleft + (glyphSizeX / pFont->pTexture->width);
         float uvbottom = uvtop  + (glyphSizeY / pFont->pTexture->height);
 
-        glTexCoord2f(uvleft,  uvbottom); glVertex3f(penPosX,              penPosY + glyphSizeY, 0.0f);
-        glTexCoord2f(uvright, uvbottom); glVertex3f(penPosX + glyphSizeX, penPosY + glyphSizeY, 0.0f);
-        glTexCoord2f(uvright, uvtop);    glVertex3f(penPosX + glyphSizeX, penPosY,              0.0f);
-        glTexCoord2f(uvleft,  uvtop);    glVertex3f(penPosX,              penPosY,              0.0f);
+        glTexCoord2f(uvleft,  uvbottom); glVertex3f(penPosX,                    penPosY + glyphSizeY*scale, 0.0f);
+        glTexCoord2f(uvright, uvbottom); glVertex3f(penPosX + glyphSizeX*scale, penPosY + glyphSizeY*scale, 0.0f);
+        glTexCoord2f(uvright, uvtop);    glVertex3f(penPosX + glyphSizeX*scale, penPosY,                    0.0f);
+        glTexCoord2f(uvleft,  uvtop);    glVertex3f(penPosX,                    penPosY,                    0.0f);
         
-        penPosX += glyphSizeX;
+        penPosX += glyphSizeX*scale;
         if (c == '\n') {
-            penPosY += pFont->height;
+            penPosY += pFont->height*scale;
             penPosX  = posX;
         }
     }
