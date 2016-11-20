@@ -101,6 +101,10 @@ void ta_capture_mouse(ta_game* pGame);
 void ta_release_mouse(ta_game* pGame);
 
 
+// Creates a texture from a file.
+ta_texture* ta_load_image(ta_game* pGame, const char* filePath);
+
+
 //// Events from Window ////
 
 // Called from the window system when the game window is resized.

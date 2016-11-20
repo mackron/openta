@@ -298,6 +298,38 @@ void ta_release_mouse(ta_game* pGame)
 }
 
 
+ta_texture* ta_load_image(ta_game* pGame, const char* filePath)
+{
+    if (pGame == NULL || filePath == NULL) return NULL;
+    
+    if (drpath_extension_equal(filePath, "pcx")) {
+        ta_file* pFile = ta_open_file(pGame->pFS, filePath, 0);
+        if (pFile == NULL) {
+            return NULL;    // File not found.
+        }
+
+        int width;
+        int height;
+        dr_uint8* pImageData = drpcx_load_memory(pFile->pFileData, pFile->sizeInBytes, TA_FALSE, &width, &height, NULL, 4);
+        if (pImageData == NULL) {
+            return NULL;    // Not a valid PCX file.
+        }
+
+        ta_texture* pTexture = ta_create_texture(pGame->pGraphics, (unsigned int)width, (unsigned int)height, 4, pImageData);
+        if (pTexture == NULL) {
+            drpcx_free(pImageData);
+            return NULL;    // Failed to create texture.
+        }
+
+        drpcx_free(pImageData);
+        return pTexture;
+    }
+
+    // Failed to open file.
+    return NULL;
+}
+
+
 
 //// Events from Window
 
