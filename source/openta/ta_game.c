@@ -101,6 +101,9 @@ ta_game* ta_create_game(dr_cmdline cmdline)
             pGame->textureGAFCount += 1;
         }
     }
+    ta_fs_end(iGAF);
+
+
 
 
 
@@ -214,7 +217,7 @@ void ta_game_render(ta_game* pGame)
             ta_draw_map(pGame->pGraphics, pGame->pCurrentMap);
         }
 
-        ta_draw_text(pGame->pGraphics, &pGame->font, 255, 64, 64, "Hello, World!");
+        //ta_draw_text(pGame->pGraphics, &pGame->font, 255, 64, 64, "Hello, World!");
 
         //ta_draw_texture(pGame->font.pTexture, TA_TRUE);
         //ta_draw_texture(pGame->pCurrentMap->ppTextures[pGame->pCurrentMap->textureCount-1], TA_FALSE);
