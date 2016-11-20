@@ -6,7 +6,7 @@ Building
 ========
 Building OpenTA is easy:
 - clone this repository and it's submodules
-- compile ta_main.c using your favourite compiler
+- compile source/openta/ta_main.c using your favourite compiler
   
 You may need to link to a few ubiquitous system libraries, but there are
 no hard to build dependencies.
