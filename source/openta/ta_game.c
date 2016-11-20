@@ -77,6 +77,13 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     }
 
 
+    // There are a few required resources that are hard coded from what I can tell.
+    pGame->pCommonGUIGAF = ta_open_gaf(pGame->pFS, "anims/commongui.GAF");
+    if (pGame->pCommonGUIGAF) {
+        goto on_error;
+    }
+
+
     // Texture GAFs. This is every GAF file contained in the "textures" directory. These are loaded in two passes. The first
     // pass counts the number of GAF files, and the second pass opens them.
     pGame->textureGAFCount = 0;
@@ -102,8 +109,6 @@ ta_game* ta_create_game(dr_cmdline cmdline)
         }
     }
     ta_fs_end(iGAF);
-
-
 
 
 

@@ -42,6 +42,10 @@ struct ta_game
     ta_gaf** ppTextureGAFs;
 
 
+    // The common GUI GAF.
+    ta_gaf* pCommonGUIGAF;
+
+
     // Whether or not the middle mouse button is down.
     ta_bool32 isMMBDown;
 

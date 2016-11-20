@@ -14,5 +14,6 @@ typedef struct ta_features_library ta_features_library;
 typedef struct ta_map_instance ta_map_instance;
 typedef struct ta_gaf ta_gaf;
 typedef struct ta_font ta_font;
+typedef struct ta_gui ta_gui;
 
 typedef enum ta_seek_origin ta_seek_origin;

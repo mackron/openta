@@ -7,6 +7,7 @@ ta_result ta_font_load(ta_game* pGame, const char* filePath, ta_font* pFont)
     if (pFont == NULL) return TA_INVALID_ARGS;
     ta_zero_object(pFont);
 
+    if (pGame == NULL || filePath == NULL) return TA_INVALID_ARGS;
     pFont->pGame = pGame;
     
     ta_file* pFile = ta_open_file(pGame->pFS, filePath, 0);
