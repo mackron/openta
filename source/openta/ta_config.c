@@ -260,7 +260,7 @@ char* ta_parse_config_object(char* configString, ta_config_obj* pObj)
             // Skip past the '='.
             configString += 1;
 
-            char* valueBeg = configString++;
+            char* valueBeg = configString;
             char* valueEnd = configString;
             while (*configString != ';') {
                 if (*configString == '\0') {
