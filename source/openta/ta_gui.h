@@ -42,6 +42,12 @@ typedef struct
             char crdefault[128];
             char escdefault[128];
             char defaultfocus[128];
+            struct
+            {
+                ta_int32 major;
+                ta_int32 minor;
+                ta_int32 revision;
+            } version;
         } root;
 
         struct   // id = 1
@@ -97,6 +103,13 @@ typedef struct
 struct ta_gui
 {
     ta_game* pGame;
+    ta_gaf* pGAF;
+
+    ta_uint32 gadgetCount;
+    ta_gui_gadget* pGadgets;    // This is an offset of _pPayload.
+
+    // Memory for each GUI is allocated in one big chunk which is stored in this buffer.
+    ta_uint8* _pPayload;
 };
 
 ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI);

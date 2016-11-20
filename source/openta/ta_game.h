@@ -26,6 +26,9 @@ struct ta_game
     // The audio context.
     dra_context* pAudioContext;
 
+    // Global properties.
+    ta_property_manager properties;
+
 
     // The features library. This is initialized once at startup from every TDF file in the "features" directory, and it's sub-directories. The
     // features library is immutable once it's initialized.
@@ -54,6 +57,8 @@ struct ta_game
     int mouseDownPosY;
 
 
+    ta_gui mainMenu;
+
 
     ta_texture* pTexture;
     ta_font font;
@@ -64,6 +69,15 @@ ta_game* ta_create_game(dr_cmdline cmdline);
 
 // Deletes a game instance.
 void ta_delete_game(ta_game* pGame);
+
+
+// Sets a global property.
+ta_result ta_set_property(ta_game* pGame, const char* key, const char* value);
+
+// Retrieves a global property. Be careful with the returned pointer because it can become invalid whenever ta_set_property()
+// is called. If you need to store the value, make a copy.
+const char* ta_get_property(ta_game* pGame, const char* key);
+const char* ta_get_propertyf(ta_game* pGame, const char* key, ...);
 
 
 // Runs the given game.

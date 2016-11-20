@@ -77,9 +77,19 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     }
 
 
+    // Properties.
+    if (ta_property_manager_init(&pGame->properties) != TA_SUCCESS) {
+        goto on_error;
+    }
+
+    // Hard coded properties. Some of these may be incorrect but we'll fix it up as we go.
+    ta_set_property(pGame, "MAINMENU.GUI.BACKGROUND", "bitmaps/FrontendX.pcx");
+
+
+
     // There are a few required resources that are hard coded from what I can tell.
     pGame->pCommonGUIGAF = ta_open_gaf(pGame->pFS, "anims/commongui.GAF");
-    if (pGame->pCommonGUIGAF) {
+    if (pGame->pCommonGUIGAF == NULL) {
         goto on_error;
     }
 
@@ -111,12 +121,20 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     ta_fs_end(iGAF);
 
 
+    // Main menu.
+    if (ta_gui_load(pGame, "guis/MAINMENU.GUI", &pGame->mainMenu) != TA_SUCCESS) {
+        goto on_error;
+    }
+
 
     // Features.
     pGame->pFeatures = ta_create_features_library(pGame->pFS);
     if (pGame->pFeatures == NULL) {
         goto on_error;
     }
+
+
+    
 
 
 
@@ -147,25 +165,11 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
 on_error:
     if (pGame != NULL) {
-        if (pGame->pCurrentMap != NULL) {
-            ta_unload_map(pGame->pCurrentMap);
-        }
-
-        if (pGame->pWindow != NULL) {
-            ta_delete_window(pGame->pWindow);
-        }
-
-        if (pGame->pGraphics != NULL) {
-            ta_delete_graphics_context(pGame->pGraphics);
-        }
-
-        if (pGame->pAudioContext != NULL) {
-            dra_context_delete(pGame->pAudioContext);
-        }
-
-        if (pGame->pFS != NULL) {
-            ta_delete_file_system(pGame->pFS);
-        }
+        if (pGame->pCurrentMap != NULL) ta_unload_map(pGame->pCurrentMap);
+        if (pGame->pWindow != NULL) ta_delete_window(pGame->pWindow);
+        if (pGame->pGraphics != NULL) ta_delete_graphics_context(pGame->pGraphics);
+        if (pGame->pAudioContext != NULL) dra_context_delete(pGame->pAudioContext);
+        if (pGame->pFS != NULL) ta_delete_file_system(pGame->pFS);
     }
 
     return NULL;
@@ -178,10 +182,60 @@ void ta_delete_game(ta_game* pGame)
     }
 
     ta_delete_window(pGame->pWindow);
+    ta_property_manager_uninit(&pGame->properties);
     ta_delete_graphics_context(pGame->pGraphics);
     dra_context_delete(pGame->pAudioContext);
     ta_delete_file_system(pGame->pFS);
     free(pGame);
+}
+
+
+ta_result ta_set_property(ta_game* pGame, const char* key, const char* value)
+{
+    return ta_property_manager_set(&pGame->properties, key, value);
+}
+
+const char* ta_get_property(ta_game* pGame, const char* key)
+{
+    return ta_property_manager_get(&pGame->properties, key);
+}
+
+const char* ta_get_propertyf(ta_game* pGame, const char* key, ...)
+{
+    va_list args;
+
+    va_start(args, key);
+#if defined(_MSC_VER)
+    int len = _vscprintf(key, args);
+#else
+    int len = vsnprintf(NULL, 0, key, args);
+#endif
+    va_end(args);
+
+    if (len < 0) {
+        return NULL;
+    }
+
+    char* formattedKey = (char*)malloc(len+1);
+    if (formattedKey == NULL) {
+        va_end(args);
+        return NULL;
+    }
+
+    va_start(args, key);
+#if defined(_MSC_VER)
+    len = vsprintf_s(formattedKey, len+1, key, args);
+#else
+    len = vsnprintf(formattedKey, len+1, key, args);
+#endif
+    va_end(args);
+
+    const char* value = ta_get_property(pGame, formattedKey);
+
+    free(formattedKey);
+    va_end(args);
+
+    return value;
 }
 
 

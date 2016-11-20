@@ -52,3 +52,11 @@ int ta_config_get_int(ta_config_obj* pConfig, const char* varName);
 
 // Retrieves the value of the given config variable as a float. Returns 0.0f if the variable does not exist.
 float ta_config_get_float(ta_config_obj* pConfig, const char* varName);
+
+// Retrieves the value of the given config variable as a boolean. Returns false if the variable does not exist. If the
+// variable _does_ exist, it will return false if the value is equal to "false" (case-insensitive) or "0".
+ta_bool32 ta_config_get_bool(ta_config_obj* pConfig, const char* varName);
+
+
+// Determines if the variable at the given index is a sub-object.
+ta_bool32 ta_config_is_subobj_by_index(ta_config_obj* pConfig, ta_uint32 varIndex);

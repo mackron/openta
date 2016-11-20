@@ -423,3 +423,26 @@ float ta_config_get_float(ta_config_obj* pConfig, const char* varName)
 
     return (float)atof(value);
 }
+
+ta_bool32 ta_config_get_bool(ta_config_obj* pConfig, const char* varName)
+{
+    const char* value = ta_config_get_string(pConfig, varName);
+    if (value == NULL) {
+        return TA_FALSE;
+    }
+
+    if (_stricmp(value, "FALSE") == 0 || value[0] == '0') {
+        return TA_FALSE;
+    }
+
+    return TA_TRUE;
+}
+
+ta_bool32 ta_config_is_subobj_by_index(ta_config_obj* pConfig, ta_uint32 varIndex)
+{
+    if (pConfig == NULL || varIndex >= pConfig->varCount) {
+        return TA_FALSE;
+    }
+
+    return ta_is_string_null_or_empty(pConfig->pVars[varIndex].value);
+}
