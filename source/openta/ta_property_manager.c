@@ -17,7 +17,7 @@ ta_result ta_property_manager_uninit(ta_property_manager* pProperties)
         free(pProperties->pProperties[i].key);
     }
 
-    free(pProperties);
+    free(pProperties->pProperties);
     return TA_SUCCESS;
 }
 
