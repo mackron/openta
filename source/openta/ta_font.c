@@ -155,6 +155,8 @@ ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
                 totalHeight = sizeY;
             }
 
+            totalWidth += 1;    // Padding column for handling interpolation at render time.
+
             ta_gaf_free(pData);
         }
     }
@@ -168,6 +170,9 @@ ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
 
     ta_texture_packer packer;
     ta_texture_packer_init(&packer, atlasSizeX, atlasSizeY, 1);
+
+    ta_uint8 paddingPixels[TA_MAX_FONT_SIZE];
+    memset(paddingPixels, TA_TRANSPARENT_COLOR, sizeof(paddingPixels));
 
     for (int i = 0; i < 256; ++i) {
         ta_uint32 sizeX;
@@ -202,6 +207,9 @@ ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
             pFont->glyphs[i].originY = (float)totalHeight - (float)posY;
             pFont->glyphs[i].sizeX = (float)sizeX;
             pFont->glyphs[i].sizeY = (float)sizeY;
+
+            // We need to add a padding row in between each character.
+            ta_texture_packer_pack_subtexture(&packer, 1, totalHeight, paddingPixels, NULL);
 
             ta_gaf_free(pixels);
         }
