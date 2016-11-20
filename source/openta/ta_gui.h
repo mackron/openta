@@ -19,7 +19,7 @@ typedef struct
     // COMMON
     ta_int32 id;
     ta_int32 assoc;
-    char name[128];
+    char* name;
     ta_int32 xpos;
     ta_int32 ypos;
     ta_int32 width;
@@ -31,17 +31,17 @@ typedef struct
     ta_int32 fontnumber;
     ta_bool32 active;
     ta_int32 commonattribs;
-    char help[128];
+    char* help;
 
     union
     {
         struct  // id = 0
         {
             ta_int32 totalgadgets;
-            char panel[128];
-            char crdefault[128];
-            char escdefault[128];
-            char defaultfocus[128];
+            char* panel;
+            char* crdefault;
+            char* escdefault;
+            char* defaultfocus;
             struct
             {
                 ta_int32 major;
@@ -53,7 +53,7 @@ typedef struct
         struct   // id = 1
         {
             ta_int32 status;        // The frame inside the GAF file the button starts on. Should always be 0 for multi-stage buttons.
-            char text[128];         // For multi-stage buttons, the text for each stage is separated with '|'.
+            char* text;             // For multi-stage buttons, the text for each stage is separated with '|'.
             ta_uint32 quickkey;     // Shortcut key. ASCII.
             ta_bool32 grayedout;    // Whether or not the button is disabled, but still visible.
             ta_int32 stages;        // The number of stages in a multi-stage button. Set to 0 for simple buttons.
@@ -79,8 +79,8 @@ typedef struct
 
         struct  // id = 5
         {
-            char text[128];
-            char link[128];     // For linking the label to a button. It just means that when the label is clicked it is the same as pressing the linked button.
+            char* text;
+            char* link;     // For linking the label to a button. It just means that when the label is clicked it is the same as pressing the linked button.
         } label;
 
         struct  // id = 6
@@ -90,7 +90,7 @@ typedef struct
 
         struct  // id = 7
         {
-            char filename[128]; // Should not include the "fonts/" section or the extension.
+            char* filename; // Should not include the "fonts/" section or the extension.
         } font;
 
         struct

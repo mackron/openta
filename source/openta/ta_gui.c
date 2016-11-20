@@ -1,5 +1,15 @@
 // Copyright (C) 2016 David Reid. See included LICENSE file.
 
+TA_INLINE char* ta_gui__copy_string_prop(char** ppNextStr, const char* src)
+{
+    char* pNextStr = *ppNextStr;
+    size_t srcLen = strlen(src);
+    memcpy(pNextStr, src, srcLen+1);
+
+    *ppNextStr += srcLen+1;
+    return pNextStr;
+}
+
 ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
 {
     if (pGUI == NULL) return TA_INVALID_ARGS;
@@ -22,10 +32,49 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
     for (unsigned int i = 0; i < pConfig->varCount; ++i) {
         if (ta_config_is_subobj_by_index(pConfig, i)) {
             payloadSize += sizeof(ta_gui_gadget);
+            pGUI->gadgetCount += 1;
 
-            // TODO: Parse string variables and accumulate their lengths so they can be dynamically allocated rather than fixed. This
-            // will save memory _and_ make it more robust.
-            //
+            // The length of each string property needs to be included with the size of the payload, including their null terminator.
+            ta_config_obj* pGadgetObj = pConfig->pVars[i].pObject;
+            assert(pGadgetObj != NULL);
+
+            ta_config_obj* pCommonObj = ta_config_get_subobj(pGadgetObj, "COMMON");
+            if (pCommonObj != NULL) {
+                ta_int32 id = ta_config_get_int(pCommonObj, "id");
+
+                payloadSize += strlen(ta_config_get_string(pCommonObj, "name"))+1;
+                payloadSize += strlen(ta_config_get_string(pCommonObj, "help"))+1;
+
+                switch (id)
+                {
+                    case TA_GUI_GADGET_TYPE_ROOT:
+                    {
+                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "panel"))+1;
+                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "crdefault"))+1;
+                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "escdefault"))+1;
+                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "defaultfocus"))+1;
+                    } break;
+
+                    case TA_GUI_GADGET_TYPE_BUTTON:
+                    {
+                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "text"))+1;
+                    } break;
+
+                    case TA_GUI_GADGET_TYPE_LABEL:
+                    {
+                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "text"))+1;
+                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "link"))+1;
+                    } break;
+
+                    case TA_GUI_GADGET_TYPE_FONT:
+                    {
+                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "filename"))+1;
+                    } break;
+
+                    default: break;
+                }
+            }
+
             // TODO: Basic validation.
         }
     }
@@ -39,6 +88,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
     pGUI->pGadgets = (ta_gui_gadget*)pGUI->_pPayload;
     
     // PASS #2
+    char* pNextStr = pGUI->_pPayload + (sizeof(*pGUI->pGadgets) * pGUI->gadgetCount);
     for (unsigned int i = 0; i < pConfig->varCount; ++i) {
         if (ta_config_is_subobj_by_index(pConfig, i)) {
             ta_config_obj* pGadgetObj = pConfig->pVars[i].pObject;
@@ -51,7 +101,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
             if (pCommonObj != NULL) {
                 pGadget->id            = ta_config_get_int(pCommonObj, "id");
                 pGadget->assoc         = ta_config_get_int(pCommonObj, "assoc");
-                dr_strcpy_s(pGadget->name, sizeof(pGadget->name), ta_config_get_string(pCommonObj, "name"));
+                pGadget->name          = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pCommonObj, "name")); 
                 pGadget->xpos          = ta_config_get_int(pCommonObj, "xpos");
                 pGadget->ypos          = ta_config_get_int(pCommonObj, "ypos");
                 pGadget->width         = ta_config_get_int(pCommonObj, "width");
@@ -63,7 +113,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                 pGadget->fontnumber    = ta_config_get_int(pCommonObj, "fontnumber");
                 pGadget->active        = ta_config_get_int(pCommonObj, "active");
                 pGadget->commonattribs = ta_config_get_int(pCommonObj, "commonattribs");
-                dr_strcpy_s(pGadget->help, sizeof(pGadget->help), ta_config_get_string(pCommonObj, "help"));
+                pGadget->help          = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pCommonObj, "help"));
             }
 
             switch (pGadget->id)
@@ -71,10 +121,10 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                 case TA_GUI_GADGET_TYPE_ROOT:
                 {
                     pGadget->root.totalgadgets = ta_config_get_int(pGadgetObj, "totalgadgets");
-                    dr_strcpy_s(pGadget->root.panel, sizeof(pGadget->root.panel), ta_config_get_string(pGadgetObj, "panel"));
-                    dr_strcpy_s(pGadget->root.crdefault, sizeof(pGadget->root.crdefault), ta_config_get_string(pGadgetObj, "crdefault"));
-                    dr_strcpy_s(pGadget->root.escdefault, sizeof(pGadget->root.escdefault), ta_config_get_string(pGadgetObj, "escdefault"));
-                    dr_strcpy_s(pGadget->root.defaultfocus, sizeof(pGadget->root.defaultfocus), ta_config_get_string(pGadgetObj, "defaultfocus"));
+                    pGadget->root.panel        = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "panel"));
+                    pGadget->root.crdefault    = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "crdefault"));
+                    pGadget->root.escdefault   = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "escdefault"));
+                    pGadget->root.defaultfocus = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "defaultfocus"));
 
                     // [VERSION]
                     ta_config_obj* pVersionObj = ta_config_get_subobj(pGadgetObj, "VERSION");
@@ -88,7 +138,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                 case TA_GUI_GADGET_TYPE_BUTTON:
                 {
                     pGadget->button.status    = ta_config_get_int(pGadgetObj, "status");
-                    dr_strcpy_s(pGadget->button.text, sizeof(pGadget->button.text), ta_config_get_string(pGadgetObj, "text"));
+                    pGadget->button.text      = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "text"));
                     pGadget->button.quickkey  = (ta_uint32)ta_config_get_int(pGadgetObj, "quickkey");
                     pGadget->button.grayedout = ta_config_get_bool(pGadgetObj, "grayedout");
                     pGadget->button.stages    = ta_config_get_int(pGadgetObj, "stages");
@@ -114,8 +164,8 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
 
                 case TA_GUI_GADGET_TYPE_LABEL:
                 {
-                    dr_strcpy_s(pGadget->label.text, sizeof(pGadget->label.text), ta_config_get_string(pGadgetObj, "text"));
-                    dr_strcpy_s(pGadget->label.link, sizeof(pGadget->label.link), ta_config_get_string(pGadgetObj, "link"));
+                    pGadget->label.text = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "text"));
+                    pGadget->label.link = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "link"));
                 } break;
 
                 case TA_GUI_GADGET_TYPE_SURFACE:
@@ -125,7 +175,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
 
                 case TA_GUI_GADGET_TYPE_FONT:
                 {
-                    dr_strcpy_s(pGadget->font.filename, sizeof(pGadget->font.filename), ta_config_get_string(pGadgetObj, "filename"));
+                    pGadget->font.filename = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "filename"));
                 } break;
 
                 case TA_GUI_GADGET_TYPE_PICTURE:
