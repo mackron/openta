@@ -143,7 +143,8 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
 
     
-    ta_font_load(pGame, "fonts/HATT12.FNT", &pGame->font);
+    //ta_font_load(pGame, "fonts/HATT12.FNT", &pGame->font);
+    ta_font_load(pGame, "anims/hattfont12.GAF/Haettenschweiler (120)", &pGame->font);
 
 
     //ta_graphics_disable_vsync(pGame->pGraphics, pGame->pWindow);
@@ -278,7 +279,7 @@ void ta_game_render(ta_game* pGame)
 
         ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->mainMenu);
 
-        //ta_draw_text(pGame->pGraphics, &pGame->font, 255, 64, 64, "Hello, World!");
+        ta_draw_text(pGame->pGraphics, &pGame->font, 255, 2, 64, 64, "Hello, World!@!@!@!@");
 
         //ta_draw_texture(pGame->font.pTexture, TA_TRUE);
         //ta_draw_texture(pGame->pCurrentMap->ppTextures[pGame->pCurrentMap->textureCount-1], TA_FALSE);

@@ -7,8 +7,8 @@ typedef struct
 {
     uint16_t width;
     uint16_t height;
-    uint16_t offsetX;
-    uint16_t offsetY;
+    int16_t offsetX;
+    int16_t offsetY;
     uint8_t isCompressed;
     uint16_t subframeCount;
     uint32_t dataPtr;

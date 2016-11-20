@@ -1118,8 +1118,32 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
                 ta_font_measure_text(&pGraphics->pGame->font, scale, pGadget->button.text, &textSizeX, &textSizeY);
 
                 float textPosX = posX + (sizeX - textSizeX)/2;
-                float textPosY = posY + (sizeY - textSizeY)/2;
+                float textPosY = /*posY + (sizeY - textSizeY)/2;*/ posY - (2*scale);    // <-- Should probably improve this a bit.
                 ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, textPosX, textPosY, pGadget->button.text);
+
+                if (pGadget->button.quickkey != 0) {
+                    float charPosX;
+                    float charPosY;
+                    float charSizeX;
+                    float charSizeY;
+                    if (ta_font_find_character_metrics(&pGraphics->pGame->font, scale, pGadget->button.text, pGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
+                        float underlineHeight = roundf(1*scale);
+                        float underlineOffsetY = roundf(0*scale);
+                        charPosX += textPosX;
+                        charPosY += textPosY;
+
+                        ta_graphics__bind_shader(pGraphics, NULL);
+                        ta_graphics__bind_texture(pGraphics, NULL);
+                        glBegin(GL_QUADS);
+                        {
+                            glColor3f(1, 1, 1); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
+                            glColor3f(1, 1, 1); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
+                            glColor3f(1, 1, 1); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY,                 0.0f);
+                            glColor3f(1, 1, 1); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY,                 0.0f);
+                        }
+                        glEnd();
+                    }
+                }
             } break;
 
             default: break;
@@ -1396,9 +1420,13 @@ void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 color
 
     
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
-    ta_graphics__bind_shader(pGraphics, &pGraphics->textShader);
-    pGraphics->glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f);
-    pGraphics->glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 1, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f);
+    if (pFont->canBeColored) {
+        ta_graphics__bind_shader(pGraphics, &pGraphics->textShader);
+        pGraphics->glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f);
+        pGraphics->glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 1, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f);
+    } else {
+        ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader);
+    }
 
     ta_graphics__bind_texture(pGraphics, pFont->pTexture);
 
@@ -1414,18 +1442,20 @@ void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 color
         }
 
         ta_font_glyph glyph = pFont->glyphs[c];
-        float glyphSizeX = glyph.width;
-        float glyphSizeY = pFont->height;
+        float glyphSizeX = glyph.sizeX;
+        float glyphSizeY = glyph.sizeY;
+        float glyphPosX  = penPosX + glyph.originX*scale;
+        float glyphPosY  = penPosY + glyph.originY*scale;
 
         float uvleft   = (float)glyph.u;
         float uvtop    = (float)glyph.v;
         float uvright  = uvleft + (glyphSizeX / pFont->pTexture->width);
         float uvbottom = uvtop  + (glyphSizeY / pFont->pTexture->height);
 
-        glTexCoord2f(uvleft,  uvbottom); glVertex3f(penPosX,                    penPosY + glyphSizeY*scale, 0.0f);
-        glTexCoord2f(uvright, uvbottom); glVertex3f(penPosX + glyphSizeX*scale, penPosY + glyphSizeY*scale, 0.0f);
-        glTexCoord2f(uvright, uvtop);    glVertex3f(penPosX + glyphSizeX*scale, penPosY,                    0.0f);
-        glTexCoord2f(uvleft,  uvtop);    glVertex3f(penPosX,                    penPosY,                    0.0f);
+        glTexCoord2f(uvleft,  uvbottom); glVertex3f(glyphPosX,                    glyphPosY + glyphSizeY*scale, 0.0f);
+        glTexCoord2f(uvright, uvbottom); glVertex3f(glyphPosX + glyphSizeX*scale, glyphPosY + glyphSizeY*scale, 0.0f);
+        glTexCoord2f(uvright, uvtop);    glVertex3f(glyphPosX + glyphSizeX*scale, glyphPosY,                    0.0f);
+        glTexCoord2f(uvleft,  uvtop);    glVertex3f(glyphPosX,                    glyphPosY,                    0.0f);
         
         penPosX += glyphSizeX*scale;
         if (c == '\n') {
