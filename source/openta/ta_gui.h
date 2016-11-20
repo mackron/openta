@@ -104,6 +104,7 @@ struct ta_gui
 {
     ta_game* pGame;
     ta_gaf* pGAF;
+    ta_texture* pBackgroundTexture;
 
     ta_uint32 gadgetCount;
     ta_gui_gadget* pGadgets;    // This is an offset of _pPayload.

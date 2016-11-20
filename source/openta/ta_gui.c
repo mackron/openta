@@ -206,7 +206,9 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
 
     // I haven't yet found a way to determine the background image to use for GUIs, so for the moment we will hard code these.
     const char* propVal = ta_get_propertyf(pGame, "%s.BACKGROUND", fileName);
-
+    if (propVal != NULL) {
+        pGUI->pBackgroundTexture = ta_load_image(pGame, propVal);
+    }
 
 
     return TA_SUCCESS;
@@ -216,6 +218,7 @@ ta_result ta_gui_unload(ta_gui* pGUI)
 {
     if (pGUI == NULL) return TA_INVALID_ARGS;
 
+    if (pGUI->pBackgroundTexture) ta_delete_texture(pGUI->pBackgroundTexture);
     if (pGUI->pGAF) ta_close_gaf(pGUI->pGAF);
     free(pGUI->_pPayload);
 
