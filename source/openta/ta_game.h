@@ -45,8 +45,9 @@ struct ta_game
     ta_gaf** ppTextureGAFs;
 
 
-    // The common GUI GAF.
-    ta_gaf* pCommonGUIGAF;
+
+    // The Common GUI.
+    ta_common_gui commonGUI;
 
     // The main font to use for basically all GUI text.
     ta_font font;

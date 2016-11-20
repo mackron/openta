@@ -125,7 +125,7 @@ void ta_texture_packer_reset(ta_texture_packer* pPacker)
 
 ta_bool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut)
 {
-    if (pPacker == NULL || pSubTextureData == NULL) {
+    if (pPacker == NULL) {
         return TA_FALSE;
     }
 
@@ -136,14 +136,13 @@ ta_bool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t
 
     slot.width = width;
     slot.height = height;
-    if (!ta_texture_packer__copy_image_data(pPacker, &slot, pSubTextureData)) {
-        return TA_FALSE;
+
+    if (pSubTextureData != NULL) {
+        if (!ta_texture_packer__copy_image_data(pPacker, &slot, pSubTextureData)) {
+            return TA_FALSE;
+        }
     }
 
-
-    if (pSlotOut) {
-        *pSlotOut = slot;
-    }
-
+    if (pSlotOut) *pSlotOut = slot;
     return TA_TRUE;
 }

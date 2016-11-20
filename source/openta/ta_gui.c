@@ -236,6 +236,14 @@ ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI)
 
     pCommonGUI->pGame = pGame;
 
+    pCommonGUI->pCommonGUIGAF = ta_open_gaf(pGame->pFS, "anims/commongui.GAF");
+    if (pCommonGUI->pCommonGUIGAF == NULL) {
+        return TA_FILE_NOT_FOUND;
+    }
+
+
+
+    
     return TA_SUCCESS;
 }
 
@@ -243,6 +251,7 @@ ta_result ta_common_gui_unload(ta_common_gui* pCommonGUI)
 {
     if (pCommonGUI == NULL) return TA_INVALID_ARGS;
 
+    ta_close_gaf(pCommonGUI->pCommonGUIGAF);
     free(pCommonGUI->_pPayload);
 
     return TA_SUCCESS;

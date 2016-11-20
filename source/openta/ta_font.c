@@ -148,16 +148,13 @@ ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
         ta_uint32 sizeY;
         ta_int32 posX;
         ta_int32 posY;
-        ta_uint8* pData = ta_gaf_get_frame(pGAF, i, &sizeX, &sizeY, &posX, &posY);
-        if (pData != NULL) {
+        if (ta_gaf_get_frame(pGAF, i, &sizeX, &sizeY, &posX, &posY, NULL) == TA_SUCCESS) {
             totalWidth += sizeX;
             if (totalHeight < sizeY) {
                 totalHeight = sizeY;
             }
 
             totalWidth += 1;    // Padding column for handling interpolation at render time.
-
-            ta_gaf_free(pData);
         }
     }
 
@@ -179,8 +176,8 @@ ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
         ta_uint32 sizeY;
         ta_int32 posX;
         ta_int32 posY;
-        ta_uint8* pixels = ta_gaf_get_frame(pGAF, i, &sizeX, &sizeY, &posX, &posY);
-        if (pixels != NULL) {
+        ta_uint8* pixels;
+        if (ta_gaf_get_frame(pGAF, i, &sizeX, &sizeY, &posX, &posY, &pixels) == TA_SUCCESS) {
             totalWidth += sizeX;
             if (totalHeight < sizeY) {
                 totalHeight = sizeY;

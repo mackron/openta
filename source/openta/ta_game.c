@@ -91,10 +91,9 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     // ===
 
     // There are a few required resources that are hard coded from what I can tell.
-    pGame->pCommonGUIGAF = ta_open_gaf(pGame->pFS, "anims/commongui.GAF");
-    if (pGame->pCommonGUIGAF == NULL) {
-        goto on_error;
-    }
+    
+
+    
 
     //ta_font_load(pGame, "fonts/HATT12.FNT", &pGame->font);
     ta_font_load(pGame, "anims/hattfont12.GAF/Haettenschweiler (120)", &pGame->font);
@@ -283,7 +282,7 @@ void ta_game_render(ta_game* pGame)
     ta_graphics_set_current_window(pGame->pGraphics, pGame->pWindow);
     {
         if (pGame->pCurrentMap) {
-            //ta_draw_map(pGame->pGraphics, pGame->pCurrentMap);
+            ta_draw_map(pGame->pGraphics, pGame->pCurrentMap);
         }
 
         ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->mainMenu);

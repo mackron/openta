@@ -145,8 +145,8 @@ ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_tex
         uint32_t frameHeight;
         int32_t offsetX;
         int32_t offsetY;
-        uint8_t* pFrameImageData = ta_gaf_get_frame(pGAF, iFrame, &frameWidth, &frameHeight, &offsetX, &offsetY);
-        if (pFrameImageData == NULL) {
+        uint8_t* pFrameImageData;
+        if (ta_gaf_get_frame(pGAF, iFrame, &frameWidth, &frameHeight, &offsetX, &offsetY, &pFrameImageData) != TA_SUCCESS) {
             free(pSeq);
             return NULL;
         }
@@ -212,8 +212,8 @@ ta_bool32 ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoad
             uint32_t height;
             uint32_t posX;
             uint32_t posY;
-            uint8_t* pTextureData = ta_gaf_get_frame(pMap->pGame->ppTextureGAFs[iGAF], 0, &width, &height, &posX, &posY);
-            if (pTextureData == NULL) {
+            uint8_t* pTextureData;
+            if (ta_gaf_get_frame(pMap->pGame->ppTextureGAFs[iGAF], 0, &width, &height, &posX, &posY, &pTextureData) != TA_SUCCESS) {
                 return TA_FALSE;
             }
 

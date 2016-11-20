@@ -287,95 +287,100 @@ ta_bool32 ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFr
     return TA_FALSE;
 }
 
-uint8_t* ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOut, uint32_t* pHeightOut, int32_t* pPosXOut, int32_t* pPosYOut)
+ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOut, uint32_t* pHeightOut, int32_t* pPosXOut, int32_t* pPosYOut, ta_uint8** ppImageData)
 {
+    if (ppImageData) *ppImageData = NULL;
     if (pGAF == NULL || frameIndex >= pGAF->_entryFrameCount || pWidthOut == NULL || pHeightOut == NULL || pPosXOut == NULL || pPosYOut == NULL) {
-        return NULL;
+        return TA_ERROR;
     }
 
     // Must have an entry selected.
     if (pGAF->_entryPointer == 0) {
-        return NULL;
+        return TA_ERROR;
     }
 
 
     // Each frame pointer is grouped as a 64-bit value. We want the first 32-bits. The frame pointers start 40 bytes
     // after the beginning of the entry.
     if (!ta_seek_file(pGAF->pFile, pGAF->_entryPointer + 40 + (frameIndex * sizeof(uint64_t)), ta_seek_origin_start)) {
-        return NULL;
+        return TA_ERROR;
     }
 
     uint32_t framePointer;
     if (!ta_read_file_uint32(pGAF->pFile, &framePointer)) {
-        return NULL;
+        return TA_ERROR;
     }
 
     if (!ta_seek_file(pGAF->pFile, framePointer, ta_seek_origin_start)) {
-        return NULL;
+        return TA_ERROR;
     }
 
     ta_gaf_frame_header frameHeader;
     if (!ta_gaf__read_frame_header(pGAF, &frameHeader)) {
-        return NULL;
+        return TA_ERROR;
     }
-    
-    uint8_t* pImageData = malloc(frameHeader.width * frameHeader.height);
-    if (pImageData == NULL) {
-        return NULL;
-    }
-
-    // It's important to clear the image data to the transparent color due to the way we'll be building the frame.
-    memset(pImageData, TA_TRANSPARENT_COLOR, frameHeader.width * frameHeader.height);
 
     *pWidthOut = frameHeader.width;
     *pHeightOut = frameHeader.height;
     *pPosXOut = frameHeader.offsetX;
     *pPosYOut = frameHeader.offsetY;
-
-    // We need to branch depending on whether or not we are loading pixel data or sub-frames.
-    if (frameHeader.subframeCount == 0)
-    {
-        // It's raw pixel data.
-        if (!ta_gaf__read_frame_pixels(pGAF, &frameHeader, frameHeader.width, frameHeader.height, frameHeader.offsetX, frameHeader.offsetY, pImageData)) {
-            free(pImageData);
-            return NULL;
+    
+    if (ppImageData != NULL) {
+        uint8_t* pImageData = malloc(frameHeader.width * frameHeader.height);
+        if (pImageData == NULL) {
+            return TA_ERROR;
         }
-    }
-    else
-    {
-        // The frame is made up of a bunch of sub-frames. They need to be combined by simply layering them on top
-        // of each other.
-        for (unsigned short iSubframe = 0; iSubframe < frameHeader.subframeCount; ++iSubframe)
+
+        // It's important to clear the image data to the transparent color due to the way we'll be building the frame.
+        memset(pImageData, TA_TRANSPARENT_COLOR, frameHeader.width * frameHeader.height);
+
+        // We need to branch depending on whether or not we are loading pixel data or sub-frames.
+        if (frameHeader.subframeCount == 0)
         {
-            // frameHeader.dataPtr points to a list of frameHeader.subframeCount pointers to frame headers.
-            if (!ta_seek_file(pGAF->pFile, frameHeader.dataPtr + (iSubframe * 4), ta_seek_origin_start)) {
+            // It's raw pixel data.
+            if (!ta_gaf__read_frame_pixels(pGAF, &frameHeader, frameHeader.width, frameHeader.height, frameHeader.offsetX, frameHeader.offsetY, pImageData)) {
                 free(pImageData);
-                return NULL;
-            }
-
-            uint32_t subframePointer;
-            if (!ta_read_file_uint32(pGAF->pFile, &subframePointer)) {
-                free(pImageData);
-                return TA_FALSE;
-            }
-
-            if (!ta_seek_file(pGAF->pFile, subframePointer, ta_seek_origin_start)) {
-                return NULL;
-            }
-
-            ta_gaf_frame_header subframeHeader;
-            if (!ta_gaf__read_frame_header(pGAF, &subframeHeader)) {
-                return NULL;
-            }
-
-            if (!ta_gaf__read_frame_pixels(pGAF, &subframeHeader, frameHeader.width, frameHeader.height, frameHeader.offsetX, frameHeader.offsetY, pImageData)) {
-                free(pImageData);
-                return NULL;
+                return TA_ERROR;
             }
         }
+        else
+        {
+            // The frame is made up of a bunch of sub-frames. They need to be combined by simply layering them on top
+            // of each other.
+            for (unsigned short iSubframe = 0; iSubframe < frameHeader.subframeCount; ++iSubframe)
+            {
+                // frameHeader.dataPtr points to a list of frameHeader.subframeCount pointers to frame headers.
+                if (!ta_seek_file(pGAF->pFile, frameHeader.dataPtr + (iSubframe * 4), ta_seek_origin_start)) {
+                    free(pImageData);
+                    return TA_ERROR;
+                }
+
+                uint32_t subframePointer;
+                if (!ta_read_file_uint32(pGAF->pFile, &subframePointer)) {
+                    free(pImageData);
+                    return TA_FALSE;
+                }
+
+                if (!ta_seek_file(pGAF->pFile, subframePointer, ta_seek_origin_start)) {
+                    return TA_ERROR;
+                }
+
+                ta_gaf_frame_header subframeHeader;
+                if (!ta_gaf__read_frame_header(pGAF, &subframeHeader)) {
+                    return TA_ERROR;
+                }
+
+                if (!ta_gaf__read_frame_pixels(pGAF, &subframeHeader, frameHeader.width, frameHeader.height, frameHeader.offsetX, frameHeader.offsetY, pImageData)) {
+                    free(pImageData);
+                    return TA_ERROR;
+                }
+            }
+        }
+
+        if (ppImageData) *ppImageData = pImageData;
     }
 
-    return pImageData;
+    return TA_SUCCESS;
 }
 
 void ta_gaf_free(void* pBuffer)

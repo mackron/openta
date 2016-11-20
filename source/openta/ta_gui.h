@@ -133,6 +133,7 @@ typedef struct
 typedef struct
 {
     ta_game* pGame;
+    ta_gaf* pCommonGUIGAF;
 
     ta_uint32 subTextureCount;
     ta_common_gui_texture* pSubTextures;    // An offset of _pPayload.

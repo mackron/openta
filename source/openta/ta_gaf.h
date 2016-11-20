@@ -43,7 +43,7 @@ ta_bool32 ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFr
 
 // Retrieves the image data of the frame at the given index of the currently selected entry. Free the returned
 // pointer with ta_gaf_free().
-uint8_t* ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOut, uint32_t* pHeightOut, int32_t* pPosXOut, int32_t* pPosYOut);
+ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOut, uint32_t* pHeightOut, int32_t* pPosXOut, int32_t* pPosYOut, ta_uint8** ppImageData);
 
 // Frees a buffer returned by ta_gaf_get_frame().
 void ta_gaf_free(void* pBuffer);
