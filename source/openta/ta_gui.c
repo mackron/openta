@@ -199,7 +199,9 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
     drpath_copy_and_remove_extension(fileNameGAF, sizeof(fileNameGAF), fileName);
     drpath_append_extension(fileNameGAF, sizeof(fileNameGAF), "GAF");
 
-    pGUI->pGAF = ta_open_gaf(pGame->pFS, fileNameGAF);    // <-- This is allowed to be NULL.
+    char filePathGAF[TA_MAX_PATH];
+    drpath_copy_and_append(filePathGAF, sizeof(filePathGAF), "anims", fileNameGAF);
+    pGUI->pGAF = ta_open_gaf(pGame->pFS, filePathGAF);    // <-- It's OK if this returns NULL.
 
 
     // I haven't yet found a way to determine the background image to use for GUIs, so for the moment we will hard code these.
