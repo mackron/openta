@@ -1042,8 +1042,6 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
     if (pGraphics == NULL || pGUI == NULL) return;
 
     // Fullscreen GUIs are drawn based on a 640x480 resolution. We want to stretch the GUI, but maintain it's aspect ratio.
-    GLenum error = glGetError();
-
     float scale      = 1;
     float offsetX    = 0;
     float offsetY    = 0;
