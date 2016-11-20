@@ -471,7 +471,7 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
     glEnableClientState(GL_NORMAL_ARRAY);
     
     // Always using fragment programs.
-    glEnable(GL_FRAGMENT_PROGRAM_ARB);
+    //glEnable(GL_FRAGMENT_PROGRAM_ARB);
 
 
 
@@ -631,8 +631,13 @@ ta_texture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
     // Must use nearest/nearest filtering in order for palettes to work properly.
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    if (components == 1) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    } else {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }
 
     if (pGraphics->pCurrentTexture) {
         glBindTexture(GL_TEXTURE_2D, pGraphics->pCurrentTexture->objectGL);
@@ -1030,6 +1035,76 @@ static TA_INLINE void ta_graphics__draw_mesh(ta_graphics_context* pGraphics, ta_
         glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (const GLvoid*)byteOffset);
     }
 }
+
+
+void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
+{
+    if (pGraphics == NULL || pGUI == NULL) return;
+
+    // Fullscreen GUIs are drawn based on a 640x480 resolution. We want to stretch the GUI, but maintain it's aspect ratio.
+    GLenum error = glGetError();
+
+    float scale      = 1;
+    float offsetX    = 0;
+    float offsetY    = 0;
+
+    float quadLeft   = 0;
+    float quadTop    = 0;
+    float quadRight  = 640;
+    float quadBottom = 480;
+
+    if (pGraphics->resolutionX/640.0f > pGraphics->resolutionY/480.0f) {
+        scale = (float)pGraphics->resolutionY / 480;
+        offsetX = (pGraphics->resolutionX - (640 * scale)) / 2.0f;
+    } else {
+        scale = (float)pGraphics->resolutionX / 640;
+        offsetY = (pGraphics->resolutionY - (480 * scale)) / 2.0f;
+    }
+
+    quadLeft   *= scale;
+    quadTop    *= scale;
+    quadRight  *= scale;
+    quadBottom *= scale;
+
+    quadLeft   += offsetX;
+    quadTop    += offsetY;
+    quadRight  += offsetX;
+    quadBottom += offsetY;
+
+    // Clear first.
+    glClearDepth(1.0);
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    if (pGUI->pBackgroundTexture != NULL) {
+        glDisable(GL_BLEND);
+
+        ta_graphics__bind_shader(pGraphics, NULL);
+        ta_graphics__bind_texture(pGraphics, pGUI->pBackgroundTexture);
+        glBegin(GL_QUADS);
+        {
+            float uvleft   = 0;
+            float uvtop    = 0;
+            float uvright  = 1;
+            float uvbottom = 1;
+
+            glTexCoord2f(uvleft,  uvbottom); glVertex3f(quadLeft,  quadBottom, 0.0f);
+            glTexCoord2f(uvright, uvbottom); glVertex3f(quadRight, quadBottom, 0.0f);
+            glTexCoord2f(uvright, uvtop);    glVertex3f(quadRight, quadTop,    0.0f);
+            glTexCoord2f(uvleft,  uvtop);    glVertex3f(quadLeft,  quadTop,    0.0f);
+        }
+        glEnd();
+    }
+}
+
+
 
 void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
 {

@@ -273,8 +273,10 @@ void ta_game_render(ta_game* pGame)
     ta_graphics_set_current_window(pGame->pGraphics, pGame->pWindow);
     {
         if (pGame->pCurrentMap) {
-            ta_draw_map(pGame->pGraphics, pGame->pCurrentMap);
+            //ta_draw_map(pGame->pGraphics, pGame->pCurrentMap);
         }
+
+        ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->mainMenu);
 
         //ta_draw_text(pGame->pGraphics, &pGame->font, 255, 64, 64, "Hello, World!");
 

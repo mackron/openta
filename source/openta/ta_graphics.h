@@ -116,6 +116,10 @@ void ta_set_camera_position(ta_graphics_context* pGraphics, int posX, int posY);
 void ta_translate_camera(ta_graphics_context* pGraphics, int offsetX, int offsetY);
 
 
+// Draws a full-screen GUI. These kinds of GUIs are things like the main menu. A different function is used for
+// doing the in-game GUIs like the HUD.
+void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI);
+
 // Draws the given given map.
 void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap);
 
