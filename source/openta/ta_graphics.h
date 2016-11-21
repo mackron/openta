@@ -134,6 +134,8 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap);
 // Draws a string of text.
 void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 colorIndex, float scale, float posX, float posY, const char* text);
 
+// Draws a textured rectangle.
+void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float width, float height, ta_bool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY);
 
 
 //// Settings ////
@@ -148,4 +150,3 @@ ta_bool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics);
 
 // TESTING
 void ta_draw_texture(ta_texture* pTexture, ta_bool32 transparent);
-void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float width, float height, ta_bool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY);

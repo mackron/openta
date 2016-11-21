@@ -1480,30 +1480,6 @@ void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 color
     glEnd();
 }
 
-
-//// Settings ////
-
-void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, ta_bool32 isShadowsEnabled)
-{
-    if (pGraphics == NULL) {
-        return;
-    }
-
-    pGraphics->isShadowsEnabled = isShadowsEnabled;
-}
-
-ta_bool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
-{
-    if (pGraphics == NULL) {
-        return TA_FALSE;
-    }
-
-    return pGraphics->isShadowsEnabled;
-}
-
-
-
-// TESTING
 void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float width, float height, ta_bool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY)
 {
     if (pTexture == NULL) {
@@ -1511,16 +1487,6 @@ void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float widt
     }
 
     ta_graphics_context* pGraphics = pTexture->pGraphics;
-
-    GLenum error = glGetError();
-
-    // Clear first.
-    //glClearDepth(1.0);
-    //glClearColor(1, 1, 1, 1);
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-    //glViewport(0, 0, width, height);
 
     glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -1570,6 +1536,30 @@ void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float widt
     }
 }
 
+
+//// Settings ////
+
+void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, ta_bool32 isShadowsEnabled)
+{
+    if (pGraphics == NULL) {
+        return;
+    }
+
+    pGraphics->isShadowsEnabled = isShadowsEnabled;
+}
+
+ta_bool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
+{
+    if (pGraphics == NULL) {
+        return TA_FALSE;
+    }
+
+    return pGraphics->isShadowsEnabled;
+}
+
+
+
+// TESTING
 void ta_draw_texture(ta_texture* pTexture, ta_bool32 transparent)
 {
     ta_draw_subtexture(pTexture, 0, 0, (float)pTexture->width, (float)pTexture->height, transparent, 0, 0, (float)pTexture->width, (float)pTexture->height);

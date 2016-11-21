@@ -143,7 +143,6 @@ ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
     ta_uint32 totalWidth = 0;
     ta_uint32 totalHeight = 0;
     for (int i = 0; i < 256; ++i) {
-        // TODO: Optimize this. Don't want to be decoding the pixel data in this pass.
         ta_uint32 sizeX;
         ta_uint32 sizeY;
         ta_int32 posX;
@@ -163,10 +162,11 @@ ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
     // The texture atlas does not need to be square, but it should be a power of 2 for maximum
     // compatibility with older hardware. This can be optimized later.
     ta_uint32 atlasSizeX = ta_next_power_of_2(totalWidth);
-    ta_uint32 atlasSizeY = ta_next_power_of_2(totalHeight);
+    ta_uint32 atlasSizeY = ta_next_power_of_2(totalHeight+1);   // Add 1 to ensure we have at least row of padding for interpolation.
 
     ta_texture_packer packer;
     ta_texture_packer_init(&packer, atlasSizeX, atlasSizeY, 1);
+    memset(packer.pImageData, TA_TRANSPARENT_COLOR, packer.width*packer.height);
 
     ta_uint8 paddingPixels[TA_MAX_FONT_SIZE];
     memset(paddingPixels, TA_TRANSPARENT_COLOR, sizeof(paddingPixels));
@@ -253,7 +253,7 @@ ta_result ta_font_measure_text(ta_font* pFont, float scale, const char* text, fl
     if (pFont == NULL || text == NULL) return TA_INVALID_ARGS;
 
     // The height is always at least the height of the font itself at a minimum, event for an empty string.
-    //if (pSizeY) *pSizeY = pFont->height*scale;
+    if (pSizeY) *pSizeY = pFont->height*scale;
 
     float currentLineSizeX = 0;
     for (;;) {
