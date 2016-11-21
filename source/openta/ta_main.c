@@ -84,7 +84,13 @@ typedef ta_int32         ta_bool32;
 
 
 #define ta_zero_object(p) memset((p), 0, sizeof(*(p)))
+#define ta_countof(p) (sizeof((p)) / sizeof((p)[0]))
 
+// The maximum size of the texture atlas. We don't really want to use the GPU's maximum texture size
+// because it can result in excessive wastage - modern GPUs support 16K textures, which is much more
+// than we need and it's better to not needlessly waste the player's system resources. Keep this at
+// a power of 2.
+#define TA_MAX_TEXTURE_ATLAS_SIZE   512 /*4096*/
 
 // Total Annihilation headers.
 #include "ta_errors.h"

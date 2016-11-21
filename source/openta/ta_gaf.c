@@ -273,9 +273,11 @@ ta_bool32 ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFr
         }
 
         // The file will be sitting on the entry name, so we just need to compare. If they're not equal just try the next entry.
-        if (_stricmp(pGAF->pFile->pFileData + ta_tell_file(pGAF->pFile), entryName) == 0)
+        const char* pName = pGAF->pFile->pFileData + ta_tell_file(pGAF->pFile);
+        if (_stricmp(pName, entryName) == 0)
         {
             // It's the entry we're looking for.
+            pGAF->_entryName = pName;
             pGAF->_entryPointer = entryPointer;
             pGAF->_entryFrameCount = frameCount;
 
@@ -285,6 +287,44 @@ ta_bool32 ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFr
     }
     
     return TA_FALSE;
+}
+
+ta_bool32 ta_gaf_select_entry_by_index(ta_gaf* pGAF, ta_uint32 index, uint32_t* pFrameCountOut)
+{
+    if (pGAF == NULL || index >= pGAF->entryCount || pFrameCountOut == NULL) {
+        return TA_FALSE;
+    }
+
+    // The entry pointers are located at byte position 12.
+    if (!ta_seek_file(pGAF->pFile, 12 + (index * sizeof(uint32_t)), ta_seek_origin_start)) {
+        return TA_FALSE;
+    }
+
+    uint32_t entryPointer;
+    if (!ta_read_file_uint32(pGAF->pFile, &entryPointer)) {
+        return TA_FALSE;
+    }
+
+    if (!ta_seek_file(pGAF->pFile, entryPointer, ta_seek_origin_start)) {
+        return TA_FALSE;
+    }
+
+
+    uint16_t frameCount;
+    if (!ta_read_file_uint16(pGAF->pFile, &frameCount)) {
+        return TA_FALSE;
+    }
+
+    if (!ta_seek_file(pGAF->pFile, 6, ta_seek_origin_current)) {
+        return TA_FALSE;
+    }
+
+    pGAF->_entryName = pGAF->pFile->pFileData + ta_tell_file(pGAF->pFile);
+    pGAF->_entryPointer = entryPointer;
+    pGAF->_entryFrameCount = frameCount;
+
+    *pFrameCountOut = frameCount;
+    return TA_TRUE;
 }
 
 ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOut, uint32_t* pHeightOut, int32_t* pPosXOut, int32_t* pPosYOut, ta_uint8** ppImageData)
@@ -381,6 +421,12 @@ ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOu
     }
 
     return TA_SUCCESS;
+}
+
+const char* ta_gaf_get_current_entry_name(ta_gaf* pGAF)
+{
+    if (pGAF == NULL) return NULL;
+    return pGAF->_entryName;
 }
 
 void ta_gaf_free(void* pBuffer)

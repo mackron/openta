@@ -3,12 +3,6 @@
 // TODO:
 // - Cull invisible terrain chunks.
 
-// The maximum size of the texture atlas. We don't really want to use the GPU's maximum texture size
-// because it can result in excessive wastage - modern GPUs support 16K textures, which is much more
-// than we need and it's better to not needlessly waste the player's system resources. Keep this at
-// a power of 2.
-#define TA_MAX_TEXTURE_ATLAS_SIZE   512 /*4096*/
-
 typedef struct
 {
     uint32_t id;

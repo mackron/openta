@@ -126,17 +126,32 @@ typedef struct
 {
     char* sequenceName;
     ta_uint32 frameIndex;
-    ta_texture* pTexture;
+    ta_uint32 textureIndex;
     ta_subtexture_metrics metrics;
+    ta_int32 offsetXGAF;
+    ta_int32 offsetYGAF;
 } ta_common_gui_texture;
 
 typedef struct
 {
-    ta_game* pGame;
-    ta_gaf* pCommonGUIGAF;
+    ta_uint32 sizeX;
+    ta_uint32 sizeY;
+    ta_uint32 subtextureIndex;
+} ta_common_gui_texture_button;
 
-    ta_uint32 subTextureCount;
-    ta_common_gui_texture* pSubTextures;    // An offset of _pPayload.
+typedef struct
+{
+    ta_game* pGame;
+    ta_gaf* pGAF;
+
+    ta_uint32 subtextureCount;
+    ta_common_gui_texture* pSubtextures;    // An offset of _pPayload.
+
+    ta_uint32 textureAtlasCount;
+    ta_texture** ppTextures;  // An offset of _pPayload.
+
+    // Button backgrounds for each size.
+    ta_common_gui_texture_button buttons[6];
 
     // The block of memory used for the common GUI package.
     ta_uint8* _pPayload;

@@ -24,6 +24,9 @@ struct ta_gaf
     // The number of entries making up the GAF archive.
     uint32_t entryCount;
 
+    // Internal use only. The name of the currently selected entry.
+    const char* _entryName;
+
     // Internal use only. The position in the file of the list of frame pointers for the current entry.
     uint32_t _entryPointer;
 
@@ -40,10 +43,14 @@ void ta_close_gaf(ta_gaf* pGAF);
 
 // Selects the entry with the given name. After calling this you can get information about each frame in an entry.
 ta_bool32 ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFrameCountOut);
+ta_bool32 ta_gaf_select_entry_by_index(ta_gaf* pGAF, ta_uint32 index, uint32_t* pFrameCountOut);
 
 // Retrieves the image data of the frame at the given index of the currently selected entry. Free the returned
 // pointer with ta_gaf_free().
 ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOut, uint32_t* pHeightOut, int32_t* pPosXOut, int32_t* pPosYOut, ta_uint8** ppImageData);
+
+// Retrieves the name of the currently selected sequence.
+const char* ta_gaf_get_current_entry_name(ta_gaf* pGAF);
 
 // Frees a buffer returned by ta_gaf_get_frame().
 void ta_gaf_free(void* pBuffer);

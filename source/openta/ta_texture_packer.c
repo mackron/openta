@@ -125,6 +125,7 @@ void ta_texture_packer_reset(ta_texture_packer* pPacker)
 
 ta_bool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut)
 {
+    if (pSlotOut) ta_zero_object(pSlotOut);
     if (pPacker == NULL) {
         return TA_FALSE;
     }
@@ -145,4 +146,10 @@ ta_bool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t
 
     if (pSlotOut) *pSlotOut = slot;
     return TA_TRUE;
+}
+
+ta_bool32 ta_texture_packer_is_empty(const ta_texture_packer* pPacker)
+{
+    if (pPacker == NULL) return TA_FALSE;
+    return pPacker->cursorPosX == 0 && pPacker->cursorPosY;
 }

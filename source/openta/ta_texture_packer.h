@@ -63,3 +63,6 @@ void ta_texture_packer_reset(ta_texture_packer* pPacker);
 
 // Packs a sub-texture into the packer. If there is no room this will simply return TA_FALSE.
 ta_bool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut);
+
+// Determines if the texture packer is empty or not.
+ta_bool32 ta_texture_packer_is_empty(const ta_texture_packer* pPacker);

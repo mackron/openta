@@ -89,12 +89,11 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
     // GUI
     // ===
+    if (ta_common_gui_load(pGame, &pGame->commonGUI) != TA_SUCCESS) {
+        goto on_error;
+    }
 
     // There are a few required resources that are hard coded from what I can tell.
-    
-
-    
-
     //ta_font_load(pGame, "fonts/HATT12.FNT", &pGame->font);
     ta_font_load(pGame, "anims/hattfont12.GAF/Haettenschweiler (120)", &pGame->font);
 
@@ -143,11 +142,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     }
 
 
-    
 
-
-
-    // Initialize the timer last so that the first frame has as accurate of a delta time as possible.
     dr_timer_init(&pGame->timer);
 
 
@@ -282,16 +277,16 @@ void ta_game_render(ta_game* pGame)
     ta_graphics_set_current_window(pGame->pGraphics, pGame->pWindow);
     {
         if (pGame->pCurrentMap) {
-            ta_draw_map(pGame->pGraphics, pGame->pCurrentMap);
+            //ta_draw_map(pGame->pGraphics, pGame->pCurrentMap);
         }
 
         ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->mainMenu);
 
         //ta_draw_text(pGame->pGraphics, &pGame->font, 255, 2, 64, 64, "Hello, World!@!@!@!@");
-
         //ta_draw_texture(pGame->font.pTexture, TA_TRUE);
         //ta_draw_texture(pGame->pCurrentMap->ppTextures[pGame->pCurrentMap->textureCount-1], TA_FALSE);
         //ta_draw_texture(pGame->pTexture, TA_FALSE);
+        //ta_draw_texture(pGame->commonGUI.ppTextures[0], TA_FALSE);
     }
     ta_graphics_present(pGame->pGraphics, pGame->pWindow);
 }
@@ -347,6 +342,21 @@ ta_texture* ta_get_gui_button_texture(ta_game* pGame, ta_uint32 width, ta_uint32
 {
     if (pMetrics) ta_zero_object(pMetrics);
     if (pGame == NULL) return NULL;
+
+    for (int i = 0; i < ta_countof(pGame->commonGUI.buttons); ++i) {
+        if (pGame->commonGUI.buttons[i].sizeX == width && pGame->commonGUI.buttons[i].sizeY == height) {
+            ta_uint32 subtextureIndex = pGame->commonGUI.buttons[i].subtextureIndex;
+            if (state == TA_GUI_BUTTON_STATE_PRESSED) {
+                subtextureIndex += 1;
+            } else if (state == TA_GUI_BUTTON_STATE_DISABLED) {
+                subtextureIndex += 2;
+            }
+
+            if (pMetrics != NULL) *pMetrics = pGame->commonGUI.pSubtextures[subtextureIndex].metrics;
+
+            return pGame->commonGUI.ppTextures[pGame->commonGUI.pSubtextures[subtextureIndex].textureIndex];
+        }
+    }
 
     return NULL;
 }

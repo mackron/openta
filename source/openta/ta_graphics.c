@@ -1116,7 +1116,7 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
                 ta_subtexture_metrics subtexture;
                 ta_texture* pBackgroundTexture = ta_get_gui_button_texture(pGraphics->pGame, pGadget->width, pGadget->height, TA_GUI_BUTTON_STATE_NORMAL, &subtexture);
                 if (pBackgroundTexture != NULL) {
-                    ta_draw_subtexture(pBackgroundTexture, (int)posX, (int)posY, TA_FALSE, (int)subtexture.texturePosX, (int)subtexture.texturePosY, (int)subtexture.width, (int)subtexture.height);
+                    ta_draw_subtexture(pBackgroundTexture, posX, posY, subtexture.width*scale, subtexture.height*scale, TA_FALSE, subtexture.texturePosX, subtexture.texturePosY, subtexture.width, subtexture.height);
                 }
 
                 if (!ta_is_string_null_or_empty(pGadget->button.text)) {
@@ -1125,7 +1125,7 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
                     ta_font_measure_text(&pGraphics->pGame->font, scale, pGadget->button.text, &textSizeX, &textSizeY);
 
                     float textPosX = posX + (sizeX - textSizeX)/2;
-                    float textPosY = /*posY + (sizeY - textSizeY)/2;*/ posY - (2*scale);    // <-- Should probably improve this a bit.
+                    float textPosY = /*posY + (sizeY - textSizeY)/2;*/ posY - (3*scale);    // <-- Should probably improve this a bit.
                     ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, textPosX, textPosY, pGadget->button.text);
 
                     if (pGadget->button.quickkey != 0) {
@@ -1504,7 +1504,7 @@ ta_bool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
 
 
 // TESTING
-void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, ta_bool32 transparent, int offsetX, int offsetY, int width, int height)
+void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float width, float height, ta_bool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY)
 {
     if (pTexture == NULL) {
         return;
@@ -1515,15 +1515,16 @@ void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, ta_bool32 tran
     GLenum error = glGetError();
 
     // Clear first.
-    glClearDepth(1.0);
-    glClearColor(1, 1, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glClearDepth(1.0);
+    //glClearColor(1, 1, 1, 1);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-    glViewport(0, 0, width, height);
+    //glViewport(0, 0, width, height);
 
     glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
+    glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
     
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -1549,15 +1550,15 @@ void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, ta_bool32 tran
     ta_graphics__bind_texture(pGraphics, pTexture);
     glBegin(GL_QUADS);
     {
-        float uvleft   = (float)offsetX / pTexture->width;
-        float uvtop    = (float)offsetY / pTexture->height;
-        float uvright  = (float)(offsetX + width)  / pTexture->width;
-        float uvbottom = (float)(offsetY + height) / pTexture->height;
+        float uvleft   = subtexturePosX / pTexture->width;
+        float uvtop    = subtexturePosY / pTexture->height;
+        float uvright  = (subtexturePosX + subtextureSizeX) / pTexture->width;
+        float uvbottom = (subtexturePosY + subtextureSizeY) / pTexture->height;
 
-        glTexCoord2f(uvleft, uvbottom); glVertex3f(-1.0f, -1.0f,  1.0f);
-        glTexCoord2f(uvright, uvbottom); glVertex3f( 1.0f, -1.0f,  1.0f);
-        glTexCoord2f(uvright, uvtop); glVertex3f( 1.0f,  1.0f,  1.0f);
-        glTexCoord2f(uvleft, uvtop); glVertex3f(-1.0f,  1.0f,  1.0f);
+        glTexCoord2f(uvleft,  uvbottom); glVertex3f(posX,         posY + height, 1.0f);
+        glTexCoord2f(uvright, uvbottom); glVertex3f(posX + width, posY + height, 1.0f);
+        glTexCoord2f(uvright, uvtop);    glVertex3f(posX + width, posY,          1.0f);
+        glTexCoord2f(uvleft,  uvtop);    glVertex3f(posX,         posY,          1.0f);
     }
     glEnd();
 
@@ -1571,5 +1572,5 @@ void ta_draw_subtexture(ta_texture* pTexture, int posX, int posY, ta_bool32 tran
 
 void ta_draw_texture(ta_texture* pTexture, ta_bool32 transparent)
 {
-    ta_draw_subtexture(pTexture, 0, 0, transparent, 0, 0, pTexture->width, pTexture->height);
+    ta_draw_subtexture(pTexture, 0, 0, (float)pTexture->width, (float)pTexture->height, transparent, 0, 0, (float)pTexture->width, (float)pTexture->height);
 }
