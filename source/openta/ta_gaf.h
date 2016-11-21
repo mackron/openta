@@ -54,3 +54,43 @@ const char* ta_gaf_get_current_entry_name(ta_gaf* pGAF);
 
 // Frees a buffer returned by ta_gaf_get_frame().
 void ta_gaf_free(void* pBuffer);
+
+
+
+// GAF Texture Groups
+// ==================
+typedef struct
+{
+	float renderOffsetX;
+	float renderOffsetY;
+	float atlasPosX;
+	float atlasPosY;
+	float sizeX;
+	float sizeY;
+	ta_uint32 atlasIndex;
+	ta_uint32 localFrameIndex;
+	ta_uint32 sequenceIndex;
+} ta_gaf_texture_group_frame;
+
+typedef struct
+{
+	char* name;
+	ta_uint32 firstFrameIndex;
+	ta_uint32 frameCount;
+} ta_gaf_texture_group_sequence;
+
+typedef struct
+{
+	ta_game* pGame;
+    ta_texture** ppAtlases;
+    ta_uint32 atlasCount;
+	ta_gaf_texture_group_sequence* pSequences;
+    ta_uint32 sequenceCount;
+	ta_gaf_texture_group_frame* pFrames;
+    ta_uint32 frameCount;
+	ta_uint8* _pPayload;
+} ta_gaf_texture_group;
+
+ta_result ta_gaf_texture_group_init(ta_game* pGame, const char* filePath, ta_gaf_texture_group* pGroup);
+ta_result ta_gaf_texture_group_uninit(ta_gaf_texture_group* pGroup);
+ta_bool32 ta_gaf_texture_group_find_sequence_by_name(ta_gaf_texture_group* pGroup, const char* sequenceName, ta_uint32* pSequenceIndex);

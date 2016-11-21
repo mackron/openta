@@ -61,6 +61,10 @@ typedef struct
             ta_uint32 quickkey;     // Shortcut key. ASCII.
             ta_bool32 grayedout;    // Whether or not the button is disabled, but still visible.
             ta_int32 stages;        // The number of stages in a multi-stage button. Set to 0 for simple buttons.
+
+            // ...
+            ta_gaf_texture_group* pBackgroundTextureGroup;
+            ta_uint32 iBackgroundFrame; // +0 for normal, +1 for pressed, +2 for disabled.
         } button;
 
         struct  // id = 2
@@ -107,7 +111,8 @@ typedef struct
 struct ta_gui
 {
     ta_game* pGame;
-    ta_gaf* pGAF;
+    ta_gaf_texture_group textureGroupGAF;
+    ta_bool32 hasGAF;
     ta_texture* pBackgroundTexture;
 
     ta_uint32 gadgetCount;
@@ -121,7 +126,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI);
 ta_result ta_gui_unload(ta_gui* pGUI);
 
 
-
+#if 0
 typedef struct
 {
     char* sequenceName;
@@ -131,31 +136,24 @@ typedef struct
     ta_int32 offsetXGAF;
     ta_int32 offsetYGAF;
 } ta_common_gui_texture;
+#endif
 
 typedef struct
 {
     ta_uint32 sizeX;
     ta_uint32 sizeY;
-    ta_uint32 subtextureIndex;
+    ta_uint32 frameIndex;
 } ta_common_gui_texture_button;
 
 typedef struct
 {
     ta_game* pGame;
-    ta_gaf* pGAF;
-
-    ta_uint32 subtextureCount;
-    ta_common_gui_texture* pSubtextures;    // An offset of _pPayload.
-
-    ta_uint32 textureAtlasCount;
-    ta_texture** ppTextures;  // An offset of _pPayload.
+    ta_gaf_texture_group textureGroup;
 
     // Button backgrounds for each size.
     ta_common_gui_texture_button buttons[6];
-
-    // The block of memory used for the common GUI package.
-    ta_uint8* _pPayload;
 } ta_common_gui;
 
 ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI);
 ta_result ta_common_gui_unload(ta_common_gui* pCommonGUI);
+ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, ta_uint32 width, ta_uint32 height, ta_uint32* pFrameIndex);

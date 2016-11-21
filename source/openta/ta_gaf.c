@@ -291,7 +291,8 @@ ta_bool32 ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFr
 
 ta_bool32 ta_gaf_select_entry_by_index(ta_gaf* pGAF, ta_uint32 index, uint32_t* pFrameCountOut)
 {
-    if (pGAF == NULL || index >= pGAF->entryCount || pFrameCountOut == NULL) {
+    if (pFrameCountOut) *pFrameCountOut = 0;
+    if (pGAF == NULL || index >= pGAF->entryCount) {
         return TA_FALSE;
     }
 
@@ -323,7 +324,7 @@ ta_bool32 ta_gaf_select_entry_by_index(ta_gaf* pGAF, ta_uint32 index, uint32_t* 
     pGAF->_entryPointer = entryPointer;
     pGAF->_entryFrameCount = frameCount;
 
-    *pFrameCountOut = frameCount;
+    if (pFrameCountOut) *pFrameCountOut = frameCount;
     return TA_TRUE;
 }
 
@@ -432,4 +433,198 @@ const char* ta_gaf_get_current_entry_name(ta_gaf* pGAF)
 void ta_gaf_free(void* pBuffer)
 {
     free(pBuffer);
+}
+
+
+
+// GAF Texture Groups
+// ==================
+TA_INLINE char* ta_gaf_texture_group__copy_sequence_name(char** ppNextStr, const char* src)
+{
+    char* pNextStr = *ppNextStr;
+    size_t srcLen = strlen(src);
+    memcpy(pNextStr, src, srcLen+1);
+
+    *ppNextStr += srcLen+1;
+    return pNextStr;
+}
+
+ta_result ta_gaf_texture_group__create_texture_atlas(ta_game* pGame, ta_gaf_texture_group* pGroup, ta_texture_packer* pPacker, ta_texture** ppTexture)
+{
+    assert(pGame != NULL);
+    assert(pGroup != NULL);
+    assert(pPacker != NULL);
+    assert(ppTexture != NULL);
+    
+    *ppTexture = ta_create_texture(pGame->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
+    if (*ppTexture == NULL) {
+        return TA_FAILED_TO_CREATE_RESOURCE;
+    }
+
+    return TA_SUCCESS;
+}
+
+ta_result ta_gaf_texture_group_init(ta_game* pGame, const char* filePath, ta_gaf_texture_group* pGroup)
+{
+    if (pGroup == NULL) return TA_INVALID_ARGS;
+    ta_zero_object(pGroup);
+    
+    pGroup->pGame = pGame;
+
+    ta_gaf* pGAF = ta_open_gaf(pGame->pFS, filePath);
+    if (pGAF == NULL) {
+        return TA_FILE_NOT_FOUND;
+    }
+
+
+    // We load in two passes. The first pass is used to calculate the size of the memory allocation and the second
+    // pass performs the actual loading.
+
+    ta_texture_packer packer;
+    ta_texture_packer_init(&packer, TA_MAX_TEXTURE_ATLAS_SIZE, TA_MAX_TEXTURE_ATLAS_SIZE, 1);
+
+    // PASS #1
+    // =======
+    ta_uint32 totalSequenceCount = 0;
+    ta_uint32 totalFrameCount = 0;
+    ta_uint32 totalAtlasCount = 0;
+
+    size_t payloadSize = 0;
+    for (ta_uint32 iSequence = 0; iSequence < pGAF->entryCount; ++iSequence) {
+        payloadSize += sizeof(ta_gaf_texture_group_sequence);
+        totalSequenceCount += 1;
+
+        ta_uint32 frameCount;
+        if (ta_gaf_select_entry_by_index(pGAF, iSequence, &frameCount)) {
+            payloadSize += strlen(ta_gaf_get_current_entry_name(pGAF))+1;
+
+            for (ta_uint32 iFrame = 0; iFrame < frameCount; ++iFrame) {
+                payloadSize += sizeof(ta_gaf_texture_group_frame);
+                totalFrameCount += 1;
+
+                ta_uint32 sizeX;
+                ta_uint32 sizeY;
+                ta_uint32 posX;
+                ta_uint32 posY;
+                if (ta_gaf_get_frame(pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, NULL) == TA_SUCCESS) {
+                    if (!ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, NULL, NULL)) {
+                        // We failed to pack the subtexture which probably means there's not enough room. We just need to reset this packer and try again.
+                        totalAtlasCount += 1;
+                        ta_texture_packer_reset(&packer);
+                        ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, NULL, NULL);   // <-- It doesn't really matter if this fails - we'll handle it organically later on in the second pass.
+                    }
+                }
+            }
+        }
+    }
+
+    // There might be textures still sitting in the packer needing to be uploaded.
+    if (!ta_texture_packer_is_empty(&packer)) {
+        totalAtlasCount += 1;
+    }
+
+    payloadSize += sizeof(ta_texture*) * totalAtlasCount;
+
+
+    size_t atlasesPayloadOffset       = 0;
+    size_t sequencesPayloadOffset     = atlasesPayloadOffset   + (sizeof(ta_texture*)                   * totalAtlasCount);
+    size_t framesPayloadOffset        = sequencesPayloadOffset + (sizeof(ta_gaf_texture_group_sequence) * totalSequenceCount);
+    size_t sequenceNamesPayloadOffset = framesPayloadOffset    + (sizeof(ta_gaf_texture_group_frame)    * totalFrameCount);
+
+    pGroup->_pPayload = (ta_uint8*)calloc(1, payloadSize);
+    if (pGroup->_pPayload == NULL) {
+        ta_close_gaf(pGAF);
+        return TA_OUT_OF_MEMORY;
+    }
+
+    pGroup->ppAtlases  = (ta_texture**                  )(pGroup->_pPayload + atlasesPayloadOffset);
+    pGroup->pSequences = (ta_gaf_texture_group_sequence*)(pGroup->_pPayload + sequencesPayloadOffset);
+    pGroup->pFrames    = (ta_gaf_texture_group_frame*   )(pGroup->_pPayload + framesPayloadOffset);
+
+    pGroup->atlasCount    = totalAtlasCount;
+    pGroup->sequenceCount = totalSequenceCount;
+    pGroup->frameCount    = totalFrameCount;
+
+
+    // PASS #2
+    // =======
+    char* pNextStr = (char*)(pGroup->_pPayload + sequenceNamesPayloadOffset);
+    ta_texture_packer_reset(&packer);
+
+    totalSequenceCount = 0;
+    totalFrameCount    = 0;
+    totalAtlasCount    = 0;
+
+    for (ta_uint32 iSequence = 0; iSequence < pGAF->entryCount; ++iSequence) {
+        ta_uint32 frameCount;
+        if (ta_gaf_select_entry_by_index(pGAF, iSequence, &frameCount)) {
+            pGroup->pSequences[totalSequenceCount].name            = ta_gaf_texture_group__copy_sequence_name(&pNextStr, ta_gaf_get_current_entry_name(pGAF));
+            pGroup->pSequences[totalSequenceCount].firstFrameIndex = totalFrameCount;
+            pGroup->pSequences[totalSequenceCount].frameCount      = frameCount;
+
+            totalSequenceCount += 1;
+            for (ta_uint32 iFrame = 0; iFrame < frameCount; ++iFrame) {
+                ta_uint32 sizeX;
+                ta_uint32 sizeY;
+                ta_uint32 posX;
+                ta_uint32 posY;
+                ta_uint8* pImageData;
+                if (ta_gaf_get_frame(pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, &pImageData) == TA_SUCCESS) {
+                    ta_texture_packer_slot slot;
+                    if (!ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, pImageData, &slot)) {
+                        // We failed to pack the subtexture which probably means there's not enough room. We just need to reset this packer and try again.
+                        ta_gaf_texture_group__create_texture_atlas(pGame, pGroup, &packer, &pGroup->ppAtlases[totalAtlasCount]);
+                        totalAtlasCount += 1;
+
+                        ta_texture_packer_reset(&packer);
+                        ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, pImageData, &slot);
+                    }
+
+                    pGroup->pFrames[totalFrameCount].renderOffsetX   = (float)posX;
+                    pGroup->pFrames[totalFrameCount].renderOffsetY   = (float)posY;
+                    pGroup->pFrames[totalFrameCount].atlasPosX       = (float)slot.posX;
+                    pGroup->pFrames[totalFrameCount].atlasPosY       = (float)slot.posY;
+                    pGroup->pFrames[totalFrameCount].sizeX           = (float)slot.width;
+                    pGroup->pFrames[totalFrameCount].sizeY           = (float)slot.height;
+                    pGroup->pFrames[totalFrameCount].atlasIndex      = totalAtlasCount;
+                    pGroup->pFrames[totalFrameCount].localFrameIndex = iFrame;
+                    pGroup->pFrames[totalFrameCount].sequenceIndex   = iSequence;
+                }
+
+                totalFrameCount += 1;
+            }
+        }
+    }
+
+    // There might be textures still sitting in the packer needing to be uploaded.
+    if (!ta_texture_packer_is_empty(&packer)) {
+        ta_gaf_texture_group__create_texture_atlas(pGame, pGroup, &packer, &pGroup->ppAtlases[totalAtlasCount]);
+        totalAtlasCount += 1;
+    }
+
+
+    return TA_SUCCESS;
+}
+
+ta_result ta_gaf_texture_group_uninit(ta_gaf_texture_group* pGroup)
+{
+    if (pGroup == NULL) return TA_INVALID_ARGS;
+
+    free(pGroup->_pPayload);
+    return TA_SUCCESS;
+}
+
+ta_bool32 ta_gaf_texture_group_find_sequence_by_name(ta_gaf_texture_group* pGroup, const char* sequenceName, ta_uint32* pSequenceIndex)
+{
+    if (pSequenceIndex) *pSequenceIndex = (ta_uint32)-1;
+    if (pGroup == NULL || sequenceName == NULL) return TA_FALSE;
+
+    for (ta_uint32 iSequence = 0; iSequence < pGroup->sequenceCount; ++iSequence) {
+        if (_stricmp(pGroup->pSequences[iSequence].name, sequenceName) == 0) {
+            if (*pSequenceIndex) *pSequenceIndex = iSequence;
+            return TA_TRUE;
+        }
+    }
+
+    return TA_FALSE;
 }

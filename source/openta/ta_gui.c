@@ -201,7 +201,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
 
     char filePathGAF[TA_MAX_PATH];
     drpath_copy_and_append(filePathGAF, sizeof(filePathGAF), "anims", fileNameGAF);
-    pGUI->pGAF = ta_open_gaf(pGame->pFS, filePathGAF);    // <-- It's OK if this returns NULL.
+    pGUI->hasGAF = ta_gaf_texture_group_init(pGame, filePathGAF, &pGUI->textureGroupGAF) == TA_SUCCESS;
 
 
     // I haven't yet found a way to determine the background image to use for GUIs, so for the moment we will hard code these.
@@ -211,6 +211,29 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
     }
 
 
+    // For some gadgets we'll need to load some graphics. From what I can tell, graphics will be located in the associated
+    // GAF file or commongui. When searching for the graphic we first search in the associated GAF file.
+    for (ta_uint32 iGadget = 0; iGadget < pGUI->gadgetCount; ++iGadget) {
+        ta_gui_gadget* pGadget = pGUI->pGadgets + iGadget;
+        switch (pGadget->id)
+        {
+            case TA_GUI_GADGET_TYPE_BUTTON:
+            {
+                ta_uint32 iSequence;
+                if (pGUI->hasGAF && ta_gaf_texture_group_find_sequence_by_name(&pGUI->textureGroupGAF, pGadget->name, &iSequence)) {
+                    pGadget->button.pBackgroundTextureGroup = &pGUI->textureGroupGAF;
+                    pGadget->button.iBackgroundFrame = 0;
+                } else {
+                    if (ta_common_gui_get_button_frame(&pGame->commonGUI, pGadget->width, pGadget->height, &pGadget->button.iBackgroundFrame) == TA_SUCCESS) {
+                        pGadget->button.pBackgroundTextureGroup = &pGame->commonGUI.textureGroup;
+                    }
+                }
+            } break;
+
+            default: break;
+        }
+    }
+
     return TA_SUCCESS;
 }
 
@@ -219,7 +242,7 @@ ta_result ta_gui_unload(ta_gui* pGUI)
     if (pGUI == NULL) return TA_INVALID_ARGS;
 
     if (pGUI->pBackgroundTexture) ta_delete_texture(pGUI->pBackgroundTexture);
-    if (pGUI->pGAF) ta_close_gaf(pGUI->pGAF);
+    if (pGUI->hasGAF) ta_gaf_texture_group_uninit(&pGUI->textureGroupGAF);
     free(pGUI->_pPayload);
 
     return TA_SUCCESS;
@@ -250,143 +273,40 @@ ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI)
 
     pCommonGUI->pGame = pGame;
 
-    pCommonGUI->pGAF = ta_open_gaf(pGame->pFS, "anims/commongui.GAF");
-    if (pCommonGUI->pGAF == NULL) {
-        return TA_FILE_NOT_FOUND;
+    ta_result result = ta_gaf_texture_group_init(pGame, "anims/commongui.GAF", &pCommonGUI->textureGroup);
+    if (result != TA_SUCCESS) {
+        return result;
     }
 
-    // We're going to load and cache the entire package all at once just for the sake of simplicity. We do this in
-    // two passes, with the first pass being used to determine the size of the memory allocation and the second
-    // pass for actually loading the graphics.
+    ta_uint32 iSequence;
+    if (ta_gaf_texture_group_find_sequence_by_name(&pCommonGUI->textureGroup, "BUTTONS0", &iSequence)) {
+        ta_gaf_texture_group_sequence* pSequence = pCommonGUI->textureGroup.pSequences + iSequence;
 
-    ta_texture_packer packer;
-    ta_texture_packer_init(&packer, TA_MAX_TEXTURE_ATLAS_SIZE, TA_MAX_TEXTURE_ATLAS_SIZE, 1);
+        pCommonGUI->buttons[0].sizeX = 321;
+        pCommonGUI->buttons[0].sizeY = 20;
+        pCommonGUI->buttons[0].frameIndex = pSequence->firstFrameIndex + 4;
 
-    // PASS #1
-    size_t payloadSize = 0;
-    ta_uint32 totalSubtextureCount = 0;
-    ta_uint32 textureAtlasCount = 0;
-    for (ta_uint32 iEntry = 0; iEntry < pCommonGUI->pGAF->entryCount; ++iEntry) {
-        ta_uint32 frameCount;
-        if (ta_gaf_select_entry_by_index(pCommonGUI->pGAF, iEntry, &frameCount)) {
-            const char* sequenceName = ta_gaf_get_current_entry_name(pCommonGUI->pGAF);
-            if (sequenceName != NULL) {
-                payloadSize += strlen(sequenceName)+1;
-                totalSubtextureCount += frameCount;
+        pCommonGUI->buttons[1].sizeX = 120;
+        pCommonGUI->buttons[1].sizeY = 20;
+        pCommonGUI->buttons[1].frameIndex = pSequence->firstFrameIndex + 8;
 
-                for (ta_uint32 iFrame = 0; iFrame < frameCount; ++iFrame) {
-                    ta_uint32 sizeX;
-                    ta_uint32 sizeY;
-                    ta_uint32 posX;
-                    ta_uint32 posY;
-                    if (ta_gaf_get_frame(pCommonGUI->pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, NULL) == TA_SUCCESS) {
-                        if (!ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, NULL, NULL)) {
-                            // We failed to pack the subtexture which probably means there's not enough room. We just need to reset this packer and try again.
-                            textureAtlasCount += 1;
-                            ta_texture_packer_reset(&packer);
-                            ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, NULL, NULL);   // <-- It doesn't really matter if this fails - we'll handle it organically later on in the second pass.
-                        }
-                    }
-                }
-            }
-        }
+        pCommonGUI->buttons[2].sizeX = 96;
+        pCommonGUI->buttons[2].sizeY = 20;
+        pCommonGUI->buttons[2].frameIndex = pSequence->firstFrameIndex + 12;
+
+        pCommonGUI->buttons[3].sizeX = 112;
+        pCommonGUI->buttons[3].sizeY = 20;
+        pCommonGUI->buttons[3].frameIndex = pSequence->firstFrameIndex + 16;
+
+        pCommonGUI->buttons[4].sizeX = 80;
+        pCommonGUI->buttons[4].sizeY = 20;
+        pCommonGUI->buttons[4].frameIndex = pSequence->firstFrameIndex + 20;
+
+        pCommonGUI->buttons[5].sizeX = 96;
+        pCommonGUI->buttons[5].sizeY = 31;
+        pCommonGUI->buttons[5].frameIndex = pSequence->firstFrameIndex + 24;
     }
 
-    // At the end of the loop above there may be a packer 
-    if (!ta_texture_packer_is_empty(&packer)) {
-        textureAtlasCount += 1;
-    }
-
-    payloadSize += sizeof(*pCommonGUI->pSubtextures) * totalSubtextureCount;
-    payloadSize += sizeof(*pCommonGUI->ppTextures) * textureAtlasCount;
-
-    pCommonGUI->_pPayload = (ta_uint8*)calloc(1, payloadSize);  // <-- Keep this as a calloc().
-    pCommonGUI->pSubtextures = (ta_common_gui_texture*)pCommonGUI->_pPayload;
-    pCommonGUI->subtextureCount = totalSubtextureCount;
-    pCommonGUI->ppTextures = (ta_texture**)(pCommonGUI->_pPayload + (sizeof(*pCommonGUI->pSubtextures) * totalSubtextureCount));
-    pCommonGUI->textureAtlasCount = textureAtlasCount;
-
-    // PASS #2
-    char* pNextStr = (char*)(pCommonGUI->_pPayload + (sizeof(*pCommonGUI->pSubtextures) * totalSubtextureCount) + (sizeof(*pCommonGUI->ppTextures) * textureAtlasCount));
-
-    ta_texture_packer_reset(&packer);
-    textureAtlasCount = 0;
-    totalSubtextureCount = 0;
-    for (ta_uint32 iEntry = 0; iEntry < pCommonGUI->pGAF->entryCount; ++iEntry) {
-        ta_uint32 frameCount;
-        if (ta_gaf_select_entry_by_index(pCommonGUI->pGAF, iEntry, &frameCount)) {
-            const char* sequenceName = ta_gaf_get_current_entry_name(pCommonGUI->pGAF);
-            if (sequenceName != NULL) {
-                for (ta_uint32 iFrame = 0; iFrame < frameCount; ++iFrame) {
-                    ta_uint32 sizeX;
-                    ta_uint32 sizeY;
-                    ta_uint32 posX;
-                    ta_uint32 posY;
-                    ta_uint8* pImageData;
-                    if (ta_gaf_get_frame(pCommonGUI->pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, &pImageData) == TA_SUCCESS) {
-                        ta_texture_packer_slot slot;
-                        if (!ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, pImageData, &slot)) {
-                            // We failed to pack the subtexture which probably means there's not enough room. We just need to reset this packer and try again.
-                            ta_common_gui__create_texture_atlas(pGame, pCommonGUI, &packer, &pCommonGUI->ppTextures[textureAtlasCount]);
-                            textureAtlasCount += 1;
-
-                            ta_texture_packer_reset(&packer);
-                            ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, pImageData, &slot);
-                        }
-                        
-                        pCommonGUI->pSubtextures[totalSubtextureCount].sequenceName        = ta_gui__copy_string_prop(&pNextStr, sequenceName);
-                        pCommonGUI->pSubtextures[totalSubtextureCount].frameIndex          = iFrame;
-                        pCommonGUI->pSubtextures[totalSubtextureCount].textureIndex        = textureAtlasCount;
-                        pCommonGUI->pSubtextures[totalSubtextureCount].offsetXGAF          = posX;
-                        pCommonGUI->pSubtextures[totalSubtextureCount].offsetYGAF          = posY;
-                        pCommonGUI->pSubtextures[totalSubtextureCount].metrics.texturePosX = (float)slot.posX;
-                        pCommonGUI->pSubtextures[totalSubtextureCount].metrics.texturePosY = (float)slot.posY;
-                        pCommonGUI->pSubtextures[totalSubtextureCount].metrics.width       = (float)slot.width;
-                        pCommonGUI->pSubtextures[totalSubtextureCount].metrics.height      = (float)slot.height;
-                    }
-
-                    totalSubtextureCount += 1;
-                }
-            }
-        }
-    }
-
-    if (!ta_texture_packer_is_empty(&packer)) {
-        ta_common_gui__create_texture_atlas(pGame, pCommonGUI, &packer, &pCommonGUI->ppTextures[textureAtlasCount]);
-    }
-
-
-    // Button backgrounds.
-    for (size_t i = 0; i < pCommonGUI->subtextureCount; ++i) {
-        if (_stricmp(pCommonGUI->pSubtextures[i].sequenceName, "BUTTONS0") == 0) {
-            pCommonGUI->buttons[0].sizeX = 321;
-            pCommonGUI->buttons[0].sizeY = 20;
-            pCommonGUI->buttons[0].subtextureIndex = i + 4;
-
-            pCommonGUI->buttons[1].sizeX = 120;
-            pCommonGUI->buttons[1].sizeY = 20;
-            pCommonGUI->buttons[1].subtextureIndex = i + 8;
-
-            pCommonGUI->buttons[2].sizeX = 96;
-            pCommonGUI->buttons[2].sizeY = 20;
-            pCommonGUI->buttons[2].subtextureIndex = i + 12;
-
-            pCommonGUI->buttons[3].sizeX = 112;
-            pCommonGUI->buttons[3].sizeY = 20;
-            pCommonGUI->buttons[3].subtextureIndex = i + 16;
-
-            pCommonGUI->buttons[4].sizeX = 80;
-            pCommonGUI->buttons[4].sizeY = 20;
-            pCommonGUI->buttons[4].subtextureIndex = i + 20;
-
-            pCommonGUI->buttons[5].sizeX = 96;
-            pCommonGUI->buttons[5].sizeY = 31;
-            pCommonGUI->buttons[5].subtextureIndex = i + 24;
-            break;
-        }
-    }
-
-    
     return TA_SUCCESS;
 }
 
@@ -394,8 +314,20 @@ ta_result ta_common_gui_unload(ta_common_gui* pCommonGUI)
 {
     if (pCommonGUI == NULL) return TA_INVALID_ARGS;
 
-    ta_close_gaf(pCommonGUI->pGAF);
-    free(pCommonGUI->_pPayload);
-
+    ta_gaf_texture_group_uninit(&pCommonGUI->textureGroup);
     return TA_SUCCESS;
+}
+
+ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, ta_uint32 width, ta_uint32 height, ta_uint32* pFrameIndex)
+{
+    if (pCommonGUI == NULL) return TA_INVALID_ARGS;
+
+    for (int i = 0; i < ta_countof(pCommonGUI->buttons); ++i) {
+        if (pCommonGUI->buttons[i].sizeX == width && pCommonGUI->buttons[i].sizeY == height) {
+            if (pFrameIndex) *pFrameIndex = pCommonGUI->buttons[i].frameIndex;
+            return TA_SUCCESS;
+        }
+    }
+
+    return TA_ERROR;
 }

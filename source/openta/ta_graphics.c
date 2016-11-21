@@ -1113,10 +1113,10 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
         {
             case TA_GUI_GADGET_TYPE_BUTTON:
             {
-                ta_subtexture_metrics subtexture;
-                ta_texture* pBackgroundTexture = ta_get_gui_button_texture(pGraphics->pGame, pGadget->width, pGadget->height, TA_GUI_BUTTON_STATE_NORMAL, &subtexture);
-                if (pBackgroundTexture != NULL) {
-                    ta_draw_subtexture(pBackgroundTexture, posX, posY, subtexture.width*scale, subtexture.height*scale, TA_FALSE, subtexture.texturePosX, subtexture.texturePosY, subtexture.width, subtexture.height);
+                if (pGadget->button.pBackgroundTextureGroup != NULL) {
+                    ta_gaf_texture_group_frame* pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + TA_GUI_BUTTON_STATE_NORMAL;
+                    ta_texture* pBackgroundTexture = pGadget->button.pBackgroundTextureGroup->ppAtlases[pFrame->atlasIndex];
+                    ta_draw_subtexture(pBackgroundTexture, posX, posY, pFrame->sizeX*scale, pFrame->sizeY*scale, TA_FALSE, pFrame->atlasPosX, pFrame->atlasPosY, pFrame->sizeX, pFrame->sizeY);
                 }
 
                 if (!ta_is_string_null_or_empty(pGadget->button.text)) {

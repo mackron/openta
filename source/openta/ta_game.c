@@ -345,16 +345,25 @@ ta_texture* ta_get_gui_button_texture(ta_game* pGame, ta_uint32 width, ta_uint32
 
     for (int i = 0; i < ta_countof(pGame->commonGUI.buttons); ++i) {
         if (pGame->commonGUI.buttons[i].sizeX == width && pGame->commonGUI.buttons[i].sizeY == height) {
-            ta_uint32 subtextureIndex = pGame->commonGUI.buttons[i].subtextureIndex;
+            ta_uint32 subtextureIndex = pGame->commonGUI.buttons[i].frameIndex;
             if (state == TA_GUI_BUTTON_STATE_PRESSED) {
                 subtextureIndex += 1;
             } else if (state == TA_GUI_BUTTON_STATE_DISABLED) {
                 subtextureIndex += 2;
             }
 
-            if (pMetrics != NULL) *pMetrics = pGame->commonGUI.pSubtextures[subtextureIndex].metrics;
+            //if (pMetrics != NULL) *pMetrics = pGame->commonGUI.pSubtextures[subtextureIndex].metrics;
+            //return pGame->commonGUI.ppTextures[pGame->commonGUI.pSubtextures[subtextureIndex].textureIndex];
 
-            return pGame->commonGUI.ppTextures[pGame->commonGUI.pSubtextures[subtextureIndex].textureIndex];
+            ta_gaf_texture_group_frame* pFrame = pGame->commonGUI.textureGroup.pFrames + subtextureIndex;
+            if (pMetrics != NULL) {
+                pMetrics->width       = pFrame->sizeX;
+                pMetrics->height      = pFrame->sizeY;
+                pMetrics->texturePosX = pFrame->atlasPosX;
+                pMetrics->texturePosY = pFrame->atlasPosY;
+            }
+
+            return pGame->commonGUI.textureGroup.ppAtlases[pFrame->atlasIndex];
         }
     }
 
