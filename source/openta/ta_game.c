@@ -342,6 +342,12 @@ dr_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
         ta_gui_focus_next_gadget(pGUI);
     } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_RIGHT)) {
         ta_gui_focus_next_gadget(pGUI);
+    } else if (ta_was_key_pressed(pGame, TA_KEY_TAB)) {
+        if (ta_is_key_down(pGame, TA_KEY_SHIFT)) {
+            ta_gui_focus_prev_gadget(pGUI);
+        } else {
+            ta_gui_focus_next_gadget(pGUI);
+        }
     } else {
         // Try shortcut keys. For this we just iterate over each button and check if it's shortcut key was pressed.
         for (ta_uint32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {
