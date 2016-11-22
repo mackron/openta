@@ -396,12 +396,15 @@ dr_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
                 ta_gui_hold_gadget(pGUI, iGadgetUnderMouse, (wasLMBPressed) ? TA_MOUSE_BUTTON_LEFT : TA_MOUSE_BUTTON_RIGHT);
             }
         } else if (wasMBReleased) {
-            if (iHeldGadget == iGadgetUnderMouse) {
-                // The gadget was pressed. May want to post an event here.
-                if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
-                    pEvent->type = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
-                    pEvent->pGadget = pGadget;
-                    return TA_TRUE;
+            if (isGadgetHeld) {
+                ta_gui_gadget* pHeldGadget = &pGUI->pGadgets[iHeldGadget];
+                if (iHeldGadget == iGadgetUnderMouse && (wasLMBReleased && pHeldGadget->heldMB == TA_MOUSE_BUTTON_LEFT) || (wasRMBReleased && pHeldGadget->heldMB == TA_MOUSE_BUTTON_RIGHT)) {
+                    // The gadget was pressed. May want to post an event here.
+                    if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
+                        pEvent->type = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
+                        pEvent->pGadget = pGadget;
+                        return TA_TRUE;
+                    }
                 }
             }
         }
