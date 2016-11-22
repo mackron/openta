@@ -3,25 +3,6 @@
 #define TA_WINDOW_CENTERED          0x0001
 #define TA_WINDOW_FULLSCREEN        0x0002
 
-// Common mouse buttons.
-#define TA_MOUSE_BUTTON_LEFT        1
-#define TA_MOUSE_BUTTON_RIGHT       2
-#define TA_MOUSE_BUTTON_MIDDLE      3
-
-// Common key codes.
-#define TA_BACKSPACE                0x08
-#define TA_SHIFT                    0x10
-#define TA_ESCAPE                   0x1B
-#define TA_PAGE_UP                  0x21
-#define TA_PAGE_DOWN                0x22
-#define TA_END                      0x23
-#define TA_HOME                     0x24
-#define TA_ARROW_LEFT               0x25
-#define TA_ARROW_UP                 0x26
-#define TA_ARROW_DOWN               0x27
-#define TA_ARROW_RIGHT              0x28
-#define TA_DELETE                   0x2E
-
 // Key state flags.
 #define TA_MOUSE_BUTTON_LEFT_DOWN   (1 << 0)
 #define TA_MOUSE_BUTTON_RIGHT_DOWN  (1 << 1)

@@ -25,18 +25,18 @@ ta_key ta_win32_to_ta_key(WPARAM wParam)
 {
     switch (wParam)
     {
-    case VK_BACK:   return TA_BACKSPACE;
-    case VK_SHIFT:  return TA_SHIFT;
-    case VK_ESCAPE: return TA_ESCAPE;
-    case VK_PRIOR:  return TA_PAGE_UP;
-    case VK_NEXT:   return TA_PAGE_DOWN;
-    case VK_END:    return TA_END;
-    case VK_HOME:   return TA_HOME;
-    case VK_LEFT:   return TA_ARROW_LEFT;
-    case VK_UP:     return TA_ARROW_UP;
-    case VK_RIGHT:  return TA_ARROW_RIGHT;
-    case VK_DOWN:   return TA_ARROW_DOWN;
-    case VK_DELETE: return TA_DELETE;
+    case VK_BACK:   return TA_KEY_BACKSPACE;
+    case VK_SHIFT:  return TA_KEY_SHIFT;
+    case VK_ESCAPE: return TA_KEY_ESCAPE;
+    case VK_PRIOR:  return TA_KEY_PAGE_UP;
+    case VK_NEXT:   return TA_KEY_PAGE_DOWN;
+    case VK_END:    return TA_KEY_END;
+    case VK_HOME:   return TA_KEY_HOME;
+    case VK_LEFT:   return TA_KEY_ARROW_LEFT;
+    case VK_UP:     return TA_KEY_ARROW_UP;
+    case VK_RIGHT:  return TA_KEY_ARROW_RIGHT;
+    case VK_DOWN:   return TA_KEY_ARROW_DOWN;
+    case VK_DELETE: return TA_KEY_DELETE;
 
     default: break;
     }
@@ -460,7 +460,7 @@ int ta_main_loop(ta_game* pGame)
         }
 
         // After handling the next event in the queue we let the game know it should do the next frame.
-        ta_do_frame(pGame);
+        ta_step(pGame);
     }
 
     return 0;

@@ -97,6 +97,7 @@ typedef ta_int32         ta_bool32;
 #include "ta_type_declarations.h"
 #include "ta_misc.h"
 #include "ta_string.h"
+#include "ta_input.h"
 #include "ta_platform_layer.h"
 #include "ta_texture_packer.h"
 #include "ta_mesh_builder.h"
@@ -139,6 +140,7 @@ typedef ta_int32         ta_bool32;
 // Total Annihilation source files.
 #include "ta_misc.c"
 #include "ta_string.c"
+#include "ta_input.c"
 #include "ta_platform_layer.c"
 #include "ta_texture_packer.c"
 #include "ta_mesh_builder.c"

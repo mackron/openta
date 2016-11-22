@@ -77,6 +77,12 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     }
 
 
+    // Input.
+    if (ta_input_state_init(&pGame->input) != TA_SUCCESS) {
+        goto on_error;
+    }
+
+
     // Properties.
     if (ta_property_manager_init(&pGame->properties) != TA_SUCCESS) {
         goto on_error;
@@ -146,7 +152,8 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     dr_timer_init(&pGame->timer);
 
 
-    
+    // Switch to the main menu by default.
+    ta_goto_screen(pGame, TA_SCREEN_MAIN_MENU);
     
 
 
@@ -158,7 +165,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     //pGame->pCurrentMap = ta_load_map(pGame, "The Pass");
     //pGame->pCurrentMap = ta_load_map(pGame, "Red Hot Lava");
     //pGame->pCurrentMap = ta_load_map(pGame, "Test0");
-    //pGame->pCurrentMap = ta_load_map(pGame, "AC01");    // <-- Includes 3DO features.
+    pGame->pCurrentMap = ta_load_map(pGame, "AC01");    // <-- Includes 3DO features.
     //pGame->pCurrentMap = ta_load_map(pGame, "AC06");    // <-- Good profiling test.
     //pGame->pCurrentMap = ta_load_map(pGame, "AC20");
     //pGame->pCurrentMap = ta_load_map(pGame, "CC25");
@@ -187,6 +194,7 @@ void ta_delete_game(ta_game* pGame)
 
     ta_delete_window(pGame->pWindow);
     ta_property_manager_uninit(&pGame->properties);
+    ta_input_state_uninit(&pGame->input);
     ta_delete_graphics_context(pGame->pGraphics);
     dra_context_delete(pGame->pAudioContext);
     ta_delete_file_system(pGame->pFS);
@@ -252,43 +260,80 @@ int ta_game_run(ta_game* pGame)
     return ta_main_loop(pGame);
 }
 
-void ta_do_frame(ta_game* pGame)
+
+void ta_step__in_game(ta_game* pGame, double dt)
 {
     assert(pGame != NULL);
+    assert(pGame->screen == TA_SCREEN_IN_GAME);
+    (void)dt;
 
-    ta_game_step(pGame);
-    ta_game_render(pGame);
+    if (ta_is_mouse_button_down(pGame, TA_MOUSE_BUTTON_MIDDLE)) {
+        ta_translate_camera(pGame->pGraphics, -(int)pGame->input.mouseOffsetX, -(int)pGame->input.mouseOffsetY);
+    }
+
+    if (pGame->pCurrentMap) {
+        ta_draw_map(pGame->pGraphics, pGame->pCurrentMap);
+    }
 }
 
+void ta_step__main_menu(ta_game* pGame, double dt)
+{
+    assert(pGame != NULL);
+    assert(pGame->screen == TA_SCREEN_MAIN_MENU);
+    (void)dt;
 
-void ta_game_step(ta_game* pGame)
+    ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->mainMenu);
+    ta_draw_text(pGame->pGraphics, &pGame->font, 255, 1, 32, 32, "Hello, World!");
+}
+
+void ta_step(ta_game* pGame)
 {
     assert(pGame != NULL);
 
-    // The first thing we need to do is figure out the delta time. We use high-resolution timing for this so we can have good accuracy
-    // at high frame rates.
     const double dt = dr_timer_tick(&pGame->timer);
-}
-
-void ta_game_render(ta_game* pGame)
-{
-    assert(pGame != NULL);
-
     ta_graphics_set_current_window(pGame->pGraphics, pGame->pWindow);
     {
-        if (pGame->pCurrentMap) {
-            //ta_draw_map(pGame->pGraphics, pGame->pCurrentMap);
+        // The first thing we need to do is figure out the delta time. We use high-resolution timing for this so we can have good accuracy
+        // at high frame rates.
+        switch (pGame->screen)
+        {
+            case TA_SCREEN_IN_GAME:
+            {
+                ta_step__in_game(pGame, dt);
+            } break;
+
+            case TA_SCREEN_MAIN_MENU:
+            {
+                ta_step__main_menu(pGame, dt);
+            } break;
+
+            default: break;
         }
 
-        ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->mainMenu);
-
-        //ta_draw_text(pGame->pGraphics, &pGame->font, 255, 2, 64, 64, "Hello, World!@!@!@!@");
-        //ta_draw_texture(pGame->font.pTexture, TA_TRUE);
-        //ta_draw_texture(pGame->pCurrentMap->ppTextures[pGame->pCurrentMap->textureCount-1], TA_FALSE);
-        //ta_draw_texture(pGame->pTexture, TA_FALSE);
-        //ta_draw_texture(pGame->commonGUI.ppTextures[0], TA_FALSE);
+        // Reset transient input state last.
+        ta_input_state_reset_transient_state(&pGame->input);
     }
     ta_graphics_present(pGame->pGraphics, pGame->pWindow);
+}
+
+
+void ta_goto_screen(ta_game* pGame, ta_uint32 newScreenType)
+{
+    if (pGame == NULL) return;
+    pGame->screen = newScreenType;
+}
+
+
+ta_bool32 ta_is_mouse_button_down(ta_game* pGame, ta_uint32 button)
+{
+    if (pGame == NULL) return TA_FALSE;
+    return ta_input_state_is_mouse_button_down(&pGame->input, button);
+}
+
+ta_bool32 ta_was_mouse_button_pressed(ta_game* pGame, ta_uint32 button)
+{
+    if (pGame == NULL) return TA_FALSE;
+    return ta_input_state_was_mouse_button_pressed(&pGame->input, button);
 }
 
 
@@ -387,14 +432,17 @@ void ta_on_mouse_button_down(ta_game* pGame, int button, int posX, int posY, uns
     (void)posY;
     (void)stateFlags;
 
-    // TODO: Properly handle mouse capture with respect to all mouse buttons.
+    ta_input_state_on_mouse_button_down(&pGame->input, button);
+    ta_capture_mouse(pGame);
 
+#if 0
+    // TODO: Properly handle mouse capture with respect to all mouse buttons.
     if (button == TA_MOUSE_BUTTON_MIDDLE) {
         pGame->isMMBDown = TA_TRUE;
         pGame->mouseDownPosX = posX;
         pGame->mouseDownPosY = posY;
-        ta_capture_mouse(pGame);
     }
+#endif
 }
 
 void ta_on_mouse_button_up(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags)
@@ -404,12 +452,18 @@ void ta_on_mouse_button_up(ta_game* pGame, int button, int posX, int posY, unsig
     (void)posY;
     (void)stateFlags;
 
-    // TODO: Properly handle mouse capture with respect to all mouse buttons.
+    ta_input_state_on_mouse_button_up(&pGame->input, button);
 
-    if (button == TA_MOUSE_BUTTON_MIDDLE) {
-        pGame->isMMBDown = TA_FALSE;
+    if (!ta_input_state_is_any_mouse_button_down(&pGame->input)) {
         ta_release_mouse(pGame);
     }
+
+#if 0
+    // TODO: Properly handle mouse capture with respect to all mouse buttons.
+    if (button == TA_MOUSE_BUTTON_MIDDLE) {
+        pGame->isMMBDown = TA_FALSE;
+    }
+#endif
 }
 
 void ta_on_mouse_button_dblclick(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags)
@@ -435,16 +489,17 @@ void ta_on_mouse_wheel(ta_game* pGame, int delta, int posX, int posY, unsigned i
 void ta_on_mouse_move(ta_game* pGame, int posX, int posY, unsigned int stateFlags)
 {
     assert(pGame != NULL);
-    (void)pGame;
-    (void)posX;
-    (void)posY;
     (void)stateFlags;
 
+    ta_input_state_on_mouse_move(&pGame->input, (float)posX, (float)posY);
+
+#if 0
     if (pGame->isMMBDown) {
         ta_translate_camera(pGame->pGraphics, pGame->mouseDownPosX - posX, pGame->mouseDownPosY - posY);
         pGame->mouseDownPosX = posX;
         pGame->mouseDownPosY = posY;
     }
+#endif
 }
 
 void ta_on_mouse_enter(ta_game* pGame)

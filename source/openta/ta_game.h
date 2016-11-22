@@ -1,5 +1,9 @@
 // Copyright (C) 2016 David Reid. See included LICENSE file.
 
+#define TA_SCREEN_NONE          0
+#define TA_SCREEN_IN_GAME       1
+#define TA_SCREEN_MAIN_MENU     2
+
 struct ta_game
 {
     // The command line that was used to start up the game.
@@ -54,14 +58,16 @@ struct ta_game
 
     // The main menu.
     ta_gui mainMenu;
+
+
+    // The current screen. This is set to one of TA_SCREEN_*
+    ta_uint32 screen;
     
 
-    // Whether or not the middle mouse button is down.
-    ta_bool32 isMMBDown;
+    // Input state.
+    ta_input_state input;
 
-    // The position of the mouse at the time it was clicked.
-    int mouseDownPosX;
-    int mouseDownPosY;
+
 
 
     ta_texture* pTexture;
@@ -87,14 +93,18 @@ const char* ta_get_propertyf(ta_game* pGame, const char* key, ...);
 int ta_game_run(ta_game* pGame);
 
 // Steps and renders a single frame.
-void ta_do_frame(ta_game* pGame);
+void ta_step(ta_game* pGame);
 
 
-// Steps the game.
-void ta_game_step(ta_game* pGame);
+// Changes the screen.
+void ta_goto_screen(ta_game* pGame, ta_uint32 newScreenType);
 
-// Renders the game.
-void ta_game_render(ta_game* pGame);
+
+// Determines whether or not a mouse button is currently down.
+ta_bool32 ta_is_mouse_button_down(ta_game* pGame, ta_uint32 button);
+
+// Determines whether or not a mouse button was just pressed.
+ta_bool32 ta_was_mouse_button_pressed(ta_game* pGame, ta_uint32 button);
 
 
 // Captures the mouse so that all mouse events get directed to the game window.
