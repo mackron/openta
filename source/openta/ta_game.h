@@ -3,6 +3,10 @@
 #define TA_SCREEN_NONE          0
 #define TA_SCREEN_IN_GAME       1
 #define TA_SCREEN_MAIN_MENU     2
+#define TA_SCREEN_SP_MENU       3
+#define TA_SCREEN_MP_MENU       4
+#define TA_SCREEN_INTRO         5
+#define TA_SCREEN_CREDITS       6
 
 struct ta_game
 {

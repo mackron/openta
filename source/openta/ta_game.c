@@ -100,7 +100,6 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     }
 
     // There are a few required resources that are hard coded from what I can tell.
-    //ta_font_load(pGame, "fonts/HATT12.FNT", &pGame->font);
     ta_font_load(pGame, "anims/hattfont12.GAF/Haettenschweiler (120)", &pGame->font);
     ta_font_load(pGame, "anims/hattfont11.GAF/Haettenschweiler (120)", &pGame->fontSmall);
 
@@ -501,6 +500,22 @@ void ta_step(ta_game* pGame)
             case TA_SCREEN_MAIN_MENU:
             {
                 ta_step__main_menu(pGame, dt);
+            } break;
+
+            case TA_SCREEN_SP_MENU:
+            {
+            } break;
+
+            case TA_SCREEN_MP_MENU:
+            {
+            } break;
+
+            case TA_SCREEN_INTRO:
+            {
+            } break;
+
+            case TA_SCREEN_CREDITS:
+            {
             } break;
 
             default: break;
