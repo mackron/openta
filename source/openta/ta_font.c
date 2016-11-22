@@ -214,11 +214,28 @@ ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
 
     ta_close_gaf(pGAF);
 
-    pFont->pTexture = ta_create_texture(pGame->pGraphics, packer.width, packer.height, 1, packer.pImageData);
+    ta_uint32* pImageDataRGBA = (ta_uint32*)malloc(packer.width * packer.height * 4);
+    if (pImageDataRGBA == NULL) {
+        ta_texture_packer_uninit(&packer);
+        return TA_OUT_OF_MEMORY;
+    }
+
+    for (ta_uint32 y = 0; y < packer.height; ++y) {
+        for (ta_uint32 x = 0; x < packer.width; ++x) {
+            ta_uint32 color = pGame->palette[packer.pImageData[(y*packer.width) + x]];
+            pImageDataRGBA[(y*packer.width) + x] = color;
+        }
+    }
+
+    pFont->pTexture = ta_create_texture(pGame->pGraphics, packer.width, packer.height, 4, pImageDataRGBA);
     if (pFont->pTexture == NULL) {
+        free(pImageDataRGBA);
+        ta_texture_packer_uninit(&packer);
         return TA_ERROR;
     }
 
+    free(pImageDataRGBA);
+    ta_texture_packer_uninit(&packer);
     return TA_SUCCESS;
 }
 

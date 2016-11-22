@@ -1463,14 +1463,12 @@ void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 color
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    
-    glEnable(GL_FRAGMENT_PROGRAM_ARB);
     if (pFont->canBeColored) {
         ta_graphics__bind_shader(pGraphics, &pGraphics->textShader);
         pGraphics->glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f);
         pGraphics->glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 1, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f);
     } else {
-        ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader);
+        ta_graphics__bind_shader(pGraphics, NULL);
     }
 
     ta_graphics__bind_texture(pGraphics, pFont->pTexture);
@@ -1551,10 +1549,9 @@ void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float widt
     // We need to use a different fragment program depending on whether or not we're using a paletted texture.
     ta_bool32 isPaletted = pTexture->components == 1;
     if (isPaletted) {
-        glEnable(GL_FRAGMENT_PROGRAM_ARB);
         ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader);
     } else {
-        glDisable(GL_FRAGMENT_PROGRAM_ARB);
+        ta_graphics__bind_shader(pGraphics, NULL);
     }
     
 
@@ -1575,7 +1572,6 @@ void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float widt
 
 
     // Restore default state.
-    glEnable(GL_FRAGMENT_PROGRAM_ARB);
     if (transparent) {
         glDisable(GL_BLEND);
     }
