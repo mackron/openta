@@ -20,8 +20,10 @@
 #define TA_KEY_C                        'C'
 #define TA_KEY_D                        'D'
 #define TA_KEY_BACKSPACE                0x08
+#define TA_KEY_ENTER                    0x0D
 #define TA_KEY_SHIFT                    0x10
 #define TA_KEY_ESCAPE                   0x1B
+#define TA_KEY_SPACE                    0x20
 #define TA_KEY_PAGE_UP                  0x21
 #define TA_KEY_PAGE_DOWN                0x22
 #define TA_KEY_END                      0x23

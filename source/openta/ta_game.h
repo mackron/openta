@@ -116,6 +116,17 @@ ta_bool32 ta_was_mouse_button_pressed(ta_game* pGame, ta_uint32 button);
 ta_bool32 ta_was_mouse_button_released(ta_game* pGame, ta_uint32 button);
 
 
+// Determines whether or not a key is currently down.
+ta_bool32 ta_is_key_down(ta_game* pGame, ta_uint32 key);
+
+// Determines whether or not a key was just pressed.
+ta_bool32 ta_was_key_pressed(ta_game* pGame, ta_uint32 key);
+
+// Determines whether or not a key was just released.
+ta_bool32 ta_was_key_released(ta_game* pGame, ta_uint32 key);
+
+
+
 // Captures the mouse so that all mouse events get directed to the game window.
 void ta_capture_mouse(ta_game* pGame);
 

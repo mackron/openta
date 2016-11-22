@@ -19,6 +19,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
     pGUI->pGame = pGame;
     pGUI->heldGadgetIndex = (ta_uint32)-1;
     pGUI->hoveredGadgetIndex = (ta_uint32)-1;
+    pGUI->focusedGadgetIndex = (ta_uint32)-1;
 
     // GUI's are loaded from configs.
     ta_config_obj* pConfig = ta_parse_config_from_file(pGame->pFS, filePath);
@@ -193,6 +194,13 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
     ta_delete_config(pConfig);
 
 
+    // Default focus.
+    if (!ta_is_string_null_or_empty(pGUI->pGadgets[0].root.defaultfocus)) {
+        ta_gui_find_gadget_by_name(pGUI, pGUI->pGadgets[0].root.defaultfocus, &pGUI->focusedGadgetIndex);
+    }
+    
+
+
     // There might be an associated GAF file in the "anims" directory that contains graphics for buttons and whatnot.
     const char* fileName = drpath_file_name(filePath);
     assert(fileName != NULL);
@@ -342,6 +350,84 @@ ta_bool32 ta_gui_get_held_gadget(ta_gui* pGUI, ta_uint32* pGadgetIndex)
 
     if (pGadgetIndex) *pGadgetIndex = pGUI->heldGadgetIndex;
     return pGUI->heldGadgetIndex != (ta_uint32)-1;
+}
+
+ta_bool32 ta_gui_find_gadget_by_name(ta_gui* pGUI, const char* name, ta_uint32* pGadgetIndex)
+{
+    if (pGadgetIndex) *pGadgetIndex = (ta_uint32)-1;
+    if (pGUI == NULL) return TA_FALSE;
+
+    for (ta_uint32 iGadget = 0; iGadget < pGUI->gadgetCount; ++iGadget) {
+        if (_stricmp(pGUI->pGadgets[iGadget].name, name) == 0) {
+            if (pGadgetIndex) *pGadgetIndex = iGadget;
+            return TA_TRUE;
+        }
+    }
+
+    return TA_FALSE;
+}
+
+ta_bool32 ta_gui_get_focused_gadget(ta_gui* pGUI, ta_uint32* pGadgetIndex)
+{
+    if (pGadgetIndex) *pGadgetIndex = (ta_uint32)-1;
+    if (pGUI == NULL) return TA_FALSE;
+
+    if (pGadgetIndex) *pGadgetIndex = pGUI->focusedGadgetIndex;
+    return pGUI->focusedGadgetIndex != (ta_uint32)-1;
+}
+
+ta_bool32 ta_gui__can_gadget_receive_focus(ta_gui_gadget* pGadget)
+{
+    assert(pGadget != NULL);
+
+    return pGadget->active != 0 &&
+        ((pGadget->id == TA_GUI_GADGET_TYPE_BUTTON && !pGadget->button.grayedout && (pGadget->attribs & TA_GUI_GADGET_ATTRIB_SKIP_FOCUS) == 0) ||
+         (pGadget->id == TA_GUI_GADGET_TYPE_LISTBOX) ||
+         (pGadget->id == TA_GUI_GADGET_TYPE_TEXTBOX));
+}
+
+void ta_gui_focus_next_gadget(ta_gui* pGUI)
+{
+    if (pGUI == NULL || pGUI->gadgetCount == 0) return;
+    
+    ta_bool32 wasAnythingFocusedBeforehand = pGUI->focusedGadgetIndex != (ta_uint32)-1; // <-- Only used to avoid infinite recursion.
+
+    // We just keep looping over each gadget until we find one that can receive focus. If we reached the end we just
+    // loop back to the start and try again, making sure we don't get stuck in an infinite recursion loop.
+    for (ta_uint32 iGadget = (wasAnythingFocusedBeforehand) ? pGUI->focusedGadgetIndex+1 : 1; iGadget < pGUI->gadgetCount; ++iGadget) { // <-- Don't include the root gadget.
+        ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadget];
+        if (ta_gui__can_gadget_receive_focus(pGadget)) {
+            pGUI->focusedGadgetIndex = iGadget;
+            return;
+        }
+    }
+
+    // If we get here it means we weren't able to find a new gadget to focus. In this case we just loop back to the start and try again.
+    if (wasAnythingFocusedBeforehand) {
+        pGUI->focusedGadgetIndex = (ta_uint32)-1;
+        ta_gui_focus_next_gadget(pGUI);
+    }
+}
+
+void ta_gui_focus_prev_gadget(ta_gui* pGUI)
+{
+    if (pGUI == NULL || pGUI->gadgetCount == 0) return;
+    
+    // Everything works the same as ta_gui_focus_next_gadget(), only in reverse.
+    ta_bool32 wasAnythingFocusedBeforehand = pGUI->focusedGadgetIndex != (ta_uint32)-1; // <-- Only used to avoid infinite recursion.
+
+    for (ta_uint32 iGadget = (wasAnythingFocusedBeforehand) ? pGUI->focusedGadgetIndex : pGUI->gadgetCount; iGadget > 1; --iGadget) {   // <-- Don't include the root gadget.
+        ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadget-1];
+        if (ta_gui__can_gadget_receive_focus(pGadget)) {
+            pGUI->focusedGadgetIndex = iGadget-1;
+            return;
+        }
+    }
+
+    if (wasAnythingFocusedBeforehand) {
+        pGUI->focusedGadgetIndex = (ta_uint32)-1;
+        ta_gui_focus_prev_gadget(pGUI);
+    }
 }
 
 

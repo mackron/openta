@@ -1111,6 +1111,29 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
         {
             case TA_GUI_GADGET_TYPE_BUTTON:
             {
+                // TODO: This highlight is a bit ugly. I think the original game uses modulation for the effect rather than blending
+                // a quad.
+                if (pGUI->focusedGadgetIndex == iGadget) {
+                    float highlightPosX  =  posX - (6*scale);
+                    float highlightPosY  =  posY - (6*scale);
+                    float highlightSizeX = sizeX + (6*scale)*2;
+                    float highlightSizeY = sizeY + (6*scale)*2;
+
+                    glEnable(GL_BLEND);
+                    ta_graphics__bind_shader(pGraphics, NULL);
+                    ta_graphics__bind_texture(pGraphics, NULL);
+                    glBegin(GL_QUADS);
+                    {
+                        glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX,                highlightPosY+highlightSizeY, 0.0f);
+                        glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX+highlightSizeX, highlightPosY+highlightSizeY, 0.0f);
+                        glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX+highlightSizeX, highlightPosY,                0.0f);
+                        glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX,                highlightPosY,                0.0f);
+                        glColor4f(1, 1, 1, 1);
+                    }
+                    glEnd();
+                    glDisable(GL_BLEND);
+                }
+
                 if (pGadget->button.pBackgroundTextureGroup != NULL) {
                     ta_uint32 buttonState = (isGadgetPressed) ? TA_GUI_BUTTON_STATE_PRESSED : TA_GUI_BUTTON_STATE_NORMAL;
                     if (pGadget->button.grayedout) {

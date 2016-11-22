@@ -279,11 +279,86 @@ dr_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
     if (pGame == NULL || pGUI == NULL || pEvent == NULL) return TA_FALSE;
     ta_zero_object(pEvent);
 
+    // Sanity check.
+    if (pGUI->gadgetCount == 0) return TA_FALSE;
+
     // An so here's the good old GUI input handling code. No matter how many times I do this it never get's better :(
 
     // Note: We don't always want to return an event, and there may be times where all we do is change the state of relevant
     //       gadgets. We return true if an event is returned, false if no event was returned.
 
+    // Keyboard
+    // ========
+    //
+    // Keys to handle:
+    // - Enter
+    // - Escape
+    // - Shortcuts for buttons
+    ta_gui_gadget* pRootGadget = &pGUI->pGadgets[0];
+    if (ta_was_key_pressed(pGame, TA_KEY_ENTER)) {
+        // When the enter key is pressed we want to prioritize crdefault. It that is not set we fall back to the focused gadget.
+        if (!ta_is_string_null_or_empty(pRootGadget->root.crdefault)) {
+            ta_uint32 iGadget;
+            ta_bool32 foundGadget = ta_gui_find_gadget_by_name(pGUI, pRootGadget->root.crdefault, &iGadget);
+            if (foundGadget) {
+                pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
+                pEvent->pGadget = &pGUI->pGadgets[iGadget];
+                return TA_TRUE;
+            }
+        } else {
+            // crdefault is not set, so try the focused element.
+            ta_uint32 iGadget;
+            ta_bool32 foundGadget = ta_gui_get_focused_gadget(pGUI, &iGadget);
+            if (foundGadget) {
+                pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
+                pEvent->pGadget = &pGUI->pGadgets[iGadget];
+                return TA_TRUE;
+            }
+        }
+    } else if (ta_was_key_pressed(pGame, TA_KEY_SPACE)) {
+        ta_uint32 iGadget;
+        ta_bool32 foundGadget = ta_gui_get_focused_gadget(pGUI, &iGadget);
+        if (foundGadget) {
+            pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
+            pEvent->pGadget = &pGUI->pGadgets[iGadget];
+            return TA_TRUE;
+        }
+    } else if (ta_was_key_pressed(pGame, TA_KEY_ESCAPE)) {
+        if (!ta_is_string_null_or_empty(pRootGadget->root.escdefault)) {
+            ta_uint32 iGadget;
+            ta_bool32 foundGadget = ta_gui_find_gadget_by_name(pGUI, pRootGadget->root.escdefault, &iGadget);
+            if (foundGadget) {
+                pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
+                pEvent->pGadget = &pGUI->pGadgets[iGadget];
+                return TA_TRUE;
+            }
+        }
+    } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_LEFT)) {
+        ta_gui_focus_prev_gadget(pGUI);
+    } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_UP)) {
+        ta_gui_focus_prev_gadget(pGUI);
+    } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_DOWN)) {
+        ta_gui_focus_next_gadget(pGUI);
+    } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_RIGHT)) {
+        ta_gui_focus_next_gadget(pGUI);
+    } else {
+        // Try shortcut keys. For this we just iterate over each button and check if it's shortcut key was pressed.
+        for (ta_uint32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {
+            ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadget];
+            if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
+                if (pGadget->button.quickkey != 0 && ta_was_key_pressed(pGame, toupper(pGadget->button.quickkey))) {
+                    pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
+                    pEvent->pGadget = &pGUI->pGadgets[iGadget];
+                    return TA_TRUE;
+                }
+            }
+        }
+    }
+
+
+
+    // Mouse
+    // =====
     ta_int32 mousePosXGUI;
     ta_int32 mousePosYGUI;
     ta_gui_map_screen_position(pGUI, pGame->pGraphics->resolutionX, pGame->pGraphics->resolutionY, (ta_int32)pGame->input.mousePosX, (ta_int32)pGame->input.mousePosY, &mousePosXGUI, &mousePosYGUI);
@@ -443,6 +518,26 @@ ta_bool32 ta_was_mouse_button_released(ta_game* pGame, ta_uint32 button)
 }
 
 
+ta_bool32 ta_is_key_down(ta_game* pGame, ta_uint32 key)
+{
+    if (pGame == NULL) return TA_FALSE;
+    return ta_input_state_is_key_down(&pGame->input, key);
+}
+
+ta_bool32 ta_was_key_pressed(ta_game* pGame, ta_uint32 key)
+{
+    if (pGame == NULL) return TA_FALSE;
+    return ta_input_state_was_key_pressed(&pGame->input, key);
+}
+
+ta_bool32 ta_was_key_released(ta_game* pGame, ta_uint32 key)
+{
+    if (pGame == NULL) return TA_FALSE;
+    return ta_input_state_was_key_released(&pGame->input, key);
+}
+
+
+
 void ta_capture_mouse(ta_game* pGame)
 {
     ta_window_capture_mouse(pGame->pWindow);
@@ -540,15 +635,6 @@ void ta_on_mouse_button_down(ta_game* pGame, int button, int posX, int posY, uns
 
     ta_input_state_on_mouse_button_down(&pGame->input, button);
     ta_capture_mouse(pGame);
-
-#if 0
-    // TODO: Properly handle mouse capture with respect to all mouse buttons.
-    if (button == TA_MOUSE_BUTTON_MIDDLE) {
-        pGame->isMMBDown = TA_TRUE;
-        pGame->mouseDownPosX = posX;
-        pGame->mouseDownPosY = posY;
-    }
-#endif
 }
 
 void ta_on_mouse_button_up(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags)
@@ -563,13 +649,6 @@ void ta_on_mouse_button_up(ta_game* pGame, int button, int posX, int posY, unsig
     if (!ta_input_state_is_any_mouse_button_down(&pGame->input)) {
         ta_release_mouse(pGame);
     }
-
-#if 0
-    // TODO: Properly handle mouse capture with respect to all mouse buttons.
-    if (button == TA_MOUSE_BUTTON_MIDDLE) {
-        pGame->isMMBDown = TA_FALSE;
-    }
-#endif
 }
 
 void ta_on_mouse_button_dblclick(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags)
@@ -623,17 +702,21 @@ void ta_on_mouse_leave(ta_game* pGame)
 void ta_on_key_down(ta_game* pGame, ta_key key, unsigned int stateFlags)
 {
     assert(pGame != NULL);
-    (void)pGame;
-    (void)key;
-    (void)stateFlags;
+
+    if (key < ta_countof(pGame->input.keyState)) {
+        if ((stateFlags & TA_KEY_STATE_AUTO_REPEATED) == 0) {
+            ta_input_state_on_key_down(&pGame->input, key);
+        }
+    }
 }
 
 void ta_on_key_up(ta_game* pGame, ta_key key, unsigned int stateFlags)
 {
     assert(pGame != NULL);
-    (void)pGame;
-    (void)key;
-    (void)stateFlags;
+
+    if (key < ta_countof(pGame->input.keyState)) {
+        ta_input_state_on_key_up(&pGame->input, key);
+    }
 }
 
 void ta_on_printable_key_down(ta_game* pGame, uint32_t utf32, unsigned int stateFlags)

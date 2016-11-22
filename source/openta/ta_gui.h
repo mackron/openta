@@ -1,5 +1,20 @@
 // Copyright (C) 2016 David Reid. See included LICENSE file.
 
+// What I've learned about the <attribs> property for gadgets
+// ==========================================================
+// It appears <attribs> is a bit field.
+//
+// Buttons
+// -------
+// Bit 2 seems to be always set, but not sure what it means.
+// Bit 11 (1024) I _think_ is used to disable keyboard focus.
+//
+//
+// Scrollbars
+// ----------
+// 1 = Horizontal; 2 = Vertical (thanks to http://units.tauniverse.com/tutorials/tadesign)
+
+
 #define TA_GUI_GADGET_TYPE_ROOT             0
 #define TA_GUI_GADGET_TYPE_BUTTON           1
 #define TA_GUI_GADGET_TYPE_LISTBOX          2
@@ -20,6 +35,8 @@
 #define TA_GUI_EVENT_TYPE_BUTTON_PRESSED    1
 #define TA_GUI_EVENT_TYPE_SCROLL_UP         2
 #define TA_GUI_EVENT_TYPE_SCROLL_DOWN       3
+
+#define TA_GUI_GADGET_ATTRIB_SKIP_FOCUS     (1 << 10)
 
 // TODO: Change these strings to dynamic strings. Can allocate these from a single pool.
 typedef struct
@@ -126,6 +143,7 @@ struct ta_gui
     ta_gui_gadget* pGadgets;    // This is an offset of _pPayload.
     ta_uint32 heldGadgetIndex;
     ta_uint32 hoveredGadgetIndex;
+    ta_uint32 focusedGadgetIndex;
 
     // Memory for each GUI is allocated in one big chunk which is stored in this buffer.
     ta_uint8* _pPayload;
@@ -156,6 +174,18 @@ ta_result ta_gui_release_hold(ta_gui* pGUI, ta_uint32 gadgetIndex);
 
 // Retrieves the index of the gadget that's currently being held. Returns false if no gadget is held; true otherwise.
 ta_bool32 ta_gui_get_held_gadget(ta_gui* pGUI, ta_uint32* pGadgetIndex);
+
+// Finds a gadget by it's name.
+ta_bool32 ta_gui_find_gadget_by_name(ta_gui* pGUI, const char* name, ta_uint32* pGadgetIndex);
+
+// Retrieves the focused gadget, if any.
+ta_bool32 ta_gui_get_focused_gadget(ta_gui* pGUI, ta_uint32* pGadgetIndex);
+
+// Gives keyboard focus to the next gadget.
+void ta_gui_focus_next_gadget(ta_gui* pGUI);
+
+// Gives keyboard focus to the previous gadget.
+void ta_gui_focus_prev_gadget(ta_gui* pGUI);
 
 
 
