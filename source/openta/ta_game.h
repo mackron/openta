@@ -58,6 +58,7 @@ struct ta_game
 
     // The main font to use for basically all GUI text.
     ta_font font;
+    ta_font fontSmall;
 
     // The main menu.
     ta_gui mainMenu;

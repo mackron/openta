@@ -102,6 +102,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     // There are a few required resources that are hard coded from what I can tell.
     //ta_font_load(pGame, "fonts/HATT12.FNT", &pGame->font);
     ta_font_load(pGame, "anims/hattfont12.GAF/Haettenschweiler (120)", &pGame->font);
+    ta_font_load(pGame, "anims/hattfont11.GAF/Haettenschweiler (120)", &pGame->fontSmall);
 
     
 
@@ -459,6 +460,17 @@ void ta_step__main_menu(ta_game* pGame, double dt)
     if (isMouseOverGadget) {
         ta_draw_textf(pGame->pGraphics, &pGame->font, 255, 1, 16, 16+(2*pGame->font.height), "Gadget Under Mouse: %s", pGame->mainMenu.pGadgets[iGadgetUnderMouse].name);
     }
+
+    float scale;
+    float offsetX;
+    float offsetY;
+    ta_gui_get_screen_mapping(&pGame->mainMenu, pGame->pGraphics->resolutionX, pGame->pGraphics->resolutionY, &scale, &offsetX, &offsetY);
+
+    const char* versionStr = "OpenTA v0.1";
+    float versionSizeX;
+    float versionSizeY;
+    ta_font_measure_text(&pGame->fontSmall, scale, versionStr, &versionSizeX, &versionSizeY);
+    ta_draw_textf(pGame->pGraphics, &pGame->fontSmall, 255, scale, (pGame->pGraphics->resolutionX - versionSizeX)/2, 300*scale + offsetY, versionStr, pGame->mainMenu.pGadgets[iGadgetUnderMouse].name);
 }
 
 void ta_step(ta_game* pGame)
