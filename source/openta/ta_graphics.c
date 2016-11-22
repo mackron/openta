@@ -1480,6 +1480,20 @@ void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 color
     glEnd();
 }
 
+void ta_draw_textf(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 colorIndex, float scale, float posX, float posY, const char* text, ...)
+{
+    va_list args;
+    va_start(args, text);
+    {
+        char* formattedText = ta_make_stringv(text, args);
+        if (formattedText) {
+            ta_draw_text(pGraphics, pFont, colorIndex, scale, posX, posY, formattedText);
+            ta_free_string(formattedText);
+        }
+    }
+    va_end(args);
+}
+
 void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float width, float height, ta_bool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY)
 {
     if (pTexture == NULL) {

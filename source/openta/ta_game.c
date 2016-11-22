@@ -214,37 +214,17 @@ const char* ta_get_property(ta_game* pGame, const char* key)
 
 const char* ta_get_propertyf(ta_game* pGame, const char* key, ...)
 {
+    const char* value = NULL;
+
     va_list args;
-
     va_start(args, key);
-#if defined(_MSC_VER)
-    int len = _vscprintf(key, args);
-#else
-    int len = vsnprintf(NULL, 0, key, args);
-#endif
-    va_end(args);
-
-    if (len < 0) {
-        return NULL;
+    {
+        char* formattedKey = ta_make_stringv(key, args);
+        if (formattedKey != NULL) {
+            value = ta_get_property(pGame, formattedKey);
+            ta_free_string(formattedKey);
+        }
     }
-
-    char* formattedKey = (char*)malloc(len+1);
-    if (formattedKey == NULL) {
-        va_end(args);
-        return NULL;
-    }
-
-    va_start(args, key);
-#if defined(_MSC_VER)
-    len = vsprintf_s(formattedKey, len+1, key, args);
-#else
-    len = vsnprintf(formattedKey, len+1, key, args);
-#endif
-    va_end(args);
-
-    const char* value = ta_get_property(pGame, formattedKey);
-
-    free(formattedKey);
     va_end(args);
 
     return value;
@@ -283,7 +263,8 @@ void ta_step__main_menu(ta_game* pGame, double dt)
     (void)dt;
 
     ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->mainMenu);
-    ta_draw_text(pGame->pGraphics, &pGame->font, 255, 1, 32, 32, "Hello, World!");
+    //ta_draw_text(pGame->pGraphics, &pGame->font, 255, 1, 32, 32, "Hello, World!");
+    ta_draw_textf(pGame->pGraphics, &pGame->font, 255, 1, 32, 32, "Mouse Position: %d %d", (int)pGame->input.mousePosX, (int)pGame->input.mousePosY);
 }
 
 void ta_step(ta_game* pGame)
