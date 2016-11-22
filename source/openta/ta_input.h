@@ -36,9 +36,11 @@
 
 #define TA_MOUSE_BUTTON_STATE_IS_DOWN   (1 << 0)
 #define TA_MOUSE_BUTTON_STATE_PRESSED   (1 << 1)    // Transient
+#define TA_MOUSE_BUTTON_STATE_RELEASED  (1 << 2)    // Transient
 
 #define TA_KEY_STATE_IS_DOWN            (1 << 0)
 #define TA_KEY_STATE_PRESSED            (1 << 1)    // Transient
+#define TA_KEY_STATE_RELEASED           (1 << 2)    // Transient
 
 typedef struct
 {
@@ -69,6 +71,7 @@ void ta_input_state_on_mouse_button_down(ta_input_state* pState, ta_uint32 mouse
 void ta_input_state_on_mouse_button_up(ta_input_state* pState, ta_uint32 mouseButton);
 dr_bool32 ta_input_state_is_mouse_button_down(ta_input_state* pState, ta_uint32 mouseButton);
 dr_bool32 ta_input_state_was_mouse_button_pressed(ta_input_state* pState, ta_uint32 mouseButton);
+dr_bool32 ta_input_state_was_mouse_button_released(ta_input_state* pState, ta_uint32 mouseButton);
 dr_bool32 ta_input_state_is_any_mouse_button_down(ta_input_state* pState);
 
 // Called when the state of a key changes.
@@ -76,3 +79,4 @@ void ta_input_state_on_key_down(ta_input_state* pState, ta_uint32 key);
 void ta_input_state_on_key_up(ta_input_state* pState, ta_uint32 key);
 dr_bool32 ta_input_state_is_key_down(ta_input_state* pState, ta_uint32 key);
 dr_bool32 ta_input_state_was_key_pressed(ta_input_state* pState, ta_uint32 key);
+dr_bool32 ta_input_state_was_key_released(ta_input_state* pState, ta_uint32 key);

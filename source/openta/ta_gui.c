@@ -17,6 +17,8 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
 
     if (pGame == NULL || filePath == NULL) return TA_INVALID_ARGS;
     pGUI->pGame = pGame;
+    pGUI->heldGadgetIndex = (ta_uint32)-1;
+    pGUI->hoveredGadgetIndex = (ta_uint32)-1;
 
     // GUI's are loaded from configs.
     ta_config_obj* pConfig = ta_parse_config_from_file(pGame->pFS, filePath);
@@ -79,7 +81,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
         }
     }
 
-    pGUI->_pPayload = (ta_uint8*)malloc(payloadSize);
+    pGUI->_pPayload = (ta_uint8*)calloc(1, payloadSize);
     if (pGUI->_pPayload == NULL) {
         ta_delete_config(pConfig);
         return TA_OUT_OF_MEMORY;
@@ -247,6 +249,101 @@ ta_result ta_gui_unload(ta_gui* pGUI)
 
     return TA_SUCCESS;
 }
+
+
+ta_result ta_gui_get_screen_mapping(ta_gui* pGUI, ta_uint32 screenSizeX, ta_uint32 screenSizeY, float* pScale, float* pOffsetX, float* pOffsetY)
+{
+    if (pScale) *pScale = 1;
+    if (pOffsetX) *pOffsetX = 0;
+    if (pOffsetY) *pOffsetY = 0;
+    if (pGUI == NULL) return TA_INVALID_ARGS;
+
+    float screenSizeXF = (float)screenSizeX;
+    float screenSizeYF = (float)screenSizeY;
+
+    float scaleX = screenSizeXF/640;
+    float scaleY = screenSizeYF/480;
+
+    if (scaleX > scaleY) {
+        if (pScale) *pScale = scaleY;
+        if (pOffsetX) *pOffsetX = (screenSizeXF - (640 * scaleY)) / 2.0f;
+    } else {
+        if (pScale) *pScale = scaleX;
+        if (pOffsetY) *pOffsetY = (screenSizeYF - (480 * scaleX)) / 2.0f;
+    }
+
+    return TA_SUCCESS;
+}
+
+ta_result ta_gui_map_screen_position(ta_gui* pGUI, ta_uint32 screenSizeX, ta_uint32 screenSizeY, ta_int32 screenPosX, ta_int32 screenPosY, ta_int32* pGUIPosX, ta_int32* pGUIPosY)
+{
+    if (pGUIPosX) *pGUIPosX = screenPosX;
+    if (pGUIPosY) *pGUIPosY = screenPosY;
+    if (pGUI == NULL) return TA_INVALID_ARGS;
+
+    float scale;
+    float offsetX;
+    float offsetY;
+    ta_gui_get_screen_mapping(pGUI, screenSizeX, screenSizeY, &scale, &offsetX, &offsetY);
+
+    if (pGUIPosX) *pGUIPosX = (ta_int32)((screenPosX - offsetX) / scale);
+    if (pGUIPosY) *pGUIPosY = (ta_int32)((screenPosY - offsetY) / scale);
+    return TA_SUCCESS;
+}
+
+ta_bool32 ta_gui_get_gadget_under_point(ta_gui* pGUI, ta_int32 posX, ta_int32 posY, ta_uint32* pGadgetIndex)
+{
+    if (pGadgetIndex) *pGadgetIndex = (ta_uint32)-1;
+    if (pGUI == NULL) return TA_FALSE;
+
+    // Iterate backwards for this. Reason for this is that GUI elements are rendered start to end which means
+    // the elements at the end of the list are at the top of the z-order.
+    for (ta_uint32 iGadget = pGUI->gadgetCount; iGadget > 0; --iGadget) {
+        ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadget-1];
+        if (posX >= pGadget->xpos && posX < pGadget->xpos+pGadget->width &&
+            posY >= pGadget->ypos && posY < pGadget->ypos+pGadget->height) {
+            if (pGadgetIndex) *pGadgetIndex = iGadget-1;
+            return TA_TRUE;
+        }
+    }
+
+    return TA_FALSE;
+}
+
+
+ta_result ta_gui_hold_gadget(ta_gui* pGUI, ta_uint32 gadgetIndex, ta_uint32 mouseButton)
+{
+    if (pGUI == NULL || gadgetIndex >= pGUI->gadgetCount) return TA_INVALID_ARGS;
+    if (pGUI->heldGadgetIndex != (ta_uint32)-1) {
+        return TA_ERROR;    // Another gadget is already being held.
+    }
+
+    pGUI->pGadgets[gadgetIndex].isHeld = TA_TRUE;
+    pGUI->pGadgets[gadgetIndex].heldMB = mouseButton;
+    pGUI->heldGadgetIndex = gadgetIndex;
+
+    return TA_SUCCESS;
+}
+
+ta_result ta_gui_release_hold(ta_gui* pGUI, ta_uint32 gadgetIndex)
+{
+    if (pGUI == NULL || gadgetIndex >= pGUI->gadgetCount) return TA_INVALID_ARGS;
+    pGUI->pGadgets[gadgetIndex].isHeld = TA_FALSE;
+    pGUI->pGadgets[gadgetIndex].heldMB = 0;
+    pGUI->heldGadgetIndex = (ta_uint32)-1;
+    
+    return TA_SUCCESS;
+}
+
+ta_bool32 ta_gui_get_held_gadget(ta_gui* pGUI, ta_uint32* pGadgetIndex)
+{
+    if (pGadgetIndex) *pGadgetIndex = (ta_uint32)-1;
+    if (pGUI == NULL) return TA_FALSE;
+
+    if (pGadgetIndex) *pGadgetIndex = pGUI->heldGadgetIndex;
+    return pGUI->heldGadgetIndex != (ta_uint32)-1;
+}
+
 
 
 // Common GUI

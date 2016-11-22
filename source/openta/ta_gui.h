@@ -17,10 +17,17 @@
 #define TA_GUI_BUTTON_STATE_PRESSED         1
 #define TA_GUI_BUTTON_STATE_DISABLED        2
 
+#define TA_GUI_EVENT_TYPE_BUTTON_PRESSED    1
+#define TA_GUI_EVENT_TYPE_SCROLL_UP         2
+#define TA_GUI_EVENT_TYPE_SCROLL_DOWN       3
+
 // TODO: Change these strings to dynamic strings. Can allocate these from a single pool.
 typedef struct
 {
-    // COMMON
+    ta_bool32 isHeld;   // Whether or not the user has clicked on a control but not released it yet.
+    ta_uint32 heldMB;   // The mouse button that triggered the hold.
+
+    // [COMMON]
     ta_int32 id;
     ta_int32 assoc;
     char* name;
@@ -117,6 +124,8 @@ struct ta_gui
 
     ta_uint32 gadgetCount;
     ta_gui_gadget* pGadgets;    // This is an offset of _pPayload.
+    ta_uint32 heldGadgetIndex;
+    ta_uint32 hoveredGadgetIndex;
 
     // Memory for each GUI is allocated in one big chunk which is stored in this buffer.
     ta_uint8* _pPayload;
@@ -125,18 +134,30 @@ struct ta_gui
 ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI);
 ta_result ta_gui_unload(ta_gui* pGUI);
 
+// Retrieves information about how the GUI is mapped to the screen of a specific resolution.
+//
+// Most GUIs are built based on a 640x480 resolution. When a GUI is drawn on the screen that is of a different resolution to this,
+// it needs to be scaled. This function is used to retrieve the necessary information needed to draw the GUI at a given screen
+// resolution.
+ta_result ta_gui_get_screen_mapping(ta_gui* pGUI, ta_uint32 screenSizeX, ta_uint32 screenSizeY, float* pScale, float* pOffsetX, float* pOffsetY);
 
-#if 0
-typedef struct
-{
-    char* sequenceName;
-    ta_uint32 frameIndex;
-    ta_uint32 textureIndex;
-    ta_subtexture_metrics metrics;
-    ta_int32 offsetXGAF;
-    ta_int32 offsetYGAF;
-} ta_common_gui_texture;
-#endif
+// Converts a position in screen coordinates to GUI coordinates.
+ta_result ta_gui_map_screen_position(ta_gui* pGUI, ta_uint32 screenSizeX, ta_uint32 screenSizeY, ta_int32 screenPosX, ta_int32 screenPosY, ta_int32* pGUIPosX, ta_int32* pGUIPosY);
+
+// Finds the gadget under the given point, in GUI coordinates. Returns false if the mouse is not under any gadget. This will
+// include the root gadget.
+ta_bool32 ta_gui_get_gadget_under_point(ta_gui* pGUI, ta_int32 posX, ta_int32 posY, ta_uint32* pGadgetIndex);
+
+// Marks the given gadget as held.
+ta_result ta_gui_hold_gadget(ta_gui* pGUI, ta_uint32 gadgetIndex, ta_uint32 mouseButton);
+
+// Releases the hold on the given gadget.
+ta_result ta_gui_release_hold(ta_gui* pGUI, ta_uint32 gadgetIndex);
+
+// Retrieves the index of the gadget that's currently being held. Returns false if no gadget is held; true otherwise.
+ta_bool32 ta_gui_get_held_gadget(ta_gui* pGUI, ta_uint32* pGadgetIndex);
+
+
 
 typedef struct
 {

@@ -1042,22 +1042,15 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
     if (pGraphics == NULL || pGUI == NULL) return;
 
     // Fullscreen GUIs are drawn based on a 640x480 resolution. We want to stretch the GUI, but maintain it's aspect ratio.
-    float scale      = 1;
-    float offsetX    = 0;
-    float offsetY    = 0;
+    float scale   = 1;
+    float offsetX = 0;
+    float offsetY = 0;
+    ta_gui_get_screen_mapping(pGUI, pGraphics->resolutionX, pGraphics->resolutionY, &scale, &offsetX, &offsetY);
 
     float quadLeft   = 0;
     float quadTop    = 0;
     float quadRight  = 640;
     float quadBottom = 480;
-
-    if (pGraphics->resolutionX/640.0f > pGraphics->resolutionY/480.0f) {
-        scale = (float)pGraphics->resolutionY / 480;
-        offsetX = (pGraphics->resolutionX - (640 * scale)) / 2.0f;
-    } else {
-        scale = (float)pGraphics->resolutionX / 640;
-        offsetY = (pGraphics->resolutionY - (480 * scale)) / 2.0f;
-    }
 
     quadLeft   *= scale;
     quadTop    *= scale;
@@ -1104,17 +1097,27 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
     // Gadgets, not including the root.
     for (ta_uint32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {   // <-- Start at 1 to skip the root gadget.
         ta_gui_gadget* pGadget = pGUI->pGadgets + iGadget;
+        if (pGadget->active == 0) {
+            continue;   // Skip over inactive gadgets.
+        }
+
         float posX  = pGadget->xpos   * scale + offsetX;
         float posY  = pGadget->ypos   * scale + offsetY;
         float sizeX = pGadget->width  * scale;
         float sizeY = pGadget->height * scale;
+        ta_bool32 isGadgetPressed = pGadget->isHeld && pGUI->hoveredGadgetIndex == iGadget;
 
         switch (pGadget->id)
         {
             case TA_GUI_GADGET_TYPE_BUTTON:
             {
                 if (pGadget->button.pBackgroundTextureGroup != NULL) {
-                    ta_gaf_texture_group_frame* pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + TA_GUI_BUTTON_STATE_NORMAL;
+                    ta_uint32 buttonState = (isGadgetPressed) ? TA_GUI_BUTTON_STATE_PRESSED : TA_GUI_BUTTON_STATE_NORMAL;
+                    if (pGadget->button.grayedout) {
+                        buttonState = TA_GUI_BUTTON_STATE_DISABLED;
+                    }
+
+                    ta_gaf_texture_group_frame* pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + buttonState;
                     ta_texture* pBackgroundTexture = pGadget->button.pBackgroundTextureGroup->ppAtlases[pFrame->atlasIndex];
                     ta_draw_subtexture(pBackgroundTexture, posX, posY, pFrame->sizeX*scale, pFrame->sizeY*scale, TA_FALSE, pFrame->atlasPosX, pFrame->atlasPosY, pFrame->sizeX, pFrame->sizeY);
                 }
@@ -1126,6 +1129,11 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
 
                     float textPosX = posX + (sizeX - textSizeX)/2;
                     float textPosY = /*posY + (sizeY - textSizeY)/2;*/ posY - (3*scale);    // <-- Should probably improve this a bit.
+                    if (isGadgetPressed) {
+                        textPosX += 1*scale;
+                        textPosY += 1*scale;
+                    }
+
                     ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, textPosX, textPosY, pGadget->button.text);
 
                     if (pGadget->button.quickkey != 0) {
@@ -1139,7 +1147,7 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
                             charPosX += textPosX;
                             charPosY += textPosY;
 
-                            ta_uint32 underlineRGBA = pGraphics->pGame->palette[2];
+                            ta_uint32 underlineRGBA = (isGadgetPressed) ? pGraphics->pGame->palette[0] : pGraphics->pGame->palette[2];
                             float underlineR = ((underlineRGBA & 0x00FF0000) >> 16) / 255.0f;
                             float underlineG = ((underlineRGBA & 0x0000FF00) >>  8) / 255.0f;
                             float underlineB = ((underlineRGBA & 0x000000FF) >>  0) / 255.0f;

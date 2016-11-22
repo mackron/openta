@@ -128,7 +128,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
             case WM_CLOSE:
             {
-                PostQuitMessage(0);
+                ta_close(pWindow->pGame);
                 return 0;
             }
 

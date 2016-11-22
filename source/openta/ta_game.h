@@ -33,6 +33,9 @@ struct ta_game
     // Global properties.
     ta_property_manager properties;
 
+    // Whether or not the game is closing.
+    ta_bool32 isClosing;
+
 
     // The features library. This is initialized once at startup from every TDF file in the "features" directory, and it's sub-directories. The
     // features library is immutable once it's initialized.
@@ -92,6 +95,9 @@ const char* ta_get_propertyf(ta_game* pGame, const char* key, ...);
 // Runs the given game.
 int ta_game_run(ta_game* pGame);
 
+// Exists from the main loop.
+void ta_close(ta_game* pGame);
+
 // Steps and renders a single frame.
 void ta_step(ta_game* pGame);
 
@@ -105,6 +111,9 @@ ta_bool32 ta_is_mouse_button_down(ta_game* pGame, ta_uint32 button);
 
 // Determines whether or not a mouse button was just pressed.
 ta_bool32 ta_was_mouse_button_pressed(ta_game* pGame, ta_uint32 button);
+
+// Determines whether or not a mouse button was just released.
+ta_bool32 ta_was_mouse_button_released(ta_game* pGame, ta_uint32 button);
 
 
 // Captures the mouse so that all mouse events get directed to the game window.

@@ -240,6 +240,17 @@ int ta_game_run(ta_game* pGame)
     return ta_main_loop(pGame);
 }
 
+void ta_close(ta_game* pGame)
+{
+    if (pGame == NULL) return;
+
+#ifdef _WIN32
+    PostQuitMessage(0);
+#endif
+
+    pGame->isClosing = TA_TRUE;
+}
+
 
 void ta_step__in_game(ta_game* pGame, double dt)
 {
@@ -256,15 +267,123 @@ void ta_step__in_game(ta_game* pGame, double dt)
     }
 }
 
+
+typedef struct
+{
+    ta_uint32 type;
+    ta_gui_gadget* pGadget;  // The gadget this event relates to.
+} ta_gui_input_event;
+
+dr_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* pEvent)
+{
+    if (pGame == NULL || pGUI == NULL || pEvent == NULL) return TA_FALSE;
+    ta_zero_object(pEvent);
+
+    // An so here's the good old GUI input handling code. No matter how many times I do this it never get's better :(
+
+    // Note: We don't always want to return an event, and there may be times where all we do is change the state of relevant
+    //       gadgets. We return true if an event is returned, false if no event was returned.
+
+    ta_int32 mousePosXGUI;
+    ta_int32 mousePosYGUI;
+    ta_gui_map_screen_position(pGUI, pGame->pGraphics->resolutionX, pGame->pGraphics->resolutionY, (ta_int32)pGame->input.mousePosX, (ta_int32)pGame->input.mousePosY, &mousePosXGUI, &mousePosYGUI);
+
+    ta_uint32 iGadgetUnderMouse;
+    ta_bool32 isMouseOverGadget = ta_gui_get_gadget_under_point(pGUI, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
+
+    ta_uint32 iHeldGadget;
+    ta_bool32 isGadgetHeld = ta_gui_get_held_gadget(pGUI, &iHeldGadget);
+
+    ta_bool32 wasLMBPressed = ta_was_mouse_button_pressed(pGame, TA_MOUSE_BUTTON_LEFT);
+    ta_bool32 wasRMBPressed = ta_was_mouse_button_pressed(pGame, TA_MOUSE_BUTTON_RIGHT);
+    ta_bool32 wasMBPressed = wasLMBPressed || wasRMBPressed;
+
+    ta_bool32 wasLMBReleased = ta_was_mouse_button_released(pGame, TA_MOUSE_BUTTON_LEFT);
+    ta_bool32 wasRMBReleased = ta_was_mouse_button_released(pGame, TA_MOUSE_BUTTON_RIGHT);
+    ta_bool32 wasMBReleased = wasLMBReleased || wasRMBReleased;
+
+    if (isGadgetHeld) {
+        ta_gui_gadget* pHeldGadget = &pGUI->pGadgets[iHeldGadget];
+        if ((wasLMBReleased && pHeldGadget->heldMB == TA_MOUSE_BUTTON_LEFT) || (wasRMBReleased && pHeldGadget->heldMB == TA_MOUSE_BUTTON_RIGHT)) {
+            if (wasMBPressed || wasMBReleased) {
+                ta_gui_release_hold(pGUI, iHeldGadget);
+            }
+        }
+    }
+
+
+    if (isMouseOverGadget && pGUI->pGadgets[iGadgetUnderMouse].id != TA_GUI_GADGET_TYPE_ROOT) {
+        pGUI->hoveredGadgetIndex = iGadgetUnderMouse;
+        ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadgetUnderMouse];
+        if (wasMBPressed) {
+            if (!isGadgetHeld) {
+                ta_gui_hold_gadget(pGUI, iGadgetUnderMouse, (wasLMBPressed) ? TA_MOUSE_BUTTON_LEFT : TA_MOUSE_BUTTON_RIGHT);
+            }
+        } else if (wasMBReleased) {
+            if (iHeldGadget == iGadgetUnderMouse) {
+                // The gadget was pressed. May want to post an event here.
+                if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
+                    pEvent->type = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
+                    pEvent->pGadget = pGadget;
+                    return TA_TRUE;
+                }
+            }
+        }
+    } else {
+        pGUI->hoveredGadgetIndex = (ta_uint32)-1;
+    }
+
+    return TA_FALSE;
+}
+
 void ta_step__main_menu(ta_game* pGame, double dt)
 {
     assert(pGame != NULL);
     assert(pGame->screen == TA_SCREEN_MAIN_MENU);
     (void)dt;
 
+    // Input
+    // =====
+    ta_int32 mousePosXGUI;
+    ta_int32 mousePosYGUI;
+    ta_gui_map_screen_position(&pGame->mainMenu, pGame->pGraphics->resolutionX, pGame->pGraphics->resolutionY, (ta_int32)pGame->input.mousePosX, (ta_int32)pGame->input.mousePosY, &mousePosXGUI, &mousePosYGUI);
+
+    ta_uint32 iGadgetUnderMouse;
+    ta_bool32 isMouseOverGadget = ta_gui_get_gadget_under_point(&pGame->mainMenu, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
+
+    ta_gui_input_event e;
+    ta_bool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->mainMenu, &e);
+    if (hasGUIEvent) {
+        if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
+            if (strcmp(e.pGadget->name, "SINGLE") == 0) {
+                // TODO: Go to single player screen.
+                return;
+            }
+            if (strcmp(e.pGadget->name, "MULTI") == 0) {
+                // TODO: Go to multi-player screen.
+                return;
+            }
+            if (strcmp(e.pGadget->name, "INTRO") == 0) {
+                // TODO: Go to intro screen.
+                return;
+            }
+            if (strcmp(e.pGadget->name, "EXIT") == 0) {
+                ta_close(pGame);
+                return;
+            }
+        }
+    }
+
+
+    // Rendering
+    // =========
     ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->mainMenu);
-    //ta_draw_text(pGame->pGraphics, &pGame->font, 255, 1, 32, 32, "Hello, World!");
-    ta_draw_textf(pGame->pGraphics, &pGame->font, 255, 1, 32, 32, "Mouse Position: %d %d", (int)pGame->input.mousePosX, (int)pGame->input.mousePosY);
+    ta_draw_textf(pGame->pGraphics, &pGame->font, 255, 1, 16, 16,                    "Mouse Position: %d %d", (int)pGame->input.mousePosX, (int)pGame->input.mousePosY);
+    ta_draw_textf(pGame->pGraphics, &pGame->font, 255, 1, 16, 16+pGame->font.height, "Mouse Position (GUI): %d %d", mousePosXGUI, mousePosYGUI);
+
+    if (isMouseOverGadget) {
+        ta_draw_textf(pGame->pGraphics, &pGame->font, 255, 1, 16, 16+(2*pGame->font.height), "Gadget Under Mouse: %s", pGame->mainMenu.pGadgets[iGadgetUnderMouse].name);
+    }
 }
 
 void ta_step(ta_game* pGame)
@@ -315,6 +434,12 @@ ta_bool32 ta_was_mouse_button_pressed(ta_game* pGame, ta_uint32 button)
 {
     if (pGame == NULL) return TA_FALSE;
     return ta_input_state_was_mouse_button_pressed(&pGame->input, button);
+}
+
+ta_bool32 ta_was_mouse_button_released(ta_game* pGame, ta_uint32 button)
+{
+    if (pGame == NULL) return TA_FALSE;
+    return ta_input_state_was_mouse_button_released(&pGame->input, button);
 }
 
 
