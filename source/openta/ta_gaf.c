@@ -208,7 +208,7 @@ ta_gaf* ta_open_gaf(ta_fs* pFS, const char* filename)
         goto on_error;    // Not a GAF file.
     }
 
-    if (!ta_read_file_uint32(pGAF->pFile, &pGAF->entryCount)) {
+    if (!ta_read_file_uint32(pGAF->pFile, &pGAF->sequenceCount)) {
         goto on_error;
     }
 
@@ -239,26 +239,26 @@ void ta_close_gaf(ta_gaf* pGAF)
 }
 
 
-ta_bool32 ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFrameCountOut)
+ta_bool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, uint32_t* pFrameCountOut)
 {
-    if (pGAF == NULL || entryName == NULL || pFrameCountOut == NULL) {
+    if (pGAF == NULL || sequenceName == NULL || pFrameCountOut == NULL) {
         return TA_FALSE;
     }
 
-    // We need to find the entry which we do by simply iterating over each one and comparing it's name.
-    for (uint32_t iEntry = 0; iEntry < pGAF->entryCount; ++iEntry)
+    // We need to find the sequence which we do by simply iterating over each one and comparing it's name.
+    for (uint32_t iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence)
     {
-        // The entry pointers are located at byte position 12.
-        if (!ta_seek_file(pGAF->pFile, 12 + (iEntry * sizeof(uint32_t)), ta_seek_origin_start)) {
+        // The sequence pointers are located at byte position 12.
+        if (!ta_seek_file(pGAF->pFile, 12 + (iSequence * sizeof(uint32_t)), ta_seek_origin_start)) {
             return TA_FALSE;
         }
 
-        uint32_t entryPointer;
-        if (!ta_read_file_uint32(pGAF->pFile, &entryPointer)) {
+        uint32_t sequencePointer;
+        if (!ta_read_file_uint32(pGAF->pFile, &sequencePointer)) {
             return TA_FALSE;
         }
 
-        if (!ta_seek_file(pGAF->pFile, entryPointer, ta_seek_origin_start)) {
+        if (!ta_seek_file(pGAF->pFile, sequencePointer, ta_seek_origin_start)) {
             return TA_FALSE;
         }
 
@@ -272,14 +272,14 @@ ta_bool32 ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFr
             return TA_FALSE;
         }
 
-        // The file will be sitting on the entry name, so we just need to compare. If they're not equal just try the next entry.
+        // The file will be sitting on the sequence's name, so we just need to compare. If they're not equal just try the next sequence.
         const char* pName = pGAF->pFile->pFileData + ta_tell_file(pGAF->pFile);
-        if (_stricmp(pName, entryName) == 0)
+        if (_stricmp(pName, sequenceName) == 0)
         {
-            // It's the entry we're looking for.
-            pGAF->_entryName = pName;
-            pGAF->_entryPointer = entryPointer;
-            pGAF->_entryFrameCount = frameCount;
+            // It's the sequence we're looking for.
+            pGAF->_sequenceName = pName;
+            pGAF->_sequencePointer = sequencePointer;
+            pGAF->_sequenceFrameCount = frameCount;
 
             *pFrameCountOut = frameCount;
             return TA_TRUE;
@@ -289,24 +289,24 @@ ta_bool32 ta_gaf_select_entry(ta_gaf* pGAF, const char* entryName, uint32_t* pFr
     return TA_FALSE;
 }
 
-ta_bool32 ta_gaf_select_entry_by_index(ta_gaf* pGAF, ta_uint32 index, uint32_t* pFrameCountOut)
+ta_bool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, ta_uint32 index, uint32_t* pFrameCountOut)
 {
     if (pFrameCountOut) *pFrameCountOut = 0;
-    if (pGAF == NULL || index >= pGAF->entryCount) {
+    if (pGAF == NULL || index >= pGAF->sequenceCount) {
         return TA_FALSE;
     }
 
-    // The entry pointers are located at byte position 12.
+    // The sequence pointers are located at byte position 12.
     if (!ta_seek_file(pGAF->pFile, 12 + (index * sizeof(uint32_t)), ta_seek_origin_start)) {
         return TA_FALSE;
     }
 
-    uint32_t entryPointer;
-    if (!ta_read_file_uint32(pGAF->pFile, &entryPointer)) {
+    uint32_t sequencePointer;
+    if (!ta_read_file_uint32(pGAF->pFile, &sequencePointer)) {
         return TA_FALSE;
     }
 
-    if (!ta_seek_file(pGAF->pFile, entryPointer, ta_seek_origin_start)) {
+    if (!ta_seek_file(pGAF->pFile, sequencePointer, ta_seek_origin_start)) {
         return TA_FALSE;
     }
 
@@ -320,9 +320,9 @@ ta_bool32 ta_gaf_select_entry_by_index(ta_gaf* pGAF, ta_uint32 index, uint32_t* 
         return TA_FALSE;
     }
 
-    pGAF->_entryName = pGAF->pFile->pFileData + ta_tell_file(pGAF->pFile);
-    pGAF->_entryPointer = entryPointer;
-    pGAF->_entryFrameCount = frameCount;
+    pGAF->_sequenceName = pGAF->pFile->pFileData + ta_tell_file(pGAF->pFile);
+    pGAF->_sequencePointer = sequencePointer;
+    pGAF->_sequenceFrameCount = frameCount;
 
     if (pFrameCountOut) *pFrameCountOut = frameCount;
     return TA_TRUE;
@@ -331,19 +331,19 @@ ta_bool32 ta_gaf_select_entry_by_index(ta_gaf* pGAF, ta_uint32 index, uint32_t* 
 ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOut, uint32_t* pHeightOut, int32_t* pPosXOut, int32_t* pPosYOut, ta_uint8** ppImageData)
 {
     if (ppImageData) *ppImageData = NULL;
-    if (pGAF == NULL || frameIndex >= pGAF->_entryFrameCount || pWidthOut == NULL || pHeightOut == NULL || pPosXOut == NULL || pPosYOut == NULL) {
+    if (pGAF == NULL || frameIndex >= pGAF->_sequenceFrameCount || pWidthOut == NULL || pHeightOut == NULL || pPosXOut == NULL || pPosYOut == NULL) {
         return TA_ERROR;
     }
 
-    // Must have an entry selected.
-    if (pGAF->_entryPointer == 0) {
+    // Must have an sequence selected.
+    if (pGAF->_sequencePointer == 0) {
         return TA_ERROR;
     }
 
 
     // Each frame pointer is grouped as a 64-bit value. We want the first 32-bits. The frame pointers start 40 bytes
-    // after the beginning of the entry.
-    if (!ta_seek_file(pGAF->pFile, pGAF->_entryPointer + 40 + (frameIndex * sizeof(uint64_t)), ta_seek_origin_start)) {
+    // after the beginning of the sequence.
+    if (!ta_seek_file(pGAF->pFile, pGAF->_sequencePointer + 40 + (frameIndex * sizeof(uint64_t)), ta_seek_origin_start)) {
         return TA_ERROR;
     }
 
@@ -424,10 +424,10 @@ ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOu
     return TA_SUCCESS;
 }
 
-const char* ta_gaf_get_current_entry_name(ta_gaf* pGAF)
+const char* ta_gaf_get_current_sequence_name(ta_gaf* pGAF)
 {
     if (pGAF == NULL) return NULL;
-    return pGAF->_entryName;
+    return pGAF->_sequenceName;
 }
 
 void ta_gaf_free(void* pBuffer)
@@ -490,13 +490,13 @@ ta_result ta_gaf_texture_group_init(ta_game* pGame, const char* filePath, ta_gaf
     ta_uint32 totalAtlasCount = 0;
 
     size_t payloadSize = 0;
-    for (ta_uint32 iSequence = 0; iSequence < pGAF->entryCount; ++iSequence) {
+    for (ta_uint32 iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence) {
         payloadSize += sizeof(ta_gaf_texture_group_sequence);
         totalSequenceCount += 1;
 
         ta_uint32 frameCount;
-        if (ta_gaf_select_entry_by_index(pGAF, iSequence, &frameCount)) {
-            payloadSize += strlen(ta_gaf_get_current_entry_name(pGAF))+1;
+        if (ta_gaf_select_sequence_by_index(pGAF, iSequence, &frameCount)) {
+            payloadSize += strlen(ta_gaf_get_current_sequence_name(pGAF))+1;
 
             for (ta_uint32 iFrame = 0; iFrame < frameCount; ++iFrame) {
                 payloadSize += sizeof(ta_gaf_texture_group_frame);
@@ -555,10 +555,10 @@ ta_result ta_gaf_texture_group_init(ta_game* pGame, const char* filePath, ta_gaf
     totalFrameCount    = 0;
     totalAtlasCount    = 0;
 
-    for (ta_uint32 iSequence = 0; iSequence < pGAF->entryCount; ++iSequence) {
+    for (ta_uint32 iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence) {
         ta_uint32 frameCount;
-        if (ta_gaf_select_entry_by_index(pGAF, iSequence, &frameCount)) {
-            pGroup->pSequences[totalSequenceCount].name            = ta_gaf_texture_group__copy_sequence_name(&pNextStr, ta_gaf_get_current_entry_name(pGAF));
+        if (ta_gaf_select_sequence_by_index(pGAF, iSequence, &frameCount)) {
+            pGroup->pSequences[totalSequenceCount].name            = ta_gaf_texture_group__copy_sequence_name(&pNextStr, ta_gaf_get_current_sequence_name(pGAF));
             pGroup->pSequences[totalSequenceCount].firstFrameIndex = totalFrameCount;
             pGroup->pSequences[totalSequenceCount].frameCount      = frameCount;
 

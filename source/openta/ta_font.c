@@ -134,7 +134,7 @@ ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
     }
 
     ta_uint32 frameCount;
-    if (!ta_gaf_select_entry(pGAF, sequenceName, &frameCount) || frameCount < 256) {
+    if (!ta_gaf_select_sequence(pGAF, sequenceName, &frameCount) || frameCount < 256) {
         ta_close_gaf(pGAF);
         return TA_INVALID_RESOURCE;
     }

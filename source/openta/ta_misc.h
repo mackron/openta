@@ -67,6 +67,9 @@ static TA_INLINE uint32_t ta_next_power_of_2(uint32_t value)
 }
 
 
+#define ta_abs(x) (((x) < 0) ? (-(x)) : (x))
+
+
 //// Memory Stream ////
 
 typedef struct

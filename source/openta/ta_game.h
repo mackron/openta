@@ -7,6 +7,7 @@
 #define TA_SCREEN_MP_MENU       4
 #define TA_SCREEN_INTRO         5
 #define TA_SCREEN_CREDITS       6
+#define TA_SCREEN_OPTIONS_MENU  7
 
 struct ta_game
 {
@@ -66,10 +67,14 @@ struct ta_game
 
     // The main menu.
     ta_gui mainMenu;
+    ta_gui spMenu;
+    ta_gui mpMenu;
+    ta_gui optionsMenu;
 
 
     // The current screen. This is set to one of TA_SCREEN_*
     ta_uint32 screen;
+    ta_uint32 prevScreen;   // Only used by the options menu for handling the back button.
     
 
     // Input state.

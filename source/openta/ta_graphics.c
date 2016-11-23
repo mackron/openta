@@ -1151,7 +1151,7 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
                     ta_font_measure_text(&pGraphics->pGame->font, scale, pGadget->button.text, &textSizeX, &textSizeY);
 
                     float textPosX = posX + (sizeX - textSizeX)/2;
-                    float textPosY = /*posY + (sizeY - textSizeY)/2;*/ posY - (3*scale);    // <-- Should probably improve this a bit.
+                    float textPosY = posY + (sizeY - textSizeY)/2/*; posY*/ - (4*scale);    // <-- Should probably improve this a bit.
                     if (isGadgetPressed) {
                         textPosX += 1*scale;
                         textPosY += 1*scale;

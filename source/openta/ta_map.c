@@ -118,7 +118,7 @@ void ta_map__reset_mesh_builders(ta_map_load_context* pLoadContext)
 ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_texture_packer* pPacker, ta_gaf* pGAF, const char* sequenceName)
 {
     uint32_t frameCount;
-    if (!ta_gaf_select_entry(pGAF, sequenceName, &frameCount)) {
+    if (!ta_gaf_select_sequence(pGAF, sequenceName, &frameCount)) {
         return NULL;
     }
 
@@ -200,7 +200,7 @@ ta_bool32 ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoad
     for (size_t iGAF = 0; iGAF < pMap->pGame->textureGAFCount; ++iGAF)
     {
         uint32_t frameCount;
-        if (ta_gaf_select_entry(pMap->pGame->ppTextureGAFs[iGAF], textureName, &frameCount))
+        if (ta_gaf_select_sequence(pMap->pGame->ppTextureGAFs[iGAF], textureName, &frameCount))
         {
             uint32_t width;
             uint32_t height;

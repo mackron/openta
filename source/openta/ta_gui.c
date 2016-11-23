@@ -3,8 +3,12 @@
 TA_INLINE char* ta_gui__copy_string_prop(char** ppNextStr, const char* src)
 {
     char* pNextStr = *ppNextStr;
-    size_t srcLen = strlen(src);
-    memcpy(pNextStr, src, srcLen+1);
+    size_t srcLen = ta_strlen_or_zero(src);
+    if (src != NULL) {
+        memcpy(pNextStr, src, srcLen+1);
+    } else {
+        pNextStr[0] = '\0';
+    }
 
     *ppNextStr += srcLen+1;
     return pNextStr;
@@ -45,33 +49,33 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
             if (pCommonObj != NULL) {
                 ta_int32 id = ta_config_get_int(pCommonObj, "id");
 
-                payloadSize += strlen(ta_config_get_string(pCommonObj, "name"))+1;
-                payloadSize += strlen(ta_config_get_string(pCommonObj, "help"))+1;
+                payloadSize += ta_strlen_or_zero(ta_config_get_string(pCommonObj, "name"))+1;
+                payloadSize += ta_strlen_or_zero(ta_config_get_string(pCommonObj, "help"))+1;
 
                 switch (id)
                 {
                     case TA_GUI_GADGET_TYPE_ROOT:
                     {
-                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "panel"))+1;
-                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "crdefault"))+1;
-                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "escdefault"))+1;
-                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "defaultfocus"))+1;
+                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "panel"))+1;
+                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "crdefault"))+1;
+                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "escdefault"))+1;
+                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "defaultfocus"))+1;
                     } break;
 
                     case TA_GUI_GADGET_TYPE_BUTTON:
                     {
-                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "text"))+1;
+                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "text"))+1;
                     } break;
 
                     case TA_GUI_GADGET_TYPE_LABEL:
                     {
-                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "text"))+1;
-                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "link"))+1;
+                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "text"))+1;
+                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "link"))+1;
                     } break;
 
                     case TA_GUI_GADGET_TYPE_FONT:
                     {
-                        payloadSize += strlen(ta_config_get_string(pGadgetObj, "filename"))+1;
+                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "filename"))+1;
                     } break;
 
                     default: break;
@@ -505,12 +509,25 @@ ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, ta_uint32 wi
 {
     if (pCommonGUI == NULL) return TA_INVALID_ARGS;
 
-    for (int i = 0; i < ta_countof(pCommonGUI->buttons); ++i) {
-        if (pCommonGUI->buttons[i].sizeX == width && pCommonGUI->buttons[i].sizeY == height) {
+    // The selection logic might be able to be improved here...
+    ta_int32 diffXClosest = INT32_MAX;
+    ta_int32 diffYClosest = INT32_MAX;
+    ta_uint32 iClosestButton = (ta_uint32)-1;
+    for (ta_uint32 i = 0; i < ta_countof(pCommonGUI->buttons); ++i) {
+        ta_int32 diffX = (ta_int32)pCommonGUI->buttons[i].sizeX - (ta_int32)width;
+        ta_int32 diffY = (ta_int32)pCommonGUI->buttons[i].sizeY - (ta_int32)height;
+        if (diffX == 0 && diffY == 0) {
             if (pFrameIndex) *pFrameIndex = pCommonGUI->buttons[i].frameIndex;
             return TA_SUCCESS;
         }
+
+        if (ta_abs((ta_int64)diffXClosest+(ta_int64)diffYClosest) > ta_abs((ta_int64)diffX+(ta_int64)diffY)) {
+            diffXClosest = diffX;
+            diffYClosest = diffY;
+            iClosestButton = i;
+        }
     }
 
-    return TA_ERROR;
+    if (pFrameIndex) *pFrameIndex = pCommonGUI->buttons[iClosestButton].frameIndex;
+    return TA_SUCCESS;
 }
