@@ -8,6 +8,7 @@
 #define TA_SCREEN_INTRO         5
 #define TA_SCREEN_CREDITS       6
 #define TA_SCREEN_OPTIONS_MENU  7
+#define TA_SCREEN_SKIRMISH_MENU 8
 
 struct ta_game
 {
@@ -70,6 +71,7 @@ struct ta_game
     ta_gui spMenu;
     ta_gui mpMenu;
     ta_gui optionsMenu;
+    ta_gui skirmishMenu;
 
 
     // The current screen. This is set to one of TA_SCREEN_*

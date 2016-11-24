@@ -93,6 +93,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     ta_set_property(pGame, "SINGLE.GUI.BACKGROUND", "bitmaps/SINGLEBG.PCX");
     ta_set_property(pGame, "SELPROV.GUI.BACKGROUND", "bitmaps/selconnect2.pcx");
     ta_set_property(pGame, "STARTOPT.GUI.BACKGROUND", "bitmaps/options4x.pcx");
+    ta_set_property(pGame, "SKIRMISH.GUI.BACKGROUND", "bitmaps/Skirmsetup4x.pcx");
 
 
     // GUI
@@ -148,6 +149,9 @@ ta_game* ta_create_game(dr_cmdline cmdline)
         goto on_error;
     }
     if (ta_gui_load(pGame, "guis/STARTOPT.GUI", &pGame->optionsMenu) != TA_SUCCESS) {
+        goto on_error;
+    }
+    if (ta_gui_load(pGame, "guis/SKIRMISH.GUI", &pGame->skirmishMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
@@ -513,7 +517,7 @@ void ta_step__sp_menu(ta_game* pGame, double dt)
                 return;
             }
             if (strcmp(e.pGadget->name, "Skirmish") == 0) {
-                // TODO: Implement me.
+                ta_goto_screen(pGame, TA_SCREEN_SKIRMISH_MENU);
                 return;
             }
             if (strcmp(e.pGadget->name, "PrevMenu") == 0) {
@@ -615,6 +619,31 @@ void ta_step__options_menu(ta_game* pGame, double dt)
     ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->optionsMenu);
 }
 
+void ta_step__skirmish_menu(ta_game* pGame, double dt)
+{
+    assert(pGame != NULL);
+    assert(pGame->screen == TA_SCREEN_SKIRMISH_MENU);
+    (void)dt;
+
+    // Input
+    // =====
+    ta_gui_input_event e;
+    ta_bool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->skirmishMenu, &e);
+    if (hasGUIEvent) {
+        if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
+            if (strcmp(e.pGadget->name, "PrevMenu") == 0) {
+                ta_goto_screen(pGame, pGame->prevScreen);
+                return;
+            }
+        }
+    }
+
+
+    // Rendering
+    // =========
+    ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->skirmishMenu);
+}
+
 void ta_step(ta_game* pGame)
 {
     assert(pGame != NULL);
@@ -649,6 +678,11 @@ void ta_step(ta_game* pGame)
             case TA_SCREEN_OPTIONS_MENU:
             {
                 ta_step__options_menu(pGame, dt);
+            } break;
+
+            case TA_SCREEN_SKIRMISH_MENU:
+            {
+                ta_step__skirmish_menu(pGame, dt);
             } break;
 
             case TA_SCREEN_INTRO:
