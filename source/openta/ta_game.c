@@ -398,9 +398,11 @@ dr_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
     ta_bool32 wasRMBReleased = ta_was_mouse_button_released(pGame, TA_MOUSE_BUTTON_RIGHT);
     ta_bool32 wasMBReleased = wasLMBReleased || wasRMBReleased;
 
+    ta_uint32 heldMB = 0;
     if (isGadgetHeld) {
         ta_gui_gadget* pHeldGadget = &pGUI->pGadgets[iHeldGadget];
-        if ((wasLMBReleased && pHeldGadget->heldMB == TA_MOUSE_BUTTON_LEFT) || (wasRMBReleased && pHeldGadget->heldMB == TA_MOUSE_BUTTON_RIGHT)) {
+        heldMB = pHeldGadget->heldMB;
+        if ((wasLMBReleased && heldMB == TA_MOUSE_BUTTON_LEFT) || (wasRMBReleased && heldMB == TA_MOUSE_BUTTON_RIGHT)) {
             if (wasMBPressed || wasMBReleased) {
                 ta_gui_release_hold(pGUI, iHeldGadget);
             }
@@ -418,7 +420,7 @@ dr_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
         } else if (wasMBReleased) {
             if (isGadgetHeld) {
                 ta_gui_gadget* pHeldGadget = &pGUI->pGadgets[iHeldGadget];
-                if (iHeldGadget == iGadgetUnderMouse && (wasLMBReleased && pHeldGadget->heldMB == TA_MOUSE_BUTTON_LEFT) || (wasRMBReleased && pHeldGadget->heldMB == TA_MOUSE_BUTTON_RIGHT)) {
+                if (iHeldGadget == iGadgetUnderMouse && ((wasLMBReleased && heldMB == TA_MOUSE_BUTTON_LEFT) || (wasRMBReleased && heldMB == TA_MOUSE_BUTTON_RIGHT))) {
                     // The gadget was pressed. May want to post an event here.
                     if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
                         if (pGadget->button.stages == 0) {
