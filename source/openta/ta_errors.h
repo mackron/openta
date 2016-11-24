@@ -8,6 +8,7 @@ typedef int ta_result;
 #define TA_FILE_NOT_FOUND               -4
 #define TA_INVALID_RESOURCE             -5
 #define TA_FAILED_TO_CREATE_RESOURCE    -6
+#define TA_RESOURCE_NOT_FOUND           -7
 
 #define TA_ERROR_FAILED_TO_PARSE_CMDLINE        -1
 #define TA_ERROR_FAILED_TO_CREATE_GAME_CONTEXT  -2

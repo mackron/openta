@@ -208,3 +208,4 @@ typedef struct
 ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI);
 ta_result ta_common_gui_unload(ta_common_gui* pCommonGUI);
 ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, ta_uint32 width, ta_uint32 height, ta_uint32* pFrameIndex);
+ta_result ta_common_gui_get_multistage_button_frame(ta_common_gui* pCommonGUI, ta_uint32 stages, ta_uint32* pFrameIndex);

@@ -1140,7 +1140,17 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
                         buttonState = TA_GUI_BUTTON_STATE_DISABLED;
                     }
 
-                    ta_gaf_texture_group_frame* pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + buttonState;
+                    ta_gaf_texture_group_frame* pFrame = NULL;
+                    if (pGadget->button.stages == 0) {
+                        pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + buttonState;
+                    } else {
+                        if (buttonState == TA_GUI_BUTTON_STATE_NORMAL) {
+                            pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + 0;   // <-- TODO: Change "0" to the index of the current selection.
+                        } else {
+                            pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + pGadget->button.stages + (buttonState-1);
+                        }
+                    }
+
                     ta_texture* pBackgroundTexture = pGadget->button.pBackgroundTextureGroup->ppAtlases[pFrame->atlasIndex];
                     ta_draw_subtexture(pBackgroundTexture, posX, posY, pFrame->sizeX*scale, pFrame->sizeY*scale, TA_FALSE, pFrame->atlasPosX, pFrame->atlasPosY, pFrame->sizeX, pFrame->sizeY);
                 }
@@ -1151,7 +1161,14 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
                     ta_font_measure_text(&pGraphics->pGame->font, scale, pGadget->button.text, &textSizeX, &textSizeY);
 
                     float textPosX = posX + (sizeX - textSizeX)/2;
-                    float textPosY = posY + (sizeY - textSizeY)/2/*; posY*/ - (4*scale);    // <-- Should probably improve this a bit.
+                    float textPosY = posY + (sizeY - textSizeY)/2 - (4*scale);
+
+                    // Left-align text for multi-stage buttons.
+                    if (pGadget->button.stages > 0) {
+                        textPosX = posX + (3*scale);
+                    }
+
+                    // Slightly indent the text if the button is pressed.
                     if (isGadgetPressed) {
                         textPosX += 1*scale;
                         textPosY += 1*scale;
@@ -1159,7 +1176,7 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
 
                     ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, textPosX, textPosY, pGadget->button.text);
 
-                    if (pGadget->button.quickkey != 0) {
+                    if (pGadget->button.quickkey != 0 && pGadget->button.stages == 0) {
                         float charPosX;
                         float charPosY;
                         float charSizeX;
@@ -1189,6 +1206,41 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
                         }
                     }
                 }
+            } break;
+
+            case TA_GUI_GADGET_TYPE_LISTBOX:
+            {
+            } break;
+
+            case TA_GUI_GADGET_TYPE_TEXTBOX:
+            {
+            } break;
+
+            case TA_GUI_GADGET_TYPE_SCROLLBAR:
+            {
+            } break;
+
+            case TA_GUI_GADGET_TYPE_LABEL:
+            {
+                if (!ta_is_string_null_or_empty(pGadget->label.text)) {
+                    float textSizeX;
+                    float textSizeY;
+                    ta_font_measure_text(&pGraphics->pGame->fontSmall, scale, pGadget->label.text, &textSizeX, &textSizeY);
+
+                    float textPosX = posX + (1*scale);
+                    float textPosY = posY + (sizeY - textSizeY)/2 - (3*scale);
+                    ta_draw_text(pGraphics, &pGraphics->pGame->fontSmall, 255, scale, textPosX, textPosY, pGadget->label.text);
+
+                    // TODO: Underline the shortcut key for the associated button. Not sure how buttons and labels are linked together...
+                }
+            } break;
+
+            case TA_GUI_GADGET_TYPE_SURFACE:
+            {
+            } break;
+
+            case TA_GUI_GADGET_TYPE_PICTURE:
+            {
             } break;
 
             default: break;

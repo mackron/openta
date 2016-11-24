@@ -149,6 +149,10 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                     pGadget->button.quickkey  = (ta_uint32)ta_config_get_int(pGadgetObj, "quickkey");
                     pGadget->button.grayedout = ta_config_get_bool(pGadgetObj, "grayedout");
                     pGadget->button.stages    = ta_config_get_int(pGadgetObj, "stages");
+
+                    // For multi-stage buttons, the text for each stage is separated with a '|' character. To make rendering easier we will
+                    // replace '|' characters with '\0'.
+                    dr_string_replace_ascii(pGadget->button.text, '|', '\0');
                 } break;
 
                 case TA_GUI_GADGET_TYPE_LISTBOX:
@@ -238,8 +242,14 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                     pGadget->button.pBackgroundTextureGroup = &pGUI->textureGroupGAF;
                     pGadget->button.iBackgroundFrame = 0;
                 } else {
-                    if (ta_common_gui_get_button_frame(&pGame->commonGUI, pGadget->width, pGadget->height, &pGadget->button.iBackgroundFrame) == TA_SUCCESS) {
-                        pGadget->button.pBackgroundTextureGroup = &pGame->commonGUI.textureGroup;
+                    if (pGadget->button.stages == 0) {
+                        if (ta_common_gui_get_button_frame(&pGame->commonGUI, pGadget->width, pGadget->height, &pGadget->button.iBackgroundFrame) == TA_SUCCESS) {
+                            pGadget->button.pBackgroundTextureGroup = &pGame->commonGUI.textureGroup;
+                        }
+                    } else {
+                        if (ta_common_gui_get_multistage_button_frame(&pGame->commonGUI, pGadget->button.stages, &pGadget->button.iBackgroundFrame) == TA_SUCCESS) {
+                            pGadget->button.pBackgroundTextureGroup = &pGame->commonGUI.textureGroup;
+                        }
                     }
                 }
             } break;
@@ -529,5 +539,30 @@ ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, ta_uint32 wi
     }
 
     if (pFrameIndex) *pFrameIndex = pCommonGUI->buttons[iClosestButton].frameIndex;
+    return TA_SUCCESS;
+}
+
+ta_result ta_common_gui_get_multistage_button_frame(ta_common_gui* pCommonGUI, ta_uint32 stages, ta_uint32* pFrameIndex)
+{
+    if (pCommonGUI == NULL || stages > 4 || stages < 1) return TA_INVALID_ARGS;
+
+    const char* sequenceName = NULL;
+    if (stages == 1) {
+        sequenceName = "stagebuttn1";
+    } else if (stages == 2) {
+        sequenceName = "stagebuttn2";
+    } else if (stages == 3) {
+        sequenceName = "stagebuttn3";
+    } else {
+        assert(stages == 4);
+        sequenceName = "stagebuttn4";
+    }
+
+    ta_uint32 iSequence;
+    if (!ta_gaf_texture_group_find_sequence_by_name(&pCommonGUI->textureGroup, sequenceName, &iSequence)) {
+        return TA_RESOURCE_NOT_FOUND;
+    }
+
+    if (pFrameIndex) *pFrameIndex = pCommonGUI->textureGroup.pSequences[iSequence].firstFrameIndex;
     return TA_SUCCESS;
 }
