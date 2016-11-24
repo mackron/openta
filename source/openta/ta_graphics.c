@@ -1231,7 +1231,37 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
                     float textPosY = posY + (sizeY - textSizeY)/2 - (3*scale);
                     ta_draw_text(pGraphics, &pGraphics->pGame->fontSmall, 255, scale, textPosX, textPosY, pGadget->label.text);
 
-                    // TODO: Underline the shortcut key for the associated button. Not sure how buttons and labels are linked together...
+                    // Underline the shortcut key for the associated button.
+                    if (pGadget->label.iLinkedGadget != (ta_uint32)-1) {
+                        ta_gui_gadget* pLinkedGadget = &pGUI->pGadgets[pGadget->label.iLinkedGadget];
+                        float charPosX;
+                        float charPosY;
+                        float charSizeX;
+                        float charSizeY;
+                        if (ta_font_find_character_metrics(&pGraphics->pGame->fontSmall, scale, pGadget->label.text, pLinkedGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
+                            float underlineHeight = roundf(1*scale);
+                            float underlineOffsetY = roundf(0*scale);
+                            charPosX += textPosX;
+                            charPosY += textPosY;
+
+                            ta_uint32 underlineRGBA = (isGadgetPressed) ? pGraphics->pGame->palette[0] : pGraphics->pGame->palette[2];
+                            float underlineR = ((underlineRGBA & 0x00FF0000) >> 16) / 255.0f;
+                            float underlineG = ((underlineRGBA & 0x0000FF00) >>  8) / 255.0f;
+                            float underlineB = ((underlineRGBA & 0x000000FF) >>  0) / 255.0f;
+
+                            ta_graphics__bind_shader(pGraphics, NULL);
+                            ta_graphics__bind_texture(pGraphics, NULL);
+                            glBegin(GL_QUADS);
+                            {
+                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
+                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
+                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY,                 0.0f);
+                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY,                 0.0f);
+                                glColor3f(1, 1, 1);
+                            }
+                            glEnd();
+                        }
+                    }
                 }
             } break;
 
