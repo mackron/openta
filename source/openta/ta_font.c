@@ -320,7 +320,7 @@ ta_result ta_font_find_character_metrics(ta_font* pFont, float scale, const char
                 if (pSizeY) *pSizeY = pFont->glyphs[c].sizeY*scale;
                 return TA_SUCCESS;
             } else {
-                penPosX += pFont->glyphs->sizeX*scale;
+                penPosX += pFont->glyphs[c].sizeX*scale;
             }
         }
     }
