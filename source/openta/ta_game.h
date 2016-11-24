@@ -97,11 +97,17 @@ void ta_delete_game(ta_game* pGame);
 
 // Sets a global property.
 ta_result ta_set_property(ta_game* pGame, const char* key, const char* value);
+ta_result ta_set_property_int(ta_game* pGame, const char* key, ta_int32 value);
+ta_result ta_set_property_float(ta_game* pGame, const char* key, float value);
+ta_result ta_set_property_bool(ta_game* pGame, const char* key, ta_bool32 value);
 
 // Retrieves a global property. Be careful with the returned pointer because it can become invalid whenever ta_set_property()
 // is called. If you need to store the value, make a copy.
 const char* ta_get_property(ta_game* pGame, const char* key);
 const char* ta_get_propertyf(ta_game* pGame, const char* key, ...);
+ta_int32 ta_get_property_int(ta_game* pGame, const char* key);
+float ta_get_property_float(ta_game* pGame, const char* key);
+ta_bool32 ta_get_property_bool(ta_game* pGame, const char* key);
 
 
 // Runs the given game.

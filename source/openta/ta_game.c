@@ -222,6 +222,26 @@ ta_result ta_set_property(ta_game* pGame, const char* key, const char* value)
     return ta_property_manager_set(&pGame->properties, key, value);
 }
 
+ta_result ta_set_property_int(ta_game* pGame, const char* key, ta_int32 value)
+{
+    char valueStr[256];
+    snprintf(valueStr, sizeof(valueStr), "%d", value);
+    return ta_set_property(pGame, key, valueStr);
+}
+
+ta_result ta_set_property_float(ta_game* pGame, const char* key, float value)
+{
+    char valueStr[256];
+    snprintf(valueStr, sizeof(valueStr), "%f", value);
+    return ta_set_property(pGame, key, valueStr);
+}
+
+ta_result ta_set_property_bool(ta_game* pGame, const char* key, ta_bool32 value)
+{
+    return ta_set_property(pGame, key, value ? "1" : "0");
+}
+
+
 const char* ta_get_property(ta_game* pGame, const char* key)
 {
     return ta_property_manager_get(&pGame->properties, key);
@@ -243,6 +263,40 @@ const char* ta_get_propertyf(ta_game* pGame, const char* key, ...)
     va_end(args);
 
     return value;
+}
+
+ta_int32 ta_get_property_int(ta_game* pGame, const char* key)
+{
+    const char* valueStr = ta_get_property(pGame, key);
+    if (valueStr == NULL) {
+        return 0;
+    }
+
+    return atoi(valueStr);
+}
+
+float ta_get_property_float(ta_game* pGame, const char* key)
+{
+    const char* valueStr = ta_get_property(pGame, key);
+    if (valueStr == NULL) {
+        return 0;
+    }
+
+    return (float)atof(valueStr);
+}
+
+ta_bool32 ta_get_property_bool(ta_game* pGame, const char* key)
+{
+    const char* valueStr = ta_get_property(pGame, key);
+    if (valueStr == NULL) {
+        return TA_FALSE;
+    }
+
+    if ((key[0] == '0' && key[1] == '\0') || _stricmp(key, "false") == 0) {
+        return TA_FALSE;
+    }
+
+    return TA_TRUE;
 }
 
 
