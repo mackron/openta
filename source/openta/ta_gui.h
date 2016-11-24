@@ -113,6 +113,9 @@ typedef struct
         {
             char* text;
             char* link;     // For linking the label to a button. It just means that when the label is clicked it is the same as pressing the linked button.
+
+            // ...
+            ta_uint32 iLinkedGadget;     // Set to -1 if there is no link.
         } label;
 
         struct  // id = 6

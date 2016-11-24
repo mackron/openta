@@ -177,6 +177,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                 {
                     pGadget->label.text = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "text"));
                     pGadget->label.link = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "link"));
+                    pGadget->label.iLinkedGadget = (ta_uint32)-1;
                 } break;
 
                 case TA_GUI_GADGET_TYPE_SURFACE:
@@ -206,6 +207,18 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
     if (!ta_is_string_null_or_empty(pGUI->pGadgets[0].root.defaultfocus)) {
         ta_gui_find_gadget_by_name(pGUI, pGUI->pGadgets[0].root.defaultfocus, &pGUI->focusedGadgetIndex);
     }
+
+    // We need to do some post-processing to link certain gadgets together.
+
+    for (ta_uint32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {
+        ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadget];
+        if (pGadget->id == TA_GUI_GADGET_TYPE_LABEL) {
+            if (!ta_is_string_null_or_empty(pGadget->label.link)) {
+                ta_gui_find_gadget_by_name(pGUI, pGadget->label.link, &pGadget->label.iLinkedGadget);
+            }
+        }
+    }
+
     
 
 
