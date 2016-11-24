@@ -457,6 +457,32 @@ void ta_gui_focus_prev_gadget(ta_gui* pGUI)
     }
 }
 
+const char* ta_gui_get_button_text(ta_gui_gadget* pGadget, ta_uint32 stage)
+{
+    if (pGadget == NULL) return NULL;
+    if (stage == 0) {
+        return pGadget->button.text;
+    }
+
+    if (pGadget->id != TA_GUI_GADGET_TYPE_BUTTON || stage >= pGadget->button.stages) {
+        return NULL;
+    }
+
+    int i = 0;
+    const char* text = pGadget->button.text;
+    for (;;) {
+        char c = *text++;
+        if (c == '\0') {
+            i += 1;
+            if (i == stage) {
+                return text;
+            }
+        }
+    }
+
+    return NULL;
+}
+
 
 
 // Common GUI

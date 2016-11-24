@@ -89,6 +89,7 @@ typedef struct
             // ...
             ta_gaf_texture_group* pBackgroundTextureGroup;
             ta_uint32 iBackgroundFrame; // +0 for normal, +1 for pressed, +2 for disabled.
+            ta_uint32 currentStage;     // Used by multi-stage buttons.
         } button;
 
         struct  // id = 2
@@ -189,6 +190,9 @@ void ta_gui_focus_next_gadget(ta_gui* pGUI);
 
 // Gives keyboard focus to the previous gadget.
 void ta_gui_focus_prev_gadget(ta_gui* pGUI);
+
+// Retrieves the text for the given button for the given stage. Returns null if an error occurs.
+const char* ta_gui_get_button_text(ta_gui_gadget* pGadget, ta_uint32 stage);
 
 
 

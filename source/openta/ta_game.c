@@ -421,9 +421,15 @@ dr_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
                 if (iHeldGadget == iGadgetUnderMouse && (wasLMBReleased && pHeldGadget->heldMB == TA_MOUSE_BUTTON_LEFT) || (wasRMBReleased && pHeldGadget->heldMB == TA_MOUSE_BUTTON_RIGHT)) {
                     // The gadget was pressed. May want to post an event here.
                     if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
-                        pEvent->type = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
-                        pEvent->pGadget = pGadget;
-                        return TA_TRUE;
+                        if (pGadget->button.stages == 0) {
+                            pEvent->type = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
+                            pEvent->pGadget = pGadget;
+                            return TA_TRUE;
+                        } else {
+                            assert(pGadget->button.stages > 0);
+                            ta_uint32 maxStage = (pGadget->button.stages == 1) ? 2 : pGadget->button.stages;
+                            pGadget->button.currentStage = (pGadget->button.currentStage + 1) % maxStage;
+                        }
                     }
                 }
             }

@@ -1145,7 +1145,7 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
                         pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + buttonState;
                     } else {
                         if (buttonState == TA_GUI_BUTTON_STATE_NORMAL) {
-                            pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + 0;   // <-- TODO: Change "0" to the index of the current selection.
+                            pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + pGadget->button.currentStage;
                         } else {
                             pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + pGadget->button.stages + (buttonState-1);
                         }
@@ -1155,10 +1155,11 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
                     ta_draw_subtexture(pBackgroundTexture, posX, posY, pFrame->sizeX*scale, pFrame->sizeY*scale, TA_FALSE, pFrame->atlasPosX, pFrame->atlasPosY, pFrame->sizeX, pFrame->sizeY);
                 }
 
-                if (!ta_is_string_null_or_empty(pGadget->button.text)) {
+                const char* text = ta_gui_get_button_text(pGadget, pGadget->button.currentStage);
+                if (!ta_is_string_null_or_empty(text)) {
                     float textSizeX;
                     float textSizeY;
-                    ta_font_measure_text(&pGraphics->pGame->font, scale, pGadget->button.text, &textSizeX, &textSizeY);
+                    ta_font_measure_text(&pGraphics->pGame->font, scale, text, &textSizeX, &textSizeY);
 
                     float textPosX = posX + (sizeX - textSizeX)/2;
                     float textPosY = posY + (sizeY - textSizeY)/2 - (4*scale);
@@ -1174,14 +1175,14 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
                         textPosY += 1*scale;
                     }
 
-                    ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, textPosX, textPosY, pGadget->button.text);
+                    ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, textPosX, textPosY, text);
 
                     if (pGadget->button.quickkey != 0 && pGadget->button.stages == 0) {
                         float charPosX;
                         float charPosY;
                         float charSizeX;
                         float charSizeY;
-                        if (ta_font_find_character_metrics(&pGraphics->pGame->font, scale, pGadget->button.text, pGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
+                        if (ta_font_find_character_metrics(&pGraphics->pGame->font, scale, text, pGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
                             float underlineHeight = roundf(1*scale);
                             float underlineOffsetY = roundf(0*scale);
                             charPosX += textPosX;
