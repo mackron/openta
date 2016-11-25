@@ -157,6 +157,11 @@ ta_game* ta_create_game(dr_cmdline cmdline)
         goto on_error;
     }
 
+    ta_set_property(pGame, "NEWGAME.GUI.BACKGROUND", "bitmaps/playanygame4.pcx");
+    if (ta_gui_load(pGame, "guis/NEWGAME.GUI", &pGame->campaignMenu) != TA_SUCCESS) {
+        goto on_error;
+    }
+
     ta_set_property(pGame, "SELMAP.GUI.BACKGROUND", "bitmaps/DSelectmap2.pcx");
     if (ta_gui_load(pGame, "guis/SELMAP.GUI", &pGame->selectMapDialog) != TA_SUCCESS) {
         goto on_error;
@@ -578,7 +583,7 @@ void ta_step__sp_menu(ta_game* pGame, double dt)
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
             if (strcmp(e.pGadget->name, "NewCamp") == 0) {
-                // TODO: Implement me.
+                ta_goto_screen(pGame, TA_SCREEN_CAMPAIGN_MENU);
                 return;
             }
             if (strcmp(e.pGadget->name, "LoadGame") == 0) {
@@ -657,14 +662,6 @@ void ta_step__options_menu(ta_game* pGame, double dt)
     ta_bool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->optionsMenu, &e);
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
-            if (strcmp(e.pGadget->name, "SETTINGS") == 0) {
-                // TODO: Implement me.
-                return;
-            }
-            if (strcmp(e.pGadget->name, "SELECT") == 0) {
-                // TODO: Implement me.
-                return;
-            }
             if (strcmp(e.pGadget->name, "PREV") == 0) {     // This is the OK button
                 ta_goto_screen(pGame, pGame->prevScreen);
                 return;
@@ -739,6 +736,37 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
     }
 }
 
+void ta_step__campaign_menu(ta_game* pGame, double dt)
+{
+    assert(pGame != NULL);
+    assert(pGame->screen == TA_SCREEN_CAMPAIGN_MENU);
+    (void)dt;
+
+    // Input
+    // =====
+    ta_gui_input_event e;
+    ta_bool32 hasGUIEvent;
+    if (pGame->pCurrentDialog == NULL) {
+        hasGUIEvent = ta_handle_gui_input(pGame, &pGame->campaignMenu, &e);
+        if (hasGUIEvent) {
+            if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
+                if (strcmp(e.pGadget->name, "PrevMenu") == 0) {
+                    ta_goto_screen(pGame, TA_SCREEN_SP_MENU);
+                    return;
+                }
+                if (strcmp(e.pGadget->name, "Start") == 0) {
+                    // TODO: Implement me.
+                    return;
+                }
+            }
+        }
+    }
+
+    // Rendering
+    // =========
+    ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->campaignMenu);
+}
+
 void ta_step(ta_game* pGame)
 {
     assert(pGame != NULL);
@@ -780,6 +808,11 @@ void ta_step(ta_game* pGame)
                 ta_step__skirmish_menu(pGame, dt);
             } break;
 
+            case TA_SCREEN_CAMPAIGN_MENU:
+            {
+                ta_step__campaign_menu(pGame, dt);
+            } break;
+
             case TA_SCREEN_INTRO:
             {
             } break;
@@ -793,10 +826,6 @@ void ta_step(ta_game* pGame)
 
         // Reset transient input state last.
         ta_input_state_reset_transient_state(&pGame->input);
-
-
-
-        //ta_draw_texture(pGame->commonGUI.textureGroup.ppAtlases[0], TA_FALSE, 4);
     }
     ta_graphics_present(pGame->pGraphics, pGame->pWindow);
 }

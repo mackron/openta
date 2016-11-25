@@ -9,6 +9,7 @@
 #define TA_SCREEN_CREDITS       6
 #define TA_SCREEN_OPTIONS_MENU  7
 #define TA_SCREEN_SKIRMISH_MENU 8
+#define TA_SCREEN_CAMPAIGN_MENU 9
 
 struct ta_game
 {
@@ -72,6 +73,8 @@ struct ta_game
     ta_gui mpMenu;
     ta_gui optionsMenu;
     ta_gui skirmishMenu;
+    ta_gui campaignMenu;
+
 
     ta_gui selectMapDialog;
     ta_gui* pCurrentDialog; // Set to non-null when a dialog is open, and will be set to a pointer to one of the dialog GUIs.
