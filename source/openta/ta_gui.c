@@ -265,6 +265,12 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                         }
                     }
                 }
+
+                // Experiment: Change the size of the button to that of it's graphic.
+                if (pGadget->button.pBackgroundTextureGroup != NULL) {
+                    pGadget->width  = (ta_int32)pGadget->button.pBackgroundTextureGroup->pFrames[pGadget->button.iBackgroundFrame].sizeX;
+                    pGadget->height = (ta_int32)pGadget->button.pBackgroundTextureGroup->pFrames[pGadget->button.iBackgroundFrame].sizeY;
+                }
             } break;
 
             case TA_GUI_GADGET_TYPE_SCROLLBAR:

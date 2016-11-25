@@ -6,8 +6,11 @@
 //
 // Buttons
 // -------
-// Bit 2 seems to be always set, but not sure what it means.
-// Bit 11 (1024) I _think_ is used to disable keyboard focus.
+// - Bit 2 seems to be always set, but not sure what it means.
+// - Bit 5 I _think_ is used to indicate that it's a toggle button where it stays pressed when clicked
+//   and then un-presses when another button in the same group is pressed. You can see it in action in
+//   the New Game menu with the Core and Arm side selection buttons.
+// - Bit 11 I _think_ is used to disable keyboard focus.
 //
 //
 // Scrollbars
@@ -35,6 +38,7 @@
 #define TA_GUI_EVENT_TYPE_SCROLL_UP         2
 #define TA_GUI_EVENT_TYPE_SCROLL_DOWN       3
 
+#define TA_GUI_GADGET_ATTRIB_STICKY_BUTTON  (1 << 4)
 #define TA_GUI_GADGET_ATTRIB_SKIP_FOCUS     (1 << 10)
 
 // TODO: Change these strings to dynamic strings. Can allocate these from a single pool.
