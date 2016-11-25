@@ -1064,12 +1064,19 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
     quadRight  += offsetX;
     quadBottom += offsetY;
 
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
     if (clearMode == TA_GUI_CLEAR_MODE_BLACK) {
         glClearDepth(1.0);
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     } else {
-        glEnable(GL_BLEND);
+        glEnable(GL_BLEND); // <-- This is disabled below.
         ta_graphics__bind_shader(pGraphics, NULL);
         ta_graphics__bind_texture(pGraphics, NULL);
         glBegin(GL_QUADS);
@@ -1081,15 +1088,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
             glColor4f(1, 1, 1, 1);
         }
         glEnd();
-        glDisable(GL_BLEND);
     }
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
 
     glDisable(GL_BLEND);
 
