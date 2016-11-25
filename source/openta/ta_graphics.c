@@ -1235,6 +1235,77 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
 
             case TA_GUI_GADGET_TYPE_SCROLLBAR:
             {
+                ta_gaf_texture_group_frame* pArrow0Frame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iArrow0Frame; // UP/LEFT arrow
+                ta_gaf_texture_group_frame* pArrow1Frame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iArrow1Frame; // DOWN/RIGHT arrow
+                ta_texture* pArrow0Texture = pGadget->scrollbar.pTextureGroup->ppAtlases[pArrow0Frame->atlasIndex];
+                ta_texture* pArrow1Texture = pGadget->scrollbar.pTextureGroup->ppAtlases[pArrow1Frame->atlasIndex];
+                float arrow0PosX = 0;
+                float arrow0PosY = 0;
+                float arrow1PosX = 0;
+                float arrow1PosY = 0;
+
+                ta_gaf_texture_group_frame* pTrackBegFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackBegFrame;
+                ta_gaf_texture_group_frame* pTrackEndFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackEndFrame;
+                ta_gaf_texture_group_frame* pTrackMidFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackMidFrame;
+                ta_texture* pTrackBegTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackBegFrame->atlasIndex];
+                ta_texture* pTrackEndTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackEndFrame->atlasIndex];
+                ta_texture* pTrackMidTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackMidFrame->atlasIndex];
+                float trackBegPosX = 0;
+                float trackBegPosY = 0;
+                float trackEndPosX = 0;
+                float trackEndPosY = 0;
+
+                if ((pGadget->attribs & TA_GUI_SCROLLBAR_TYPE_VERTICAL) != 0) {
+                    // Vertical
+                    arrow0PosX = posX;
+                    arrow0PosY = posY;
+                    arrow1PosX = posX;
+                    arrow1PosY = posY+sizeY - pArrow1Frame->sizeY*scale;
+                    trackBegPosX = arrow0PosX;
+                    trackBegPosY = arrow0PosY + pArrow0Frame->sizeY*scale;
+                    trackEndPosX = arrow1PosX;
+                    trackEndPosY = arrow1PosY - pTrackEndFrame->sizeY*scale;
+
+                    if ((pGadget->attribs & TA_GUI_SCROLLBAR_TYPE_VERTICAL) != 0) {
+                        float runningPosY = trackBegPosY + pTrackBegFrame->sizeY*scale;
+                        for (;;) {
+                            if (runningPosY >= trackEndPosY) {
+                                break;
+                            }
+
+                            ta_draw_subtexture(pTrackBegTexture, trackBegPosX, runningPosY, pTrackMidFrame->sizeX*scale, pTrackMidFrame->sizeY*scale, TA_FALSE, pTrackMidFrame->atlasPosX, pTrackMidFrame->atlasPosY, pTrackMidFrame->sizeX, pTrackMidFrame->sizeY);
+                            runningPosY += pTrackMidFrame->sizeY*scale;
+                        }
+                    } else {
+                        float runningPosX = trackBegPosY + pTrackBegFrame->sizeY*scale;
+                        for (;;) {
+                            if (runningPosX >= trackEndPosY) {
+                                break;
+                            }
+
+                            ta_draw_subtexture(pTrackBegTexture, runningPosX, trackBegPosY, pTrackMidFrame->sizeX*scale, pTrackMidFrame->sizeY*scale, TA_FALSE, pTrackMidFrame->atlasPosX, pTrackMidFrame->atlasPosY, pTrackMidFrame->sizeX, pTrackMidFrame->sizeY);
+                            runningPosX += pTrackMidFrame->sizeX*scale;
+                        }
+                    }
+                } else {
+                    // Horizontal
+                    arrow0PosX = posX;
+                    arrow0PosY = posY;
+                    arrow1PosX = posX+sizeX - pArrow1Frame->sizeX*scale;
+                    arrow1PosY = posY;
+                    trackBegPosX = arrow0PosX + pArrow0Frame->sizeX*scale;
+                    trackBegPosY = arrow0PosY;
+                    trackEndPosX = arrow1PosX - pTrackEndFrame->sizeX*scale;
+                    trackEndPosY = arrow1PosY;
+                }
+
+                // Arrows.
+                ta_draw_subtexture(pArrow0Texture, arrow0PosX, arrow0PosY, pArrow0Frame->sizeX*scale, pArrow0Frame->sizeY*scale, TA_TRUE, pArrow0Frame->atlasPosX, pArrow0Frame->atlasPosY, pArrow0Frame->sizeX, pArrow0Frame->sizeY);
+                ta_draw_subtexture(pArrow0Texture, arrow1PosX, arrow1PosY, pArrow1Frame->sizeX*scale, pArrow1Frame->sizeY*scale, TA_TRUE, pArrow1Frame->atlasPosX, pArrow1Frame->atlasPosY, pArrow1Frame->sizeX, pArrow1Frame->sizeY);
+
+                // Track.
+                ta_draw_subtexture(pTrackBegTexture, trackBegPosX, trackBegPosY, pTrackBegFrame->sizeX*scale, pTrackBegFrame->sizeY*scale, TA_TRUE, pTrackBegFrame->atlasPosX, pTrackBegFrame->atlasPosY, pTrackBegFrame->sizeX, pTrackBegFrame->sizeY);
+                ta_draw_subtexture(pTrackEndTexture, trackEndPosX, trackEndPosY, pTrackEndFrame->sizeX*scale, pTrackEndFrame->sizeY*scale, TA_TRUE, pTrackEndFrame->atlasPosX, pTrackEndFrame->atlasPosY, pTrackEndFrame->sizeX, pTrackEndFrame->sizeY);
             } break;
 
             case TA_GUI_GADGET_TYPE_LABEL:

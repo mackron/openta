@@ -267,6 +267,24 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                 }
             } break;
 
+            case TA_GUI_GADGET_TYPE_SCROLLBAR:
+            {
+                pGadget->scrollbar.pTextureGroup = &pGame->commonGUI.textureGroup;
+                if (pGadget->attribs & TA_GUI_SCROLLBAR_TYPE_VERTICAL) {
+                    pGadget->scrollbar.iArrow0Frame = pGame->commonGUI.scrollbar.arrowUpFrameIndex;
+                    pGadget->scrollbar.iArrow1Frame = pGame->commonGUI.scrollbar.arrowDownFrameIndex;
+                    pGadget->scrollbar.iTrackBegFrame = pGame->commonGUI.scrollbar.trackTopFrameIndex;
+                    pGadget->scrollbar.iTrackEndFrame = pGame->commonGUI.scrollbar.trackBottomFrameIndex;
+                    pGadget->scrollbar.iTrackMidFrame = pGame->commonGUI.scrollbar.trackMidVertFrameIndex;
+                } else {
+                    pGadget->scrollbar.iArrow0Frame = pGame->commonGUI.scrollbar.arrowLeftFrameIndex;
+                    pGadget->scrollbar.iArrow1Frame = pGame->commonGUI.scrollbar.arrowRightFrameIndex;
+                    pGadget->scrollbar.iTrackBegFrame = pGame->commonGUI.scrollbar.trackLeftFrameIndex;
+                    pGadget->scrollbar.iTrackEndFrame = pGame->commonGUI.scrollbar.trackRightFrameIndex;
+                    pGadget->scrollbar.iTrackMidFrame = pGame->commonGUI.scrollbar.trackMidHorzFrameIndex;
+                }
+            } break;
+
             default: break;
         }
     }
@@ -557,6 +575,13 @@ ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI)
         pCommonGUI->scrollbar.arrowLeftPressedFrameIndex  = firstFrameIndex + 17;
         pCommonGUI->scrollbar.arrowRightFrameIndex        = firstFrameIndex + 18;
         pCommonGUI->scrollbar.arrowRightPressedFrameIndex = firstFrameIndex + 19;
+
+        pCommonGUI->scrollbar.trackTopFrameIndex          = firstFrameIndex + 0;
+        pCommonGUI->scrollbar.trackBottomFrameIndex       = firstFrameIndex + 2;
+        pCommonGUI->scrollbar.trackMidVertFrameIndex      = firstFrameIndex + 1;
+        pCommonGUI->scrollbar.trackLeftFrameIndex         = firstFrameIndex + 10;
+        pCommonGUI->scrollbar.trackRightFrameIndex        = firstFrameIndex + 12;
+        pCommonGUI->scrollbar.trackMidHorzFrameIndex      = firstFrameIndex + 11;
     }
 
     return TA_SUCCESS;

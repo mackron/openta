@@ -107,6 +107,14 @@ typedef struct
             ta_int32 thick;
             ta_int32 knobpos;   // "knob" is the scrollbar's thumb.
             ta_int32 knobsize;
+
+            // ...
+            ta_gaf_texture_group* pTextureGroup;
+            ta_uint32 iArrow0Frame;     // UP/LEFT arrow
+            ta_uint32 iArrow1Frame;     // DOWN/RIGHT arrow
+            ta_uint32 iTrackBegFrame;   // TOP/LEFT end of the track.
+            ta_uint32 iTrackEndFrame;   // RIGHT/BOTTOM end of the track.
+            ta_uint32 iTrackMidFrame;   // The middle piece of the track.
         } scrollbar;
 
         struct  // id = 5
@@ -197,8 +205,8 @@ const char* ta_gui_get_button_text(ta_gui_gadget* pGadget, ta_uint32 stage);
 
 typedef struct
 {
-    ta_uint32 sizeX;
-    ta_uint32 sizeY;
+    ta_uint32 sizeX;    // <-- Remove this
+    ta_uint32 sizeY;    // <-- Remove this
     ta_uint32 frameIndex;
 } ta_common_gui_texture_button;
 
@@ -220,6 +228,12 @@ typedef struct
         ta_uint32 arrowLeftPressedFrameIndex;
         ta_uint32 arrowRightFrameIndex;
         ta_uint32 arrowRightPressedFrameIndex;
+        ta_uint32 trackTopFrameIndex;
+        ta_uint32 trackBottomFrameIndex;
+        ta_uint32 trackMidVertFrameIndex;
+        ta_uint32 trackLeftFrameIndex;
+        ta_uint32 trackRightFrameIndex;
+        ta_uint32 trackMidHorzFrameIndex;
     } scrollbar;
 } ta_common_gui;
 
