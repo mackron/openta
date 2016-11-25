@@ -1246,7 +1246,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                     ta_font_measure_text(&pGraphics->pGame->fontSmall, scale, pGadget->label.text, &textSizeX, &textSizeY);
 
                     float textPosX = posX + (1*scale);
-                    float textPosY = posY + (sizeY - textSizeY)/2 - (3*scale);
+                    float textPosY = posY - (4*scale);
                     ta_draw_text(pGraphics, &pGraphics->pGame->fontSmall, 255, scale, textPosX, textPosY, pGadget->label.text);
 
                     // Underline the shortcut key for the associated button.
