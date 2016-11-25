@@ -449,22 +449,43 @@ TA_INLINE char* ta_gaf_texture_group__copy_sequence_name(char** ppNextStr, const
     return pNextStr;
 }
 
-ta_result ta_gaf_texture_group__create_texture_atlas(ta_game* pGame, ta_gaf_texture_group* pGroup, ta_texture_packer* pPacker, ta_texture** ppTexture)
+ta_result ta_gaf_texture_group__create_texture_atlas(ta_game* pGame, ta_gaf_texture_group* pGroup, ta_texture_packer* pPacker, ta_color_mode colorMode, ta_texture** ppTexture)
 {
     assert(pGame != NULL);
     assert(pGroup != NULL);
     assert(pPacker != NULL);
     assert(ppTexture != NULL);
-    
-    *ppTexture = ta_create_texture(pGame->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
-    if (*ppTexture == NULL) {
-        return TA_FAILED_TO_CREATE_RESOURCE;
+
+    if (colorMode == ta_color_mode_palette) {
+        *ppTexture = ta_create_texture(pGame->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
+        if (*ppTexture == NULL) {
+            return TA_FAILED_TO_CREATE_RESOURCE;
+        }
+    } else {
+        ta_uint32* pImageData = (ta_uint32*)malloc(pPacker->width*pPacker->height*4);
+        if (pImageData == NULL) {
+            return TA_OUT_OF_MEMORY;
+        }
+
+        for (ta_uint32 y = 0; y < pPacker->height; ++y) {
+            for (ta_uint32 x = 0; x < pPacker->width; ++x) {
+                pImageData[(y*pPacker->width) + x] = pGame->palette[pPacker->pImageData[(y*pPacker->width) + x]];
+            }
+        }
+
+        *ppTexture = ta_create_texture(pGame->pGraphics, pPacker->width, pPacker->height, 4, pImageData);
+        if (*ppTexture == NULL) {
+            free(pImageData);
+            return TA_FAILED_TO_CREATE_RESOURCE;
+        }
+
+        free(pImageData);
     }
 
     return TA_SUCCESS;
 }
 
-ta_result ta_gaf_texture_group_init(ta_game* pGame, const char* filePath, ta_gaf_texture_group* pGroup)
+ta_result ta_gaf_texture_group_init(ta_game* pGame, const char* filePath, ta_color_mode colorMode, ta_gaf_texture_group* pGroup)
 {
     if (pGroup == NULL) return TA_INVALID_ARGS;
     ta_zero_object(pGroup);
@@ -573,7 +594,7 @@ ta_result ta_gaf_texture_group_init(ta_game* pGame, const char* filePath, ta_gaf
                     ta_texture_packer_slot slot;
                     if (!ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, pImageData, &slot)) {
                         // We failed to pack the subtexture which probably means there's not enough room. We just need to reset this packer and try again.
-                        ta_gaf_texture_group__create_texture_atlas(pGame, pGroup, &packer, &pGroup->ppAtlases[totalAtlasCount]);
+                        ta_gaf_texture_group__create_texture_atlas(pGame, pGroup, &packer, colorMode, &pGroup->ppAtlases[totalAtlasCount]);
                         totalAtlasCount += 1;
 
                         ta_texture_packer_reset(&packer);
@@ -598,7 +619,7 @@ ta_result ta_gaf_texture_group_init(ta_game* pGame, const char* filePath, ta_gaf
 
     // There might be textures still sitting in the packer needing to be uploaded.
     if (!ta_texture_packer_is_empty(&packer)) {
-        ta_gaf_texture_group__create_texture_atlas(pGame, pGroup, &packer, &pGroup->ppAtlases[totalAtlasCount]);
+        ta_gaf_texture_group__create_texture_atlas(pGame, pGroup, &packer, colorMode, &pGroup->ppAtlases[totalAtlasCount]);
         totalAtlasCount += 1;
     }
 

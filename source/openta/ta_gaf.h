@@ -80,6 +80,6 @@ typedef struct
 	ta_uint8* _pPayload;
 } ta_gaf_texture_group;
 
-ta_result ta_gaf_texture_group_init(ta_game* pGame, const char* filePath, ta_gaf_texture_group* pGroup);
+ta_result ta_gaf_texture_group_init(ta_game* pGame, const char* filePath, ta_color_mode colorMode, ta_gaf_texture_group* pGroup);
 ta_result ta_gaf_texture_group_uninit(ta_gaf_texture_group* pGroup);
 ta_bool32 ta_gaf_texture_group_find_sequence_by_name(ta_gaf_texture_group* pGroup, const char* sequenceName, ta_uint32* pSequenceIndex);

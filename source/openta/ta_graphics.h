@@ -59,6 +59,12 @@ typedef enum
     ta_primitive_type_quad
 } ta_primitive_type;
 
+typedef enum
+{
+    ta_color_mode_palette,
+    ta_color_mode_truecolor
+} ta_color_mode;
+
 
 // Creates a new graphics.
 ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette[256]);

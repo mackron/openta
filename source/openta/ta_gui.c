@@ -232,7 +232,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
 
     char filePathGAF[TA_MAX_PATH];
     drpath_copy_and_append(filePathGAF, sizeof(filePathGAF), "anims", fileNameGAF);
-    pGUI->hasGAF = ta_gaf_texture_group_init(pGame, filePathGAF, &pGUI->textureGroupGAF) == TA_SUCCESS;
+    pGUI->hasGAF = ta_gaf_texture_group_init(pGame, filePathGAF, ta_color_mode_truecolor, &pGUI->textureGroupGAF) == TA_SUCCESS;
 
 
     // I haven't yet found a way to determine the background image to use for GUIs, so for the moment we will hard code these.
@@ -531,7 +531,7 @@ ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI)
 
     pCommonGUI->pGame = pGame;
 
-    ta_result result = ta_gaf_texture_group_init(pGame, "anims/commongui.GAF", &pCommonGUI->textureGroup);
+    ta_result result = ta_gaf_texture_group_init(pGame, "anims/commongui.GAF", ta_color_mode_truecolor, &pCommonGUI->textureGroup);
     if (result != TA_SUCCESS) {
         return result;
     }
