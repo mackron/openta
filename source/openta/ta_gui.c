@@ -540,28 +540,11 @@ ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI)
     if (ta_gaf_texture_group_find_sequence_by_name(&pCommonGUI->textureGroup, "BUTTONS0", &iSequence)) {
         ta_gaf_texture_group_sequence* pSequence = pCommonGUI->textureGroup.pSequences + iSequence;
 
-        pCommonGUI->buttons[0].sizeX = 321;
-        pCommonGUI->buttons[0].sizeY = 20;
         pCommonGUI->buttons[0].frameIndex = pSequence->firstFrameIndex + 4;
-
-        pCommonGUI->buttons[1].sizeX = 120;
-        pCommonGUI->buttons[1].sizeY = 20;
         pCommonGUI->buttons[1].frameIndex = pSequence->firstFrameIndex + 8;
-
-        pCommonGUI->buttons[2].sizeX = 96;
-        pCommonGUI->buttons[2].sizeY = 20;
         pCommonGUI->buttons[2].frameIndex = pSequence->firstFrameIndex + 12;
-
-        pCommonGUI->buttons[3].sizeX = 112;
-        pCommonGUI->buttons[3].sizeY = 20;
         pCommonGUI->buttons[3].frameIndex = pSequence->firstFrameIndex + 16;
-
-        pCommonGUI->buttons[4].sizeX = 80;
-        pCommonGUI->buttons[4].sizeY = 20;
         pCommonGUI->buttons[4].frameIndex = pSequence->firstFrameIndex + 20;
-
-        pCommonGUI->buttons[5].sizeX = 96;
-        pCommonGUI->buttons[5].sizeY = 31;
         pCommonGUI->buttons[5].frameIndex = pSequence->firstFrameIndex + 24;
     }
 
@@ -604,8 +587,8 @@ ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, ta_uint32 wi
     ta_int32 diffYClosest = INT32_MAX;
     ta_uint32 iClosestButton = (ta_uint32)-1;
     for (ta_uint32 i = 0; i < ta_countof(pCommonGUI->buttons); ++i) {
-        ta_int32 diffX = (ta_int32)pCommonGUI->buttons[i].sizeX - (ta_int32)width;
-        ta_int32 diffY = (ta_int32)pCommonGUI->buttons[i].sizeY - (ta_int32)height;
+        ta_int32 diffX = (ta_int32)pCommonGUI->textureGroup.pFrames[pCommonGUI->buttons[i].frameIndex].sizeX - (ta_int32)width;
+        ta_int32 diffY = (ta_int32)pCommonGUI->textureGroup.pFrames[pCommonGUI->buttons[i].frameIndex].sizeY - (ta_int32)height;
         if (diffX == 0 && diffY == 0) {
             if (pFrameIndex) *pFrameIndex = pCommonGUI->buttons[i].frameIndex;
             return TA_SUCCESS;

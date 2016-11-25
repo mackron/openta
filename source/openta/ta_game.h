@@ -159,17 +159,6 @@ void ta_release_mouse(ta_game* pGame);
 ta_texture* ta_load_image(ta_game* pGame, const char* filePath);
 
 
-//// GUI ////
-
-// Retrieves the texture to use for the background of a button with the given dimensions and state.
-//
-// Button graphics are handled a bit strangely in Total Annihilation because they are selected based on the dimensions
-// of the button.
-//
-// The <state> parameter should be set to one of the TA_GUI_BUTTON_STATE_* values.
-ta_texture* ta_get_gui_button_texture(ta_game* pGame, ta_uint32 width, ta_uint32 height, ta_uint32 state, ta_subtexture_metrics* pMetrics);
-
-
 //// Events from Window ////
 
 // Called from the window system when the game window is resized.

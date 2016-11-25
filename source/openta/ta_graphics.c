@@ -1273,7 +1273,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                                 break;
                             }
 
-                            ta_draw_subtexture(pTrackBegTexture, trackBegPosX, runningPosY, pTrackMidFrame->sizeX*scale, pTrackMidFrame->sizeY*scale, TA_FALSE, pTrackMidFrame->atlasPosX, pTrackMidFrame->atlasPosY, pTrackMidFrame->sizeX, pTrackMidFrame->sizeY);
+                            ta_draw_subtexture(pTrackBegTexture, trackBegPosX, runningPosY, pTrackMidFrame->sizeX*scale, pTrackMidFrame->sizeY*scale, TA_TRUE, pTrackMidFrame->atlasPosX, pTrackMidFrame->atlasPosY, pTrackMidFrame->sizeX, pTrackMidFrame->sizeY);
                             runningPosY += pTrackMidFrame->sizeY*scale;
                         }
                     } else {
@@ -1283,7 +1283,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                                 break;
                             }
 
-                            ta_draw_subtexture(pTrackBegTexture, runningPosX, trackBegPosY, pTrackMidFrame->sizeX*scale, pTrackMidFrame->sizeY*scale, TA_FALSE, pTrackMidFrame->atlasPosX, pTrackMidFrame->atlasPosY, pTrackMidFrame->sizeX, pTrackMidFrame->sizeY);
+                            ta_draw_subtexture(pTrackBegTexture, runningPosX, trackBegPosY, pTrackMidFrame->sizeX*scale, pTrackMidFrame->sizeY*scale, TA_TRUE, pTrackMidFrame->atlasPosX, pTrackMidFrame->atlasPosY, pTrackMidFrame->sizeX, pTrackMidFrame->sizeY);
                             runningPosX += pTrackMidFrame->sizeX*scale;
                         }
                     }

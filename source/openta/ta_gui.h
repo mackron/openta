@@ -205,8 +205,6 @@ const char* ta_gui_get_button_text(ta_gui_gadget* pGadget, ta_uint32 stage);
 
 typedef struct
 {
-    ta_uint32 sizeX;    // <-- Remove this
-    ta_uint32 sizeY;    // <-- Remove this
     ta_uint32 frameIndex;
 } ta_common_gui_texture_button;
 
