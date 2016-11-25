@@ -602,7 +602,7 @@ void ta_step__sp_menu(ta_game* pGame, double dt)
 
     // For some reason the SINGLE.GUI file does not define the "escdefault" which means we'll need to hard code it.
     if (ta_was_key_pressed(pGame, TA_KEY_ESCAPE)) {
-        ta_goto_screen(pGame, pGame->prevScreen);
+        ta_goto_screen(pGame, TA_SCREEN_MAIN_MENU);
         return;
     }
 
