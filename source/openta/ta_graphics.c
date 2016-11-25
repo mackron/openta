@@ -1036,8 +1036,10 @@ static TA_INLINE void ta_graphics__draw_mesh(ta_graphics_context* pGraphics, ta_
     }
 }
 
+#define TA_GUI_CLEAR_MODE_BLACK 0
+#define TA_GUI_CLEAR_MODE_SHADE 1
 
-void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
+void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMode)
 {
     if (pGraphics == NULL || pGUI == NULL) return;
 
@@ -1049,8 +1051,8 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
 
     float quadLeft   = 0;
     float quadTop    = 0;
-    float quadRight  = 640;
-    float quadBottom = 480;
+    float quadRight  = (float)pGUI->pGadgets[0].width;
+    float quadBottom = (float)pGUI->pGadgets[0].height;
 
     quadLeft   *= scale;
     quadTop    *= scale;
@@ -1062,10 +1064,25 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
     quadRight  += offsetX;
     quadBottom += offsetY;
 
-    // Clear first.
-    glClearDepth(1.0);
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (clearMode == TA_GUI_CLEAR_MODE_BLACK) {
+        glClearDepth(1.0);
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    } else {
+        glEnable(GL_BLEND);
+        ta_graphics__bind_shader(pGraphics, NULL);
+        ta_graphics__bind_texture(pGraphics, NULL);
+        glBegin(GL_QUADS);
+        {
+            glColor4f(0, 0, 0, 0.5f); glVertex3f(0,                             (float)pGraphics->resolutionY, 0.0f);
+            glColor4f(0, 0, 0, 0.5f); glVertex3f((float)pGraphics->resolutionX, (float)pGraphics->resolutionY, 0.0f);
+            glColor4f(0, 0, 0, 0.5f); glVertex3f((float)pGraphics->resolutionX, 0,                             0.0f);
+            glColor4f(0, 0, 0, 0.5f); glVertex3f(0,                             0,                             0.0f);
+            glColor4f(1, 1, 1, 1);
+        }
+        glEnd();
+        glDisable(GL_BLEND);
+    }
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -1083,8 +1100,8 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
         {
             float uvleft   = 0;
             float uvtop    = 0;
-            float uvright  = 1;
-            float uvbottom = 1;
+            float uvright  = (float)pGUI->pGadgets[0].width  / 640.0f;
+            float uvbottom = (float)pGUI->pGadgets[0].height / 480.0f;
 
             glTexCoord2f(uvleft,  uvbottom); glVertex3f(quadLeft,  quadBottom, 0.0f);
             glTexCoord2f(uvright, uvbottom); glVertex3f(quadRight, quadBottom, 0.0f);
@@ -1277,6 +1294,16 @@ void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
             default: break;
         }
     }
+}
+
+void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
+{
+    ta_draw_gui(pGraphics, pGUI, TA_GUI_CLEAR_MODE_BLACK);
+}
+
+void ta_draw_dialog_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
+{
+    ta_draw_gui(pGraphics, pGUI, TA_GUI_CLEAR_MODE_SHADE);
 }
 
 

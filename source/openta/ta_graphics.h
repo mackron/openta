@@ -128,6 +128,10 @@ void ta_translate_camera(ta_graphics_context* pGraphics, int offsetX, int offset
 // doing the in-game GUIs like the HUD.
 void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI);
 
+// Draws a dialog GUI. This will not usually be fullscreen and will draw a semi-transparent shade over the background
+// rather than clearing it.
+void ta_draw_dialog_gui(ta_graphics_context* pGraphics, ta_gui* pGUI);
+
 // Draws the given given map.
 void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap);
 

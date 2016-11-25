@@ -88,13 +88,6 @@ ta_game* ta_create_game(dr_cmdline cmdline)
         goto on_error;
     }
 
-    // Hard coded properties. Some of these may be incorrect but we'll fix it up as we go.
-    ta_set_property(pGame, "MAINMENU.GUI.BACKGROUND", "bitmaps/FrontendX.pcx");
-    ta_set_property(pGame, "SINGLE.GUI.BACKGROUND", "bitmaps/SINGLEBG.PCX");
-    ta_set_property(pGame, "SELPROV.GUI.BACKGROUND", "bitmaps/selconnect2.pcx");
-    ta_set_property(pGame, "STARTOPT.GUI.BACKGROUND", "bitmaps/options4x.pcx");
-    ta_set_property(pGame, "SKIRMISH.GUI.BACKGROUND", "bitmaps/Skirmsetup4x.pcx");
-
 
     // GUI
     // ===
@@ -139,19 +132,33 @@ ta_game* ta_create_game(dr_cmdline cmdline)
 
 
     // Menus.
+    ta_set_property(pGame, "MAINMENU.GUI.BACKGROUND", "bitmaps/FrontendX.pcx");
     if (ta_gui_load(pGame, "guis/MAINMENU.GUI", &pGame->mainMenu) != TA_SUCCESS) {
         goto on_error;
     }
+
+    ta_set_property(pGame, "SINGLE.GUI.BACKGROUND", "bitmaps/SINGLEBG.PCX");
     if (ta_gui_load(pGame, "guis/SINGLE.GUI", &pGame->spMenu) != TA_SUCCESS) {
         goto on_error;
     }
+
+    ta_set_property(pGame, "SELPROV.GUI.BACKGROUND", "bitmaps/selconnect2.pcx");
     if (ta_gui_load(pGame, "guis/SELPROV.GUI", &pGame->mpMenu) != TA_SUCCESS) {
         goto on_error;
     }
+
+    ta_set_property(pGame, "STARTOPT.GUI.BACKGROUND", "bitmaps/options4x.pcx");
     if (ta_gui_load(pGame, "guis/STARTOPT.GUI", &pGame->optionsMenu) != TA_SUCCESS) {
         goto on_error;
     }
+
+    ta_set_property(pGame, "SKIRMISH.GUI.BACKGROUND", "bitmaps/Skirmsetup4x.pcx");
     if (ta_gui_load(pGame, "guis/SKIRMISH.GUI", &pGame->skirmishMenu) != TA_SUCCESS) {
+        goto on_error;
+    }
+
+    ta_set_property(pGame, "SELMAP.GUI.BACKGROUND", "bitmaps/DSelectmap2.pcx");
+    if (ta_gui_load(pGame, "guis/SELMAP.GUI", &pGame->selectMapDialog) != TA_SUCCESS) {
         goto on_error;
     }
 
@@ -690,12 +697,33 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
     // Input
     // =====
     ta_gui_input_event e;
-    ta_bool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->skirmishMenu, &e);
-    if (hasGUIEvent) {
-        if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
-            if (strcmp(e.pGadget->name, "PrevMenu") == 0) {
-                ta_goto_screen(pGame, pGame->prevScreen);
-                return;
+    ta_bool32 hasGUIEvent;
+    if (pGame->pCurrentDialog == NULL) {
+        hasGUIEvent = ta_handle_gui_input(pGame, &pGame->skirmishMenu, &e);
+        if (hasGUIEvent) {
+            if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
+                if (strcmp(e.pGadget->name, "PrevMenu") == 0) {
+                    ta_goto_screen(pGame, pGame->prevScreen);
+                    return;
+                }
+                if (strcmp(e.pGadget->name, "SelectMap") == 0) {
+                    pGame->pCurrentDialog = &pGame->selectMapDialog;
+                    return;
+                }
+            }
+        }
+    } else {
+        // A dialog is open, so handle the input of that. The skirmish menu only cares about the Select Map dialog.
+        assert(pGame->pCurrentDialog == &pGame->selectMapDialog);
+        hasGUIEvent = ta_handle_gui_input(pGame, pGame->pCurrentDialog, &e);
+        if (hasGUIEvent) {
+            if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
+                if (strcmp(e.pGadget->name, "PREVMENU") == 0) {
+                    pGame->pCurrentDialog = NULL;   // Close the dialog.
+                }
+                if (strcmp(e.pGadget->name, "LOAD") == 0) {
+                    pGame->pCurrentDialog = NULL;   // Close the dialog.
+                }
             }
         }
     }
@@ -704,6 +732,11 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
     // Rendering
     // =========
     ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->skirmishMenu);
+
+    if (pGame->pCurrentDialog != NULL) {
+        assert(pGame->pCurrentDialog == &pGame->selectMapDialog);
+        ta_draw_dialog_gui(pGame->pGraphics, &pGame->selectMapDialog);
+    }
 }
 
 void ta_step(ta_game* pGame)
@@ -770,6 +803,10 @@ void ta_goto_screen(ta_game* pGame, ta_uint32 newScreenType)
     if (pGame == NULL) return;
     pGame->prevScreen = pGame->screen;
     pGame->screen = newScreenType;
+
+    // Make sure any dialog is closed after a fresh switch.
+    assert(pGame->pCurrentDialog == NULL);
+    pGame->pCurrentDialog = NULL;
 }
 
 

@@ -299,14 +299,18 @@ ta_result ta_gui_get_screen_mapping(ta_gui* pGUI, ta_uint32 screenSizeX, ta_uint
     float scaleX = screenSizeXF/640;
     float scaleY = screenSizeYF/480;
 
+    float scale;
     if (scaleX > scaleY) {
-        if (pScale) *pScale = scaleY;
-        if (pOffsetX) *pOffsetX = (screenSizeXF - (640 * scaleY)) / 2.0f;
+        scale = scaleY;
+        if (pOffsetX) *pOffsetX = (screenSizeXF - (640*scale)) / 2.0f;
     } else {
-        if (pScale) *pScale = scaleX;
-        if (pOffsetY) *pOffsetY = (screenSizeYF - (480 * scaleX)) / 2.0f;
+        scale = scaleX;
+        if (pOffsetY) *pOffsetY = (screenSizeYF - (480*scale)) / 2.0f;
     }
 
+    if (pScale) *pScale = scale;
+    if (pOffsetX) *pOffsetX += (pGUI->pGadgets[0].xpos*scale);
+    if (pOffsetY) *pOffsetY += (pGUI->pGadgets[0].ypos*scale);
     return TA_SUCCESS;
 }
 
@@ -464,7 +468,7 @@ const char* ta_gui_get_button_text(ta_gui_gadget* pGadget, ta_uint32 stage)
         return pGadget->button.text;
     }
 
-    if (pGadget->id != TA_GUI_GADGET_TYPE_BUTTON || stage >= pGadget->button.stages) {
+    if (pGadget->id != TA_GUI_GADGET_TYPE_BUTTON || (ta_int32)stage >= pGadget->button.stages) {
         return NULL;
     }
 
@@ -541,6 +545,18 @@ ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI)
         pCommonGUI->buttons[5].sizeX = 96;
         pCommonGUI->buttons[5].sizeY = 31;
         pCommonGUI->buttons[5].frameIndex = pSequence->firstFrameIndex + 24;
+    }
+
+    if (ta_gaf_texture_group_find_sequence_by_name(&pCommonGUI->textureGroup, "SLIDERS", &iSequence)) {
+        ta_uint32 firstFrameIndex = pCommonGUI->textureGroup.pSequences[iSequence].firstFrameIndex;
+        pCommonGUI->scrollbar.arrowUpFrameIndex           = firstFrameIndex + 6;
+        pCommonGUI->scrollbar.arrowUpPressedFrameIndex    = firstFrameIndex + 7;
+        pCommonGUI->scrollbar.arrowDownFrameIndex         = firstFrameIndex + 8;
+        pCommonGUI->scrollbar.arrowDownPressedFrameIndex  = firstFrameIndex + 9;
+        pCommonGUI->scrollbar.arrowLeftFrameIndex         = firstFrameIndex + 16;
+        pCommonGUI->scrollbar.arrowLeftPressedFrameIndex  = firstFrameIndex + 17;
+        pCommonGUI->scrollbar.arrowRightFrameIndex        = firstFrameIndex + 18;
+        pCommonGUI->scrollbar.arrowRightPressedFrameIndex = firstFrameIndex + 19;
     }
 
     return TA_SUCCESS;

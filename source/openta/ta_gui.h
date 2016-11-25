@@ -14,7 +14,6 @@
 // ----------
 // 1 = Horizontal; 2 = Vertical (thanks to http://units.tauniverse.com/tutorials/tadesign)
 
-
 #define TA_GUI_GADGET_TYPE_ROOT             0
 #define TA_GUI_GADGET_TYPE_BUTTON           1
 #define TA_GUI_GADGET_TYPE_LISTBOX          2
@@ -210,6 +209,18 @@ typedef struct
 
     // Button backgrounds for each size.
     ta_common_gui_texture_button buttons[6];
+
+    struct
+    {
+        ta_uint32 arrowUpFrameIndex;
+        ta_uint32 arrowUpPressedFrameIndex;
+        ta_uint32 arrowDownFrameIndex;
+        ta_uint32 arrowDownPressedFrameIndex;
+        ta_uint32 arrowLeftFrameIndex;
+        ta_uint32 arrowLeftPressedFrameIndex;
+        ta_uint32 arrowRightFrameIndex;
+        ta_uint32 arrowRightPressedFrameIndex;
+    } scrollbar;
 } ta_common_gui;
 
 ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI);

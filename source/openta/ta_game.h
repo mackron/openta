@@ -73,6 +73,9 @@ struct ta_game
     ta_gui optionsMenu;
     ta_gui skirmishMenu;
 
+    ta_gui selectMapDialog;
+    ta_gui* pCurrentDialog; // Set to non-null when a dialog is open, and will be set to a pointer to one of the dialog GUIs.
+
 
     // The current screen. This is set to one of TA_SCREEN_*
     ta_uint32 screen;
