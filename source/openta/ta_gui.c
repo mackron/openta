@@ -253,7 +253,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                 ta_uint32 iSequence;
                 if (pGUI->hasGAF && ta_gaf_texture_group_find_sequence_by_name(&pGUI->textureGroupGAF, pGadget->name, &iSequence)) {
                     pGadget->button.pBackgroundTextureGroup = &pGUI->textureGroupGAF;
-                    pGadget->button.iBackgroundFrame = 0;
+                    pGadget->button.iBackgroundFrame = pGUI->textureGroupGAF.pSequences[iSequence].firstFrameIndex + pGadget->button.status;
                 } else {
                     if (pGadget->button.stages == 0) {
                         if (ta_common_gui_get_button_frame(&pGame->commonGUI, pGadget->width, pGadget->height, &pGadget->button.iBackgroundFrame) == TA_SUCCESS) {
