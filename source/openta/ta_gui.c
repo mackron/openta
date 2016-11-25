@@ -276,13 +276,18 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                     pGadget->scrollbar.iTrackBegFrame = pGame->commonGUI.scrollbar.trackTopFrameIndex;
                     pGadget->scrollbar.iTrackEndFrame = pGame->commonGUI.scrollbar.trackBottomFrameIndex;
                     pGadget->scrollbar.iTrackMidFrame = pGame->commonGUI.scrollbar.trackMidVertFrameIndex;
+                    pGadget->scrollbar.iThumbFrame = pGame->commonGUI.scrollbar.thumbVertFrameIndex;
                 } else {
                     pGadget->scrollbar.iArrow0Frame = pGame->commonGUI.scrollbar.arrowLeftFrameIndex;
                     pGadget->scrollbar.iArrow1Frame = pGame->commonGUI.scrollbar.arrowRightFrameIndex;
                     pGadget->scrollbar.iTrackBegFrame = pGame->commonGUI.scrollbar.trackLeftFrameIndex;
                     pGadget->scrollbar.iTrackEndFrame = pGame->commonGUI.scrollbar.trackRightFrameIndex;
                     pGadget->scrollbar.iTrackMidFrame = pGame->commonGUI.scrollbar.trackMidHorzFrameIndex;
+                    pGadget->scrollbar.iThumbFrame = pGame->commonGUI.scrollbar.thumbHorzFrameIndex;
                 }
+                
+                pGadget->scrollbar.iThumbCapTopFrame = pGame->commonGUI.scrollbar.thumbCapTopFrameIndex;
+                pGadget->scrollbar.iThumbCapBotFrame = pGame->commonGUI.scrollbar.thumbCapBotFrameIndex;
             } break;
 
             default: break;
@@ -565,6 +570,11 @@ ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI)
         pCommonGUI->scrollbar.trackLeftFrameIndex         = firstFrameIndex + 10;
         pCommonGUI->scrollbar.trackRightFrameIndex        = firstFrameIndex + 12;
         pCommonGUI->scrollbar.trackMidHorzFrameIndex      = firstFrameIndex + 11;
+
+        pCommonGUI->scrollbar.thumbVertFrameIndex         = firstFrameIndex + 4;
+        pCommonGUI->scrollbar.thumbHorzFrameIndex         = firstFrameIndex + 14;
+        pCommonGUI->scrollbar.thumbCapTopFrameIndex       = firstFrameIndex + 3;
+        pCommonGUI->scrollbar.thumbCapBotFrameIndex       = firstFrameIndex + 5;
     }
 
     return TA_SUCCESS;

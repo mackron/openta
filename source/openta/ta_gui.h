@@ -115,6 +115,9 @@ typedef struct
             ta_uint32 iTrackBegFrame;   // TOP/LEFT end of the track.
             ta_uint32 iTrackEndFrame;   // RIGHT/BOTTOM end of the track.
             ta_uint32 iTrackMidFrame;   // The middle piece of the track.
+            ta_uint32 iThumbFrame;
+            ta_uint32 iThumbCapTopFrame;
+            ta_uint32 iThumbCapBotFrame;
         } scrollbar;
 
         struct  // id = 5
@@ -232,6 +235,10 @@ typedef struct
         ta_uint32 trackLeftFrameIndex;
         ta_uint32 trackRightFrameIndex;
         ta_uint32 trackMidHorzFrameIndex;
+        ta_uint32 thumbVertFrameIndex;
+        ta_uint32 thumbHorzFrameIndex;
+        ta_uint32 thumbCapTopFrameIndex;
+        ta_uint32 thumbCapBotFrameIndex;
     } scrollbar;
 } ta_common_gui;
 
