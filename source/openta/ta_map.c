@@ -1068,7 +1068,7 @@ ta_bool32 ta_map_load_context_init(ta_map_load_context* pLoadContext, ta_game* p
     }
 
     // We'll need a texture packer to help us pack images into atlases.
-    if (!ta_texture_packer_init(&pLoadContext->texturePacker, maxTextureSize, maxTextureSize, 1)) {
+    if (!ta_texture_packer_init(&pLoadContext->texturePacker, maxTextureSize, maxTextureSize, 1, 0)) {
         return TA_FALSE;
     }
 

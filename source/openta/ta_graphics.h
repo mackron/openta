@@ -160,4 +160,4 @@ ta_bool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics);
 
 
 // TESTING
-void ta_draw_texture(ta_texture* pTexture, ta_bool32 transparent);
+void ta_draw_texture(ta_texture* pTexture, ta_bool32 transparent, float scale);

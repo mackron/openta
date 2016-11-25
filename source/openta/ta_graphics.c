@@ -1781,7 +1781,7 @@ ta_bool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
 
 
 // TESTING
-void ta_draw_texture(ta_texture* pTexture, ta_bool32 transparent)
+void ta_draw_texture(ta_texture* pTexture, ta_bool32 transparent,float scale)
 {
-    ta_draw_subtexture(pTexture, 0, 0, (float)pTexture->width, (float)pTexture->height, transparent, 0, 0, (float)pTexture->width, (float)pTexture->height);
+    ta_draw_subtexture(pTexture, 0, 0, (float)pTexture->width*scale, (float)pTexture->height*scale, transparent, 0, 0, (float)pTexture->width, (float)pTexture->height);
 }

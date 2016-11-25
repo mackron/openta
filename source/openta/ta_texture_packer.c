@@ -6,7 +6,11 @@ ta_bool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t widt
     assert(pPosXOut != NULL);
     assert(pPosYOut != NULL);
 
-    if (width > pPacker->width || height > pPacker->height) {
+    ta_uint32 edge = (pPacker->flags & (TA_TEXTURE_PACKER_FLAG_HARD_EDGE | TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE)) ? 1 : 0;
+    ta_uint32 outerWidth  = width  + (edge*2);
+    ta_uint32 outerHeight = height + (edge*2);
+
+    if (outerWidth > pPacker->width || outerHeight > pPacker->height) {
         return TA_FALSE;
     }
 
@@ -15,18 +19,18 @@ ta_bool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t widt
     // the image such that the top left of it is sitting on that point.
 
     // Check if there is room on the x axis. If there isn't we'll need to move the cursor down.
-    if (pPacker->cursorPosX + width <= pPacker->width)
+    if (pPacker->cursorPosX + outerWidth <= pPacker->width)
     {
         // There is enough room on the x axis, so now check the y axis.
-        if (pPacker->cursorPosY + height <= pPacker->height)
+        if (pPacker->cursorPosY + outerHeight <= pPacker->height)
         {
             // There is enough room on the y axis as well. Place the sub-texture here.
-            *pPosXOut = pPacker->cursorPosX;
-            *pPosYOut = pPacker->cursorPosY;
+            *pPosXOut = pPacker->cursorPosX + edge;
+            *pPosYOut = pPacker->cursorPosY + edge;
 
-            pPacker->cursorPosX += width;
-            if (pPacker->currentRowHeight < height) {
-                pPacker->currentRowHeight = height;
+            pPacker->cursorPosX += outerWidth;
+            if (pPacker->currentRowHeight < outerHeight) {
+                pPacker->currentRowHeight = outerHeight;
             }
 
             return TA_TRUE;
@@ -40,17 +44,17 @@ ta_bool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t widt
     else
     {
         // There is not enough room on the x axis, but there may be room on the next row.
-        if (pPacker->cursorPosY + pPacker->currentRowHeight + height <= pPacker->height)
+        if (pPacker->cursorPosY + pPacker->currentRowHeight + outerHeight <= pPacker->height)
         {
             // There is enough room on the x axis if we just move to the next row.
             pPacker->cursorPosX = 0;
             pPacker->cursorPosY = pPacker->cursorPosY + pPacker->currentRowHeight;
 
-            *pPosXOut = pPacker->cursorPosX;
-            *pPosYOut = pPacker->cursorPosY;
+            *pPosXOut = pPacker->cursorPosX + edge;
+            *pPosYOut = pPacker->cursorPosY + edge;
 
-            pPacker->cursorPosX += width;
-            pPacker->currentRowHeight = height;
+            pPacker->cursorPosX += outerWidth;
+            pPacker->currentRowHeight = outerHeight;
 
             return TA_TRUE;
         }
@@ -62,11 +66,15 @@ ta_bool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t widt
     }
 }
 
-ta_bool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, ta_texture_packer_slot* pSlot, const uint8_t* pSubTextureData)
+ta_bool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, const ta_texture_packer_slot* pSlot, const uint8_t* pSubTextureData)
 {
     assert(pPacker != NULL);
     assert(pSlot != NULL);
     assert(pSubTextureData != NULL);
+
+    if (pSlot->width == 0 || pSlot->height == 0) {
+        return TA_TRUE;
+    }
 
     uint32_t srcStride = pPacker->bpp * pSlot->width;
     uint32_t dstStride = pPacker->bpp * pPacker->width;
@@ -75,14 +83,41 @@ ta_bool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, ta_text
     {
         const uint8_t* pSrcRow = pSubTextureData + (y * srcStride);
         uint8_t* pDstRow = pPacker->pImageData + ((pSlot->posY + y) * dstStride);
-        memcpy(pDstRow + pSlot->posX, pSrcRow, srcStride);
+        memcpy(pDstRow + pSlot->posX*pPacker->bpp, pSrcRow, srcStride);
+    }
+
+    // Do the edge if applicable. The edge is equal to the outside edge of the main part of the image. Note that we're
+    // deliberately not checking the TRANSPARENT_EDGE flag because the texture packer is always initialized to transparency
+    // by default which therefore means we don't need to do anything special.
+    ta_uint32 edge = (pPacker->flags & TA_TEXTURE_PACKER_FLAG_HARD_EDGE) ? 1 : 0;
+    if (edge > 0) {
+        // Top and bottom edges.
+        const uint8_t* pSrcRow0 = pSubTextureData     + (0                               * srcStride);
+        const uint8_t* pSrcRow1 = pSubTextureData     + ((pSlot->height-1)               * srcStride);
+              uint8_t* pDstRow0 = pPacker->pImageData + ((pSlot->posY - 1)               * dstStride);
+              uint8_t* pDstRow1 = pPacker->pImageData + ((pSlot->posY + (pSlot->height)) * dstStride);
+
+        memcpy(pDstRow0 + pSlot->posX*pPacker->bpp, pSrcRow0, srcStride);
+        memcpy(pDstRow1 + pSlot->posX*pPacker->bpp, pSrcRow1, srcStride);
+
+        // Side edges.
+        for (ta_uint32 y = pSlot->posY-1; y < pSlot->posY+pSlot->height+1; ++y) {
+            uint8_t* pDstRow = pPacker->pImageData + (y * dstStride) + ((pSlot->posX-1) * pPacker->bpp);
+            uint8_t* pDstOuter0 = pDstRow;
+            uint8_t* pDstInner0 = pDstRow + pPacker->bpp;
+            uint8_t* pDstOuter1 = pDstRow + ((pSlot->width+1) * pPacker->bpp);
+            uint8_t* pDstInner1 = pDstRow + ((pSlot->width+0) * pPacker->bpp);
+
+            memcpy(pDstOuter0, pDstInner0, pPacker->bpp);
+            memcpy(pDstOuter1, pDstInner1, pPacker->bpp);
+        }
     }
 
     return TA_TRUE;
 }
 
 
-ta_bool32 ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t bytesPerPixel)
+ta_bool32 ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t bytesPerPixel, ta_uint32 flags)
 {
     if (pPacker == NULL || width == 0 || height == 0) {
         return TA_FALSE;
@@ -92,9 +127,16 @@ ta_bool32 ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uin
     pPacker->width = width;
     pPacker->height = height;
     pPacker->bpp = bytesPerPixel;
-    pPacker->pImageData = calloc(1, width * height * bytesPerPixel);   // <-- calloc this so the background is black. Important for debugging.
+    pPacker->flags = flags;
+    pPacker->pImageData = malloc(width * height * bytesPerPixel);
     if (pPacker->pImageData == NULL) {
         return TA_FALSE;
+    }
+
+    if (pPacker->bpp == 1) {
+        memset(pPacker->pImageData, TA_TRANSPARENT_COLOR, pPacker->width * pPacker->height * pPacker->bpp);
+    } else {
+        memset(pPacker->pImageData, 0, pPacker->width * pPacker->height * pPacker->bpp);
     }
 
     return TA_TRUE;
@@ -119,8 +161,12 @@ void ta_texture_packer_reset(ta_texture_packer* pPacker)
     pPacker->cursorPosY = 0;
     pPacker->currentRowHeight = 0;
 
-    // Clear the image data to black to make the background easy to see during debugging.
-    memset(pPacker->pImageData, 0, pPacker->width * pPacker->height * pPacker->bpp);
+    // Clear the image data to transparency.
+    if (pPacker->bpp == 1) {
+        memset(pPacker->pImageData, TA_TRANSPARENT_COLOR, pPacker->width * pPacker->height * pPacker->bpp);
+    } else {
+        memset(pPacker->pImageData, 0, pPacker->width * pPacker->height * pPacker->bpp);
+    }
 }
 
 ta_bool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut)

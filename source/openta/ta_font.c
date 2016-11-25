@@ -50,7 +50,7 @@ ta_result ta_font_load_fnt(ta_game* pGame, const char* filePath, ta_font* pFont)
     ta_uint32 atlasSizeY = ta_next_power_of_2(height);
 
     ta_texture_packer packer;
-    ta_texture_packer_init(&packer, atlasSizeX, atlasSizeY, 1);
+    ta_texture_packer_init(&packer, atlasSizeX, atlasSizeY, 1, TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE);
 
     ta_uint8 pixels[256*256];
 
@@ -165,7 +165,7 @@ ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
     ta_uint32 atlasSizeY = ta_next_power_of_2(totalHeight+1);   // Add 1 to ensure we have at least row of padding for interpolation.
 
     ta_texture_packer packer;
-    ta_texture_packer_init(&packer, atlasSizeX, atlasSizeY, 1);
+    ta_texture_packer_init(&packer, atlasSizeX, atlasSizeY, 1, TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE);
     memset(packer.pImageData, TA_TRANSPARENT_COLOR, packer.width*packer.height);
 
     ta_uint8 paddingPixels[TA_MAX_FONT_SIZE];

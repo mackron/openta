@@ -793,6 +793,10 @@ void ta_step(ta_game* pGame)
 
         // Reset transient input state last.
         ta_input_state_reset_transient_state(&pGame->input);
+
+
+
+        //ta_draw_texture(pGame->commonGUI.textureGroup.ppAtlases[0], TA_FALSE, 4);
     }
     ta_graphics_present(pGame->pGraphics, pGame->pWindow);
 }

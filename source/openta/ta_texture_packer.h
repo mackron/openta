@@ -16,6 +16,14 @@
 // The number of bytes per pixel can be specified during initialization. Only uncompressed image
 // formats are supported. Indeed, the packer does not care about the specific format of the image
 // data, only that there's a constant number of bytes-per-pixel.
+//
+// Another issue with texture packing is how the edges are handled with respect to linear filering
+// and precision errors with UV coordinates. One was of handling this is to put an extra pixel
+// around each sub-texture which can be used to emulate clamping. To enable this, set the
+// TA_TEXTURE_PACKER_FLAG_HARD_EDGE option flag.
+
+#define TA_TEXTURE_PACKER_FLAG_HARD_EDGE        (1 << 0)
+#define TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE (1 << 1)
 
 typedef struct
 {
@@ -27,6 +35,9 @@ typedef struct
 
     // The number of bytes per pixel.
     uint32_t bpp;
+
+    // Option flags: TA_TEXTURE_PACKER_FLAG_*
+    ta_uint32 flags;
 
 
     // The cursor position on the x axis. This is where the next image will try to be placed.
@@ -52,7 +63,7 @@ typedef struct
 
 
 // Initializes the given texture packer. The minimum and maximum size should be a power of 2.
-ta_bool32 ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t bytesPerPixel);
+ta_bool32 ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t bytesPerPixel, ta_uint32 flags);
 
 // Uninitializes the given texture packer.
 void ta_texture_packer_uninit(ta_texture_packer* pPacker);

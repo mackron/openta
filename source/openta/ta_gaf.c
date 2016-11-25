@@ -502,7 +502,7 @@ ta_result ta_gaf_texture_group_init(ta_game* pGame, const char* filePath, ta_col
     // pass performs the actual loading.
 
     ta_texture_packer packer;
-    ta_texture_packer_init(&packer, TA_MAX_TEXTURE_ATLAS_SIZE, TA_MAX_TEXTURE_ATLAS_SIZE, 1);
+    ta_texture_packer_init(&packer, TA_MAX_TEXTURE_ATLAS_SIZE, TA_MAX_TEXTURE_ATLAS_SIZE, 1, TA_TEXTURE_PACKER_FLAG_HARD_EDGE);
 
     // PASS #1
     // =======
