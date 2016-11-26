@@ -1232,6 +1232,27 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                 float itemPosY = -4*scale;
                 for (ta_uint32 iItem = 0; iItem < pGadget->listbox.itemCount; ++iItem) {
                     ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, posX + itemPosX, posY + itemPosY, pGadget->listbox.pItems[iItem]);
+                    if (iItem == pGadget->listbox.iSelectedItem) {
+                        float highlightPosX  = posX + itemPosX - (0*scale);
+                        float highlightPosY  = posY + itemPosY + (4*scale);
+                        float highlightSizeX = sizeX + (0*scale)*2;
+                        float highlightSizeY = pGraphics->pGame->font.height*scale + (0*scale)*2;
+
+                        glEnable(GL_BLEND);
+                        ta_graphics__bind_shader(pGraphics, NULL);
+                        ta_graphics__bind_texture(pGraphics, NULL);
+                        glBegin(GL_QUADS);
+                        {
+                            glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX,                highlightPosY+highlightSizeY, 0.0f);
+                            glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX+highlightSizeX, highlightPosY+highlightSizeY, 0.0f);
+                            glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX+highlightSizeX, highlightPosY,                0.0f);
+                            glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX,                highlightPosY,                0.0f);
+                            glColor4f(1, 1, 1, 1);
+                        }
+                        glEnd();
+                        glDisable(GL_BLEND);
+                    }
+
                     itemPosY += (pGraphics->pGame->font.height + (itemPadding*2)) * scale;
                 }
             } break;

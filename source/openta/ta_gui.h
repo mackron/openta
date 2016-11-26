@@ -99,6 +99,7 @@ typedef struct
         {
             char** pItems;
             ta_uint32 itemCount;
+            ta_uint32 iSelectedItem;    // The index of the currently selected item. Set to -1 if nothing is slected.
         } listbox;
 
         struct  // id = 3

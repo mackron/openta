@@ -157,7 +157,9 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
 
                 case TA_GUI_GADGET_TYPE_LISTBOX:
                 {
-                    // Nothing.
+                    pGadget->listbox.pItems = NULL;
+                    pGadget->listbox.itemCount = 0;
+                    pGadget->listbox.iSelectedItem = (ta_uint32)-1;
                 } break;
 
                 case TA_GUI_GADGET_TYPE_TEXTBOX:
