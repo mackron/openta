@@ -97,7 +97,8 @@ typedef struct
 
         struct  // id = 2
         {
-            int unused;
+            char** pItems;
+            ta_uint32 itemCount;
         } listbox;
 
         struct  // id = 3
@@ -208,6 +209,13 @@ void ta_gui_focus_prev_gadget(ta_gui* pGUI);
 // Retrieves the text for the given button for the given stage. Returns null if an error occurs.
 const char* ta_gui_get_button_text(ta_gui_gadget* pGadget, ta_uint32 stage);
 
+// Sets the items in a listbox gadget.
+//
+// This will make it's own local copy of each item.
+ta_result ta_gui_set_listbox_items(ta_gui_gadget* pGadget, const char** pItems, ta_uint32 count);
+
+// Retrieves the text of the listbox item at the given index.
+const char* ta_gui_get_listbox_item(ta_gui_gadget* pGadget, ta_uint32 index);
 
 
 typedef struct

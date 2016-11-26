@@ -1227,6 +1227,13 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
 
             case TA_GUI_GADGET_TYPE_LISTBOX:
             {
+                const float itemPadding = 0;
+                float itemPosX = 0;
+                float itemPosY = -4*scale;
+                for (ta_uint32 iItem = 0; iItem < pGadget->listbox.itemCount; ++iItem) {
+                    ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, posX + itemPosX, posY + itemPosY, pGadget->listbox.pItems[iItem]);
+                    itemPosY += (pGraphics->pGame->font.height + (itemPadding*2)) * scale;
+                }
             } break;
 
             case TA_GUI_GADGET_TYPE_TEXTBOX:

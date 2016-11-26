@@ -296,6 +296,17 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                 pGadget->scrollbar.iThumbCapBotFrame = pGame->commonGUI.scrollbar.thumbCapBotFrameIndex;
             } break;
 
+            // TESTING. TODO: DELETE ME.
+            case TA_GUI_GADGET_TYPE_LISTBOX:
+            {
+                const char* pTestItems[] = {
+                    "Hello, World!",
+                    "Testing 1",
+                    "Blah Blah"
+                };
+                ta_gui_set_listbox_items(pGadget, pTestItems, ta_countof(pTestItems));
+            } break;
+
             default: break;
         }
     }
@@ -514,6 +525,50 @@ const char* ta_gui_get_button_text(ta_gui_gadget* pGadget, ta_uint32 stage)
     }
 
     return NULL;
+}
+
+ta_result ta_gui_set_listbox_items(ta_gui_gadget* pGadget, const char** pItems, ta_uint32 count)
+{
+    if (pGadget == NULL || pGadget->id != TA_GUI_GADGET_TYPE_LISTBOX) return TA_INVALID_ARGS;
+    
+    if (pGadget->listbox.pItems != NULL) {
+        free(pGadget->listbox.pItems);
+        pGadget->listbox.itemCount = 0;
+    }
+
+    // Make a copy of each item.
+    size_t payloadSize = 0;
+    for (ta_uint32 i = 0; i < count; ++i) {
+        payloadSize += sizeof(*pGadget->listbox.pItems);
+        payloadSize += ta_strlen_or_zero(pItems[i]) + 1;    // +1 for null terminator.
+    }
+
+    pGadget->listbox.pItems = (char**)malloc(payloadSize);
+    if (pGadget->listbox.pItems == NULL) {
+        return TA_OUT_OF_MEMORY;
+    }
+
+    // Payload format: [ptr0, ptr1, ... ptrN][str0, str1, ... strN];
+    char* pDstStr = (char*)pGadget->listbox.pItems + (sizeof(*pGadget->listbox.pItems) * count);
+    for (ta_uint32 i = 0; i < count; ++i) {
+        const char* pSrcStr = pItems[i];
+        if (pSrcStr == NULL) pSrcStr = "";
+
+        size_t srcLen = ta_strlen_or_zero(pItems[i]) + 1;
+        memcpy(pDstStr, pSrcStr, srcLen);
+
+        pGadget->listbox.pItems[i] = pDstStr;
+        pDstStr += srcLen;
+    }
+
+    pGadget->listbox.itemCount = count;
+    return TA_SUCCESS;
+}
+
+const char* ta_gui_get_listbox_item(ta_gui_gadget* pGadget, ta_uint32 index)
+{
+    if (pGadget == NULL || pGadget->id != TA_GUI_GADGET_TYPE_LISTBOX || index >= pGadget->listbox.itemCount) return NULL;
+    return pGadget->listbox.pItems[index];
 }
 
 
