@@ -89,6 +89,14 @@ struct ta_game
     ta_input_state input;
 
 
+    // The list of multi-player/skirmish maps.
+    ta_config_obj** ppMPMaps;   // <-- stb_stretchy_buffer
+
+    // The list of single-player maps.
+    ta_config_obj** ppSPMaps;   // <-- stb_stretchy_buffer
+
+    // The selected multi-player/skirmish map.
+    ta_uint32 iSelectedMPMap;
 
 
     ta_texture* pTexture;

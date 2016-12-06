@@ -369,7 +369,7 @@ void ta_delete_config(ta_config_obj* pConfig)
 }
 
 
-ta_config_var* ta_config_get_var(ta_config_obj* pConfig, const char* varName)
+ta_config_var* ta_config_get_var(const ta_config_obj* pConfig, const char* varName)
 {
     if (pConfig == NULL || varName == NULL) {
         return NULL;
@@ -397,7 +397,7 @@ ta_config_var* ta_config_get_var(ta_config_obj* pConfig, const char* varName)
     return NULL;
 }
 
-ta_config_obj* ta_config_get_subobj(ta_config_obj* pConfig, const char* varName)
+ta_config_obj* ta_config_get_subobj(const ta_config_obj* pConfig, const char* varName)
 {
     ta_config_var* pVar = ta_config_get_var(pConfig, varName);
     if (pVar == NULL) {
@@ -407,7 +407,7 @@ ta_config_obj* ta_config_get_subobj(ta_config_obj* pConfig, const char* varName)
     return pVar->pObject;
 }
 
-const char* ta_config_get_string(ta_config_obj* pConfig, const char* varName)
+const char* ta_config_get_string(const ta_config_obj* pConfig, const char* varName)
 {
     ta_config_var* pVar = ta_config_get_var(pConfig, varName);
     if (pVar == NULL) {
@@ -417,7 +417,7 @@ const char* ta_config_get_string(ta_config_obj* pConfig, const char* varName)
     return pVar->value;
 }
 
-int ta_config_get_int(ta_config_obj* pConfig, const char* varName)
+int ta_config_get_int(const ta_config_obj* pConfig, const char* varName)
 {
     const char* value = ta_config_get_string(pConfig, varName);
     if (value == NULL) {
@@ -427,7 +427,7 @@ int ta_config_get_int(ta_config_obj* pConfig, const char* varName)
     return atoi(value);
 }
 
-float ta_config_get_float(ta_config_obj* pConfig, const char* varName)
+float ta_config_get_float(const ta_config_obj* pConfig, const char* varName)
 {
     const char* value = ta_config_get_string(pConfig, varName);
     if (value == NULL) {
@@ -437,7 +437,7 @@ float ta_config_get_float(ta_config_obj* pConfig, const char* varName)
     return (float)atof(value);
 }
 
-ta_bool32 ta_config_get_bool(ta_config_obj* pConfig, const char* varName)
+ta_bool32 ta_config_get_bool(const ta_config_obj* pConfig, const char* varName)
 {
     const char* value = ta_config_get_string(pConfig, varName);
     if (value == NULL) {
@@ -451,7 +451,7 @@ ta_bool32 ta_config_get_bool(ta_config_obj* pConfig, const char* varName)
     return TA_TRUE;
 }
 
-ta_bool32 ta_config_is_subobj_by_index(ta_config_obj* pConfig, ta_uint32 varIndex)
+ta_bool32 ta_config_is_subobj_by_index(const ta_config_obj* pConfig, ta_uint32 varIndex)
 {
     if (pConfig == NULL || varIndex >= pConfig->varCount) {
         return TA_FALSE;

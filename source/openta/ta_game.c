@@ -24,6 +24,16 @@ ta_bool32 ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut
     return TA_TRUE;
 }
 
+int ta_qsort_cb_map(const void* a, const void* b)
+{
+    const ta_config_obj** ppOTA_0 = (const ta_config_obj**)a;
+    const ta_config_obj** ppOTA_1 = (const ta_config_obj**)b;
+
+    const char* name0 = ta_config_get_string(*ppOTA_0, "GlobalHeader/missionname");
+    const char* name1 = ta_config_get_string(*ppOTA_1, "GlobalHeader/missionname");
+
+    return _stricmp(name0, name1);
+}
 
 
 ta_game* ta_create_game(dr_cmdline cmdline)
@@ -182,9 +192,47 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     // Switch to the main menu by default.
     ta_goto_screen(pGame, TA_SCREEN_MAIN_MENU);
     
+    // TODO:
+    // - Only load these when needed, i.e. when the Select Map dialog or campaign menu is opened.
+    // - Save memory by converting OTA data to a struct rather than just holding a pointer to the ta_config_obj.
+    //
+    // Grab the maps for skirmish and multiplayer.
+    ta_fs_iterator* pIter = ta_fs_begin(pGame->pFS, "maps", TA_FALSE);
+    do
+    {
+        // From what I can tell, it looks like skirmish/mp maps are determined by the "type" property of the first
+        // schema in the OTA file.
+        if (drpath_extension_equal(pIter->fileInfo.relativePath, "ota")) {
+            ta_config_obj* pOTA = ta_parse_config_from_file(pGame->pFS, pIter->fileInfo.relativePath);
+            if (pOTA != NULL) {
+                const char* type = ta_config_get_string(pOTA, "GlobalHeader/Schema 0/Type");
+                if (type != NULL && _stricmp(type, "Network 1") == 0) {
+                    stb_sb_push(pGame->ppMPMaps, pOTA);
+                    printf("MP Map: %s\n", pIter->fileInfo.relativePath);
+                } else {
+                    stb_sb_push(pGame->ppSPMaps, pOTA);
+                    printf("SP Map: %s\n", pIter->fileInfo.relativePath);
+                }
+            }
+        }
+    } while (ta_fs_next(pIter));
+    ta_fs_end(pIter);
 
+    // Sort alphabetically.
+    qsort(pGame->ppMPMaps, stb_sb_count(pGame->ppMPMaps), sizeof(*pGame->ppMPMaps), ta_qsort_cb_map);
+    qsort(pGame->ppSPMaps, stb_sb_count(pGame->ppSPMaps), sizeof(*pGame->ppSPMaps), ta_qsort_cb_map);
 
-    //ta_graphics_disable_vsync(pGame->pGraphics, pGame->pWindow);
+    ta_uint32 iMapListGadget;
+    if (ta_gui_find_gadget_by_name(&pGame->selectMapDialog, "MAPNAMES", &iMapListGadget)) {
+        const char** ppMPMapNames = (const char**)malloc(stb_sb_count(pGame->ppMPMaps) * sizeof(*ppMPMapNames));
+        for (int i = 0; i < stb_sb_count(pGame->ppMPMaps); ++i) {
+            ppMPMapNames[i] = ta_config_get_string(pGame->ppMPMaps[i], "GlobalHeader/missionname");
+        }
+
+        ta_gui_set_listbox_items(&pGame->selectMapDialog.pGadgets[iMapListGadget], ppMPMapNames, stb_sb_count(pGame->ppMPMaps));
+    }
+
+    
 
 
     // TESTING
@@ -192,7 +240,7 @@ ta_game* ta_create_game(dr_cmdline cmdline)
     //pGame->pCurrentMap = ta_load_map(pGame, "The Pass");
     //pGame->pCurrentMap = ta_load_map(pGame, "Red Hot Lava");
     //pGame->pCurrentMap = ta_load_map(pGame, "Test0");
-    pGame->pCurrentMap = ta_load_map(pGame, "AC01");    // <-- Includes 3DO features.
+    //pGame->pCurrentMap = ta_load_map(pGame, "AC01");    // <-- Includes 3DO features.
     //pGame->pCurrentMap = ta_load_map(pGame, "AC06");    // <-- Good profiling test.
     //pGame->pCurrentMap = ta_load_map(pGame, "AC20");
     //pGame->pCurrentMap = ta_load_map(pGame, "CC25");
@@ -416,13 +464,37 @@ dr_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
         }
     } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_LEFT)) {
         ta_gui_focus_prev_gadget(pGUI);
-    } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_UP)) {
-        ta_gui_focus_prev_gadget(pGUI);
-    } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_DOWN)) {
-        ta_gui_focus_next_gadget(pGUI);
     } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_RIGHT)) {
         ta_gui_focus_next_gadget(pGUI);
-    } else if (ta_was_key_pressed(pGame, TA_KEY_TAB)) {
+    } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_UP)) {
+        ta_uint32 iFocusedGadget;
+        if (ta_gui_get_focused_gadget(pGUI, &iFocusedGadget) && pGUI->pGadgets[iFocusedGadget].id == TA_GUI_GADGET_TYPE_LISTBOX) {
+            ta_uint32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem;
+            if (iSelectedItem == (ta_uint32)-1 || iSelectedItem == 0) {
+                iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.itemCount - 1;
+            } else {
+                iSelectedItem -= 1;
+            }
+
+            pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem = iSelectedItem;
+        } else {
+            ta_gui_focus_prev_gadget(pGUI);
+        }
+    } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_DOWN)) {
+        ta_uint32 iFocusedGadget;
+        if (ta_gui_get_focused_gadget(pGUI, &iFocusedGadget) && pGUI->pGadgets[iFocusedGadget].id == TA_GUI_GADGET_TYPE_LISTBOX) {
+            ta_uint32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem;
+            if (iSelectedItem == (ta_uint32)-1 || iSelectedItem == pGUI->pGadgets[iFocusedGadget].listbox.itemCount-1) {
+                iSelectedItem = 0;
+            } else {
+                iSelectedItem += 1;
+            }
+
+            pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem = iSelectedItem;
+        } else {
+            ta_gui_focus_next_gadget(pGUI);
+        }
+    }  else if (ta_was_key_pressed(pGame, TA_KEY_TAB)) {
         if (ta_is_key_down(pGame, TA_KEY_SHIFT)) {
             ta_gui_focus_prev_gadget(pGUI);
         } else {
@@ -488,12 +560,15 @@ dr_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
                     ta_int32 relativeMousePosY = mousePosYGUI - pGadget->ypos;
 
                     // The selected item is based on the position of the mouse.
-                    ta_int32 iSelectedItem = (relativeMousePosY / pGame->font.height) + pGadget->listbox.scrollPos;
-                    if (iSelectedItem >= pGadget->listbox.itemCount) {
+                    ta_int32 iSelectedItem = (ta_int32)(relativeMousePosY / pGame->font.height) + pGadget->listbox.scrollPos;
+                    if (iSelectedItem >= (ta_int32)pGadget->listbox.itemCount) {
                         pGadget->listbox.iSelectedItem = (ta_uint32)-1;
                     } else {
                         pGadget->listbox.iSelectedItem = (ta_uint32)iSelectedItem;
                     }
+
+                    // Make sure this is the gadget with keyboard focus.
+                    pGUI->focusedGadgetIndex = iGadgetUnderMouse;
                 }
             }
         } else if (wasMBReleased) {
@@ -720,6 +795,11 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
                     pGame->pCurrentDialog = &pGame->selectMapDialog;
                     return;
                 }
+                if (strcmp(e.pGadget->name, "Start") == 0) {
+                    pGame->pCurrentMap = ta_load_map(pGame, ta_config_get_string(pGame->ppMPMaps[pGame->iSelectedMPMap], "GlobalHeader/missionname"));    // TODO: Free this when the user leaves the game!
+                    ta_goto_screen(pGame, TA_SCREEN_IN_GAME);
+                    return;
+                }
             }
         }
     } else {
@@ -732,6 +812,13 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
                     pGame->pCurrentDialog = NULL;   // Close the dialog.
                 }
                 if (strcmp(e.pGadget->name, "LOAD") == 0) {
+                    ta_uint32 iMapListGadget;
+                    ta_gui_find_gadget_by_name(&pGame->selectMapDialog, "MAPNAMES", &iMapListGadget);
+
+                    pGame->iSelectedMPMap = pGame->selectMapDialog.pGadgets[iMapListGadget].listbox.iSelectedItem;
+
+                    // TODO: Update the map label on the main GUI.
+
                     pGame->pCurrentDialog = NULL;   // Close the dialog.
                 }
             }

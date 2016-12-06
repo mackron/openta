@@ -130,6 +130,9 @@ typedef ta_int32         ta_bool32;
 // Bob Jenkins' lookup3 hash
 #include "../external/lookup3.c"
 
+// stb_stretchy_buffer
+#include "../external/stretchy_buffer.h"
+
 
 // Private Options
 

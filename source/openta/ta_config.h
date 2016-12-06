@@ -39,24 +39,24 @@ void ta_delete_config(ta_config_obj* pConfig);
 
 
 // Retrieves a pointer to a generic variable from the given config.
-ta_config_var* ta_config_get_var(ta_config_obj* pConfig, const char* varName);
+ta_config_var* ta_config_get_var(const ta_config_obj* pConfig, const char* varName);
 
 // Retrieves the value of the given config variable as a sub-object. Returns NULL if the variable does not exist.
-ta_config_obj* ta_config_get_subobj(ta_config_obj* pConfig, const char* varName);
+ta_config_obj* ta_config_get_subobj(const ta_config_obj* pConfig, const char* varName);
 
 // Retrieves the value of the given config variable as an integer. Returns NULL if the variable does not exist.
-const char* ta_config_get_string(ta_config_obj* pConfig, const char* varName);
+const char* ta_config_get_string(const ta_config_obj* pConfig, const char* varName);
 
 // Retrieves the value of the given config variable as an integer. Returns 0 if the variable does not exist.
-int ta_config_get_int(ta_config_obj* pConfig, const char* varName);
+int ta_config_get_int(const ta_config_obj* pConfig, const char* varName);
 
 // Retrieves the value of the given config variable as a float. Returns 0.0f if the variable does not exist.
-float ta_config_get_float(ta_config_obj* pConfig, const char* varName);
+float ta_config_get_float(const ta_config_obj* pConfig, const char* varName);
 
 // Retrieves the value of the given config variable as a boolean. Returns false if the variable does not exist. If the
 // variable _does_ exist, it will return false if the value is equal to "false" (case-insensitive) or "0".
-ta_bool32 ta_config_get_bool(ta_config_obj* pConfig, const char* varName);
+ta_bool32 ta_config_get_bool(const ta_config_obj* pConfig, const char* varName);
 
 
 // Determines if the variable at the given index is a sub-object.
-ta_bool32 ta_config_is_subobj_by_index(ta_config_obj* pConfig, ta_uint32 varIndex);
+ta_bool32 ta_config_is_subobj_by_index(const ta_config_obj* pConfig, ta_uint32 varIndex);
