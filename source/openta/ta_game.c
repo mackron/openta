@@ -481,7 +481,20 @@ dr_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
         ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadgetUnderMouse];
         if (wasMBPressed) {
             if (!isGadgetHeld) {
-                ta_gui_hold_gadget(pGUI, iGadgetUnderMouse, (wasLMBPressed) ? TA_MOUSE_BUTTON_LEFT : TA_MOUSE_BUTTON_RIGHT);
+                if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
+                    ta_gui_hold_gadget(pGUI, iGadgetUnderMouse, (wasLMBPressed) ? TA_MOUSE_BUTTON_LEFT : TA_MOUSE_BUTTON_RIGHT);
+                } else if (pGadget->id == TA_GUI_GADGET_TYPE_LISTBOX) {
+                    ta_int32 relativeMousePosX = mousePosXGUI - pGadget->xpos;
+                    ta_int32 relativeMousePosY = mousePosYGUI - pGadget->ypos;
+
+                    // The selected item is based on the position of the mouse.
+                    ta_int32 iSelectedItem = (relativeMousePosY / pGame->font.height) + pGadget->listbox.scrollPos;
+                    if (iSelectedItem >= pGadget->listbox.itemCount) {
+                        pGadget->listbox.iSelectedItem = (ta_uint32)-1;
+                    } else {
+                        pGadget->listbox.iSelectedItem = (ta_uint32)iSelectedItem;
+                    }
+                }
             }
         } else if (wasMBReleased) {
             if (isGadgetHeld) {

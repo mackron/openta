@@ -101,6 +101,7 @@ typedef struct
             ta_uint32 itemCount;
             ta_uint32 iSelectedItem;    // The index of the currently selected item. Set to -1 if nothing is slected.
             ta_uint32 scrollPos;
+            ta_uint32 pageSize;         // The number of items that can fit on one page of the list box. 
         } listbox;
 
         struct  // id = 3
