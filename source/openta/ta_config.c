@@ -375,9 +375,22 @@ ta_config_var* ta_config_get_var(ta_config_obj* pConfig, const char* varName)
         return NULL;
     }
 
-    for (unsigned i = 0; i < pConfig->varCount; ++i) {
-        if (strcmp(pConfig->pVars[i].name, varName) == 0) { // <-- Should this be case insensitive?
-            return &pConfig->pVars[i];
+    drpath_iterator iSeg;
+    if (drpath_first(varName, &iSeg)) {
+        drpath_iterator iNextSeg = iSeg;
+        if (drpath_next(&iNextSeg)) {
+            char subobjName[256];
+            drpath_copy_and_append_iterator(subobjName, sizeof(subobjName), "", iSeg);
+            ta_config_obj* pSubObj = ta_config_get_subobj(pConfig, subobjName);
+            if (pSubObj != NULL) {
+                return ta_config_get_var(pSubObj, iNextSeg.path + iNextSeg.segment.offset);
+            }
+        } else {
+            for (unsigned int i = 0; i < pConfig->varCount; ++i) {
+                if (strcmp(pConfig->pVars[i].name, varName) == 0) { // <-- Should this be case insensitive?
+                    return &pConfig->pVars[i];
+                }
+            }
         }
     }
 
