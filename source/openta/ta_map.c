@@ -453,7 +453,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
 
 
     // Here is where we convert the mesh builders to actual meshes. The meshes are stored in an array in the main 3DO object.
-    size_t objectMeshCount = pLoadContext->meshBuildersCount;
+    uint32_t objectMeshCount = (uint32_t)pLoadContext->meshBuildersCount;
     p3DO->pObjects[thisIndex].meshCount = objectMeshCount;
     p3DO->pObjects[thisIndex].firstMeshIndex = p3DO->meshCount;
 
@@ -462,7 +462,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
         return 0;
     }
 
-    for (size_t iMesh = 0; iMesh < objectMeshCount; ++iMesh) {
+    for (uint32_t iMesh = 0; iMesh < objectMeshCount; ++iMesh) {
         ta_mesh_builder* pMeshBuilder = &pLoadContext->pMeshBuilders[iMesh];
 
         p3DO->pMeshes[p3DO->meshCount + iMesh].textureIndex = pMeshBuilder->textureIndex;
