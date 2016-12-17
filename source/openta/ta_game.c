@@ -98,6 +98,8 @@ ta_game* ta_create_game(dr_cmdline cmdline)
         goto on_error;
     }
 
+    ta_property_manager_load_settings(&pGame->properties);
+
 
     // GUI
     // ===

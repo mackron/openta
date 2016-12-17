@@ -1,5 +1,9 @@
 // Copyright (C) 2016 David Reid. See included LICENSE file.
 
+// TODO: This needs an almost complete re-implementation:
+// - Add support for changing the value of existing keys.
+// - Add support for non-string values: numbers, booleans, strings
+
 typedef struct
 {
     // The key and value is stored in the same memory allocation. The value is stored just after
@@ -20,6 +24,15 @@ typedef struct
 ta_result ta_property_manager_init(ta_property_manager* pProperties);
 ta_result ta_property_manager_uninit(ta_property_manager* pProperties);
 
+// Loads game settings from either the registry (Windows) or a config file.
+ta_result ta_property_manager_load_settings(ta_property_manager* pProperties);
+
+// Saves game settings to either the registry (Windows) or a config file.
+ta_result ta_property_manager_save_settings(ta_property_manager* pProperties);
+
 ta_result ta_property_manager_set(ta_property_manager* pProperties, const char* key, const char* val);
+ta_result ta_property_manager_set_int(ta_property_manager* pProperties, const char* key, int val);
+ta_result ta_property_manager_set_bool(ta_property_manager* pProperties, const char* key, dr_bool32 val);
 ta_result ta_property_manager_unset(ta_property_manager* pProperties, const char* key);
+
 const char* ta_property_manager_get(ta_property_manager* pProperties, const char* key);
