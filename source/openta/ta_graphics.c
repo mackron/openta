@@ -14,10 +14,10 @@
 // - Experiment with alpha testing for handling transparency instead of alpha blending.
 
 #include <gl/gl.h>
-#include <gl/glext.h>
+#include "../external/gl/glext.h"
 
 #ifdef _WIN32
-#include <GL/wglext.h>
+#include "../external/gl/wglext.h"
 #endif
 
 typedef struct
