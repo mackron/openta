@@ -23,23 +23,28 @@
 
 // dr_libs
 #define DR_IMPLEMENTATION
-#define DR_AUDIO_IMPLEMENTATION
 #define DR_WAV_IMPLEMENTATION
 #define DR_WAV_NO_STDIO
 #define DR_MATH_IMPLEMENTATION
 #define DR_PCX_IMPLEMENTATION
 #ifdef TA_USE_EXTERNAL_DR_LIBS
 #include "../../../dr_libs/dr.h"
-#include "../../../dr_libs/dr_audio.h"
 #include "../../../dr_libs/dr_wav.h"
 #include "../../../dr_libs/dr_math.h"
 #include "../../../dr_libs/dr_pcx.h"
 #else
 #include "../external/dr_libs/dr.h"
-#include "../external/dr_libs/dr_audio.h"
 #include "../external/dr_libs/dr_wav.h"
 #include "../external/dr_libs/dr_math.h"
 #include "../external/dr_libs/dr_pcx.h"
+#endif
+
+// mini_al
+#define MAL_IMPLEMENTATION
+#ifdef TA_USE_EXTERNAL_DR_LIBS
+#include "../../../drsoftware/mini_al/mini_al.h"
+#else
+#include "../external/mini_al/mini_al.h"
 #endif
 
 
@@ -77,14 +82,15 @@ typedef uint32_t         ta_uint32;
 typedef int64_t          ta_int64;
 typedef uint64_t         ta_uint64;
 #endif
-typedef ta_int8          ta_bool8;
-typedef ta_int32         ta_bool32;
+typedef ta_uint8         ta_bool8;
+typedef ta_uint32        ta_bool32;
 #define TA_TRUE          1
 #define TA_FALSE         0
 
-
 #define ta_zero_object(p) memset((p), 0, sizeof(*(p)))
 #define ta_countof(p) (sizeof((p)) / sizeof((p)[0]))
+
+#define TA_PRIVATE static
 
 // The maximum size of the texture atlas. We don't really want to use the GPU's maximum texture size
 // because it can result in excessive wastage - modern GPUs support 16K textures, which is much more
@@ -101,6 +107,7 @@ typedef ta_int32         ta_bool32;
 #include "ta_platform_layer.h"
 #include "ta_texture_packer.h"
 #include "ta_mesh_builder.h"
+#include "ta_audio.h"
 #include "ta_graphics.h"
 #include "ta_font.h"
 #include "ta_gaf.h"
@@ -147,6 +154,7 @@ typedef ta_int32         ta_bool32;
 #include "ta_platform_layer.c"
 #include "ta_texture_packer.c"
 #include "ta_mesh_builder.c"
+#include "ta_audio.c"
 #include "ta_graphics.c"
 #include "ta_font.c"
 #include "ta_gaf.c"

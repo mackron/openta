@@ -35,7 +35,7 @@ struct ta_game
     dr_timer timer;
 
     // The audio context.
-    dra_context* pAudioContext;
+    ta_audio_context* pAudio;
 
     // Global properties.
     ta_property_manager properties;

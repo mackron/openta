@@ -74,15 +74,16 @@ ta_game* ta_create_game(dr_cmdline cmdline)
         goto on_error;
     }
 
-    // Create a show the window as soon as we can to make loading feel faster.
+    // Create and show the window as soon as we can to make loading feel faster.
     pGame->pWindow = ta_graphics_create_window(pGame->pGraphics, "Total Annihilation", 1280, 720, TA_WINDOW_FULLSCREEN | TA_WINDOW_CENTERED);
     if (pGame->pWindow == NULL) {
         goto on_error;
     }
 
+
     // Audio system.
-    dra_context_create(&pGame->pAudioContext);
-    if (pGame->pAudioContext == NULL) {
+    pGame->pAudio = ta_create_audio_context(pGame);
+    if (pGame->pAudio == NULL) {
         goto on_error;
     }
 
@@ -256,7 +257,7 @@ on_error:
         if (pGame->pCurrentMap != NULL) ta_unload_map(pGame->pCurrentMap);
         if (pGame->pWindow != NULL) ta_delete_window(pGame->pWindow);
         if (pGame->pGraphics != NULL) ta_delete_graphics_context(pGame->pGraphics);
-        if (pGame->pAudioContext != NULL) dra_context_delete(pGame->pAudioContext);
+        if (pGame->pAudio != NULL) ta_delete_audio_context(pGame->pAudio);
         if (pGame->pFS != NULL) ta_delete_file_system(pGame->pFS);
     }
 
@@ -273,7 +274,7 @@ void ta_delete_game(ta_game* pGame)
     ta_property_manager_uninit(&pGame->properties);
     ta_input_state_uninit(&pGame->input);
     ta_delete_graphics_context(pGame->pGraphics);
-    dra_context_delete(pGame->pAudioContext);
+    ta_delete_audio_context(pGame->pAudio);
     ta_delete_file_system(pGame->pFS);
     free(pGame);
 }
