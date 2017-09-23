@@ -132,13 +132,13 @@ ta_bool32 ta_fs__find_file_in_archive(ta_fs* pFS, ta_fs_archive* pArchive, const
 }
 
 
-ta_bool32 ta_fs__file_exists_in_list(const char* relativePath, size_t fileCount, ta_fs_file_info* pFiles)
+ta_bool32 ta_fs__file_exists_in_list(const char* relativePath, uint32_t fileCount, ta_fs_file_info* pFiles)
 {
     if (pFiles == NULL) {
         return TA_FALSE;
     }
 
-    for (size_t i = 0; i < fileCount; ++i) {
+    for (uint32_t i = 0; i < fileCount; ++i) {
         if (_stricmp(pFiles[i].relativePath, relativePath) == 0) {    // <-- TA seems to be case insensitive.
             return TA_TRUE;
         }
@@ -147,7 +147,7 @@ ta_bool32 ta_fs__file_exists_in_list(const char* relativePath, size_t fileCount,
     return TA_FALSE;
 }
 
-void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRelativePath, ta_bool32 recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut)
+void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRelativePath, ta_bool32 recursive, uint32_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut)
 {
     assert(pFS != NULL);
     assert(directoryRelativePath != NULL);
@@ -169,7 +169,7 @@ void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRe
     searchQuery[searchQueryLength + 1] = '*';
     searchQuery[searchQueryLength + 2] = '\0';
 
-    size_t fileCount = 0;
+    uint32_t fileCount = 0;
 
     WIN32_FIND_DATAA ffd;
     HANDLE hFind = FindFirstFileA(searchQuery, &ffd);
@@ -219,7 +219,7 @@ void ta_fs__gather_files_in_native_directory(ta_fs* pFS, const char* directoryRe
 #endif
 }
 
-void ta_fs__gather_files_in_archive_directory_at_location(ta_fs* pFS, ta_fs_archive* pArchive, uint32_t directoryDataPos, const char* parentPath, ta_bool32 recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut, uint32_t prevFileCount)
+void ta_fs__gather_files_in_archive_directory_at_location(ta_fs* pFS, ta_fs_archive* pArchive, uint32_t directoryDataPos, const char* parentPath, ta_bool32 recursive, uint32_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut, uint32_t prevFileCount)
 {
     ta_memory_stream stream = ta_create_memory_stream(pArchive->pCentralDirectory, pArchive->centralDirectorySize);
     if (!ta_memory_stream_seek(&stream, directoryDataPos, ta_seek_origin_start)) {
@@ -281,7 +281,7 @@ void ta_fs__gather_files_in_archive_directory_at_location(ta_fs* pFS, ta_fs_arch
     }
 }
 
-void ta_fs__gather_files_in_archive_directory(ta_fs* pFS, ta_fs_archive* pArchive, const char* directoryRelativePath, ta_bool32 recursive, size_t* pFileCountInOut, ta_fs_file_info** ppFilesInOut)
+void ta_fs__gather_files_in_archive_directory(ta_fs* pFS, ta_fs_archive* pArchive, const char* directoryRelativePath, ta_bool32 recursive, ta_uint32* pFileCountInOut, ta_fs_file_info** ppFilesInOut)
 {
     assert(pFS != NULL);
     assert(directoryRelativePath != NULL);
@@ -362,7 +362,7 @@ ta_bool32 ta_fs__adjust_central_dir_name_pointers_recursive(ta_memory_stream* pS
         // the recursion to work correctly.
         if (isDirectory)
         {
-            uint32_t currentReadPos = ta_memory_stream_tell(pStream);
+            uint32_t currentReadPos = (uint32_t)ta_memory_stream_tell(pStream);
 
             // Before traversing the sub-directory we need to seek to it.
             if (!ta_memory_stream_seek(pStream, dataPos, ta_seek_origin_start)) {
@@ -638,12 +638,12 @@ ta_fs* ta_create_file_system()
     ta_fs__register_archive(pFS, "tactics8.hpi");
 
     // Now we need to search for .ufo files and register them. We only search the root directory for these.
-    size_t fileCount = 0;
+    uint32_t fileCount = 0;
     ta_fs_file_info* pFiles = NULL;
     ta_fs__gather_files_in_native_directory(pFS, "", TA_FALSE, &fileCount, &pFiles);
     qsort(pFiles, fileCount, sizeof(*pFiles), ta_fs__file_info_qsort_callback);
 
-    for (size_t iFile = 0; iFile < fileCount; ++iFile) {
+    for (uint32_t iFile = 0; iFile < fileCount; ++iFile) {
         if (!pFiles[iFile].isDirectory && drpath_extension_equal(pFiles[iFile].relativePath, "ufo")) {
             ta_fs__register_archive(pFS, pFiles[iFile].relativePath);
         }
@@ -842,13 +842,13 @@ ta_bool32 ta_read_file_uint8(ta_file* pFile, uint8_t* pBufferOut)
 
 //// Iteration ////
 
-size_t ta_fs__gather_files_in_directory(ta_fs* pFS, const char* directoryRelativePath, ta_fs_file_info** ppFilesInOut, ta_bool32 recursive)
+uint32_t ta_fs__gather_files_in_directory(ta_fs* pFS, const char* directoryRelativePath, ta_fs_file_info** ppFilesInOut, ta_bool32 recursive)
 {
     assert(pFS != NULL);
     assert(directoryRelativePath != NULL);
     assert(ppFilesInOut != NULL);
 
-    size_t fileCount = 0;
+    uint32_t fileCount = 0;
 
     // Native directory has the highest priority.
     ta_fs__gather_files_in_native_directory(pFS, directoryRelativePath, recursive, &fileCount, ppFilesInOut);

@@ -195,7 +195,7 @@ ta_bool32 ta_graphics__compile_shader(ta_graphics_context* pGraphics, ta_graphic
     if (vertexStr != NULL) {
         pGraphics->glGenProgramsARB(1, &pShader->vertexProgram);
         pGraphics->glBindProgramARB(GL_VERTEX_PROGRAM_ARB, pShader->vertexProgram);
-        pGraphics->glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(vertexStr), vertexStr);    // -1 to remove null terminator.
+        pGraphics->glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, (GLsizei)strlen(vertexStr), vertexStr);    // -1 to remove null terminator.
 
         GLint errorPos;
         glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
@@ -212,7 +212,7 @@ ta_bool32 ta_graphics__compile_shader(ta_graphics_context* pGraphics, ta_graphic
     if (fragmentStr != NULL) {
         pGraphics->glGenProgramsARB(1, &pShader->fragmentProgram);
         pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pShader->fragmentProgram);
-        pGraphics->glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, strlen(fragmentStr), fragmentStr);    // -1 to remove null terminator.
+        pGraphics->glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, (GLsizei)strlen(fragmentStr), fragmentStr);    // -1 to remove null terminator.
 
         GLint errorPos;
         glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
@@ -1032,7 +1032,7 @@ static TA_INLINE void ta_graphics__draw_mesh(ta_graphics_context* pGraphics, ta_
     if (pMesh->pIndexData != NULL) {
         glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (uint8_t*)pMesh->pIndexData + byteOffset);
     } else {
-        glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (const GLvoid*)byteOffset);
+        glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (const GLvoid*)((uint8_t*)0 + byteOffset));
     }
 }
 

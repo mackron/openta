@@ -98,6 +98,8 @@ ta_game* ta_create_game(dr_cmdline cmdline)
         goto on_error;
     }
 
+    ta_property_manager_load_settings(&pGame->properties);
+
 
     // GUI
     // ===
@@ -655,7 +657,7 @@ void ta_step__main_menu(ta_game* pGame, double dt)
     float versionSizeX;
     float versionSizeY;
     ta_font_measure_text(&pGame->fontSmall, scale, versionStr, &versionSizeX, &versionSizeY);
-    ta_draw_textf(pGame->pGraphics, &pGame->fontSmall, 255, scale, (pGame->pGraphics->resolutionX - versionSizeX)/2, 300*scale + offsetY, versionStr, pGame->mainMenu.pGadgets[iGadgetUnderMouse].name);
+    ta_draw_textf(pGame->pGraphics, &pGame->fontSmall, 255, scale, (pGame->pGraphics->resolutionX - versionSizeX)/2, 300*scale + offsetY, "%s", versionStr);
 }
 
 void ta_step__sp_menu(ta_game* pGame, double dt)
