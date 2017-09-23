@@ -1230,7 +1230,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                 const float itemPadding = 0;
                 float itemPosX = 0;
                 float itemPosY = -4*scale;
-                for (ta_uint32 iItem = pGadget->listbox.scrollPos; iItem < pGadget->listbox.scrollPos + pGadget->listbox.pageSize; ++iItem) {
+                for (ta_uint32 iItem = pGadget->listbox.scrollPos; iItem < pGadget->listbox.scrollPos + pGadget->listbox.pageSize && iItem < pGadget->listbox.itemCount; ++iItem) {
                     ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, posX + itemPosX, posY + itemPosY, pGadget->listbox.pItems[iItem]);
                     if (iItem == pGadget->listbox.iSelectedItem) {
                         float highlightPosX  = posX + itemPosX - (0*scale);
