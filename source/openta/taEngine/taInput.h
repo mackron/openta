@@ -72,14 +72,14 @@ void ta_input_state_reset_transient_state(ta_input_state* pState);
 void ta_input_state_on_mouse_move(ta_input_state* pState, float newMousePosX, float newMousePosY);
 void ta_input_state_on_mouse_button_down(ta_input_state* pState, ta_uint32 mouseButton);
 void ta_input_state_on_mouse_button_up(ta_input_state* pState, ta_uint32 mouseButton);
-dr_bool32 ta_input_state_is_mouse_button_down(ta_input_state* pState, ta_uint32 mouseButton);
-dr_bool32 ta_input_state_was_mouse_button_pressed(ta_input_state* pState, ta_uint32 mouseButton);
-dr_bool32 ta_input_state_was_mouse_button_released(ta_input_state* pState, ta_uint32 mouseButton);
-dr_bool32 ta_input_state_is_any_mouse_button_down(ta_input_state* pState);
+ta_bool32 ta_input_state_is_mouse_button_down(ta_input_state* pState, ta_uint32 mouseButton);
+ta_bool32 ta_input_state_was_mouse_button_pressed(ta_input_state* pState, ta_uint32 mouseButton);
+ta_bool32 ta_input_state_was_mouse_button_released(ta_input_state* pState, ta_uint32 mouseButton);
+ta_bool32 ta_input_state_is_any_mouse_button_down(ta_input_state* pState);
 
 // Called when the state of a key changes.
 void ta_input_state_on_key_down(ta_input_state* pState, ta_uint32 key);
 void ta_input_state_on_key_up(ta_input_state* pState, ta_uint32 key);
-dr_bool32 ta_input_state_is_key_down(ta_input_state* pState, ta_uint32 key);
-dr_bool32 ta_input_state_was_key_pressed(ta_input_state* pState, ta_uint32 key);
-dr_bool32 ta_input_state_was_key_released(ta_input_state* pState, ta_uint32 key);
+ta_bool32 ta_input_state_is_key_down(ta_input_state* pState, ta_uint32 key);
+ta_bool32 ta_input_state_was_key_pressed(ta_input_state* pState, ta_uint32 key);
+ta_bool32 ta_input_state_was_key_released(ta_input_state* pState, ta_uint32 key);

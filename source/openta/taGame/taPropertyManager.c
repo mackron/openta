@@ -290,7 +290,7 @@ ta_result ta_property_manager_set_int(ta_property_manager* pProperties, const ch
     return ta_property_manager_set(pProperties, key, valStr);
 }
 
-ta_result ta_property_manager_set_bool(ta_property_manager* pProperties, const char* key, dr_bool32 val)
+ta_result ta_property_manager_set_bool(ta_property_manager* pProperties, const char* key, ta_bool32 val)
 {
     return ta_property_manager_set(pProperties, key, (val) ? "true" : "false");
 }

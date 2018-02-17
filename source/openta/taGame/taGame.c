@@ -36,14 +36,15 @@ int ta_qsort_cb_map(const void* a, const void* b)
 }
 
 
-ta_game* ta_create_game(dr_cmdline cmdline)
+ta_game* ta_create_game(int argc, char** argv)
 {
     ta_game* pGame = calloc(1, sizeof(*pGame));
     if (pGame == NULL) {
         return NULL;
     }
 
-    pGame->cmdline = cmdline;
+    pGame->argc = argc;
+    pGame->argv = argv;
 
     pGame->pFS = ta_create_file_system();
     if (pGame->pFS == NULL) {
@@ -406,7 +407,7 @@ typedef struct
     ta_gui_gadget* pGadget;  // The gadget this event relates to.
 } ta_gui_input_event;
 
-dr_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* pEvent)
+ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* pEvent)
 {
     if (pGame == NULL || pGUI == NULL || pEvent == NULL) return TA_FALSE;
     ta_zero_object(pEvent);

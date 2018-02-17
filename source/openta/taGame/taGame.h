@@ -14,7 +14,8 @@
 struct ta_game
 {
     // The command line that was used to start up the game.
-    dr_cmdline cmdline;
+    int argc;
+    char** argv;
 
     // The file system context.
     ta_fs* pFS;
@@ -103,7 +104,7 @@ struct ta_game
 };
 
 // Creates a game instance.
-ta_game* ta_create_game(dr_cmdline cmdline);
+ta_game* ta_create_game(int argc, char** argv);
 
 // Deletes a game instance.
 void ta_delete_game(ta_game* pGame);

@@ -38,12 +38,12 @@
 #include "taGame/taFeatures.c"
 #include "taGame/taMap.c"
 
-int ta_main(dr_cmdline cmdline)
+int main(int argc, char** argv)
 {
     // The window system needs to be initialized once, before creating the game context.
     ta_init_window_system();
 
-    ta_game* pGame = ta_create_game(cmdline);
+    ta_game* pGame = ta_create_game(argc, argv);
     if (pGame == NULL) {
         return TA_ERROR_FAILED_TO_CREATE_GAME_CONTEXT;
     }
@@ -55,14 +55,4 @@ int ta_main(dr_cmdline cmdline)
     ta_uninit_window_system();
 
     return result;
-}
-
-int main(int argc, char** argv)
-{
-    dr_cmdline cmdline;
-    if (!dr_init_cmdline(&cmdline, argc, argv)) {
-        return TA_ERROR_FAILED_TO_PARSE_CMDLINE;
-    }
-
-    return ta_main(cmdline);
 }
