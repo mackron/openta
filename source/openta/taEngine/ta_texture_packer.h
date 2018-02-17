@@ -1,4 +1,4 @@
-// Copyright (C) 2016 David Reid. See included LICENSE file.
+// Copyright (C) 2018 David Reid. See included LICENSE file.
 
 // The texture packer is used for packing small textures into a large texture atlases. It's usage is
 // pretty simple - you simply allocate a rectangle region, and then commit image data to it. Note

@@ -1,4 +1,4 @@
-// Copyright (C) 2016 David Reid. See included LICENSE file.
+// Copyright (C) 2018 David Reid. See included LICENSE file.
 
 #define TA_SCREEN_NONE          0
 #define TA_SCREEN_IN_GAME       1

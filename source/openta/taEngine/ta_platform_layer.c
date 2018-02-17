@@ -1,4 +1,4 @@
-// Copyright (C) 2016 David Reid. See included LICENSE file.
+// Copyright (C) 2018 David Reid. See included LICENSE file.
 
 #ifdef _WIN32
 static const char* g_TAWndClassName = "TAMainWindow";

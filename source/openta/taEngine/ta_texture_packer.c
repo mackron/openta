@@ -1,4 +1,4 @@
-// Copyright (C) 2016 David Reid. See included LICENSE file.
+// Copyright (C) 2018 David Reid. See included LICENSE file.
 
 ta_bool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t* pPosXOut, uint32_t* pPosYOut)
 {

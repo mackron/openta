@@ -1,4 +1,4 @@
-// Copyright (C) 2016 David Reid. See included LICENSE file.
+// Copyright (C) 2018 David Reid. See included LICENSE file.
 
 #define TA_MAX_FONT_SIZE    64     // <-- Don't make this too big otherwise you'll end up using too much stack space. Can probably improve this later.
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2016 David Reid. See included LICENSE file.
+// Copyright (C) 2018 David Reid. See included LICENSE file.
 
 // TODO: This needs an almost complete re-implementation:
 // - Add support for changing the value of existing keys.

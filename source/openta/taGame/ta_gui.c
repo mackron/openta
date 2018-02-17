@@ -1,4 +1,4 @@
-// Copyright (C) 2016 David Reid. See included LICENSE file.
+// Copyright (C) 2018 David Reid. See included LICENSE file.
 
 TA_INLINE char* ta_gui__copy_string_prop(char** ppNextStr, const char* src)
 {

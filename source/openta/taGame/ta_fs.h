@@ -1,4 +1,4 @@
-// Copyright (C) 2016 David Reid. See included LICENSE file.
+// Copyright (C) 2018 David Reid. See included LICENSE file.
 
 #define TA_OPEN_FILE_WITH_NULL_TERMINATOR    0x0001      // Opens a file with a null terminator at the end.
 
