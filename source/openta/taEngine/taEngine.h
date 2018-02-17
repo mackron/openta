@@ -78,13 +78,13 @@ typedef ta_uint32        ta_bool32;
 #define TA_MAX_TEXTURE_ATLAS_SIZE   512 /*4096*/
 
 // Total Annihilation headers.
-#include "ta_errors.h"
-#include "ta_type_declarations.h"
-#include "ta_misc.h"
-#include "ta_string.h"
-#include "ta_input.h"
-#include "ta_platform_layer.h"
-#include "ta_texture_packer.h"
-#include "ta_mesh_builder.h"
-#include "ta_audio.h"
-#include "ta_graphics.h"
+#include "taErrors.h"
+#include "taTypeDeclarations.h"
+#include "taMisc.h"
+#include "taString.h"
+#include "taInput.h"
+#include "taPlatformLayer.h"
+#include "taTexturePacker.h"
+#include "taMeshBuilder.h"
+#include "taAudio.h"
+#include "taGraphics.h"

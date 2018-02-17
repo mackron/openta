@@ -2,19 +2,19 @@
 
 // The main file containing the entry point. This is the only compiled file for the entire game.
 
-#include "taEngine/ta_engine.h"
+#include "taEngine/taEngine.h"
 
 
-#include "taGame/ta_font.h"
-#include "taGame/ta_gaf.h"
-#include "taGame/ta_gui.h"
-#include "taGame/ta_property_manager.h"
-#include "taGame/ta_game.h"
-#include "taGame/ta_fs.h"
-#include "taGame/ta_3do.h"
-#include "taGame/ta_config.h"
-#include "taGame/ta_features.h"
-#include "taGame/ta_map.h"
+#include "taGame/taFont.h"
+#include "taGame/taGAF.h"
+#include "taGame/taGUI.h"
+#include "taGame/taPropertyManager.h"
+#include "taGame/taGame.h"
+#include "taGame/taFS.h"
+#include "taGame/ta3DO.h"
+#include "taGame/taConfig.h"
+#include "taGame/taFeatures.h"
+#include "taGame/taMap.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,18 +25,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "taEngine/ta_engine.c"
+#include "taEngine/taEngine.c"
 
-#include "taGame/ta_font.c"
-#include "taGame/ta_gaf.c"
-#include "taGame/ta_gui.c"
-#include "taGame/ta_property_manager.c"
-#include "taGame/ta_game.c"
-#include "taGame/ta_fs.c"
-#include "taGame/ta_3do.c"
-#include "taGame/ta_config.c"
-#include "taGame/ta_features.c"
-#include "taGame/ta_map.c"
+#include "taGame/taFont.c"
+#include "taGame/taGAF.c"
+#include "taGame/taGUI.c"
+#include "taGame/taPropertyManager.c"
+#include "taGame/taGame.c"
+#include "taGame/taFS.c"
+#include "taGame/ta3DO.c"
+#include "taGame/taConfig.c"
+#include "taGame/taFeatures.c"
+#include "taGame/taMap.c"
 
 int ta_main(dr_cmdline cmdline)
 {
