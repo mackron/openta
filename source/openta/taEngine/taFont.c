@@ -2,15 +2,15 @@
 
 #define TA_MAX_FONT_SIZE    64     // <-- Don't make this too big otherwise you'll end up using too much stack space. Can probably improve this later.
 
-ta_result ta_font_load_fnt(ta_game* pGame, const char* filePath, ta_font* pFont)
+ta_result ta_font_load_fnt(taEngineContext* pEngine, const char* filePath, ta_font* pFont)
 {
-    assert(pGame != NULL);
+    assert(pEngine != NULL);
     assert(filePath != NULL);
     assert(pFont != NULL);
 
     pFont->canBeColored = TA_TRUE;
 
-    ta_file* pFile = ta_open_file(pGame->pFS, filePath, 0);
+    ta_file* pFile = ta_open_file(pEngine->pFS, filePath, 0);
     if (pFile == NULL) {
         return TA_FILE_NOT_FOUND;
     }
@@ -96,7 +96,7 @@ ta_result ta_font_load_fnt(ta_game* pGame, const char* filePath, ta_font* pFont)
 
     ta_close_file(pFile);
 
-    pFont->pTexture = ta_create_texture(pGame->pGraphics, packer.width, packer.height, 1, packer.pImageData);
+    pFont->pTexture = ta_create_texture(pEngine->pGraphics, packer.width, packer.height, 1, packer.pImageData);
     if (pFont->pTexture == NULL) {
         return TA_ERROR;
     }
@@ -104,9 +104,9 @@ ta_result ta_font_load_fnt(ta_game* pGame, const char* filePath, ta_font* pFont)
     return TA_SUCCESS;
 }
 
-ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
+ta_result ta_font_load_gaf(taEngineContext* pEngine, const char* filePath, ta_font* pFont)
 {
-    assert(pGame != NULL);
+    assert(pEngine != NULL);
     assert(filePath != NULL);
     assert(pFont != NULL);
 
@@ -128,7 +128,7 @@ ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
         return TA_FILE_NOT_FOUND;
     }
 
-    ta_gaf* pGAF = ta_open_gaf(pGame->pFS, packagePath);
+    ta_gaf* pGAF = ta_open_gaf(pEngine->pFS, packagePath);
     if (pGAF == NULL) {
         return TA_FILE_NOT_FOUND;
     }
@@ -222,12 +222,12 @@ ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
 
     for (ta_uint32 y = 0; y < packer.height; ++y) {
         for (ta_uint32 x = 0; x < packer.width; ++x) {
-            ta_uint32 color = pGame->palette[packer.pImageData[(y*packer.width) + x]];
+            ta_uint32 color = pEngine->palette[packer.pImageData[(y*packer.width) + x]];
             pImageDataRGBA[(y*packer.width) + x] = color;
         }
     }
 
-    pFont->pTexture = ta_create_texture(pGame->pGraphics, packer.width, packer.height, 4, pImageDataRGBA);
+    pFont->pTexture = ta_create_texture(pEngine->pGraphics, packer.width, packer.height, 4, pImageDataRGBA);
     if (pFont->pTexture == NULL) {
         free(pImageDataRGBA);
         ta_texture_packer_uninit(&packer);
@@ -239,19 +239,19 @@ ta_result ta_font_load_gaf(ta_game* pGame, const char* filePath, ta_font* pFont)
     return TA_SUCCESS;
 }
 
-ta_result ta_font_load(ta_game* pGame, const char* filePath, ta_font* pFont)
+ta_result ta_font_load(taEngineContext* pEngine, const char* filePath, ta_font* pFont)
 {
     if (pFont == NULL) return TA_INVALID_ARGS;
     ta_zero_object(pFont);
 
-    if (pGame == NULL || filePath == NULL) return TA_INVALID_ARGS;
-    pFont->pGame = pGame;
+    if (pEngine == NULL || filePath == NULL) return TA_INVALID_ARGS;
+    pFont->pEngine = pEngine;
 
     // The font is loaded differently depending on whether or not it's being loaded from a .FNT file or a .GAF file.
     if (drpath_extension_equal(filePath, "FNT")) {
-        return ta_font_load_fnt(pGame, filePath, pFont);
+        return ta_font_load_fnt(pEngine, filePath, pFont);
     } else {
-        return ta_font_load_gaf(pGame, filePath, pFont);
+        return ta_font_load_gaf(pEngine, filePath, pFont);
     }
 }
 

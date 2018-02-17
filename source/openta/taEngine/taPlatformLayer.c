@@ -128,7 +128,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
             case WM_CLOSE:
             {
-                ta_close(pWindow->pGame);
+                ta_post_quit_message(0);
                 return 0;
             }
 
@@ -136,7 +136,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
             case WM_SIZE:
             {
-                ta_on_window_size(pWindow->pGame, LOWORD(lParam), HIWORD(lParam));
+                ta_on_window_size(pWindow->pEngine, LOWORD(lParam), HIWORD(lParam));
                 break;
             }
 
@@ -144,54 +144,54 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
             case WM_LBUTTONDOWN:
             {
-                ta_on_mouse_button_down(pWindow->pGame, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
+                ta_on_mouse_button_down(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
                 break;
             }
             case WM_LBUTTONUP:
             {
-                ta_on_mouse_button_up(pWindow->pGame, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                ta_on_mouse_button_up(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
             case WM_LBUTTONDBLCLK:
             {
-                ta_on_mouse_button_down(pWindow->pGame, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
-                ta_on_mouse_button_dblclick(pWindow->pGame, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
+                ta_on_mouse_button_down(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
+                ta_on_mouse_button_dblclick(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
                 break;
             }
 
 
             case WM_RBUTTONDOWN:
             {
-                ta_on_mouse_button_down(pWindow->pGame, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
+                ta_on_mouse_button_down(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
                 break;
             }
             case WM_RBUTTONUP:
             {
-                ta_on_mouse_button_up(pWindow->pGame, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                ta_on_mouse_button_up(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
             case WM_RBUTTONDBLCLK:
             {
-                ta_on_mouse_button_down(pWindow->pGame, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
-                ta_on_mouse_button_dblclick(pWindow->pGame, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
+                ta_on_mouse_button_down(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
+                ta_on_mouse_button_dblclick(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
                 break;
             }
 
 
             case WM_MBUTTONDOWN:
             {
-                ta_on_mouse_button_down(pWindow->pGame, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
+                ta_on_mouse_button_down(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
                 break;
             }
             case WM_MBUTTONUP:
             {
-                ta_on_mouse_button_up(pWindow->pGame, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                ta_on_mouse_button_up(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
             case WM_MBUTTONDBLCLK:
             {
-                ta_on_mouse_button_down(pWindow->pGame, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
-                ta_on_mouse_button_dblclick(pWindow->pGame, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
+                ta_on_mouse_button_down(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
+                ta_on_mouse_button_dblclick(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
                 break;
             }
 
@@ -205,7 +205,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 p.y = GET_Y_LPARAM(lParam);
                 ScreenToClient(hWnd, &p);
 
-                ta_on_mouse_wheel(pWindow->pGame, delta, p.x, p.y, ta_win32_get_mouse_event_state_flags(wParam));
+                ta_on_mouse_wheel(pWindow->pEngine, delta, p.x, p.y, ta_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
 
@@ -214,7 +214,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
             {
                 pWindow->isCursorOver = TA_FALSE;
 
-                ta_on_mouse_leave(pWindow->pGame);
+                ta_on_mouse_leave(pWindow->pEngine);
                 break;
             }
 
@@ -227,10 +227,10 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                     ta_win32_track_mouse_leave_event(hWnd);
                     pWindow->isCursorOver = TA_TRUE;
 
-                    ta_on_mouse_enter(pWindow->pGame);
+                    ta_on_mouse_enter(pWindow->pEngine);
                 }
 
-                ta_on_mouse_move(pWindow->pGame, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                ta_on_mouse_move(pWindow->pEngine, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
 
@@ -244,7 +244,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                         stateFlags |= TA_KEY_STATE_AUTO_REPEATED;
                     }
 
-                    ta_on_key_down(pWindow->pGame, ta_win32_to_ta_key(wParam), stateFlags);
+                    ta_on_key_down(pWindow->pEngine, ta_win32_to_ta_key(wParam), stateFlags);
                 }
 
                 break;
@@ -255,7 +255,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 if (!ta_is_win32_mouse_button_key_code(wParam))
                 {
                     unsigned int stateFlags = ta_win32_get_modifier_key_state_flags();
-                    ta_on_key_up(pWindow->pGame, ta_win32_to_ta_key(wParam), stateFlags);
+                    ta_on_key_up(pWindow->pEngine, ta_win32_to_ta_key(wParam), stateFlags);
                 }
 
                 break;
@@ -304,7 +304,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                                 stateFlags |= TA_KEY_STATE_AUTO_REPEATED;
                             }
 
-                            ta_on_printable_key_down(pWindow->pGame, character, stateFlags);
+                            ta_on_printable_key_down(pWindow->pEngine, character, stateFlags);
                         }
                     }
                 }
@@ -351,7 +351,13 @@ void ta_uninit_window_system()
     UnregisterClassA(g_TAWndClassName, GetModuleHandleA(NULL));
 }
 
-ta_window* ta_create_window(ta_game* pGame, const char* pTitle, unsigned int resolutionX, unsigned int resolutionY, unsigned int options)
+void ta_post_quit_message(int exitCode)
+{
+    PostQuitMessage(exitCode);
+}
+
+
+ta_window* ta_create_window(taEngineContext* pEngine, const char* pTitle, unsigned int resolutionX, unsigned int resolutionY, unsigned int options)
 {
     DWORD dwExStyle = 0;
     DWORD dwStyle = WS_OVERLAPPEDWINDOW;
@@ -405,7 +411,7 @@ ta_window* ta_create_window(ta_game* pGame, const char* pTitle, unsigned int res
         return NULL;
     }
 
-    pWindow->pGame = pGame;
+    pWindow->pEngine = pEngine;
     pWindow->hWnd = hWnd;
 
 
@@ -443,7 +449,7 @@ void ta_window_release_mouse()
 }
 
 
-int ta_main_loop(ta_game* pGame)
+int ta_main_loop(taEngineContext* pEngine)
 {
     for (;;)
     {
@@ -460,7 +466,9 @@ int ta_main_loop(ta_game* pGame)
         }
 
         // After handling the next event in the queue we let the game know it should do the next frame.
-        ta_step(pGame);
+        if (pEngine->onStep) {
+            pEngine->onStep(pEngine);
+        }
     }
 
     return 0;
@@ -505,7 +513,7 @@ void ta_delete_window(ta_window* pWindow)
     free(pWindow);
 }
 
-int ta_main_loop(ta_game* pGame)
+int ta_main_loop(taEngineContext* pEngine)
 {
     // TODO: Implement Me.
 

@@ -4,13 +4,11 @@
 
 #include "taEngine/taEngine.h"
 
-
-#include "taGame/taFont.h"
+#include "taGame/taFS.h"
 #include "taGame/taGAF.h"
 #include "taGame/taGUI.h"
 #include "taGame/taPropertyManager.h"
 #include "taGame/taGame.h"
-#include "taGame/taFS.h"
 #include "taGame/ta3DO.h"
 #include "taGame/taConfig.h"
 #include "taGame/taFeatures.h"
@@ -27,12 +25,11 @@
 
 #include "taEngine/taEngine.c"
 
-#include "taGame/taFont.c"
+#include "taGame/taFS.c"
 #include "taGame/taGAF.c"
 #include "taGame/taGUI.c"
 #include "taGame/taPropertyManager.c"
 #include "taGame/taGame.c"
-#include "taGame/taFS.c"
 #include "taGame/ta3DO.c"
 #include "taGame/taConfig.c"
 #include "taGame/taFeatures.c"

@@ -43,11 +43,13 @@
 
 
 // Total Annihilation source files.
+#include "taPlatformLayer.c"
 #include "taMisc.c"
 #include "taString.c"
 #include "taInput.c"
-#include "taPlatformLayer.c"
 #include "taTexturePacker.c"
 #include "taMeshBuilder.c"
 #include "taAudio.c"
 #include "taGraphics.c"
+#include "taFont.c"
+#include "taEngineContext.c"

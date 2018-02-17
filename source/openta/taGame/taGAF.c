@@ -457,7 +457,7 @@ ta_result ta_gaf_texture_group__create_texture_atlas(ta_game* pGame, ta_gaf_text
     assert(ppTexture != NULL);
 
     if (colorMode == ta_color_mode_palette) {
-        *ppTexture = ta_create_texture(pGame->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
+        *ppTexture = ta_create_texture(pGame->engine.pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
         if (*ppTexture == NULL) {
             return TA_FAILED_TO_CREATE_RESOURCE;
         }
@@ -469,11 +469,11 @@ ta_result ta_gaf_texture_group__create_texture_atlas(ta_game* pGame, ta_gaf_text
 
         for (ta_uint32 y = 0; y < pPacker->height; ++y) {
             for (ta_uint32 x = 0; x < pPacker->width; ++x) {
-                pImageData[(y*pPacker->width) + x] = pGame->palette[pPacker->pImageData[(y*pPacker->width) + x]];
+                pImageData[(y*pPacker->width) + x] = pGame->engine.palette[pPacker->pImageData[(y*pPacker->width) + x]];
             }
         }
 
-        *ppTexture = ta_create_texture(pGame->pGraphics, pPacker->width, pPacker->height, 4, pImageData);
+        *ppTexture = ta_create_texture(pGame->engine.pGraphics, pPacker->width, pPacker->height, 4, pImageData);
         if (*ppTexture == NULL) {
             free(pImageData);
             return TA_FAILED_TO_CREATE_RESOURCE;
@@ -492,7 +492,7 @@ ta_result ta_gaf_texture_group_init(ta_game* pGame, const char* filePath, ta_col
     
     pGroup->pGame = pGame;
 
-    ta_gaf* pGAF = ta_open_gaf(pGame->pFS, filePath);
+    ta_gaf* pGAF = ta_open_gaf(pGame->engine.pFS, filePath);
     if (pGAF == NULL) {
         return TA_FILE_NOT_FOUND;
     }

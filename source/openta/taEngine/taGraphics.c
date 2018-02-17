@@ -28,8 +28,8 @@ typedef struct
 
 struct ta_graphics_context
 {
-    // A pointer to the game that owns this renderer.
-    ta_game* pGame;
+    // A pointer to the engine context that owns this renderer.
+    taEngineContext* pEngine;
 
     // The current window.
     ta_window* pCurrentWindow;
@@ -228,9 +228,9 @@ ta_bool32 ta_graphics__compile_shader(ta_graphics_context* pGraphics, ta_graphic
 }
 
 
-ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette[256])
+ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, uint32_t palette[256])
 {
-    if (pGame == NULL) {
+    if (pEngine == NULL) {
         return NULL;
     }
 
@@ -240,7 +240,7 @@ ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette
     }
 
 
-    pGraphics->pGame          = pGame;
+    pGraphics->pEngine        = pEngine;
     pGraphics->pCurrentWindow = NULL;
 
     // Default settings.
@@ -514,7 +514,7 @@ void ta_delete_graphics_context(ta_graphics_context* pGraphics)
 ta_window* ta_graphics_create_window(ta_graphics_context* pGraphics, const char* pTitle, unsigned int resolutionX, unsigned int resolutionY, unsigned int options)
 {
 #ifdef _WIN32
-    ta_window* pWindow = ta_create_window(pGraphics->pGame, pTitle, resolutionX, resolutionY, options);
+    ta_window* pWindow = ta_create_window(pGraphics->pEngine, pTitle, resolutionX, resolutionY, options);
     if (pWindow == NULL) {
         return NULL;
     }
@@ -1175,7 +1175,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                 if (!ta_is_string_null_or_empty(text)) {
                     float textSizeX;
                     float textSizeY;
-                    ta_font_measure_text(&pGraphics->pGame->font, scale, text, &textSizeX, &textSizeY);
+                    ta_font_measure_text(&pGraphics->pEngine->font, scale, text, &textSizeX, &textSizeY);
 
                     float textPosX = posX + (sizeX - textSizeX)/2;
                     float textPosY = posY + (sizeY - textSizeY)/2 - (4*scale);
@@ -1191,20 +1191,20 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                         textPosY += 1*scale;
                     }
 
-                    ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, textPosX, textPosY, text);
+                    ta_draw_text(pGraphics, &pGraphics->pEngine->font, 255, scale, textPosX, textPosY, text);
 
                     if (pGadget->button.quickkey != 0 && pGadget->button.stages == 0) {
                         float charPosX;
                         float charPosY;
                         float charSizeX;
                         float charSizeY;
-                        if (ta_font_find_character_metrics(&pGraphics->pGame->font, scale, text, pGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
+                        if (ta_font_find_character_metrics(&pGraphics->pEngine->font, scale, text, pGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
                             float underlineHeight = roundf(1*scale);
                             float underlineOffsetY = roundf(0*scale);
                             charPosX += textPosX;
                             charPosY += textPosY;
 
-                            ta_uint32 underlineRGBA = (isGadgetPressed) ? pGraphics->pGame->palette[0] : pGraphics->pGame->palette[2];
+                            ta_uint32 underlineRGBA = (isGadgetPressed) ? pGraphics->pEngine->palette[0] : pGraphics->pEngine->palette[2];
                             float underlineR = ((underlineRGBA & 0x00FF0000) >> 16) / 255.0f;
                             float underlineG = ((underlineRGBA & 0x0000FF00) >>  8) / 255.0f;
                             float underlineB = ((underlineRGBA & 0x000000FF) >>  0) / 255.0f;
@@ -1231,12 +1231,12 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                 float itemPosX = 0;
                 float itemPosY = -4*scale;
                 for (ta_uint32 iItem = pGadget->listbox.scrollPos; iItem < pGadget->listbox.scrollPos + pGadget->listbox.pageSize && iItem < pGadget->listbox.itemCount; ++iItem) {
-                    ta_draw_text(pGraphics, &pGraphics->pGame->font, 255, scale, posX + itemPosX, posY + itemPosY, pGadget->listbox.pItems[iItem]);
+                    ta_draw_text(pGraphics, &pGraphics->pEngine->font, 255, scale, posX + itemPosX, posY + itemPosY, pGadget->listbox.pItems[iItem]);
                     if (iItem == pGadget->listbox.iSelectedItem) {
                         float highlightPosX  = posX + itemPosX - (0*scale);
                         float highlightPosY  = posY + itemPosY + (4*scale);
                         float highlightSizeX = sizeX + (0*scale)*2;
-                        float highlightSizeY = pGraphics->pGame->font.height*scale + (0*scale)*2;
+                        float highlightSizeY = pGraphics->pEngine->font.height*scale + (0*scale)*2;
 
                         glEnable(GL_BLEND);
                         ta_graphics__bind_shader(pGraphics, NULL);
@@ -1253,7 +1253,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                         glDisable(GL_BLEND);
                     }
 
-                    itemPosY += (pGraphics->pGame->font.height + (itemPadding*2)) * scale;
+                    itemPosY += (pGraphics->pEngine->font.height + (itemPadding*2)) * scale;
                     if (itemPosY >= sizeY) {
                         break;  // Reached the last visible item.
                     }
@@ -1384,11 +1384,11 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                 if (!ta_is_string_null_or_empty(pGadget->label.text)) {
                     float textSizeX;
                     float textSizeY;
-                    ta_font_measure_text(&pGraphics->pGame->fontSmall, scale, pGadget->label.text, &textSizeX, &textSizeY);
+                    ta_font_measure_text(&pGraphics->pEngine->fontSmall, scale, pGadget->label.text, &textSizeX, &textSizeY);
 
                     float textPosX = posX + (1*scale);
                     float textPosY = posY - (4*scale);
-                    ta_draw_text(pGraphics, &pGraphics->pGame->fontSmall, 255, scale, textPosX, textPosY, pGadget->label.text);
+                    ta_draw_text(pGraphics, &pGraphics->pEngine->fontSmall, 255, scale, textPosX, textPosY, pGadget->label.text);
 
                     // Underline the shortcut key for the associated button.
                     if (pGadget->label.iLinkedGadget != (ta_uint32)-1) {
@@ -1397,13 +1397,13 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                         float charPosY;
                         float charSizeX;
                         float charSizeY;
-                        if (ta_font_find_character_metrics(&pGraphics->pGame->fontSmall, scale, pGadget->label.text, pLinkedGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
+                        if (ta_font_find_character_metrics(&pGraphics->pEngine->fontSmall, scale, pGadget->label.text, pLinkedGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
                             float underlineHeight = roundf(1*scale);
                             float underlineOffsetY = roundf(0*scale);
                             charPosX += textPosX;
                             charPosY += textPosY;
 
-                            ta_uint32 underlineRGBA = (isGadgetPressed) ? pGraphics->pGame->palette[0] : pGraphics->pGame->palette[2];
+                            ta_uint32 underlineRGBA = (isGadgetPressed) ? pGraphics->pEngine->palette[0] : pGraphics->pEngine->palette[2];
                             float underlineR = ((underlineRGBA & 0x00FF0000) >> 16) / 255.0f;
                             float underlineG = ((underlineRGBA & 0x0000FF00) >>  8) / 255.0f;
                             float underlineB = ((underlineRGBA & 0x000000FF) >>  0) / 255.0f;

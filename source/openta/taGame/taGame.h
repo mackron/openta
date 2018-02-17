@@ -13,21 +13,7 @@
 
 struct ta_game
 {
-    // The command line that was used to start up the game.
-    int argc;
-    char** argv;
-
-    // The file system context.
-    ta_fs* pFS;
-
-    // The graphics context.
-    ta_graphics_context* pGraphics;
-
-    // The standard palette. PALETTE.PAL
-    uint32_t palette[256];
-
-    // The GUI palette. GUIPAL.PAL
-    uint32_t guipal[256];
+    taEngineContext engine;
 
     // The game window.
     ta_window* pWindow;
@@ -40,9 +26,6 @@ struct ta_game
 
     // Global properties.
     ta_property_manager properties;
-
-    // Whether or not the game is closing.
-    ta_bool32 isClosing;
 
 
     // The features library. This is initialized once at startup from every TDF file in the "features" directory, and it's sub-directories. The
@@ -64,10 +47,6 @@ struct ta_game
     // The Common GUI.
     ta_common_gui commonGUI;
 
-    // The main font to use for basically all GUI text.
-    ta_font font;
-    ta_font fontSmall;
-
     // The main menu.
     ta_gui mainMenu;
     ta_gui spMenu;
@@ -85,10 +64,6 @@ struct ta_game
     ta_uint32 screen;
     ta_uint32 prevScreen;   // Only used by the options menu for handling the back button.
     
-
-    // Input state.
-    ta_input_state input;
-
 
     // The list of multi-player/skirmish maps.
     ta_config_obj** ppMPMaps;   // <-- stb_stretchy_buffer
@@ -128,11 +103,8 @@ ta_bool32 ta_get_property_bool(ta_game* pGame, const char* key);
 // Runs the given game.
 int ta_game_run(ta_game* pGame);
 
-// Exists from the main loop.
+// Posts a message to quit the game.
 void ta_close(ta_game* pGame);
-
-// Steps and renders a single frame.
-void ta_step(ta_game* pGame);
 
 
 // Changes the screen.
@@ -160,48 +132,7 @@ ta_bool32 ta_was_key_released(ta_game* pGame, ta_uint32 key);
 
 
 
-// Captures the mouse so that all mouse events get directed to the game window.
-void ta_capture_mouse(ta_game* pGame);
-
-// Releases the mouse. The opposite of ta_capture_mouse().
-void ta_release_mouse(ta_game* pGame);
-
-
 // Creates a texture from a file.
 ta_texture* ta_load_image(ta_game* pGame, const char* filePath);
 
 
-//// Events from Window ////
-
-// Called from the window system when the game window is resized.
-void ta_on_window_size(ta_game* pGame, unsigned int newWidth, unsigned int newHeight);
-
-// Called when a mouse button is pressed.
-void ta_on_mouse_button_down(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags);
-
-// Called when a mouse button is released.
-void ta_on_mouse_button_up(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags);
-
-// Called when a mouse button is double clicked.
-void ta_on_mouse_button_dblclick(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags);
-
-// Called when the mouse wheel is turned.
-void ta_on_mouse_wheel(ta_game* pGame, int delta, int posX, int posY, unsigned int stateFlags);
-
-// Called when the mouse moves.
-void ta_on_mouse_move(ta_game* pGame, int posX, int posY, unsigned int stateFlags);
-
-// Called when the mouse enters the window.
-void ta_on_mouse_enter(ta_game* pGame);
-
-// Called when the mouse leaves the window.
-void ta_on_mouse_leave(ta_game* pGame);
-
-// Called when a key is pressed.
-void ta_on_key_down(ta_game* pGame, ta_key key, unsigned int stateFlags);
-
-// Called when a key is released.
-void ta_on_key_up(ta_game* pGame, ta_key key, unsigned int stateFlags);
-
-// Called when a printable key is pressed or auto-repeated. Use this for text boxes.
-void ta_on_printable_key_down(ta_game* pGame, uint32_t utf32, unsigned int stateFlags);

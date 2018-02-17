@@ -26,7 +26,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
     pGUI->focusedGadgetIndex = (ta_uint32)-1;
 
     // GUI's are loaded from configs.
-    ta_config_obj* pConfig = ta_parse_config_from_file(pGame->pFS, filePath);
+    ta_config_obj* pConfig = ta_parse_config_from_file(pGame->engine.pFS, filePath);
     if (pConfig == NULL) {
         return TA_FILE_NOT_FOUND;
     }
@@ -161,7 +161,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                     pGadget->listbox.itemCount = 0;
                     pGadget->listbox.iSelectedItem = (ta_uint32)-1;
                     pGadget->listbox.scrollPos = 0;
-                    pGadget->listbox.pageSize = (ta_uint32)max(1, pGadget->height / pGame->font.height);
+                    pGadget->listbox.pageSize = (ta_uint32)max(1, pGadget->height / pGame->engine.font.height);
                 } break;
 
                 case TA_GUI_GADGET_TYPE_TEXTBOX:
@@ -586,7 +586,7 @@ ta_result ta_common_gui__create_texture_atlas(ta_game* pGame, ta_common_gui* pCo
     assert(pPacker != NULL);
     assert(ppTexture != NULL);
     
-    *ppTexture = ta_create_texture(pGame->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
+    *ppTexture = ta_create_texture(pGame->engine.pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
     if (*ppTexture == NULL) {
         return TA_FAILED_TO_CREATE_RESOURCE;
     }

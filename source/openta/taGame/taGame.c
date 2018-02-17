@@ -1,29 +1,5 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-ta_bool32 ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut)
-{
-    ta_file* pPaletteFile = ta_open_file(pFS, filePath, 0);
-    if (pPaletteFile == NULL) {
-        return TA_FALSE;
-    }
-
-    size_t bytesRead;
-    if (!ta_read_file(pPaletteFile, paletteOut, 1024, &bytesRead) || bytesRead != 1024) {
-        return TA_FALSE;
-    }
-
-    ta_close_file(pPaletteFile);
-
-
-    // The palettes will include room for an alpha component, but it'll always be set to 0 (fully transparent). However, due
-    // to the way I'm doing things in this project it's better for us to convert all of them to fully opaque.
-    for (int i = 0; i < 256; ++i) {
-        paletteOut[i] |= 0xFF000000;
-    }
-
-    return TA_TRUE;
-}
-
 int ta_qsort_cb_map(const void* a, const void* b)
 {
     const ta_config_obj** ppOTA_0 = (const ta_config_obj**)a;
@@ -35,6 +11,7 @@ int ta_qsort_cb_map(const void* a, const void* b)
     return _stricmp(name0, name1);
 }
 
+void ta_game_on_step(taEngineContext* pEngine);
 
 ta_game* ta_create_game(int argc, char** argv)
 {
@@ -43,40 +20,16 @@ ta_game* ta_create_game(int argc, char** argv)
         return NULL;
     }
 
-    pGame->argc = argc;
-    pGame->argv = argv;
-
-    pGame->pFS = ta_create_file_system();
-    if (pGame->pFS == NULL) {
-        goto on_error;
+    ta_result result = taEngineContextInit(argc, argv, ta_game_on_step, pGame, &pGame->engine);
+    if (result != TA_SUCCESS) {
+        free(pGame);
+        return NULL;
     }
 
 
-
-    // The palettes. The graphics system depends on these so they need to be loaded first.
-    if (!ta_load_palette(pGame->pFS, "palettes/PALETTE.PAL", pGame->palette)) {
-        goto on_error;
-    }
-
-    if (!ta_load_palette(pGame->pFS, "palettes/GUIPAL.PAL", pGame->guipal)) {
-        goto on_error;
-    }
-
-    // Due to the way I'm doing a few things with the rendering, we want to use a specific entry in the palette to act as a
-    // fully transparent value. For now I'll be using entry 240. Any non-transparent pixel that wants to use this entry will
-    // be changed to use color 0. From what I can tell there should be no difference in visual appearance by doing this.
-    pGame->palette[TA_TRANSPARENT_COLOR] &= 0x00FFFFFF; // <-- Make the alpha component fully transparent.
-
-
-
-    // We need to create a graphics context before we can create the game window.
-    pGame->pGraphics = ta_create_graphics_context(pGame, pGame->palette);
-    if (pGame->pGraphics == NULL) {
-        goto on_error;
-    }
 
     // Create and show the window as soon as we can to make loading feel faster.
-    pGame->pWindow = ta_graphics_create_window(pGame->pGraphics, "Total Annihilation", 1280, 720, TA_WINDOW_FULLSCREEN | TA_WINDOW_CENTERED);
+    pGame->pWindow = ta_graphics_create_window(pGame->engine.pGraphics, "Total Annihilation", 1280, 720, TA_WINDOW_FULLSCREEN | TA_WINDOW_CENTERED);
     if (pGame->pWindow == NULL) {
         goto on_error;
     }
@@ -88,11 +41,6 @@ ta_game* ta_create_game(int argc, char** argv)
         goto on_error;
     }
 
-
-    // Input.
-    if (ta_input_state_init(&pGame->input) != TA_SUCCESS) {
-        goto on_error;
-    }
 
 
     // Properties.
@@ -109,19 +57,13 @@ ta_game* ta_create_game(int argc, char** argv)
         goto on_error;
     }
 
-    // There are a few required resources that are hard coded from what I can tell.
-    ta_font_load(pGame, "anims/hattfont12.GAF/Haettenschweiler (120)", &pGame->font);
-    ta_font_load(pGame, "anims/hattfont11.GAF/Haettenschweiler (120)", &pGame->fontSmall);
-
     
-
-
 
 
     // Texture GAFs. This is every GAF file contained in the "textures" directory. These are loaded in two passes. The first
     // pass counts the number of GAF files, and the second pass opens them.
     pGame->textureGAFCount = 0;
-    ta_fs_iterator* iGAF = ta_fs_begin(pGame->pFS, "textures", TA_FALSE);
+    ta_fs_iterator* iGAF = ta_fs_begin(pGame->engine.pFS, "textures", TA_FALSE);
     while (ta_fs_next(iGAF)) {
         if (drpath_extension_equal(iGAF->fileInfo.relativePath, "gaf")) {
             pGame->textureGAFCount += 1;
@@ -135,10 +77,10 @@ ta_game* ta_create_game(int argc, char** argv)
     }
 
     pGame->textureGAFCount = 0;
-    iGAF = ta_fs_begin(pGame->pFS, "textures", TA_FALSE);
+    iGAF = ta_fs_begin(pGame->engine.pFS, "textures", TA_FALSE);
     while (ta_fs_next(iGAF)) {
         if (drpath_extension_equal(iGAF->fileInfo.relativePath, "gaf")) {
-            pGame->ppTextureGAFs[pGame->textureGAFCount] = ta_open_gaf(pGame->pFS, iGAF->fileInfo.relativePath);
+            pGame->ppTextureGAFs[pGame->textureGAFCount] = ta_open_gaf(pGame->engine.pFS, iGAF->fileInfo.relativePath);
             pGame->textureGAFCount += 1;
         }
     }
@@ -183,7 +125,7 @@ ta_game* ta_create_game(int argc, char** argv)
 
 
     // Features.
-    pGame->pFeatures = ta_create_features_library(pGame->pFS);
+    pGame->pFeatures = ta_create_features_library(pGame->engine.pFS);
     if (pGame->pFeatures == NULL) {
         goto on_error;
     }
@@ -201,13 +143,13 @@ ta_game* ta_create_game(int argc, char** argv)
     // - Save memory by converting OTA data to a struct rather than just holding a pointer to the ta_config_obj.
     //
     // Grab the maps for skirmish and multiplayer.
-    ta_fs_iterator* pIter = ta_fs_begin(pGame->pFS, "maps", TA_FALSE);
+    ta_fs_iterator* pIter = ta_fs_begin(pGame->engine.pFS, "maps", TA_FALSE);
     do
     {
         // From what I can tell, it looks like skirmish/mp maps are determined by the "type" property of the first
         // schema in the OTA file.
         if (drpath_extension_equal(pIter->fileInfo.relativePath, "ota")) {
-            ta_config_obj* pOTA = ta_parse_config_from_file(pGame->pFS, pIter->fileInfo.relativePath);
+            ta_config_obj* pOTA = ta_parse_config_from_file(pGame->engine.pFS, pIter->fileInfo.relativePath);
             if (pOTA != NULL) {
                 const char* type = ta_config_get_string(pOTA, "GlobalHeader/Schema 0/Type");
                 if (type != NULL && _stricmp(type, "Network 1") == 0) {
@@ -257,9 +199,8 @@ on_error:
     if (pGame != NULL) {
         if (pGame->pCurrentMap != NULL) ta_unload_map(pGame->pCurrentMap);
         if (pGame->pWindow != NULL) ta_delete_window(pGame->pWindow);
-        if (pGame->pGraphics != NULL) ta_delete_graphics_context(pGame->pGraphics);
         if (pGame->pAudio != NULL) ta_delete_audio_context(pGame->pAudio);
-        if (pGame->pFS != NULL) ta_delete_file_system(pGame->pFS);
+        taEngineContextUninit(&pGame->engine);
     }
 
     return NULL;
@@ -273,10 +214,8 @@ void ta_delete_game(ta_game* pGame)
 
     ta_delete_window(pGame->pWindow);
     ta_property_manager_uninit(&pGame->properties);
-    ta_input_state_uninit(&pGame->input);
-    ta_delete_graphics_context(pGame->pGraphics);
     ta_delete_audio_context(pGame->pAudio);
-    ta_delete_file_system(pGame->pFS);
+    taEngineContextUninit(&pGame->engine);
     free(pGame);
 }
 
@@ -370,18 +309,12 @@ int ta_game_run(ta_game* pGame)
         return TA_ERROR_INVALID_ARGS;
     }
 
-    return ta_main_loop(pGame);
+    return ta_main_loop(&pGame->engine);
 }
 
 void ta_close(ta_game* pGame)
 {
-    if (pGame == NULL) return;
-
-#ifdef _WIN32
-    PostQuitMessage(0);
-#endif
-
-    pGame->isClosing = TA_TRUE;
+    ta_post_quit_message(0);
 }
 
 
@@ -392,11 +325,11 @@ void ta_step__in_game(ta_game* pGame, double dt)
     (void)dt;
 
     if (ta_is_mouse_button_down(pGame, TA_MOUSE_BUTTON_MIDDLE)) {
-        ta_translate_camera(pGame->pGraphics, -(int)pGame->input.mouseOffsetX, -(int)pGame->input.mouseOffsetY);
+        ta_translate_camera(pGame->engine.pGraphics, -(int)pGame->engine.input.mouseOffsetX, -(int)pGame->engine.input.mouseOffsetY);
     }
 
     if (pGame->pCurrentMap) {
-        ta_draw_map(pGame->pGraphics, pGame->pCurrentMap);
+        ta_draw_map(pGame->engine.pGraphics, pGame->pCurrentMap);
     }
 }
 
@@ -524,7 +457,7 @@ ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
     // =====
     ta_int32 mousePosXGUI;
     ta_int32 mousePosYGUI;
-    ta_gui_map_screen_position(pGUI, pGame->pGraphics->resolutionX, pGame->pGraphics->resolutionY, (ta_int32)pGame->input.mousePosX, (ta_int32)pGame->input.mousePosY, &mousePosXGUI, &mousePosYGUI);
+    ta_gui_map_screen_position(pGUI, pGame->engine.pGraphics->resolutionX, pGame->engine.pGraphics->resolutionY, (ta_int32)pGame->engine.input.mousePosX, (ta_int32)pGame->engine.input.mousePosY, &mousePosXGUI, &mousePosYGUI);
 
     ta_uint32 iGadgetUnderMouse;
     ta_bool32 isMouseOverGadget = ta_gui_get_gadget_under_point(pGUI, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
@@ -564,7 +497,7 @@ ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
                     ta_int32 relativeMousePosY = mousePosYGUI - pGadget->ypos;
 
                     // The selected item is based on the position of the mouse.
-                    ta_int32 iSelectedItem = (ta_int32)(relativeMousePosY / pGame->font.height) + pGadget->listbox.scrollPos;
+                    ta_int32 iSelectedItem = (ta_int32)(relativeMousePosY / pGame->engine.font.height) + pGadget->listbox.scrollPos;
                     if (iSelectedItem >= (ta_int32)pGadget->listbox.itemCount) {
                         pGadget->listbox.iSelectedItem = (ta_uint32)-1;
                     } else {
@@ -611,7 +544,7 @@ void ta_step__main_menu(ta_game* pGame, double dt)
     // =====
     ta_int32 mousePosXGUI;
     ta_int32 mousePosYGUI;
-    ta_gui_map_screen_position(&pGame->mainMenu, pGame->pGraphics->resolutionX, pGame->pGraphics->resolutionY, (ta_int32)pGame->input.mousePosX, (ta_int32)pGame->input.mousePosY, &mousePosXGUI, &mousePosYGUI);
+    ta_gui_map_screen_position(&pGame->mainMenu, pGame->engine.pGraphics->resolutionX, pGame->engine.pGraphics->resolutionY, (ta_int32)pGame->engine.input.mousePosX, (ta_int32)pGame->engine.input.mousePosY, &mousePosXGUI, &mousePosYGUI);
 
     ta_uint32 iGadgetUnderMouse;
     ta_bool32 isMouseOverGadget = ta_gui_get_gadget_under_point(&pGame->mainMenu, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
@@ -642,24 +575,24 @@ void ta_step__main_menu(ta_game* pGame, double dt)
 
     // Rendering
     // =========
-    ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->mainMenu);
-    ta_draw_textf(pGame->pGraphics, &pGame->font, 255, 1, 16, 16,                    "Mouse Position: %d %d", (int)pGame->input.mousePosX, (int)pGame->input.mousePosY);
-    ta_draw_textf(pGame->pGraphics, &pGame->font, 255, 1, 16, 16+pGame->font.height, "Mouse Position (GUI): %d %d", mousePosXGUI, mousePosYGUI);
+    ta_draw_fullscreen_gui(pGame->engine.pGraphics, &pGame->mainMenu);
+    ta_draw_textf(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16,                           "Mouse Position: %d %d", (int)pGame->engine.input.mousePosX, (int)pGame->engine.input.mousePosY);
+    ta_draw_textf(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16+pGame->engine.font.height, "Mouse Position (GUI): %d %d", mousePosXGUI, mousePosYGUI);
 
     if (isMouseOverGadget) {
-        ta_draw_textf(pGame->pGraphics, &pGame->font, 255, 1, 16, 16+(2*pGame->font.height), "Gadget Under Mouse: %s", pGame->mainMenu.pGadgets[iGadgetUnderMouse].name);
+        ta_draw_textf(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16+(2*pGame->engine.font.height), "Gadget Under Mouse: %s", pGame->mainMenu.pGadgets[iGadgetUnderMouse].name);
     }
 
     float scale;
     float offsetX;
     float offsetY;
-    ta_gui_get_screen_mapping(&pGame->mainMenu, pGame->pGraphics->resolutionX, pGame->pGraphics->resolutionY, &scale, &offsetX, &offsetY);
+    ta_gui_get_screen_mapping(&pGame->mainMenu, pGame->engine.pGraphics->resolutionX, pGame->engine.pGraphics->resolutionY, &scale, &offsetX, &offsetY);
 
     const char* versionStr = "OpenTA v0.1";
     float versionSizeX;
     float versionSizeY;
-    ta_font_measure_text(&pGame->fontSmall, scale, versionStr, &versionSizeX, &versionSizeY);
-    ta_draw_textf(pGame->pGraphics, &pGame->fontSmall, 255, scale, (pGame->pGraphics->resolutionX - versionSizeX)/2, 300*scale + offsetY, "%s", versionStr);
+    ta_font_measure_text(&pGame->engine.fontSmall, scale, versionStr, &versionSizeX, &versionSizeY);
+    ta_draw_textf(pGame->engine.pGraphics, &pGame->engine.fontSmall, 255, scale, (pGame->engine.pGraphics->resolutionX - versionSizeX)/2, 300*scale + offsetY, "%s", versionStr);
 }
 
 void ta_step__sp_menu(ta_game* pGame, double dt)
@@ -706,7 +639,7 @@ void ta_step__sp_menu(ta_game* pGame, double dt)
 
     // Rendering
     // =========
-    ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->spMenu);
+    ta_draw_fullscreen_gui(pGame->engine.pGraphics, &pGame->spMenu);
 }
 
 void ta_step__mp_menu(ta_game* pGame, double dt)
@@ -739,7 +672,7 @@ void ta_step__mp_menu(ta_game* pGame, double dt)
 
     // Rendering
     // =========
-    ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->mpMenu);
+    ta_draw_fullscreen_gui(pGame->engine.pGraphics, &pGame->mpMenu);
 }
 
 void ta_step__options_menu(ta_game* pGame, double dt)
@@ -774,7 +707,7 @@ void ta_step__options_menu(ta_game* pGame, double dt)
 
     // Rendering
     // =========
-    ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->optionsMenu);
+    ta_draw_fullscreen_gui(pGame->engine.pGraphics, &pGame->optionsMenu);
 }
 
 void ta_step__skirmish_menu(ta_game* pGame, double dt)
@@ -832,11 +765,11 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
 
     // Rendering
     // =========
-    ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->skirmishMenu);
+    ta_draw_fullscreen_gui(pGame->engine.pGraphics, &pGame->skirmishMenu);
 
     if (pGame->pCurrentDialog != NULL) {
         assert(pGame->pCurrentDialog == &pGame->selectMapDialog);
-        ta_draw_dialog_gui(pGame->pGraphics, &pGame->selectMapDialog);
+        ta_draw_dialog_gui(pGame->engine.pGraphics, &pGame->selectMapDialog);
     }
 }
 
@@ -868,15 +801,15 @@ void ta_step__campaign_menu(ta_game* pGame, double dt)
 
     // Rendering
     // =========
-    ta_draw_fullscreen_gui(pGame->pGraphics, &pGame->campaignMenu);
+    ta_draw_fullscreen_gui(pGame->engine.pGraphics, &pGame->campaignMenu);
 }
 
-void ta_step(ta_game* pGame)
+void ta_step__main(ta_game* pGame)
 {
     assert(pGame != NULL);
 
     const double dt = dr_timer_tick(&pGame->timer);
-    ta_graphics_set_current_window(pGame->pGraphics, pGame->pWindow);
+    ta_graphics_set_current_window(pGame->engine.pGraphics, pGame->pWindow);
     {
         // The first thing we need to do is figure out the delta time. We use high-resolution timing for this so we can have good accuracy
         // at high frame rates.
@@ -929,9 +862,14 @@ void ta_step(ta_game* pGame)
         }
 
         // Reset transient input state last.
-        ta_input_state_reset_transient_state(&pGame->input);
+        ta_input_state_reset_transient_state(&pGame->engine.input);
     }
-    ta_graphics_present(pGame->pGraphics, pGame->pWindow);
+    ta_graphics_present(pGame->engine.pGraphics, pGame->pWindow);
+}
+
+void ta_game_on_step(taEngineContext* pEngine)
+{
+    ta_step__main((ta_game*)pEngine->pUserData);
 }
 
 
@@ -950,52 +888,40 @@ void ta_goto_screen(ta_game* pGame, ta_uint32 newScreenType)
 ta_bool32 ta_is_mouse_button_down(ta_game* pGame, ta_uint32 button)
 {
     if (pGame == NULL) return TA_FALSE;
-    return ta_input_state_is_mouse_button_down(&pGame->input, button);
+    return ta_input_state_is_mouse_button_down(&pGame->engine.input, button);
 }
 
 ta_bool32 ta_was_mouse_button_pressed(ta_game* pGame, ta_uint32 button)
 {
     if (pGame == NULL) return TA_FALSE;
-    return ta_input_state_was_mouse_button_pressed(&pGame->input, button);
+    return ta_input_state_was_mouse_button_pressed(&pGame->engine.input, button);
 }
 
 ta_bool32 ta_was_mouse_button_released(ta_game* pGame, ta_uint32 button)
 {
     if (pGame == NULL) return TA_FALSE;
-    return ta_input_state_was_mouse_button_released(&pGame->input, button);
+    return ta_input_state_was_mouse_button_released(&pGame->engine.input, button);
 }
 
 
 ta_bool32 ta_is_key_down(ta_game* pGame, ta_uint32 key)
 {
     if (pGame == NULL) return TA_FALSE;
-    return ta_input_state_is_key_down(&pGame->input, key);
+    return ta_input_state_is_key_down(&pGame->engine.input, key);
 }
 
 ta_bool32 ta_was_key_pressed(ta_game* pGame, ta_uint32 key)
 {
     if (pGame == NULL) return TA_FALSE;
-    return ta_input_state_was_key_pressed(&pGame->input, key);
+    return ta_input_state_was_key_pressed(&pGame->engine.input, key);
 }
 
 ta_bool32 ta_was_key_released(ta_game* pGame, ta_uint32 key)
 {
     if (pGame == NULL) return TA_FALSE;
-    return ta_input_state_was_key_released(&pGame->input, key);
+    return ta_input_state_was_key_released(&pGame->engine.input, key);
 }
 
-
-
-void ta_capture_mouse(ta_game* pGame)
-{
-    ta_window_capture_mouse(pGame->pWindow);
-}
-
-void ta_release_mouse(ta_game* pGame)
-{
-    (void)pGame;
-    ta_window_release_mouse();
-}
 
 
 ta_texture* ta_load_image(ta_game* pGame, const char* filePath)
@@ -1003,7 +929,7 @@ ta_texture* ta_load_image(ta_game* pGame, const char* filePath)
     if (pGame == NULL || filePath == NULL) return NULL;
     
     if (drpath_extension_equal(filePath, "pcx")) {
-        ta_file* pFile = ta_open_file(pGame->pFS, filePath, 0);
+        ta_file* pFile = ta_open_file(pGame->engine.pFS, filePath, 0);
         if (pFile == NULL) {
             return NULL;    // File not found.
         }
@@ -1015,7 +941,7 @@ ta_texture* ta_load_image(ta_game* pGame, const char* filePath)
             return NULL;    // Not a valid PCX file.
         }
 
-        ta_texture* pTexture = ta_create_texture(pGame->pGraphics, (unsigned int)width, (unsigned int)height, 4, pImageData);
+        ta_texture* pTexture = ta_create_texture(pGame->engine.pGraphics, (unsigned int)width, (unsigned int)height, 4, pImageData);
         if (pTexture == NULL) {
             drpcx_free(pImageData);
             return NULL;    // Failed to create texture.
@@ -1027,115 +953,4 @@ ta_texture* ta_load_image(ta_game* pGame, const char* filePath)
 
     // Failed to open file.
     return NULL;
-}
-
-
-
-//// Events from Window
-
-void ta_on_window_size(ta_game* pGame, unsigned int newWidth, unsigned int newHeight)
-{
-    assert(pGame != NULL);
-    ta_set_resolution(pGame->pGraphics, newWidth, newHeight);
-}
-
-void ta_on_mouse_button_down(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags)
-{
-    assert(pGame != NULL);
-    (void)posX;
-    (void)posY;
-    (void)stateFlags;
-
-    ta_input_state_on_mouse_button_down(&pGame->input, button);
-    ta_capture_mouse(pGame);
-}
-
-void ta_on_mouse_button_up(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags)
-{
-    assert(pGame != NULL);
-    (void)posX;
-    (void)posY;
-    (void)stateFlags;
-
-    ta_input_state_on_mouse_button_up(&pGame->input, button);
-
-    if (!ta_input_state_is_any_mouse_button_down(&pGame->input)) {
-        ta_release_mouse(pGame);
-    }
-}
-
-void ta_on_mouse_button_dblclick(ta_game* pGame, int button, int posX, int posY, unsigned int stateFlags)
-{
-    assert(pGame != NULL);
-    (void)pGame;
-    (void)button;
-    (void)posX;
-    (void)posY;
-    (void)stateFlags;
-}
-
-void ta_on_mouse_wheel(ta_game* pGame, int delta, int posX, int posY, unsigned int stateFlags)
-{
-    assert(pGame != NULL);
-    (void)pGame;
-    (void)delta;
-    (void)posX;
-    (void)posY;
-    (void)stateFlags;
-}
-
-void ta_on_mouse_move(ta_game* pGame, int posX, int posY, unsigned int stateFlags)
-{
-    assert(pGame != NULL);
-    (void)stateFlags;
-
-    ta_input_state_on_mouse_move(&pGame->input, (float)posX, (float)posY);
-
-#if 0
-    if (pGame->isMMBDown) {
-        ta_translate_camera(pGame->pGraphics, pGame->mouseDownPosX - posX, pGame->mouseDownPosY - posY);
-        pGame->mouseDownPosX = posX;
-        pGame->mouseDownPosY = posY;
-    }
-#endif
-}
-
-void ta_on_mouse_enter(ta_game* pGame)
-{
-    assert(pGame != NULL);
-    (void)pGame;
-}
-
-void ta_on_mouse_leave(ta_game* pGame)
-{
-    assert(pGame != NULL);
-    (void)pGame;
-}
-
-void ta_on_key_down(ta_game* pGame, ta_key key, unsigned int stateFlags)
-{
-    assert(pGame != NULL);
-
-    if (key < ta_countof(pGame->input.keyState)) {
-        if ((stateFlags & TA_KEY_STATE_AUTO_REPEATED) == 0) {
-            ta_input_state_on_key_down(&pGame->input, key);
-        }
-    }
-}
-
-void ta_on_key_up(ta_game* pGame, ta_key key, unsigned int stateFlags)
-{
-    assert(pGame != NULL);
-
-    if (key < ta_countof(pGame->input.keyState)) {
-        ta_input_state_on_key_up(&pGame->input, key);
-    }
-}
-
-void ta_on_printable_key_down(ta_game* pGame, uint32_t utf32, unsigned int stateFlags)
-{
-    assert(pGame != NULL);
-    (void)pGame;
-    (void)utf32;
-    (void)stateFlags;
 }

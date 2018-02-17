@@ -67,7 +67,7 @@ typedef enum
 
 
 // Creates a new graphics.
-ta_graphics_context* ta_create_graphics_context(ta_game* pGame, uint32_t palette[256]);
+ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, uint32_t palette[256]);
 
 // Deletes the given graphics context.
 void ta_delete_graphics_context(ta_graphics_context* pGraphics);

@@ -51,7 +51,7 @@ typedef struct
 
 ta_bool32 ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_packer* pPacker)
 {
-    ta_texture* pNewTexture = ta_create_texture(pMap->pGame->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
+    ta_texture* pNewTexture = ta_create_texture(pMap->pGame->engine.pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
     if (pNewTexture == NULL) {
         return TA_FALSE;
     }
@@ -466,7 +466,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
         ta_mesh_builder* pMeshBuilder = &pLoadContext->pMeshBuilders[iMesh];
 
         p3DO->pMeshes[p3DO->meshCount + iMesh].textureIndex = pMeshBuilder->textureIndex;
-        p3DO->pMeshes[p3DO->meshCount + iMesh].pMesh = ta_create_mesh(pMap->pGame->pGraphics, ta_primitive_type_triangle,
+        p3DO->pMeshes[p3DO->meshCount + iMesh].pMesh = ta_create_mesh(pMap->pGame->engine.pGraphics, ta_primitive_type_triangle,
             ta_vertex_format_p3t2n3,  pMeshBuilder->vertexCount, pMeshBuilder->pVertexData,
             ta_index_format_uint32, pMeshBuilder->indexCount,  pMeshBuilder->pIndexData);
         if (p3DO->pMeshes[p3DO->meshCount + iMesh].pMesh == NULL) {
@@ -528,7 +528,7 @@ ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadCo
         }
     }
 
-    ta_file* pFile = ta_open_file(pMap->pGame->pFS, fullFileName, 0);
+    ta_file* pFile = ta_open_file(pMap->pGame->engine.pFS, fullFileName, 0);
     if (pFile == NULL) {
         return NULL;
     }
@@ -641,7 +641,7 @@ ta_bool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_lo
     assert(mapName != NULL);
     assert(pLoadContext != NULL);
 
-    ta_file* pTNT = ta_map__open_tnt_file(pMap->pGame->pFS, mapName);
+    ta_file* pTNT = ta_map__open_tnt_file(pMap->pGame->engine.pFS, mapName);
     if (pTNT == NULL) {
         return TA_FALSE;
     }
@@ -862,7 +862,7 @@ ta_bool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_lo
     free(pTileSubImages);
 
     // Finally we can create the terrains mesh.
-    pMap->terrain.pMesh = ta_create_mesh(pMap->pGame->pGraphics, ta_primitive_type_quad, ta_vertex_format_p2t2, totalTileCount*4, pVertexData, ta_index_format_uint32, totalTileCount*4, pIndexData);
+    pMap->terrain.pMesh = ta_create_mesh(pMap->pGame->engine.pGraphics, ta_primitive_type_quad, ta_vertex_format_p2t2, totalTileCount*4, pVertexData, ta_index_format_uint32, totalTileCount*4, pIndexData);
     if (pMap->terrain.pMesh == NULL) {
         free(pIndexData);
         free(pVertexData);
@@ -920,7 +920,7 @@ ta_bool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_lo
                 }
 
                 ta_close_gaf(pCurrentGAF);
-                pCurrentGAF = ta_open_gaf(pMap->pGame->pFS, filename);
+                pCurrentGAF = ta_open_gaf(pMap->pGame->engine.pFS, filename);
                 if (pCurrentGAF == NULL) {
                     goto on_error;
                 }
@@ -1040,7 +1040,7 @@ void ta_map__close_ota_file(ta_config_obj* pOTA)
 
 ta_bool32 ta_map__load_ota(ta_map_instance* pMap, const char* mapName)
 {
-    ta_config_obj* pOTA = ta_map__open_ota_file(pMap->pGame->pFS, mapName);
+    ta_config_obj* pOTA = ta_map__open_ota_file(pMap->pGame->engine.pFS, mapName);
     if (pOTA == NULL) {
         return TA_FALSE;
     }
@@ -1062,7 +1062,7 @@ ta_bool32 ta_map_load_context_init(ta_map_load_context* pLoadContext, ta_game* p
 
     // Clamp the texture size to avoid excessive wastage. Modern GPUs support 16K textures which is way more than we need, and
     // I'd rather avoid wasting the player's system resources.
-    uint32_t maxTextureSize = ta_get_max_texture_size(pGame->pGraphics);
+    uint32_t maxTextureSize = ta_get_max_texture_size(pGame->engine.pGraphics);
     if (maxTextureSize > TA_MAX_TEXTURE_ATLAS_SIZE) {
         maxTextureSize = TA_MAX_TEXTURE_ATLAS_SIZE;
     }

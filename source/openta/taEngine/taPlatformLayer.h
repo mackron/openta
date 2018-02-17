@@ -26,8 +26,8 @@ typedef uint32_t ta_key;
 // Structure representing a window.
 typedef struct
 {
-    // A pointer to the game that owns this window.
-    ta_game* pGame;
+    // The engine context that owns this window.
+    taEngineContext* pEngine;
 
 #ifdef _WIN32
     // The main Win32 window handle.
@@ -55,9 +55,13 @@ ta_bool32 ta_init_window_system();
 void ta_uninit_window_system();
 
 
+// Posts a quit message.
+void ta_post_quit_message(int exitCode);
+
+
 // Creates a game window.
 #ifdef _WIN32
-ta_window* ta_create_window(ta_game* pGame, const char* pTitle, unsigned int width, unsigned int height, unsigned int options);
+ta_window* ta_create_window(taEngineContext* pEngine, const char* pTitle, unsigned int width, unsigned int height, unsigned int options);
 
 // Retrieves a handle to the device context of the given window.
 HDC ta_get_window_hdc(ta_window* pWindow);
@@ -75,4 +79,4 @@ void ta_window_release_mouse();
 
 
 // Runs the main application loop.
-int ta_main_loop(ta_game* pGame);
+int ta_main_loop(taEngineContext* pEngine);

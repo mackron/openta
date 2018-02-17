@@ -77,14 +77,18 @@ typedef ta_uint32        ta_bool32;
 // a power of 2.
 #define TA_MAX_TEXTURE_ATLAS_SIZE   512 /*4096*/
 
+typedef struct taEngineContext taEngineContext;
+
 // Total Annihilation headers.
 #include "taErrors.h"
+#include "taPlatformLayer.h"
 #include "taTypeDeclarations.h"
 #include "taMisc.h"
 #include "taString.h"
 #include "taInput.h"
-#include "taPlatformLayer.h"
 #include "taTexturePacker.h"
 #include "taMeshBuilder.h"
 #include "taAudio.h"
 #include "taGraphics.h"
+#include "taFont.h"
+#include "taEngineContext.h"
