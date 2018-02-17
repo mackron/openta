@@ -22,7 +22,7 @@ ta_audio_context* ta_create_audio_context(ta_game* pGame)
         return NULL;
     }
 
-    mal_result resultMAL = mal_context_init(NULL, 0, &pContext->contextMAL);
+    mal_result resultMAL = mal_context_init(NULL, 0, NULL, &pContext->contextMAL);
     if (resultMAL != MAL_SUCCESS) {
         free(pContext);
         return NULL;
