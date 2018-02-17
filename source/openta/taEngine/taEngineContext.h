@@ -16,6 +16,7 @@ struct taEngineContext
     ta_input_state input;
     ta_font font;               // The main font to use for basically all GUI text.
     ta_font fontSmall;
+    ta_audio_context* pAudio;
 };
 
 ta_result taEngineContextInit(int argc, char** argv, taStepProc onStep, void* pUserData, taEngineContext* pEngine);

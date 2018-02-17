@@ -35,14 +35,6 @@ ta_game* ta_create_game(int argc, char** argv)
     }
 
 
-    // Audio system.
-    pGame->pAudio = ta_create_audio_context(pGame);
-    if (pGame->pAudio == NULL) {
-        goto on_error;
-    }
-
-
-
     // Properties.
     if (ta_property_manager_init(&pGame->properties) != TA_SUCCESS) {
         goto on_error;
@@ -199,7 +191,6 @@ on_error:
     if (pGame != NULL) {
         if (pGame->pCurrentMap != NULL) ta_unload_map(pGame->pCurrentMap);
         if (pGame->pWindow != NULL) ta_delete_window(pGame->pWindow);
-        if (pGame->pAudio != NULL) ta_delete_audio_context(pGame->pAudio);
         taEngineContextUninit(&pGame->engine);
     }
 
@@ -214,7 +205,6 @@ void ta_delete_game(ta_game* pGame)
 
     ta_delete_window(pGame->pWindow);
     ta_property_manager_uninit(&pGame->properties);
-    ta_delete_audio_context(pGame->pAudio);
     taEngineContextUninit(&pGame->engine);
     free(pGame);
 }

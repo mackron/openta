@@ -13,9 +13,9 @@ TA_PRIVATE mal_uint32 ta_mal_send_proc(mal_device* pDevice, mal_uint32 frameCoun
     return 0;
 }
 
-ta_audio_context* ta_create_audio_context(ta_game* pGame)
+ta_audio_context* ta_create_audio_context(taEngineContext* pEngine)
 {
-    if (pGame == NULL) return NULL;
+    if (pEngine == NULL) return NULL;
 
     ta_audio_context* pContext = (ta_audio_context*)calloc(1, sizeof(*pContext));
     if (pContext == NULL) {

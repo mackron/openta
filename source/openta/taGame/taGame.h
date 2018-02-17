@@ -21,9 +21,6 @@ struct ta_game
     // The game timer for stepping the game.
     dr_timer timer;
 
-    // The audio context.
-    ta_audio_context* pAudio;
-
     // Global properties.
     ta_property_manager properties;
 

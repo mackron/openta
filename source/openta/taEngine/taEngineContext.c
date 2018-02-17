@@ -70,10 +70,19 @@ ta_result taEngineContextInit(int argc, char** argv, taStepProc onStep, void* pU
 
 
 
+    //// Audio ////
+    pEngine->pAudio = ta_create_audio_context(pEngine);
+    if (pEngine->pAudio == NULL) {
+        result = TA_ERROR;
+        goto on_error3;
+    }
+
+
+
     //// Input ////
     result = ta_input_state_init(&pEngine->input);
     if (result != TA_SUCCESS) {
-        goto on_error3;
+        goto on_error4;
     }
 
 
@@ -83,20 +92,24 @@ ta_result taEngineContextInit(int argc, char** argv, taStepProc onStep, void* pU
     // There are a few required resources that are hard coded from what I can tell.
     result = ta_font_load(pEngine, "anims/hattfont12.GAF/Haettenschweiler (120)", &pEngine->font);
     if (result != TA_SUCCESS) {
-        goto on_error4;
+        goto on_error5;
     }
 
     result = ta_font_load(pEngine, "anims/hattfont11.GAF/Haettenschweiler (120)", &pEngine->fontSmall);
     if (result != TA_SUCCESS) {
-        goto on_error5;
+        goto on_error6;
     }
 
 
+
+    
+
     return TA_SUCCESS;
 
-//on_error6: ta_font_unload(&pEngine->fontSmall);
-on_error5: ta_font_unload(&pEngine->font);
-on_error4: ta_input_state_uninit(&pEngine->input);
+//on_error7: ta_font_unload(&pEngine->fontSmall);
+on_error6: ta_font_unload(&pEngine->font);
+on_error5: ta_input_state_uninit(&pEngine->input);
+on_error4: ta_delete_audio_context(pEngine->pAudio);
 on_error3: ta_delete_graphics_context(pEngine->pGraphics);
 on_error2: ta_delete_file_system(pEngine->pFS);
 on_error1:
