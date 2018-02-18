@@ -94,26 +94,26 @@ void ta_close_file(ta_file* pFile);
 
 
 // Reads data from the given file.
-ta_bool32 ta_read_file(ta_file* pFile, void* pBufferOut, size_t bytesToRead, size_t* pBytesReadOut);
+taBool32 ta_read_file(ta_file* pFile, void* pBufferOut, size_t bytesToRead, size_t* pBytesReadOut);
 
 // Seeks the given file.
-ta_bool32 ta_seek_file(ta_file* pFile, int64_t offset, ta_seek_origin origin);
+taBool32 ta_seek_file(ta_file* pFile, int64_t offset, ta_seek_origin origin);
 
 // Retrieves the current read position of the file.
 uint64_t ta_tell_file(ta_file* pFile);
 
 
 // High level helper for reading an unsigned 32-bit integer.
-ta_bool32 ta_read_file_uint32(ta_file* pFile, uint32_t* pBufferOut);
+taBool32 ta_read_file_uint32(ta_file* pFile, uint32_t* pBufferOut);
 
 // High level helper for reading a signed 32-bit integer.
-ta_bool32 ta_read_file_int32(ta_file* pFile, int32_t* pBufferOut);
+taBool32 ta_read_file_int32(ta_file* pFile, int32_t* pBufferOut);
 
 // High level helper for reading an unsigned 16-bit integer.
-ta_bool32 ta_read_file_uint16(ta_file* pFile, uint16_t* pBufferOut);
+taBool32 ta_read_file_uint16(ta_file* pFile, uint16_t* pBufferOut);
 
 // High level helper for reading an unsigned 8-bit integer.
-ta_bool32 ta_read_file_uint8(ta_file* pFile, uint8_t* pBufferOut);
+taBool32 ta_read_file_uint8(ta_file* pFile, uint8_t* pBufferOut);
 
 
 // Iteration should work like the following:
@@ -140,7 +140,7 @@ typedef struct
     char relativePath[TA_MAX_PATH];
 
     // Whether or not the file is a directory.
-    ta_bool32 isDirectory;
+    taBool32 isDirectory;
 
 } ta_fs_file_info;
 
@@ -161,23 +161,23 @@ typedef struct
 } ta_fs_iterator;
 
 // Begins iterating the contents of the given folder.
-ta_fs_iterator* ta_fs_begin(ta_fs* pFS, const char* directoryRelativePath, ta_bool32 recursive);
+ta_fs_iterator* ta_fs_begin(ta_fs* pFS, const char* directoryRelativePath, taBool32 recursive);
 
 // Ends the iteration.
 void ta_fs_end(ta_fs_iterator* pIter);
 
 // Goes to the next file itration.
-ta_bool32 ta_fs_next(ta_fs_iterator* pIter);
+taBool32 ta_fs_next(ta_fs_iterator* pIter);
 
 
 
 //// HPI Helpers ////
 
 // LZ77 decompression for HPI archives.
-ta_bool32 ta_hpi_decompress_lz77(const unsigned char* pIn, uint32_t compressedSize, unsigned char* pOut, uint32_t uncompressedSize);
+taBool32 ta_hpi_decompress_lz77(const unsigned char* pIn, uint32_t compressedSize, unsigned char* pOut, uint32_t uncompressedSize);
 
 // ZLib decompression for HPI archives.
-ta_bool32 ta_hpi_decompress_zlib(const void* pIn, uint32_t compressedSize, void* pOut, uint32_t uncompressedSize);
+taBool32 ta_hpi_decompress_zlib(const void* pIn, uint32_t compressedSize, void* pOut, uint32_t uncompressedSize);
 
 // Decrypts data from a HPI archive.
 void ta_hpi_decrypt(uint8_t* pData, size_t sizeInBytes, uint32_t decryptionKey, uint32_t firstBytePos);

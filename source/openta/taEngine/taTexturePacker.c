@@ -1,14 +1,14 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-ta_bool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t* pPosXOut, uint32_t* pPosYOut)
+taBool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t* pPosXOut, uint32_t* pPosYOut)
 {
     assert(pPacker != NULL);
     assert(pPosXOut != NULL);
     assert(pPosYOut != NULL);
 
-    ta_uint32 edge = (pPacker->flags & (TA_TEXTURE_PACKER_FLAG_HARD_EDGE | TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE)) ? 1 : 0;
-    ta_uint32 outerWidth  = width  + (edge*2);
-    ta_uint32 outerHeight = height + (edge*2);
+    taUInt32 edge = (pPacker->flags & (TA_TEXTURE_PACKER_FLAG_HARD_EDGE | TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE)) ? 1 : 0;
+    taUInt32 outerWidth  = width  + (edge*2);
+    taUInt32 outerHeight = height + (edge*2);
 
     if (outerWidth > pPacker->width || outerHeight > pPacker->height) {
         return TA_FALSE;
@@ -66,7 +66,7 @@ ta_bool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t widt
     }
 }
 
-ta_bool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, const ta_texture_packer_slot* pSlot, const uint8_t* pSubTextureData)
+taBool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, const ta_texture_packer_slot* pSlot, const uint8_t* pSubTextureData)
 {
     assert(pPacker != NULL);
     assert(pSlot != NULL);
@@ -89,7 +89,7 @@ ta_bool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, const t
     // Do the edge if applicable. The edge is equal to the outside edge of the main part of the image. Note that we're
     // deliberately not checking the TRANSPARENT_EDGE flag because the texture packer is always initialized to transparency
     // by default which therefore means we don't need to do anything special.
-    ta_uint32 edge = (pPacker->flags & TA_TEXTURE_PACKER_FLAG_HARD_EDGE) ? 1 : 0;
+    taUInt32 edge = (pPacker->flags & TA_TEXTURE_PACKER_FLAG_HARD_EDGE) ? 1 : 0;
     if (edge > 0) {
         // Top and bottom edges.
         const uint8_t* pSrcRow0 = pSubTextureData     + (0                               * srcStride);
@@ -101,7 +101,7 @@ ta_bool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, const t
         memcpy(pDstRow1 + pSlot->posX*pPacker->bpp, pSrcRow1, srcStride);
 
         // Side edges.
-        for (ta_uint32 y = pSlot->posY-1; y < pSlot->posY+pSlot->height+1; ++y) {
+        for (taUInt32 y = pSlot->posY-1; y < pSlot->posY+pSlot->height+1; ++y) {
             uint8_t* pDstRow = pPacker->pImageData + (y * dstStride) + ((pSlot->posX-1) * pPacker->bpp);
             uint8_t* pDstOuter0 = pDstRow;
             uint8_t* pDstInner0 = pDstRow + pPacker->bpp;
@@ -117,7 +117,7 @@ ta_bool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, const t
 }
 
 
-ta_bool32 ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t bytesPerPixel, ta_uint32 flags)
+taBool32 ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t bytesPerPixel, taUInt32 flags)
 {
     if (pPacker == NULL || width == 0 || height == 0) {
         return TA_FALSE;
@@ -169,7 +169,7 @@ void ta_texture_packer_reset(ta_texture_packer* pPacker)
     }
 }
 
-ta_bool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut)
+taBool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut)
 {
     if (pSlotOut) ta_zero_object(pSlotOut);
     if (pPacker == NULL) {
@@ -194,7 +194,7 @@ ta_bool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t
     return TA_TRUE;
 }
 
-ta_bool32 ta_texture_packer_is_empty(const ta_texture_packer* pPacker)
+taBool32 ta_texture_packer_is_empty(const ta_texture_packer* pPacker)
 {
     if (pPacker == NULL) return TA_FALSE;
     return pPacker->cursorPosX == 0 && pPacker->cursorPosY;

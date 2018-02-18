@@ -16,8 +16,8 @@ typedef struct
 {
     // TODO: This can be improved. It's currently just a simple variable-length array, but the memory
     // management should be able to be improved a bit here.
-    ta_uint32 count;
-    ta_uint32 capacity;
+    taUInt32 count;
+    taUInt32 capacity;
     ta_property* pProperties;
 } ta_property_manager;
 
@@ -26,7 +26,7 @@ ta_result ta_property_manager_uninit(ta_property_manager* pProperties);
 
 ta_result ta_property_manager_set(ta_property_manager* pProperties, const char* key, const char* val);
 ta_result ta_property_manager_set_int(ta_property_manager* pProperties, const char* key, int val);
-ta_result ta_property_manager_set_bool(ta_property_manager* pProperties, const char* key, ta_bool32 val);
+ta_result ta_property_manager_set_bool(ta_property_manager* pProperties, const char* key, taBool32 val);
 ta_result ta_property_manager_unset(ta_property_manager* pProperties, const char* key);
 
 const char* ta_property_manager_get(ta_property_manager* pProperties, const char* key);

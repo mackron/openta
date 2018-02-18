@@ -1,6 +1,6 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-ta_bool32 ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut)
+taBool32 ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut)
 {
     ta_file* pPaletteFile = ta_open_file(pFS, filePath, 0);
     if (pPaletteFile == NULL) {
@@ -165,7 +165,7 @@ ta_result taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoad
 
     return TA_SUCCESS;
 
-//on_error11: for (ta_uint32 i = 0; i < pEngine->textureGAFCount; ++i) { ta_close_gaf(pEngine->ppTextureGAFs[i]); }
+//on_error11: for (taUInt32 i = 0; i < pEngine->textureGAFCount; ++i) { ta_close_gaf(pEngine->ppTextureGAFs[i]); }
 //on_error10: free(pEngine->ppTextureGAFs);
 on_error9:  ta_delete_features_library(pEngine->pFeatures);
 on_error8:  ta_common_gui_unload(&pEngine->commonGUI);
@@ -184,7 +184,7 @@ ta_result taEngineContextUninit(taEngineContext* pEngine)
 {
     if (pEngine == NULL) return TA_INVALID_ARGS;
 
-    for (ta_uint32 i = 0; i < pEngine->textureGAFCount; ++i) { ta_close_gaf(pEngine->ppTextureGAFs[i]); }
+    for (taUInt32 i = 0; i < pEngine->textureGAFCount; ++i) { ta_close_gaf(pEngine->ppTextureGAFs[i]); }
     free(pEngine->ppTextureGAFs);
     ta_delete_features_library(pEngine->pFeatures);
     ta_common_gui_unload(&pEngine->commonGUI);

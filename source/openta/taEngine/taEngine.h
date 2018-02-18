@@ -45,27 +45,27 @@
 
 // Basic types.
 #if defined(_MSC_VER) && _MSC_VER < 1600
-typedef   signed char    ta_int8;
-typedef unsigned char    ta_uint8;
-typedef   signed short   ta_int16;
-typedef unsigned short   ta_uint16;
-typedef   signed int     ta_int32;
-typedef unsigned int     ta_uint32;
-typedef   signed __int64 ta_int64;
-typedef unsigned __int64 ta_uint64;
+typedef   signed char    taInt8;
+typedef unsigned char    taUInt8;
+typedef   signed short   taInt16;
+typedef unsigned short   taUInt16;
+typedef   signed int     taInt32;
+typedef unsigned int     taUInt32;
+typedef   signed __int64 taInt64;
+typedef unsigned __int64 taUInt64;
 #else
 #include <stdint.h>
-typedef int8_t           ta_int8;
-typedef uint8_t          ta_uint8;
-typedef int16_t          ta_int16;
-typedef uint16_t         ta_uint16;
-typedef int32_t          ta_int32;
-typedef uint32_t         ta_uint32;
-typedef int64_t          ta_int64;
-typedef uint64_t         ta_uint64;
+typedef int8_t           taInt8;
+typedef uint8_t          taUInt8;
+typedef int16_t          taInt16;
+typedef uint16_t         taUInt16;
+typedef int32_t          taInt32;
+typedef uint32_t         taUInt32;
+typedef int64_t          taInt64;
+typedef uint64_t         taUInt64;
 #endif
-typedef ta_uint8         ta_bool8;
-typedef ta_uint32        ta_bool32;
+typedef taUInt8          taBool8;
+typedef taUInt32         taBool32;
 #define TA_TRUE          1
 #define TA_FALSE         0
 

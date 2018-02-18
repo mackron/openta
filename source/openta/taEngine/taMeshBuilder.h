@@ -31,10 +31,10 @@ typedef struct
 
 } ta_mesh_builder;
 
-ta_bool32 ta_mesh_builder_init(ta_mesh_builder* pBuilder, size_t vertexSize);
+taBool32 ta_mesh_builder_init(ta_mesh_builder* pBuilder, size_t vertexSize);
 void ta_mesh_builder_uninit(ta_mesh_builder* pBuilder);
 
-ta_bool32 ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVertexData);
+taBool32 ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVertexData);
 
 // Resets the mesh builder.
 //

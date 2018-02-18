@@ -49,7 +49,7 @@ typedef struct
     ta_mesh_builder* pMeshBuilders;
 } ta_map_load_context;
 
-ta_bool32 ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_packer* pPacker)
+taBool32 ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_packer* pPacker)
 {
     ta_texture* pNewTexture = ta_create_texture(pMap->pEngine->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
     if (pNewTexture == NULL) {
@@ -69,7 +69,7 @@ ta_bool32 ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_pack
     return TA_TRUE;
 }
 
-ta_bool32 ta_map__pack_subtexture(ta_map_instance* pMap, ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pImageData, ta_texture_packer_slot* pSlotOut)
+taBool32 ta_map__pack_subtexture(ta_map_instance* pMap, ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pImageData, ta_texture_packer_slot* pSlotOut)
 {
     // If we can't pack the image we just create a new texture on the graphics system and then reset the packer and try again.
     if (ta_texture_packer_pack_subtexture(pPacker, width, height, pImageData, pSlotOut)) {
@@ -164,7 +164,7 @@ ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_tex
 }
 
 
-ta_bool32 ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadContext, const char* textureName, ta_map_loaded_texture* pTextureOut)
+taBool32 ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadContext, const char* textureName, ta_map_loaded_texture* pTextureOut)
 {
     assert(pMap != NULL);
     assert(pLoadContext != NULL);
@@ -283,8 +283,8 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
             return 0;
         }
 
-        ta_bool32 isClear = TA_FALSE;
-        ta_bool32 isColor = TA_FALSE;
+        taBool32 isClear = TA_FALSE;
+        taBool32 isColor = TA_FALSE;
 
         ta_map_loaded_texture texture;
         if (primHeader.textureNamePtr != 0)
@@ -603,7 +603,7 @@ void ta_map__close_tnt_file(ta_file* pTNT)
     ta_close_file(pTNT);
 }
 
-ta_bool32 ta_map__read_tnt_header(ta_file* pTNT, ta_tnt_header* pHeader)
+taBool32 ta_map__read_tnt_header(ta_file* pTNT, ta_tnt_header* pHeader)
 {
     assert(pTNT != NULL);
     assert(pHeader != NULL);
@@ -635,7 +635,7 @@ ta_bool32 ta_map__read_tnt_header(ta_file* pTNT, ta_tnt_header* pHeader)
     return TA_TRUE;
 }
 
-ta_bool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_load_context* pLoadContext)
+taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_load_context* pLoadContext)
 {
     assert(pMap != NULL);
     assert(mapName != NULL);
@@ -760,7 +760,7 @@ ta_bool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_lo
             // We want to group each mesh in the chunk by texture...
             for (uint32_t iTexture = 0; iTexture < pMap->textureCount+1; ++iTexture)    // <-- +1 because there is a texture sitting in the packer that hasn't yet been added to the list.
             {
-                ta_bool32 isMeshAllocatedForThisTextures = TA_FALSE;
+                taBool32 isMeshAllocatedForThisTextures = TA_FALSE;
                 
                 // For every tile in the chunk...
                 for (uint32_t tileY = 0; tileY < chunkTileCountY; ++tileY)
@@ -1038,7 +1038,7 @@ void ta_map__close_ota_file(ta_config_obj* pOTA)
     ta_delete_config(pOTA);
 }
 
-ta_bool32 ta_map__load_ota(ta_map_instance* pMap, const char* mapName)
+taBool32 ta_map__load_ota(ta_map_instance* pMap, const char* mapName)
 {
     ta_config_obj* pOTA = ta_map__open_ota_file(pMap->pEngine->pFS, mapName);
     if (pOTA == NULL) {
@@ -1052,7 +1052,7 @@ ta_bool32 ta_map__load_ota(ta_map_instance* pMap, const char* mapName)
 }
 
 
-ta_bool32 ta_map_load_context_init(ta_map_load_context* pLoadContext, taEngineContext* pEngine)
+taBool32 ta_map_load_context_init(ta_map_load_context* pLoadContext, taEngineContext* pEngine)
 {
     if (pLoadContext == NULL || pEngine == NULL) {
         return TA_FALSE;

@@ -15,24 +15,24 @@ ta_result ta_font_load_fnt(taEngineContext* pEngine, const char* filePath, ta_fo
         return TA_FILE_NOT_FOUND;
     }
 
-    ta_uint16 height;
+    taUInt16 height;
     ta_read_file_uint16(pFile, &height);
     if (height > TA_MAX_FONT_SIZE) {
         ta_close_file(pFile);
         return TA_ERROR;
     }
 
-    ta_uint16 padding;
+    taUInt16 padding;
     ta_read_file_uint16(pFile, &padding);
 
-    ta_uint16 offsets[256];
+    taUInt16 offsets[256];
     ta_read_file(pFile, offsets, sizeof(offsets), NULL);
 
     pFont->height = (float)height;
 
     // We will decode the font in two passes, with the first pass used to calculate the required size of the texture atlas.
-    ta_uint32 totalWidth = 0;
-    ta_uint8 widths[256];
+    taUInt32 totalWidth = 0;
+    taUInt8 widths[256];
     for (int i = 0; i < 256; ++i) {
         if (offsets[i] != 0) {
             ta_seek_file(pFile, offsets[i], ta_seek_origin_start);
@@ -46,13 +46,13 @@ ta_result ta_font_load_fnt(taEngineContext* pEngine, const char* filePath, ta_fo
     
     // The texture atlas does not need to be square, but it should be a power of 2 for maximum
     // compatibility with older hardware. This can be optimized later.
-    ta_uint32 atlasSizeX = ta_next_power_of_2(totalWidth);
-    ta_uint32 atlasSizeY = ta_next_power_of_2(height);
+    taUInt32 atlasSizeX = ta_next_power_of_2(totalWidth);
+    taUInt32 atlasSizeY = ta_next_power_of_2(height);
 
     ta_texture_packer packer;
     ta_texture_packer_init(&packer, atlasSizeX, atlasSizeY, 1, TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE);
 
-    ta_uint8 pixels[256*256];
+    taUInt8 pixels[256*256];
 
     for (int i = 0; i < 256; ++i) {
         if (offsets[i] != 0) {
@@ -60,22 +60,22 @@ ta_result ta_font_load_fnt(taEngineContext* pEngine, const char* filePath, ta_fo
             ta_seek_file(pFile, 1, ta_seek_origin_current);
 
             memset(pixels, 0, sizeof(pixels));
-            ta_uint8* nextPixel = pixels;
+            taUInt8* nextPixel = pixels;
 
             // The next width*height bits is the bitmap for the glyph.
-            ta_uint32 bits = widths[i]*height;
-            ta_uint32 bytes = bits / 8;
+            taUInt32 bits = widths[i]*height;
+            taUInt32 bytes = bits / 8;
             if (bits % 8 != 0) {
                 bytes += 1;
             }
 
-            for (ta_uint32 iByte = 0; iByte < bytes; ++iByte) {
+            for (taUInt32 iByte = 0; iByte < bytes; ++iByte) {
                 assert(bits > 0);
 
-                ta_uint32 data;
+                taUInt32 data;
                 ta_read_file(pFile, &data, 1, NULL);
 
-                for (ta_uint8 iBit = 0; iBit < 8 && iBit < bits; ++iBit) {
+                for (taUInt8 iBit = 0; iBit < 8 && iBit < bits; ++iBit) {
                     *nextPixel++ = ((data & (1 << (7 - iBit))) >> (7 - iBit)) * 255;
                 }
 
@@ -133,20 +133,20 @@ ta_result ta_font_load_gaf(taEngineContext* pEngine, const char* filePath, ta_fo
         return TA_FILE_NOT_FOUND;
     }
 
-    ta_uint32 frameCount;
+    taUInt32 frameCount;
     if (!ta_gaf_select_sequence(pGAF, sequenceName, &frameCount) || frameCount < 256) {
         ta_close_gaf(pGAF);
         return TA_INVALID_RESOURCE;
     }
 
     // We will decode the font in two passes, with the first pass used to calculate the required size of the texture atlas.
-    ta_uint32 totalWidth = 0;
-    ta_uint32 totalHeight = 0;
+    taUInt32 totalWidth = 0;
+    taUInt32 totalHeight = 0;
     for (int i = 0; i < 256; ++i) {
-        ta_uint32 sizeX;
-        ta_uint32 sizeY;
-        ta_int32 posX;
-        ta_int32 posY;
+        taUInt32 sizeX;
+        taUInt32 sizeY;
+        taInt32 posX;
+        taInt32 posY;
         if (ta_gaf_get_frame(pGAF, i, &sizeX, &sizeY, &posX, &posY, NULL) == TA_SUCCESS) {
             totalWidth += sizeX;
             if (totalHeight < sizeY) {
@@ -161,22 +161,22 @@ ta_result ta_font_load_gaf(taEngineContext* pEngine, const char* filePath, ta_fo
 
     // The texture atlas does not need to be square, but it should be a power of 2 for maximum
     // compatibility with older hardware. This can be optimized later.
-    ta_uint32 atlasSizeX = ta_next_power_of_2(totalWidth);
-    ta_uint32 atlasSizeY = ta_next_power_of_2(totalHeight+1);   // Add 1 to ensure we have at least row of padding for interpolation.
+    taUInt32 atlasSizeX = ta_next_power_of_2(totalWidth);
+    taUInt32 atlasSizeY = ta_next_power_of_2(totalHeight+1);   // Add 1 to ensure we have at least row of padding for interpolation.
 
     ta_texture_packer packer;
     ta_texture_packer_init(&packer, atlasSizeX, atlasSizeY, 1, TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE);
     memset(packer.pImageData, TA_TRANSPARENT_COLOR, packer.width*packer.height);
 
-    ta_uint8 paddingPixels[TA_MAX_FONT_SIZE];
+    taUInt8 paddingPixels[TA_MAX_FONT_SIZE];
     memset(paddingPixels, TA_TRANSPARENT_COLOR, sizeof(paddingPixels));
 
     for (int i = 0; i < 256; ++i) {
-        ta_uint32 sizeX;
-        ta_uint32 sizeY;
-        ta_int32 posX;
-        ta_int32 posY;
-        ta_uint8* pixels;
+        taUInt32 sizeX;
+        taUInt32 sizeY;
+        taInt32 posX;
+        taInt32 posY;
+        taUInt8* pixels;
         if (ta_gaf_get_frame(pGAF, i, &sizeX, &sizeY, &posX, &posY, &pixels) == TA_SUCCESS) {
             totalWidth += sizeX;
             if (totalHeight < sizeY) {
@@ -188,7 +188,7 @@ ta_result ta_font_load_gaf(taEngineContext* pEngine, const char* filePath, ta_fo
             // Spaces are a special case because the graphic for them is not blank for some reason. To fix this we just
             // need to use a different image for spaces.
             if (i == ' ') {
-                ta_uint8* spacePixels = (ta_uint8*)malloc(sizeX * sizeY);
+                taUInt8* spacePixels = (taUInt8*)malloc(sizeX * sizeY);
                 if (spacePixels != NULL) {
                     memset(spacePixels, TA_TRANSPARENT_COLOR, sizeX * sizeY);
                     ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, spacePixels, &slot);
@@ -214,15 +214,15 @@ ta_result ta_font_load_gaf(taEngineContext* pEngine, const char* filePath, ta_fo
 
     ta_close_gaf(pGAF);
 
-    ta_uint32* pImageDataRGBA = (ta_uint32*)malloc(packer.width * packer.height * 4);
+    taUInt32* pImageDataRGBA = (taUInt32*)malloc(packer.width * packer.height * 4);
     if (pImageDataRGBA == NULL) {
         ta_texture_packer_uninit(&packer);
         return TA_OUT_OF_MEMORY;
     }
 
-    for (ta_uint32 y = 0; y < packer.height; ++y) {
-        for (ta_uint32 x = 0; x < packer.width; ++x) {
-            ta_uint32 color = pEngine->palette[packer.pImageData[(y*packer.width) + x]];
+    for (taUInt32 y = 0; y < packer.height; ++y) {
+        for (taUInt32 x = 0; x < packer.width; ++x) {
+            taUInt32 color = pEngine->palette[packer.pImageData[(y*packer.width) + x]];
             pImageDataRGBA[(y*packer.width) + x] = color;
         }
     }

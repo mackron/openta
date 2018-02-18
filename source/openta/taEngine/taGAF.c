@@ -14,7 +14,7 @@ typedef struct
     uint32_t dataPtr;
 } ta_gaf_frame_header;
 
-ta_bool32 ta_gaf__read_frame_header(ta_gaf* pGAF, ta_gaf_frame_header* pHeader)
+taBool32 ta_gaf__read_frame_header(ta_gaf* pGAF, ta_gaf_frame_header* pHeader)
 {
     assert(pGAF != NULL);
     assert(pHeader != NULL);
@@ -55,7 +55,7 @@ ta_bool32 ta_gaf__read_frame_header(ta_gaf* pGAF, ta_gaf_frame_header* pHeader)
     return TA_TRUE;
 }
 
-ta_bool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHeader, uint16_t dstWidth, uint16_t dstHeight, uint16_t dstOffsetX, uint16_t dstOffsetY, uint8_t* pDstImageData)
+taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHeader, uint16_t dstWidth, uint16_t dstHeight, uint16_t dstOffsetX, uint16_t dstOffsetY, uint8_t* pDstImageData)
 {
     assert(pGAF != NULL);
     assert(pFrameHeader != NULL);
@@ -239,7 +239,7 @@ void ta_close_gaf(ta_gaf* pGAF)
 }
 
 
-ta_bool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, uint32_t* pFrameCountOut)
+taBool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, uint32_t* pFrameCountOut)
 {
     if (pGAF == NULL || sequenceName == NULL || pFrameCountOut == NULL) {
         return TA_FALSE;
@@ -289,7 +289,7 @@ ta_bool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, uint32_
     return TA_FALSE;
 }
 
-ta_bool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, ta_uint32 index, uint32_t* pFrameCountOut)
+taBool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, taUInt32 index, uint32_t* pFrameCountOut)
 {
     if (pFrameCountOut) *pFrameCountOut = 0;
     if (pGAF == NULL || index >= pGAF->sequenceCount) {
@@ -328,7 +328,7 @@ ta_bool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, ta_uint32 index, uint32_
     return TA_TRUE;
 }
 
-ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOut, uint32_t* pHeightOut, int32_t* pPosXOut, int32_t* pPosYOut, ta_uint8** ppImageData)
+ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOut, uint32_t* pHeightOut, int32_t* pPosXOut, int32_t* pPosYOut, taUInt8** ppImageData)
 {
     if (ppImageData) *ppImageData = NULL;
     if (pGAF == NULL || frameIndex >= pGAF->_sequenceFrameCount || pWidthOut == NULL || pHeightOut == NULL || pPosXOut == NULL || pPosYOut == NULL) {
@@ -462,13 +462,13 @@ ta_result ta_gaf_texture_group__create_texture_atlas(taEngineContext* pEngine, t
             return TA_FAILED_TO_CREATE_RESOURCE;
         }
     } else {
-        ta_uint32* pImageData = (ta_uint32*)malloc(pPacker->width*pPacker->height*4);
+        taUInt32* pImageData = (taUInt32*)malloc(pPacker->width*pPacker->height*4);
         if (pImageData == NULL) {
             return TA_OUT_OF_MEMORY;
         }
 
-        for (ta_uint32 y = 0; y < pPacker->height; ++y) {
-            for (ta_uint32 x = 0; x < pPacker->width; ++x) {
+        for (taUInt32 y = 0; y < pPacker->height; ++y) {
+            for (taUInt32 x = 0; x < pPacker->width; ++x) {
                 pImageData[(y*pPacker->width) + x] = pEngine->palette[pPacker->pImageData[(y*pPacker->width) + x]];
             }
         }
@@ -506,27 +506,27 @@ ta_result ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePa
 
     // PASS #1
     // =======
-    ta_uint32 totalSequenceCount = 0;
-    ta_uint32 totalFrameCount = 0;
-    ta_uint32 totalAtlasCount = 0;
+    taUInt32 totalSequenceCount = 0;
+    taUInt32 totalFrameCount = 0;
+    taUInt32 totalAtlasCount = 0;
 
     size_t payloadSize = 0;
-    for (ta_uint32 iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence) {
+    for (taUInt32 iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence) {
         payloadSize += sizeof(ta_gaf_texture_group_sequence);
         totalSequenceCount += 1;
 
-        ta_uint32 frameCount;
+        taUInt32 frameCount;
         if (ta_gaf_select_sequence_by_index(pGAF, iSequence, &frameCount)) {
             payloadSize += strlen(ta_gaf_get_current_sequence_name(pGAF))+1;
 
-            for (ta_uint32 iFrame = 0; iFrame < frameCount; ++iFrame) {
+            for (taUInt32 iFrame = 0; iFrame < frameCount; ++iFrame) {
                 payloadSize += sizeof(ta_gaf_texture_group_frame);
                 totalFrameCount += 1;
 
-                ta_uint32 sizeX;
-                ta_uint32 sizeY;
-                ta_uint32 posX;
-                ta_uint32 posY;
+                taUInt32 sizeX;
+                taUInt32 sizeY;
+                taUInt32 posX;
+                taUInt32 posY;
                 if (ta_gaf_get_frame(pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, NULL) == TA_SUCCESS) {
                     if (!ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, NULL, NULL)) {
                         // We failed to pack the subtexture which probably means there's not enough room. We just need to reset this packer and try again.
@@ -552,7 +552,7 @@ ta_result ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePa
     size_t framesPayloadOffset        = sequencesPayloadOffset + (sizeof(ta_gaf_texture_group_sequence) * totalSequenceCount);
     size_t sequenceNamesPayloadOffset = framesPayloadOffset    + (sizeof(ta_gaf_texture_group_frame)    * totalFrameCount);
 
-    pGroup->_pPayload = (ta_uint8*)calloc(1, payloadSize);
+    pGroup->_pPayload = (taUInt8*)calloc(1, payloadSize);
     if (pGroup->_pPayload == NULL) {
         ta_close_gaf(pGAF);
         return TA_OUT_OF_MEMORY;
@@ -576,20 +576,20 @@ ta_result ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePa
     totalFrameCount    = 0;
     totalAtlasCount    = 0;
 
-    for (ta_uint32 iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence) {
-        ta_uint32 frameCount;
+    for (taUInt32 iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence) {
+        taUInt32 frameCount;
         if (ta_gaf_select_sequence_by_index(pGAF, iSequence, &frameCount)) {
             pGroup->pSequences[totalSequenceCount].name            = ta_gaf_texture_group__copy_sequence_name(&pNextStr, ta_gaf_get_current_sequence_name(pGAF));
             pGroup->pSequences[totalSequenceCount].firstFrameIndex = totalFrameCount;
             pGroup->pSequences[totalSequenceCount].frameCount      = frameCount;
 
             totalSequenceCount += 1;
-            for (ta_uint32 iFrame = 0; iFrame < frameCount; ++iFrame) {
-                ta_uint32 sizeX;
-                ta_uint32 sizeY;
-                ta_uint32 posX;
-                ta_uint32 posY;
-                ta_uint8* pImageData;
+            for (taUInt32 iFrame = 0; iFrame < frameCount; ++iFrame) {
+                taUInt32 sizeX;
+                taUInt32 sizeY;
+                taUInt32 posX;
+                taUInt32 posY;
+                taUInt8* pImageData;
                 if (ta_gaf_get_frame(pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, &pImageData) == TA_SUCCESS) {
                     ta_texture_packer_slot slot;
                     if (!ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, pImageData, &slot)) {
@@ -635,12 +635,12 @@ ta_result ta_gaf_texture_group_uninit(ta_gaf_texture_group* pGroup)
     return TA_SUCCESS;
 }
 
-ta_bool32 ta_gaf_texture_group_find_sequence_by_name(ta_gaf_texture_group* pGroup, const char* sequenceName, ta_uint32* pSequenceIndex)
+taBool32 ta_gaf_texture_group_find_sequence_by_name(ta_gaf_texture_group* pGroup, const char* sequenceName, taUInt32* pSequenceIndex)
 {
-    if (pSequenceIndex) *pSequenceIndex = (ta_uint32)-1;
+    if (pSequenceIndex) *pSequenceIndex = (taUInt32)-1;
     if (pGroup == NULL || sequenceName == NULL) return TA_FALSE;
 
-    for (ta_uint32 iSequence = 0; iSequence < pGroup->sequenceCount; ++iSequence) {
+    for (taUInt32 iSequence = 0; iSequence < pGroup->sequenceCount; ++iSequence) {
         if (_stricmp(pGroup->pSequences[iSequence].name, sequenceName) == 0) {
             if (*pSequenceIndex) *pSequenceIndex = iSequence;
             return TA_TRUE;

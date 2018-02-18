@@ -17,7 +17,7 @@ ta_config_obj* ta_allocate_config_object()
     return pObj;
 }
 
-ta_bool32 ta_config_is_whitespace(char c)
+taBool32 ta_config_is_whitespace(char c)
 {
     return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
 }
@@ -35,12 +35,12 @@ char* ta_config_first_non_whitespace(char* str)
     return str;
 }
 
-ta_bool32 ta_config_is_on_line_comment(const char* configString)
+taBool32 ta_config_is_on_line_comment(const char* configString)
 {
     return configString[0] == '/' && configString[1] == '/';
 }
 
-ta_bool32 ta_config_is_on_block_comment(const char* configString)
+taBool32 ta_config_is_on_block_comment(const char* configString)
 {
     return configString[0] == '/' && configString[1] == '*';
 }
@@ -437,7 +437,7 @@ float ta_config_get_float(const ta_config_obj* pConfig, const char* varName)
     return (float)atof(value);
 }
 
-ta_bool32 ta_config_get_bool(const ta_config_obj* pConfig, const char* varName)
+taBool32 ta_config_get_bool(const ta_config_obj* pConfig, const char* varName)
 {
     const char* value = ta_config_get_string(pConfig, varName);
     if (value == NULL) {
@@ -451,7 +451,7 @@ ta_bool32 ta_config_get_bool(const ta_config_obj* pConfig, const char* varName)
     return TA_TRUE;
 }
 
-ta_bool32 ta_config_is_subobj_by_index(const ta_config_obj* pConfig, ta_uint32 varIndex)
+taBool32 ta_config_is_subobj_by_index(const ta_config_obj* pConfig, taUInt32 varIndex)
 {
     if (pConfig == NULL || varIndex >= pConfig->varCount) {
         return TA_FALSE;

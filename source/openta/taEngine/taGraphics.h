@@ -145,22 +145,22 @@ void ta_draw_dialog_gui(ta_graphics_context* pGraphics, ta_gui* pGUI);
 void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap);
 
 // Draws a string of text.
-void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 colorIndex, float scale, float posX, float posY, const char* text);
-void ta_draw_textf(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 colorIndex, float scale, float posX, float posY, const char* text, ...);
+void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text);
+void ta_draw_textf(ta_graphics_context* pGraphics, ta_font* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...);
 
 // Draws a textured rectangle.
-void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float width, float height, ta_bool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY);
+void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float width, float height, taBool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY);
 
 
 //// Settings ////
 
 // Sets whether or not shadows are enabled.
-void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, ta_bool32 isShadowsEnabled);
+void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, taBool32 isShadowsEnabled);
 
 // Determines whether or not shadows are enabled.
-ta_bool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics);
+taBool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics);
 
 
 
 // TESTING
-void ta_draw_texture(ta_texture* pTexture, ta_bool32 transparent, float scale);
+void ta_draw_texture(ta_texture* pTexture, taBool32 transparent, float scale);

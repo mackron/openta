@@ -112,7 +112,7 @@ static ta_feature_category ta_parse_feature_category(const char* featureStr)
 }
 #endif
 
-static ta_bool32 ta_features_library__load_feature(ta_features_library* pLib, const char* featureName, ta_config_obj* pFeatureConfig)
+static taBool32 ta_features_library__load_feature(ta_features_library* pLib, const char* featureName, ta_config_obj* pFeatureConfig)
 {
     if (pLib == NULL || pFeatureConfig == NULL) {
         return TA_FALSE;
@@ -248,13 +248,13 @@ static ta_bool32 ta_features_library__load_feature(ta_features_library* pLib, co
     return TA_TRUE;
 }
 
-static ta_bool32 ta_features_library__load_features_from_config(ta_features_library* pLib, ta_config_obj* pConfig)
+static taBool32 ta_features_library__load_features_from_config(ta_features_library* pLib, ta_config_obj* pConfig)
 {
     if (pLib == NULL) {
         return TA_FALSE;
     }
 
-    ta_bool32 result = TA_TRUE;
+    taBool32 result = TA_TRUE;
     for (unsigned int iVar = 0; iVar < pConfig->varCount; ++iVar) {
         if (!ta_features_library__load_feature(pLib, pConfig->pVars[iVar].name, pConfig->pVars[iVar].pObject)) {
             result = TA_FALSE;
@@ -265,7 +265,7 @@ static ta_bool32 ta_features_library__load_features_from_config(ta_features_libr
     return result;
 }
 
-static ta_bool32 ta_features_library__load_and_parse_script(ta_features_library* pLib, ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath)
+static taBool32 ta_features_library__load_and_parse_script(ta_features_library* pLib, ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath)
 {
     assert(pLib != NULL);
     assert(pFS != NULL);
@@ -276,7 +276,7 @@ static ta_bool32 ta_features_library__load_and_parse_script(ta_features_library*
         return TA_FALSE;
     }
 
-    ta_bool32 result = ta_features_library__load_features_from_config(pLib, pConfig);
+    taBool32 result = ta_features_library__load_features_from_config(pLib, pConfig);
     //printf("FILE: %s/%s\n", archiveRelativePath, fileRelativePath);
 
     ta_delete_config(pConfig);

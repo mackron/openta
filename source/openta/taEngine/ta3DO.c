@@ -2,7 +2,7 @@
 //
 // Credits to http://units.tauniverse.com/tutorials/tadesign/tadesign/ta-3do-fmtV2.txt for the description of the 3DO file format.
 
-ta_bool32 ta_3do__init_object_from_header(ta_3do* p3DO, ta_3do_object* pObject, ta_3do_object_header* pHeader)
+taBool32 ta_3do__init_object_from_header(ta_3do* p3DO, ta_3do_object* pObject, ta_3do_object_header* pHeader)
 {
     assert(pObject != NULL);
     memset(pObject, 0, sizeof(*pObject));
@@ -119,7 +119,7 @@ void ta_close_3do(ta_3do* p3DO)
     free(p3DO);
 }
 
-ta_bool32 ta_3do_read_object_header(ta_file* pFile, ta_3do_object_header* pHeader)
+taBool32 ta_3do_read_object_header(ta_file* pFile, ta_3do_object_header* pHeader)
 {
     // PRE: The file must be sitting on the first byte of the header.
 
@@ -145,7 +145,7 @@ ta_bool32 ta_3do_read_object_header(ta_file* pFile, ta_3do_object_header* pHeade
     return TA_TRUE;
 }
 
-ta_bool32 ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* pHeaderOut)
+taBool32 ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* pHeaderOut)
 {
     if (pFile == NULL || pHeaderOut == NULL) {
         return TA_FALSE;

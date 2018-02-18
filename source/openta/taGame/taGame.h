@@ -45,8 +45,8 @@ typedef struct
 
 
     // The current screen. This is set to one of TA_SCREEN_*
-    ta_uint32 screen;
-    ta_uint32 prevScreen;   // Only used by the options menu for handling the back button.
+    taUInt32 screen;
+    taUInt32 prevScreen;   // Only used by the options menu for handling the back button.
     
 
     // The list of multi-player/skirmish maps.
@@ -56,7 +56,7 @@ typedef struct
     ta_config_obj** ppSPMaps;   // <-- stb_stretchy_buffer
 
     // The selected multi-player/skirmish map.
-    ta_uint32 iSelectedMPMap;
+    taUInt32 iSelectedMPMap;
 
 
     ta_texture* pTexture;
@@ -71,17 +71,17 @@ void ta_delete_game(ta_game* pGame);
 
 // Sets a global property.
 ta_result ta_set_property(ta_game* pGame, const char* key, const char* value);
-ta_result ta_set_property_int(ta_game* pGame, const char* key, ta_int32 value);
+ta_result ta_set_property_int(ta_game* pGame, const char* key, taInt32 value);
 ta_result ta_set_property_float(ta_game* pGame, const char* key, float value);
-ta_result ta_set_property_bool(ta_game* pGame, const char* key, ta_bool32 value);
+ta_result ta_set_property_bool(ta_game* pGame, const char* key, taBool32 value);
 
 // Retrieves a global property. Be careful with the returned pointer because it can become invalid whenever ta_set_property()
 // is called. If you need to store the value, make a copy.
 const char* ta_get_property(ta_game* pGame, const char* key);
 const char* ta_get_propertyf(ta_game* pGame, const char* key, ...);
-ta_int32 ta_get_property_int(ta_game* pGame, const char* key);
+taInt32 ta_get_property_int(ta_game* pGame, const char* key);
 float ta_get_property_float(ta_game* pGame, const char* key);
-ta_bool32 ta_get_property_bool(ta_game* pGame, const char* key);
+taBool32 ta_get_property_bool(ta_game* pGame, const char* key);
 
 
 // Runs the given game.
@@ -92,27 +92,27 @@ void ta_close(ta_game* pGame);
 
 
 // Changes the screen.
-void ta_goto_screen(ta_game* pGame, ta_uint32 newScreenType);
+void ta_goto_screen(ta_game* pGame, taUInt32 newScreenType);
 
 
 // Determines whether or not a mouse button is currently down.
-ta_bool32 ta_is_mouse_button_down(ta_game* pGame, ta_uint32 button);
+taBool32 ta_is_mouse_button_down(ta_game* pGame, taUInt32 button);
 
 // Determines whether or not a mouse button was just pressed.
-ta_bool32 ta_was_mouse_button_pressed(ta_game* pGame, ta_uint32 button);
+taBool32 ta_was_mouse_button_pressed(ta_game* pGame, taUInt32 button);
 
 // Determines whether or not a mouse button was just released.
-ta_bool32 ta_was_mouse_button_released(ta_game* pGame, ta_uint32 button);
+taBool32 ta_was_mouse_button_released(ta_game* pGame, taUInt32 button);
 
 
 // Determines whether or not a key is currently down.
-ta_bool32 ta_is_key_down(ta_game* pGame, ta_uint32 key);
+taBool32 ta_is_key_down(ta_game* pGame, taUInt32 key);
 
 // Determines whether or not a key was just pressed.
-ta_bool32 ta_was_key_pressed(ta_game* pGame, ta_uint32 key);
+taBool32 ta_was_key_pressed(ta_game* pGame, taUInt32 key);
 
 // Determines whether or not a key was just released.
-ta_bool32 ta_was_key_released(ta_game* pGame, ta_uint32 key);
+taBool32 ta_was_key_released(ta_game* pGame, taUInt32 key);
 
 
 

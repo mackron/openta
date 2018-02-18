@@ -125,7 +125,7 @@ typedef struct
     ta_feature_desc* pFeatures;
 
     // Whether or not the library is optimized. If so, we can so a binary search for items.
-    ta_bool32 isOptimized;
+    taBool32 isOptimized;
 } ta_features_library;
 
 // Creates a features library by loading every TDF file in the "features" directory and all of it's sub-directories.

@@ -44,7 +44,7 @@ size_t ta_memory_stream_peek(ta_memory_stream* pStream, void* pDataOut, size_t b
     return bytesToRead;
 }
 
-ta_bool32 ta_memory_stream_seek(ta_memory_stream* pStream, int64_t bytesToSeek, ta_seek_origin origin)
+taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, int64_t bytesToSeek, ta_seek_origin origin)
 {
     uint64_t newPos = pStream->currentReadPos;
     if (origin == ta_seek_origin_current)
@@ -95,7 +95,7 @@ size_t ta_memory_stream_tell(ta_memory_stream* pStream)
     return pStream->currentReadPos;
 }
 
-ta_bool32 ta_memory_stream_write_uint32(ta_memory_stream* pStream, uint32_t value)
+taBool32 ta_memory_stream_write_uint32(ta_memory_stream* pStream, uint32_t value)
 {
     if (pStream == NULL) {
         return TA_FALSE;

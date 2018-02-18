@@ -18,7 +18,7 @@
 #endif
 
 //// Endian Management ////
-static TA_INLINE ta_bool32 ta__is_little_endian()
+static TA_INLINE taBool32 ta__is_little_endian()
 {
     int n = 1;
     return (*(char*)&n) == 1;
@@ -95,7 +95,7 @@ size_t ta_memory_stream_read(ta_memory_stream* pStream, void* pDataOut, size_t b
 size_t ta_memory_stream_peek(ta_memory_stream* pStream, void* pDataOut, size_t bytesToRead);
 
 // Seeks to the given position.
-ta_bool32 ta_memory_stream_seek(ta_memory_stream* pStream, int64_t bytesToSeek, ta_seek_origin origin);
+taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, int64_t bytesToSeek, ta_seek_origin origin);
 
 // A simple helper for retrieving the current read position of a memory stream.
 size_t ta_memory_stream_tell(ta_memory_stream* pStream);
@@ -103,4 +103,4 @@ size_t ta_memory_stream_tell(ta_memory_stream* pStream);
 // Helper for writing a uint32 at the current position. This replaces the next 4 bytes of data - it does NOT insert it. This will move
 // the read position to past the value. This will fail if the stream is at the end and there is no room to fit the value. The stream
 // does not expand.
-ta_bool32 ta_memory_stream_write_uint32(ta_memory_stream* pStream, uint32_t value);
+taBool32 ta_memory_stream_write_uint32(ta_memory_stream* pStream, uint32_t value);

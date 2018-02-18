@@ -38,7 +38,7 @@ typedef struct
     unsigned short utf16HighSurrogate;
 
     // Keeps track of whether or not the cursor is over this window.
-    ta_bool32 isCursorOver;
+    taBool32 isCursorOver;
 #endif
 
 #ifdef __linux__
@@ -49,7 +49,7 @@ typedef struct
 
 
 // Initializes the window system. Only call this once per application.
-ta_bool32 ta_init_window_system();
+taBool32 ta_init_window_system();
 
 // Uninitializes the window system.
 void ta_uninit_window_system();

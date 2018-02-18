@@ -15,7 +15,7 @@ struct ta_font
     taEngineContext* pEngine;
     float height;
     ta_font_glyph glyphs[256];
-    ta_bool32 canBeColored; // Set to true for FNT fonts, false for GAF fonts.
+    taBool32 canBeColored; // Set to true for FNT fonts, false for GAF fonts.
     ta_texture* pTexture;
 };
 

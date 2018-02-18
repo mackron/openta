@@ -13,7 +13,7 @@ ta_result ta_property_manager_uninit(ta_property_manager* pProperties)
     if (pProperties == NULL) return TA_INVALID_ARGS;
 
     // Only the keys for each property is frees because the value is part of the same allocation.
-    for (ta_uint32 i = 0; i < pProperties->count; ++i) {
+    for (taUInt32 i = 0; i < pProperties->count; ++i) {
         free(pProperties->pProperties[i].key);
     }
 
@@ -38,7 +38,7 @@ ta_result ta_property_manager_set(ta_property_manager* pProperties, const char* 
         dr_strcpy_s(prop.val, valLen+1, val);
 
         if (pProperties->capacity == pProperties->count) {
-            ta_uint32 newCapacity = (pProperties->capacity == 0) ? 16 : pProperties->capacity*2;
+            taUInt32 newCapacity = (pProperties->capacity == 0) ? 16 : pProperties->capacity*2;
             ta_property* pNewProperties = (ta_property*)realloc(pProperties->pProperties, newCapacity * sizeof(ta_property));
             if (pNewProperties == NULL) {
                 return TA_OUT_OF_MEMORY;
@@ -55,9 +55,9 @@ ta_result ta_property_manager_set(ta_property_manager* pProperties, const char* 
         return TA_SUCCESS;
     } else {
         // The key is being unset so just clear it.
-        for (ta_uint32 i = 0; i < pProperties->count; ++i) {
+        for (taUInt32 i = 0; i < pProperties->count; ++i) {
             if (strcmp(pProperties->pProperties[i].key, key) == 0) {
-                for (ta_uint32 j = i; j < pProperties->count-1; ++j) {
+                for (taUInt32 j = i; j < pProperties->count-1; ++j) {
                     pProperties->pProperties[j] = pProperties->pProperties[j+1];
                 }
 
@@ -80,7 +80,7 @@ ta_result ta_property_manager_set_int(ta_property_manager* pProperties, const ch
     return ta_property_manager_set(pProperties, key, valStr);
 }
 
-ta_result ta_property_manager_set_bool(ta_property_manager* pProperties, const char* key, ta_bool32 val)
+ta_result ta_property_manager_set_bool(ta_property_manager* pProperties, const char* key, taBool32 val)
 {
     return ta_property_manager_set(pProperties, key, (val) ? "true" : "false");
 }
@@ -94,7 +94,7 @@ const char* ta_property_manager_get(ta_property_manager* pProperties, const char
 {
     if (pProperties == NULL || key == NULL) return NULL;
 
-    for (ta_uint32 i = 0; i < pProperties->count; ++i) {
+    for (taUInt32 i = 0; i < pProperties->count; ++i) {
         if (strcmp(pProperties->pProperties[i].key, key) == 0) {
             return pProperties->pProperties[i].val;
         }

@@ -1,6 +1,6 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-ta_bool32 ta_mesh_builder_init(ta_mesh_builder* pBuilder, size_t vertexSize)
+taBool32 ta_mesh_builder_init(ta_mesh_builder* pBuilder, size_t vertexSize)
 {
     if (pBuilder == NULL || vertexSize == 0) {
         return TA_FALSE;
@@ -23,7 +23,7 @@ void ta_mesh_builder_uninit(ta_mesh_builder* pBuilder)
 }
 
 
-ta_bool32 ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVertexData)
+taBool32 ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVertexData)
 {
     if (pBuilder == NULL || pVertexData == NULL) {
         return TA_FALSE;

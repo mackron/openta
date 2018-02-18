@@ -106,7 +106,7 @@ struct ta_graphics_context
 
 
     // Settings.
-    ta_bool32 isShadowsEnabled;
+    taBool32 isShadowsEnabled;
 
 
     // State
@@ -185,7 +185,7 @@ void* ta_get_gl_proc_address(const char* name)
 
 
 // Creates a shader from both a vertex and fragment shader string.
-ta_bool32 ta_graphics__compile_shader(ta_graphics_context* pGraphics, ta_graphics_shader* pShader, const char* vertexStr, const char* fragmentStr, char* pOutputLog, size_t outputLogSize)
+taBool32 ta_graphics__compile_shader(ta_graphics_context* pGraphics, ta_graphics_shader* pShader, const char* vertexStr, const char* fragmentStr, char* pOutputLog, size_t outputLogSize)
 {
     if (pGraphics == NULL || pShader == NULL) {
         return TA_FALSE;
@@ -1039,7 +1039,7 @@ static TA_INLINE void ta_graphics__draw_mesh(ta_graphics_context* pGraphics, ta_
 #define TA_GUI_CLEAR_MODE_BLACK 0
 #define TA_GUI_CLEAR_MODE_SHADE 1
 
-void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMode)
+void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMode)
 {
     if (pGraphics == NULL || pGUI == NULL) return;
 
@@ -1111,7 +1111,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
     }
 
     // Gadgets, not including the root.
-    for (ta_uint32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {   // <-- Start at 1 to skip the root gadget.
+    for (taUInt32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {   // <-- Start at 1 to skip the root gadget.
         ta_gui_gadget* pGadget = pGUI->pGadgets + iGadget;
         if (pGadget->active == 0) {
             continue;   // Skip over inactive gadgets.
@@ -1121,7 +1121,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
         float posY  = pGadget->ypos   * scale + offsetY;
         float sizeX = pGadget->width  * scale;
         float sizeY = pGadget->height * scale;
-        ta_bool32 isGadgetPressed = pGadget->isHeld && pGUI->hoveredGadgetIndex == iGadget;
+        taBool32 isGadgetPressed = pGadget->isHeld && pGUI->hoveredGadgetIndex == iGadget;
 
         switch (pGadget->id)
         {
@@ -1151,7 +1151,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                 }
 
                 if (pGadget->button.pBackgroundTextureGroup != NULL) {
-                    ta_uint32 buttonState = (isGadgetPressed) ? TA_GUI_BUTTON_STATE_PRESSED : TA_GUI_BUTTON_STATE_NORMAL;
+                    taUInt32 buttonState = (isGadgetPressed) ? TA_GUI_BUTTON_STATE_PRESSED : TA_GUI_BUTTON_STATE_NORMAL;
                     if (pGadget->button.grayedout) {
                         buttonState = TA_GUI_BUTTON_STATE_DISABLED;
                     }
@@ -1204,7 +1204,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                             charPosX += textPosX;
                             charPosY += textPosY;
 
-                            ta_uint32 underlineRGBA = (isGadgetPressed) ? pGraphics->pEngine->palette[0] : pGraphics->pEngine->palette[2];
+                            taUInt32 underlineRGBA = (isGadgetPressed) ? pGraphics->pEngine->palette[0] : pGraphics->pEngine->palette[2];
                             float underlineR = ((underlineRGBA & 0x00FF0000) >> 16) / 255.0f;
                             float underlineG = ((underlineRGBA & 0x0000FF00) >>  8) / 255.0f;
                             float underlineB = ((underlineRGBA & 0x000000FF) >>  0) / 255.0f;
@@ -1230,7 +1230,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                 const float itemPadding = 0;
                 float itemPosX = 0;
                 float itemPosY = -4*scale;
-                for (ta_uint32 iItem = pGadget->listbox.scrollPos; iItem < pGadget->listbox.scrollPos + pGadget->listbox.pageSize && iItem < pGadget->listbox.itemCount; ++iItem) {
+                for (taUInt32 iItem = pGadget->listbox.scrollPos; iItem < pGadget->listbox.scrollPos + pGadget->listbox.pageSize && iItem < pGadget->listbox.itemCount; ++iItem) {
                     ta_draw_text(pGraphics, &pGraphics->pEngine->font, 255, scale, posX + itemPosX, posY + itemPosY, pGadget->listbox.pItems[iItem]);
                     if (iItem == pGadget->listbox.iSelectedItem) {
                         float highlightPosX  = posX + itemPosX - (0*scale);
@@ -1391,7 +1391,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                     ta_draw_text(pGraphics, &pGraphics->pEngine->fontSmall, 255, scale, textPosX, textPosY, pGadget->label.text);
 
                     // Underline the shortcut key for the associated button.
-                    if (pGadget->label.iLinkedGadget != (ta_uint32)-1) {
+                    if (pGadget->label.iLinkedGadget != (taUInt32)-1) {
                         ta_gui_gadget* pLinkedGadget = &pGUI->pGadgets[pGadget->label.iLinkedGadget];
                         float charPosX;
                         float charPosY;
@@ -1403,7 +1403,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, ta_uint32 clearMo
                             charPosX += textPosX;
                             charPosY += textPosY;
 
-                            ta_uint32 underlineRGBA = (isGadgetPressed) ? pGraphics->pEngine->palette[0] : pGraphics->pEngine->palette[2];
+                            taUInt32 underlineRGBA = (isGadgetPressed) ? pGraphics->pEngine->palette[0] : pGraphics->pEngine->palette[2];
                             float underlineR = ((underlineRGBA & 0x00FF0000) >> 16) / 255.0f;
                             float underlineG = ((underlineRGBA & 0x0000FF00) >>  8) / 255.0f;
                             float underlineB = ((underlineRGBA & 0x000000FF) >>  0) / 255.0f;
@@ -1541,7 +1541,7 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     }
 }
 
-void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_feature_sequence* pSequence, uint32_t frameIndex, ta_bool32 transparent)
+void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_feature_sequence* pSequence, uint32_t frameIndex, taBool32 transparent)
 {
     if (pSequence == NULL) {
         return;
@@ -1698,7 +1698,7 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     }
 }
 
-void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 colorIndex, float scale, float posX, float posY, const char* text)
+void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text)
 {
     if (pGraphics == NULL || pFont == NULL || text == NULL) {
         return;
@@ -1760,7 +1760,7 @@ void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 color
     glEnd();
 }
 
-void ta_draw_textf(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 colorIndex, float scale, float posX, float posY, const char* text, ...)
+void ta_draw_textf(ta_graphics_context* pGraphics, ta_font* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...)
 {
     va_list args;
     va_start(args, text);
@@ -1774,7 +1774,7 @@ void ta_draw_textf(ta_graphics_context* pGraphics, ta_font* pFont, ta_uint8 colo
     va_end(args);
 }
 
-void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float width, float height, ta_bool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY)
+void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float width, float height, taBool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY)
 {
     if (pTexture == NULL) {
         return;
@@ -1798,7 +1798,7 @@ void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float widt
 
 
     // We need to use a different fragment program depending on whether or not we're using a paletted texture.
-    ta_bool32 isPaletted = pTexture->components == 1;
+    taBool32 isPaletted = pTexture->components == 1;
     if (isPaletted) {
         ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader);
     } else {
@@ -1831,7 +1831,7 @@ void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float widt
 
 //// Settings ////
 
-void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, ta_bool32 isShadowsEnabled)
+void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, taBool32 isShadowsEnabled)
 {
     if (pGraphics == NULL) {
         return;
@@ -1840,7 +1840,7 @@ void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, ta_bool32 is
     pGraphics->isShadowsEnabled = isShadowsEnabled;
 }
 
-ta_bool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
+taBool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
 {
     if (pGraphics == NULL) {
         return TA_FALSE;
@@ -1852,7 +1852,7 @@ ta_bool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
 
 
 // TESTING
-void ta_draw_texture(ta_texture* pTexture, ta_bool32 transparent,float scale)
+void ta_draw_texture(ta_texture* pTexture, taBool32 transparent,float scale)
 {
     ta_draw_subtexture(pTexture, 0, 0, (float)pTexture->width*scale, (float)pTexture->height*scale, transparent, 0, 0, (float)pTexture->width, (float)pTexture->height);
 }

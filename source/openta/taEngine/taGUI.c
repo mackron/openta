@@ -21,9 +21,9 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
 
     if (pEngine == NULL || filePath == NULL) return TA_INVALID_ARGS;
     pGUI->pEngine = pEngine;
-    pGUI->heldGadgetIndex = (ta_uint32)-1;
-    pGUI->hoveredGadgetIndex = (ta_uint32)-1;
-    pGUI->focusedGadgetIndex = (ta_uint32)-1;
+    pGUI->heldGadgetIndex = (taUInt32)-1;
+    pGUI->hoveredGadgetIndex = (taUInt32)-1;
+    pGUI->focusedGadgetIndex = (taUInt32)-1;
 
     // GUI's are loaded from configs.
     ta_config_obj* pConfig = ta_parse_config_from_file(pEngine->pFS, filePath);
@@ -47,7 +47,7 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
 
             ta_config_obj* pCommonObj = ta_config_get_subobj(pGadgetObj, "COMMON");
             if (pCommonObj != NULL) {
-                ta_int32 id = ta_config_get_int(pCommonObj, "id");
+                taInt32 id = ta_config_get_int(pCommonObj, "id");
 
                 payloadSize += ta_strlen_or_zero(ta_config_get_string(pCommonObj, "name"))+1;
                 payloadSize += ta_strlen_or_zero(ta_config_get_string(pCommonObj, "help"))+1;
@@ -86,7 +86,7 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
         }
     }
 
-    pGUI->_pPayload = (ta_uint8*)calloc(1, payloadSize);
+    pGUI->_pPayload = (taUInt8*)calloc(1, payloadSize);
     if (pGUI->_pPayload == NULL) {
         ta_delete_config(pConfig);
         return TA_OUT_OF_MEMORY;
@@ -146,7 +146,7 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
                 {
                     pGadget->button.status    = ta_config_get_int(pGadgetObj, "status");
                     pGadget->button.text      = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "text"));
-                    pGadget->button.quickkey  = (ta_uint32)ta_config_get_int(pGadgetObj, "quickkey");
+                    pGadget->button.quickkey  = (taUInt32)ta_config_get_int(pGadgetObj, "quickkey");
                     pGadget->button.grayedout = ta_config_get_bool(pGadgetObj, "grayedout");
                     pGadget->button.stages    = ta_config_get_int(pGadgetObj, "stages");
 
@@ -159,9 +159,9 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
                 {
                     pGadget->listbox.pItems = NULL;
                     pGadget->listbox.itemCount = 0;
-                    pGadget->listbox.iSelectedItem = (ta_uint32)-1;
+                    pGadget->listbox.iSelectedItem = (taUInt32)-1;
                     pGadget->listbox.scrollPos = 0;
-                    pGadget->listbox.pageSize = (ta_uint32)max(1, pGadget->height / pEngine->font.height);
+                    pGadget->listbox.pageSize = (taUInt32)max(1, pGadget->height / pEngine->font.height);
                 } break;
 
                 case TA_GUI_GADGET_TYPE_TEXTBOX:
@@ -181,7 +181,7 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
                 {
                     pGadget->label.text = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "text"));
                     pGadget->label.link = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "link"));
-                    pGadget->label.iLinkedGadget = (ta_uint32)-1;
+                    pGadget->label.iLinkedGadget = (taUInt32)-1;
                 } break;
 
                 case TA_GUI_GADGET_TYPE_SURFACE:
@@ -214,7 +214,7 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
 
     // We need to do some post-processing to link certain gadgets together.
 
-    for (ta_uint32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {
+    for (taUInt32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {
         ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadget];
         if (pGadget->id == TA_GUI_GADGET_TYPE_LABEL) {
             if (!ta_is_string_null_or_empty(pGadget->label.link)) {
@@ -248,13 +248,13 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
 
     // For some gadgets we'll need to load some graphics. From what I can tell, graphics will be located in the associated
     // GAF file or commongui. When searching for the graphic we first search in the associated GAF file.
-    for (ta_uint32 iGadget = 0; iGadget < pGUI->gadgetCount; ++iGadget) {
+    for (taUInt32 iGadget = 0; iGadget < pGUI->gadgetCount; ++iGadget) {
         ta_gui_gadget* pGadget = pGUI->pGadgets + iGadget;
         switch (pGadget->id)
         {
             case TA_GUI_GADGET_TYPE_BUTTON:
             {
-                ta_uint32 iSequence;
+                taUInt32 iSequence;
                 if (pGUI->hasGAF && ta_gaf_texture_group_find_sequence_by_name(&pGUI->textureGroupGAF, pGadget->name, &iSequence)) {
                     pGadget->button.pBackgroundTextureGroup = &pGUI->textureGroupGAF;
                     pGadget->button.iBackgroundFrame = pGUI->textureGroupGAF.pSequences[iSequence].firstFrameIndex + pGadget->button.status;
@@ -272,8 +272,8 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
 
                 // Experiment: Change the size of the button to that of it's graphic.
                 if (pGadget->button.pBackgroundTextureGroup != NULL) {
-                    pGadget->width  = (ta_int32)pGadget->button.pBackgroundTextureGroup->pFrames[pGadget->button.iBackgroundFrame].sizeX;
-                    pGadget->height = (ta_int32)pGadget->button.pBackgroundTextureGroup->pFrames[pGadget->button.iBackgroundFrame].sizeY;
+                    pGadget->width  = (taInt32)pGadget->button.pBackgroundTextureGroup->pFrames[pGadget->button.iBackgroundFrame].sizeX;
+                    pGadget->height = (taInt32)pGadget->button.pBackgroundTextureGroup->pFrames[pGadget->button.iBackgroundFrame].sizeY;
                 }
             } break;
 
@@ -330,7 +330,7 @@ ta_result ta_gui_unload(ta_gui* pGUI)
 }
 
 
-ta_result ta_gui_get_screen_mapping(ta_gui* pGUI, ta_uint32 screenSizeX, ta_uint32 screenSizeY, float* pScale, float* pOffsetX, float* pOffsetY)
+ta_result ta_gui_get_screen_mapping(ta_gui* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, float* pScale, float* pOffsetX, float* pOffsetY)
 {
     if (pScale) *pScale = 1;
     if (pOffsetX) *pOffsetX = 0;
@@ -358,7 +358,7 @@ ta_result ta_gui_get_screen_mapping(ta_gui* pGUI, ta_uint32 screenSizeX, ta_uint
     return TA_SUCCESS;
 }
 
-ta_result ta_gui_map_screen_position(ta_gui* pGUI, ta_uint32 screenSizeX, ta_uint32 screenSizeY, ta_int32 screenPosX, ta_int32 screenPosY, ta_int32* pGUIPosX, ta_int32* pGUIPosY)
+ta_result ta_gui_map_screen_position(ta_gui* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, taInt32 screenPosX, taInt32 screenPosY, taInt32* pGUIPosX, taInt32* pGUIPosY)
 {
     if (pGUIPosX) *pGUIPosX = screenPosX;
     if (pGUIPosY) *pGUIPosY = screenPosY;
@@ -369,19 +369,19 @@ ta_result ta_gui_map_screen_position(ta_gui* pGUI, ta_uint32 screenSizeX, ta_uin
     float offsetY;
     ta_gui_get_screen_mapping(pGUI, screenSizeX, screenSizeY, &scale, &offsetX, &offsetY);
 
-    if (pGUIPosX) *pGUIPosX = (ta_int32)((screenPosX - offsetX) / scale);
-    if (pGUIPosY) *pGUIPosY = (ta_int32)((screenPosY - offsetY) / scale);
+    if (pGUIPosX) *pGUIPosX = (taInt32)((screenPosX - offsetX) / scale);
+    if (pGUIPosY) *pGUIPosY = (taInt32)((screenPosY - offsetY) / scale);
     return TA_SUCCESS;
 }
 
-ta_bool32 ta_gui_get_gadget_under_point(ta_gui* pGUI, ta_int32 posX, ta_int32 posY, ta_uint32* pGadgetIndex)
+taBool32 ta_gui_get_gadget_under_point(ta_gui* pGUI, taInt32 posX, taInt32 posY, taUInt32* pGadgetIndex)
 {
-    if (pGadgetIndex) *pGadgetIndex = (ta_uint32)-1;
+    if (pGadgetIndex) *pGadgetIndex = (taUInt32)-1;
     if (pGUI == NULL) return TA_FALSE;
 
     // Iterate backwards for this. Reason for this is that GUI elements are rendered start to end which means
     // the elements at the end of the list are at the top of the z-order.
-    for (ta_uint32 iGadget = pGUI->gadgetCount; iGadget > 0; --iGadget) {
+    for (taUInt32 iGadget = pGUI->gadgetCount; iGadget > 0; --iGadget) {
         ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadget-1];
         if (posX >= pGadget->xpos && posX < pGadget->xpos+pGadget->width &&
             posY >= pGadget->ypos && posY < pGadget->ypos+pGadget->height) {
@@ -394,10 +394,10 @@ ta_bool32 ta_gui_get_gadget_under_point(ta_gui* pGUI, ta_int32 posX, ta_int32 po
 }
 
 
-ta_result ta_gui_hold_gadget(ta_gui* pGUI, ta_uint32 gadgetIndex, ta_uint32 mouseButton)
+ta_result ta_gui_hold_gadget(ta_gui* pGUI, taUInt32 gadgetIndex, taUInt32 mouseButton)
 {
     if (pGUI == NULL || gadgetIndex >= pGUI->gadgetCount) return TA_INVALID_ARGS;
-    if (pGUI->heldGadgetIndex != (ta_uint32)-1) {
+    if (pGUI->heldGadgetIndex != (taUInt32)-1) {
         return TA_ERROR;    // Another gadget is already being held.
     }
 
@@ -408,31 +408,31 @@ ta_result ta_gui_hold_gadget(ta_gui* pGUI, ta_uint32 gadgetIndex, ta_uint32 mous
     return TA_SUCCESS;
 }
 
-ta_result ta_gui_release_hold(ta_gui* pGUI, ta_uint32 gadgetIndex)
+ta_result ta_gui_release_hold(ta_gui* pGUI, taUInt32 gadgetIndex)
 {
     if (pGUI == NULL || gadgetIndex >= pGUI->gadgetCount) return TA_INVALID_ARGS;
     pGUI->pGadgets[gadgetIndex].isHeld = TA_FALSE;
     pGUI->pGadgets[gadgetIndex].heldMB = 0;
-    pGUI->heldGadgetIndex = (ta_uint32)-1;
+    pGUI->heldGadgetIndex = (taUInt32)-1;
     
     return TA_SUCCESS;
 }
 
-ta_bool32 ta_gui_get_held_gadget(ta_gui* pGUI, ta_uint32* pGadgetIndex)
+taBool32 ta_gui_get_held_gadget(ta_gui* pGUI, taUInt32* pGadgetIndex)
 {
-    if (pGadgetIndex) *pGadgetIndex = (ta_uint32)-1;
+    if (pGadgetIndex) *pGadgetIndex = (taUInt32)-1;
     if (pGUI == NULL) return TA_FALSE;
 
     if (pGadgetIndex) *pGadgetIndex = pGUI->heldGadgetIndex;
-    return pGUI->heldGadgetIndex != (ta_uint32)-1;
+    return pGUI->heldGadgetIndex != (taUInt32)-1;
 }
 
-ta_bool32 ta_gui_find_gadget_by_name(ta_gui* pGUI, const char* name, ta_uint32* pGadgetIndex)
+taBool32 ta_gui_find_gadget_by_name(ta_gui* pGUI, const char* name, taUInt32* pGadgetIndex)
 {
-    if (pGadgetIndex) *pGadgetIndex = (ta_uint32)-1;
+    if (pGadgetIndex) *pGadgetIndex = (taUInt32)-1;
     if (pGUI == NULL) return TA_FALSE;
 
-    for (ta_uint32 iGadget = 0; iGadget < pGUI->gadgetCount; ++iGadget) {
+    for (taUInt32 iGadget = 0; iGadget < pGUI->gadgetCount; ++iGadget) {
         if (_stricmp(pGUI->pGadgets[iGadget].name, name) == 0) {
             if (pGadgetIndex) *pGadgetIndex = iGadget;
             return TA_TRUE;
@@ -442,16 +442,16 @@ ta_bool32 ta_gui_find_gadget_by_name(ta_gui* pGUI, const char* name, ta_uint32* 
     return TA_FALSE;
 }
 
-ta_bool32 ta_gui_get_focused_gadget(ta_gui* pGUI, ta_uint32* pGadgetIndex)
+taBool32 ta_gui_get_focused_gadget(ta_gui* pGUI, taUInt32* pGadgetIndex)
 {
-    if (pGadgetIndex) *pGadgetIndex = (ta_uint32)-1;
+    if (pGadgetIndex) *pGadgetIndex = (taUInt32)-1;
     if (pGUI == NULL) return TA_FALSE;
 
     if (pGadgetIndex) *pGadgetIndex = pGUI->focusedGadgetIndex;
-    return pGUI->focusedGadgetIndex != (ta_uint32)-1;
+    return pGUI->focusedGadgetIndex != (taUInt32)-1;
 }
 
-ta_bool32 ta_gui__can_gadget_receive_focus(ta_gui_gadget* pGadget)
+taBool32 ta_gui__can_gadget_receive_focus(ta_gui_gadget* pGadget)
 {
     assert(pGadget != NULL);
 
@@ -465,11 +465,11 @@ void ta_gui_focus_next_gadget(ta_gui* pGUI)
 {
     if (pGUI == NULL || pGUI->gadgetCount == 0) return;
     
-    ta_bool32 wasAnythingFocusedBeforehand = pGUI->focusedGadgetIndex != (ta_uint32)-1; // <-- Only used to avoid infinite recursion.
+    taBool32 wasAnythingFocusedBeforehand = pGUI->focusedGadgetIndex != (taUInt32)-1; // <-- Only used to avoid infinite recursion.
 
     // We just keep looping over each gadget until we find one that can receive focus. If we reached the end we just
     // loop back to the start and try again, making sure we don't get stuck in an infinite recursion loop.
-    for (ta_uint32 iGadget = (wasAnythingFocusedBeforehand) ? pGUI->focusedGadgetIndex+1 : 1; iGadget < pGUI->gadgetCount; ++iGadget) { // <-- Don't include the root gadget.
+    for (taUInt32 iGadget = (wasAnythingFocusedBeforehand) ? pGUI->focusedGadgetIndex+1 : 1; iGadget < pGUI->gadgetCount; ++iGadget) { // <-- Don't include the root gadget.
         ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadget];
         if (ta_gui__can_gadget_receive_focus(pGadget)) {
             pGUI->focusedGadgetIndex = iGadget;
@@ -479,7 +479,7 @@ void ta_gui_focus_next_gadget(ta_gui* pGUI)
 
     // If we get here it means we weren't able to find a new gadget to focus. In this case we just loop back to the start and try again.
     if (wasAnythingFocusedBeforehand) {
-        pGUI->focusedGadgetIndex = (ta_uint32)-1;
+        pGUI->focusedGadgetIndex = (taUInt32)-1;
         ta_gui_focus_next_gadget(pGUI);
     }
 }
@@ -489,9 +489,9 @@ void ta_gui_focus_prev_gadget(ta_gui* pGUI)
     if (pGUI == NULL || pGUI->gadgetCount == 0) return;
     
     // Everything works the same as ta_gui_focus_next_gadget(), only in reverse.
-    ta_bool32 wasAnythingFocusedBeforehand = pGUI->focusedGadgetIndex != (ta_uint32)-1; // <-- Only used to avoid infinite recursion.
+    taBool32 wasAnythingFocusedBeforehand = pGUI->focusedGadgetIndex != (taUInt32)-1; // <-- Only used to avoid infinite recursion.
 
-    for (ta_uint32 iGadget = (wasAnythingFocusedBeforehand) ? pGUI->focusedGadgetIndex : pGUI->gadgetCount; iGadget > 1; --iGadget) {   // <-- Don't include the root gadget.
+    for (taUInt32 iGadget = (wasAnythingFocusedBeforehand) ? pGUI->focusedGadgetIndex : pGUI->gadgetCount; iGadget > 1; --iGadget) {   // <-- Don't include the root gadget.
         ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadget-1];
         if (ta_gui__can_gadget_receive_focus(pGadget)) {
             pGUI->focusedGadgetIndex = iGadget-1;
@@ -500,19 +500,19 @@ void ta_gui_focus_prev_gadget(ta_gui* pGUI)
     }
 
     if (wasAnythingFocusedBeforehand) {
-        pGUI->focusedGadgetIndex = (ta_uint32)-1;
+        pGUI->focusedGadgetIndex = (taUInt32)-1;
         ta_gui_focus_prev_gadget(pGUI);
     }
 }
 
-const char* ta_gui_get_button_text(ta_gui_gadget* pGadget, ta_uint32 stage)
+const char* ta_gui_get_button_text(ta_gui_gadget* pGadget, taUInt32 stage)
 {
     if (pGadget == NULL) return NULL;
     if (stage == 0) {
         return pGadget->button.text;
     }
 
-    if (pGadget->id != TA_GUI_GADGET_TYPE_BUTTON || (ta_int32)stage >= pGadget->button.stages) {
+    if (pGadget->id != TA_GUI_GADGET_TYPE_BUTTON || (taInt32)stage >= pGadget->button.stages) {
         return NULL;
     }
 
@@ -531,7 +531,7 @@ const char* ta_gui_get_button_text(ta_gui_gadget* pGadget, ta_uint32 stage)
     return NULL;
 }
 
-ta_result ta_gui_set_listbox_items(ta_gui_gadget* pGadget, const char** pItems, ta_uint32 count)
+ta_result ta_gui_set_listbox_items(ta_gui_gadget* pGadget, const char** pItems, taUInt32 count)
 {
     if (pGadget == NULL || pGadget->id != TA_GUI_GADGET_TYPE_LISTBOX) return TA_INVALID_ARGS;
     
@@ -542,7 +542,7 @@ ta_result ta_gui_set_listbox_items(ta_gui_gadget* pGadget, const char** pItems, 
 
     // Make a copy of each item.
     size_t payloadSize = 0;
-    for (ta_uint32 i = 0; i < count; ++i) {
+    for (taUInt32 i = 0; i < count; ++i) {
         payloadSize += sizeof(*pGadget->listbox.pItems);
         payloadSize += ta_strlen_or_zero(pItems[i]) + 1;    // +1 for null terminator.
     }
@@ -554,7 +554,7 @@ ta_result ta_gui_set_listbox_items(ta_gui_gadget* pGadget, const char** pItems, 
 
     // Payload format: [ptr0, ptr1, ... ptrN][str0, str1, ... strN];
     char* pDstStr = (char*)pGadget->listbox.pItems + (sizeof(*pGadget->listbox.pItems) * count);
-    for (ta_uint32 i = 0; i < count; ++i) {
+    for (taUInt32 i = 0; i < count; ++i) {
         const char* pSrcStr = pItems[i];
         if (pSrcStr == NULL) pSrcStr = "";
 
@@ -569,7 +569,7 @@ ta_result ta_gui_set_listbox_items(ta_gui_gadget* pGadget, const char** pItems, 
     return TA_SUCCESS;
 }
 
-const char* ta_gui_get_listbox_item(ta_gui_gadget* pGadget, ta_uint32 index)
+const char* ta_gui_get_listbox_item(ta_gui_gadget* pGadget, taUInt32 index)
 {
     if (pGadget == NULL || pGadget->id != TA_GUI_GADGET_TYPE_LISTBOX || index >= pGadget->listbox.itemCount) return NULL;
     return pGadget->listbox.pItems[index];
@@ -606,7 +606,7 @@ ta_result ta_common_gui_load(taEngineContext* pEngine, ta_common_gui* pCommonGUI
         return result;
     }
 
-    ta_uint32 iSequence;
+    taUInt32 iSequence;
     if (ta_gaf_texture_group_find_sequence_by_name(&pCommonGUI->textureGroup, "BUTTONS0", &iSequence)) {
         ta_gaf_texture_group_sequence* pSequence = pCommonGUI->textureGroup.pSequences + iSequence;
 
@@ -619,7 +619,7 @@ ta_result ta_common_gui_load(taEngineContext* pEngine, ta_common_gui* pCommonGUI
     }
 
     if (ta_gaf_texture_group_find_sequence_by_name(&pCommonGUI->textureGroup, "SLIDERS", &iSequence)) {
-        ta_uint32 firstFrameIndex = pCommonGUI->textureGroup.pSequences[iSequence].firstFrameIndex;
+        taUInt32 firstFrameIndex = pCommonGUI->textureGroup.pSequences[iSequence].firstFrameIndex;
         pCommonGUI->scrollbar.arrowUpFrameIndex           = firstFrameIndex + 6;
         pCommonGUI->scrollbar.arrowUpPressedFrameIndex    = firstFrameIndex + 7;
         pCommonGUI->scrollbar.arrowDownFrameIndex         = firstFrameIndex + 8;
@@ -653,23 +653,23 @@ ta_result ta_common_gui_unload(ta_common_gui* pCommonGUI)
     return TA_SUCCESS;
 }
 
-ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, ta_uint32 width, ta_uint32 height, ta_uint32* pFrameIndex)
+ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, taUInt32 width, taUInt32 height, taUInt32* pFrameIndex)
 {
     if (pCommonGUI == NULL) return TA_INVALID_ARGS;
 
     // The selection logic might be able to be improved here...
-    ta_int32 diffXClosest = INT32_MAX;
-    ta_int32 diffYClosest = INT32_MAX;
-    ta_uint32 iClosestButton = (ta_uint32)-1;
-    for (ta_uint32 i = 0; i < ta_countof(pCommonGUI->buttons); ++i) {
-        ta_int32 diffX = (ta_int32)pCommonGUI->textureGroup.pFrames[pCommonGUI->buttons[i].frameIndex].sizeX - (ta_int32)width;
-        ta_int32 diffY = (ta_int32)pCommonGUI->textureGroup.pFrames[pCommonGUI->buttons[i].frameIndex].sizeY - (ta_int32)height;
+    taInt32 diffXClosest = INT32_MAX;
+    taInt32 diffYClosest = INT32_MAX;
+    taUInt32 iClosestButton = (taUInt32)-1;
+    for (taUInt32 i = 0; i < ta_countof(pCommonGUI->buttons); ++i) {
+        taInt32 diffX = (taInt32)pCommonGUI->textureGroup.pFrames[pCommonGUI->buttons[i].frameIndex].sizeX - (taInt32)width;
+        taInt32 diffY = (taInt32)pCommonGUI->textureGroup.pFrames[pCommonGUI->buttons[i].frameIndex].sizeY - (taInt32)height;
         if (diffX == 0 && diffY == 0) {
             if (pFrameIndex) *pFrameIndex = pCommonGUI->buttons[i].frameIndex;
             return TA_SUCCESS;
         }
 
-        if (ta_abs((ta_int64)diffXClosest+(ta_int64)diffYClosest) > ta_abs((ta_int64)diffX+(ta_int64)diffY)) {
+        if (ta_abs((taInt64)diffXClosest+(taInt64)diffYClosest) > ta_abs((taInt64)diffX+(taInt64)diffY)) {
             diffXClosest = diffX;
             diffYClosest = diffY;
             iClosestButton = i;
@@ -680,7 +680,7 @@ ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, ta_uint32 wi
     return TA_SUCCESS;
 }
 
-ta_result ta_common_gui_get_multistage_button_frame(ta_common_gui* pCommonGUI, ta_uint32 stages, ta_uint32* pFrameIndex)
+ta_result ta_common_gui_get_multistage_button_frame(ta_common_gui* pCommonGUI, taUInt32 stages, taUInt32* pFrameIndex)
 {
     if (pCommonGUI == NULL || stages > 4 || stages < 1) return TA_INVALID_ARGS;
 
@@ -696,7 +696,7 @@ ta_result ta_common_gui_get_multistage_button_frame(ta_common_gui* pCommonGUI, t
         sequenceName = "stagebuttn4";
     }
 
-    ta_uint32 iSequence;
+    taUInt32 iSequence;
     if (!ta_gaf_texture_group_find_sequence_by_name(&pCommonGUI->textureGroup, sequenceName, &iSequence)) {
         return TA_RESOURCE_NOT_FOUND;
     }

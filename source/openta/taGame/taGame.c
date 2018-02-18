@@ -35,7 +35,7 @@ TA_PRIVATE ta_result ta_load_totala_settings__config(ta_property_manager* pPrope
 }
 
 #ifdef _WIN32
-TA_PRIVATE ta_uint32 ta_registry_read_uint32(HKEY hKey, const char* name)
+TA_PRIVATE taUInt32 ta_registry_read_uint32(HKEY hKey, const char* name)
 {
     DWORD value = 0;
     DWORD valueSize = sizeof(value);
@@ -332,7 +332,7 @@ ta_game* ta_create_game(int argc, char** argv)
     qsort(pGame->ppMPMaps, stb_sb_count(pGame->ppMPMaps), sizeof(*pGame->ppMPMaps), ta_qsort_cb_map);
     qsort(pGame->ppSPMaps, stb_sb_count(pGame->ppSPMaps), sizeof(*pGame->ppSPMaps), ta_qsort_cb_map);
 
-    ta_uint32 iMapListGadget;
+    taUInt32 iMapListGadget;
     if (ta_gui_find_gadget_by_name(&pGame->selectMapDialog, "MAPNAMES", &iMapListGadget)) {
         const char** ppMPMapNames = (const char**)malloc(stb_sb_count(pGame->ppMPMaps) * sizeof(*ppMPMapNames));
         for (int i = 0; i < stb_sb_count(pGame->ppMPMaps); ++i) {
@@ -386,7 +386,7 @@ ta_result ta_set_property(ta_game* pGame, const char* key, const char* value)
     return ta_property_manager_set(&pGame->engine.properties, key, value);
 }
 
-ta_result ta_set_property_int(ta_game* pGame, const char* key, ta_int32 value)
+ta_result ta_set_property_int(ta_game* pGame, const char* key, taInt32 value)
 {
     char valueStr[256];
     snprintf(valueStr, sizeof(valueStr), "%d", value);
@@ -400,7 +400,7 @@ ta_result ta_set_property_float(ta_game* pGame, const char* key, float value)
     return ta_set_property(pGame, key, valueStr);
 }
 
-ta_result ta_set_property_bool(ta_game* pGame, const char* key, ta_bool32 value)
+ta_result ta_set_property_bool(ta_game* pGame, const char* key, taBool32 value)
 {
     return ta_set_property(pGame, key, value ? "1" : "0");
 }
@@ -422,7 +422,7 @@ const char* ta_get_propertyf(ta_game* pGame, const char* key, ...)
     return value;
 }
 
-ta_int32 ta_get_property_int(ta_game* pGame, const char* key)
+taInt32 ta_get_property_int(ta_game* pGame, const char* key)
 {
     const char* valueStr = ta_get_property(pGame, key);
     if (valueStr == NULL) {
@@ -442,7 +442,7 @@ float ta_get_property_float(ta_game* pGame, const char* key)
     return (float)atof(valueStr);
 }
 
-ta_bool32 ta_get_property_bool(ta_game* pGame, const char* key)
+taBool32 ta_get_property_bool(ta_game* pGame, const char* key)
 {
     const char* valueStr = ta_get_property(pGame, key);
     if (valueStr == NULL) {
@@ -490,11 +490,11 @@ void ta_step__in_game(ta_game* pGame, double dt)
 
 typedef struct
 {
-    ta_uint32 type;
+    taUInt32 type;
     ta_gui_gadget* pGadget;  // The gadget this event relates to.
 } ta_gui_input_event;
 
-ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* pEvent)
+taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* pEvent)
 {
     if (pGame == NULL || pGUI == NULL || pEvent == NULL) return TA_FALSE;
     ta_zero_object(pEvent);
@@ -518,8 +518,8 @@ ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
     if (ta_was_key_pressed(pGame, TA_KEY_ENTER)) {
         // When the enter key is pressed we want to prioritize crdefault. It that is not set we fall back to the focused gadget.
         if (!ta_is_string_null_or_empty(pRootGadget->root.crdefault)) {
-            ta_uint32 iGadget;
-            ta_bool32 foundGadget = ta_gui_find_gadget_by_name(pGUI, pRootGadget->root.crdefault, &iGadget);
+            taUInt32 iGadget;
+            taBool32 foundGadget = ta_gui_find_gadget_by_name(pGUI, pRootGadget->root.crdefault, &iGadget);
             if (foundGadget) {
                 pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
                 pEvent->pGadget = &pGUI->pGadgets[iGadget];
@@ -527,8 +527,8 @@ ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
             }
         } else {
             // crdefault is not set, so try the focused element.
-            ta_uint32 iGadget;
-            ta_bool32 foundGadget = ta_gui_get_focused_gadget(pGUI, &iGadget);
+            taUInt32 iGadget;
+            taBool32 foundGadget = ta_gui_get_focused_gadget(pGUI, &iGadget);
             if (foundGadget) {
                 pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
                 pEvent->pGadget = &pGUI->pGadgets[iGadget];
@@ -536,8 +536,8 @@ ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
             }
         }
     } else if (ta_was_key_pressed(pGame, TA_KEY_SPACE)) {
-        ta_uint32 iGadget;
-        ta_bool32 foundGadget = ta_gui_get_focused_gadget(pGUI, &iGadget);
+        taUInt32 iGadget;
+        taBool32 foundGadget = ta_gui_get_focused_gadget(pGUI, &iGadget);
         if (foundGadget) {
             pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
             pEvent->pGadget = &pGUI->pGadgets[iGadget];
@@ -545,8 +545,8 @@ ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
         }
     } else if (ta_was_key_pressed(pGame, TA_KEY_ESCAPE)) {
         if (!ta_is_string_null_or_empty(pRootGadget->root.escdefault)) {
-            ta_uint32 iGadget;
-            ta_bool32 foundGadget = ta_gui_find_gadget_by_name(pGUI, pRootGadget->root.escdefault, &iGadget);
+            taUInt32 iGadget;
+            taBool32 foundGadget = ta_gui_find_gadget_by_name(pGUI, pRootGadget->root.escdefault, &iGadget);
             if (foundGadget) {
                 pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
                 pEvent->pGadget = &pGUI->pGadgets[iGadget];
@@ -558,10 +558,10 @@ ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
     } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_RIGHT)) {
         ta_gui_focus_next_gadget(pGUI);
     } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_UP)) {
-        ta_uint32 iFocusedGadget;
+        taUInt32 iFocusedGadget;
         if (ta_gui_get_focused_gadget(pGUI, &iFocusedGadget) && pGUI->pGadgets[iFocusedGadget].id == TA_GUI_GADGET_TYPE_LISTBOX) {
-            ta_uint32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem;
-            if (iSelectedItem == (ta_uint32)-1 || iSelectedItem == 0) {
+            taUInt32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem;
+            if (iSelectedItem == (taUInt32)-1 || iSelectedItem == 0) {
                 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.itemCount - 1;
             } else {
                 iSelectedItem -= 1;
@@ -572,10 +572,10 @@ ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
             ta_gui_focus_prev_gadget(pGUI);
         }
     } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_DOWN)) {
-        ta_uint32 iFocusedGadget;
+        taUInt32 iFocusedGadget;
         if (ta_gui_get_focused_gadget(pGUI, &iFocusedGadget) && pGUI->pGadgets[iFocusedGadget].id == TA_GUI_GADGET_TYPE_LISTBOX) {
-            ta_uint32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem;
-            if (iSelectedItem == (ta_uint32)-1 || iSelectedItem == pGUI->pGadgets[iFocusedGadget].listbox.itemCount-1) {
+            taUInt32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem;
+            if (iSelectedItem == (taUInt32)-1 || iSelectedItem == pGUI->pGadgets[iFocusedGadget].listbox.itemCount-1) {
                 iSelectedItem = 0;
             } else {
                 iSelectedItem += 1;
@@ -593,7 +593,7 @@ ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
         }
     } else {
         // Try shortcut keys. For this we just iterate over each button and check if it's shortcut key was pressed.
-        for (ta_uint32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {
+        for (taUInt32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {
             ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadget];
             if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
                 if (pGadget->button.quickkey != 0 && ta_was_key_pressed(pGame, toupper(pGadget->button.quickkey))) {
@@ -609,25 +609,25 @@ ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
 
     // Mouse
     // =====
-    ta_int32 mousePosXGUI;
-    ta_int32 mousePosYGUI;
-    ta_gui_map_screen_position(pGUI, pGame->engine.pGraphics->resolutionX, pGame->engine.pGraphics->resolutionY, (ta_int32)pGame->engine.input.mousePosX, (ta_int32)pGame->engine.input.mousePosY, &mousePosXGUI, &mousePosYGUI);
+    taInt32 mousePosXGUI;
+    taInt32 mousePosYGUI;
+    ta_gui_map_screen_position(pGUI, pGame->engine.pGraphics->resolutionX, pGame->engine.pGraphics->resolutionY, (taInt32)pGame->engine.input.mousePosX, (taInt32)pGame->engine.input.mousePosY, &mousePosXGUI, &mousePosYGUI);
 
-    ta_uint32 iGadgetUnderMouse;
-    ta_bool32 isMouseOverGadget = ta_gui_get_gadget_under_point(pGUI, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
+    taUInt32 iGadgetUnderMouse;
+    taBool32 isMouseOverGadget = ta_gui_get_gadget_under_point(pGUI, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
 
-    ta_uint32 iHeldGadget;
-    ta_bool32 isGadgetHeld = ta_gui_get_held_gadget(pGUI, &iHeldGadget);
+    taUInt32 iHeldGadget;
+    taBool32 isGadgetHeld = ta_gui_get_held_gadget(pGUI, &iHeldGadget);
 
-    ta_bool32 wasLMBPressed = ta_was_mouse_button_pressed(pGame, TA_MOUSE_BUTTON_LEFT);
-    ta_bool32 wasRMBPressed = ta_was_mouse_button_pressed(pGame, TA_MOUSE_BUTTON_RIGHT);
-    ta_bool32 wasMBPressed = wasLMBPressed || wasRMBPressed;
+    taBool32 wasLMBPressed = ta_was_mouse_button_pressed(pGame, TA_MOUSE_BUTTON_LEFT);
+    taBool32 wasRMBPressed = ta_was_mouse_button_pressed(pGame, TA_MOUSE_BUTTON_RIGHT);
+    taBool32 wasMBPressed = wasLMBPressed || wasRMBPressed;
 
-    ta_bool32 wasLMBReleased = ta_was_mouse_button_released(pGame, TA_MOUSE_BUTTON_LEFT);
-    ta_bool32 wasRMBReleased = ta_was_mouse_button_released(pGame, TA_MOUSE_BUTTON_RIGHT);
-    ta_bool32 wasMBReleased = wasLMBReleased || wasRMBReleased;
+    taBool32 wasLMBReleased = ta_was_mouse_button_released(pGame, TA_MOUSE_BUTTON_LEFT);
+    taBool32 wasRMBReleased = ta_was_mouse_button_released(pGame, TA_MOUSE_BUTTON_RIGHT);
+    taBool32 wasMBReleased = wasLMBReleased || wasRMBReleased;
 
-    ta_uint32 heldMB = 0;
+    taUInt32 heldMB = 0;
     if (isGadgetHeld) {
         ta_gui_gadget* pHeldGadget = &pGUI->pGadgets[iHeldGadget];
         heldMB = pHeldGadget->heldMB;
@@ -647,15 +647,15 @@ ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
                 if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
                     ta_gui_hold_gadget(pGUI, iGadgetUnderMouse, (wasLMBPressed) ? TA_MOUSE_BUTTON_LEFT : TA_MOUSE_BUTTON_RIGHT);
                 } else if (pGadget->id == TA_GUI_GADGET_TYPE_LISTBOX) {
-                    ta_int32 relativeMousePosX = mousePosXGUI - pGadget->xpos;
-                    ta_int32 relativeMousePosY = mousePosYGUI - pGadget->ypos;
+                    taInt32 relativeMousePosX = mousePosXGUI - pGadget->xpos;
+                    taInt32 relativeMousePosY = mousePosYGUI - pGadget->ypos;
 
                     // The selected item is based on the position of the mouse.
-                    ta_int32 iSelectedItem = (ta_int32)(relativeMousePosY / pGame->engine.font.height) + pGadget->listbox.scrollPos;
-                    if (iSelectedItem >= (ta_int32)pGadget->listbox.itemCount) {
-                        pGadget->listbox.iSelectedItem = (ta_uint32)-1;
+                    taInt32 iSelectedItem = (taInt32)(relativeMousePosY / pGame->engine.font.height) + pGadget->listbox.scrollPos;
+                    if (iSelectedItem >= (taInt32)pGadget->listbox.itemCount) {
+                        pGadget->listbox.iSelectedItem = (taUInt32)-1;
                     } else {
-                        pGadget->listbox.iSelectedItem = (ta_uint32)iSelectedItem;
+                        pGadget->listbox.iSelectedItem = (taUInt32)iSelectedItem;
                     }
 
                     // Make sure this is the gadget with keyboard focus.
@@ -674,7 +674,7 @@ ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
                             return TA_TRUE;
                         } else {
                             assert(pGadget->button.stages > 0);
-                            ta_uint32 maxStage = (pGadget->button.stages == 1) ? 2 : pGadget->button.stages;
+                            taUInt32 maxStage = (pGadget->button.stages == 1) ? 2 : pGadget->button.stages;
                             pGadget->button.currentStage = (pGadget->button.currentStage + 1) % maxStage;
                         }
                     }
@@ -682,7 +682,7 @@ ta_bool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* 
             }
         }
     } else {
-        pGUI->hoveredGadgetIndex = (ta_uint32)-1;
+        pGUI->hoveredGadgetIndex = (taUInt32)-1;
     }
 
     return TA_FALSE;
@@ -696,15 +696,15 @@ void ta_step__main_menu(ta_game* pGame, double dt)
 
     // Input
     // =====
-    ta_int32 mousePosXGUI;
-    ta_int32 mousePosYGUI;
-    ta_gui_map_screen_position(&pGame->mainMenu, pGame->engine.pGraphics->resolutionX, pGame->engine.pGraphics->resolutionY, (ta_int32)pGame->engine.input.mousePosX, (ta_int32)pGame->engine.input.mousePosY, &mousePosXGUI, &mousePosYGUI);
+    taInt32 mousePosXGUI;
+    taInt32 mousePosYGUI;
+    ta_gui_map_screen_position(&pGame->mainMenu, pGame->engine.pGraphics->resolutionX, pGame->engine.pGraphics->resolutionY, (taInt32)pGame->engine.input.mousePosX, (taInt32)pGame->engine.input.mousePosY, &mousePosXGUI, &mousePosYGUI);
 
-    ta_uint32 iGadgetUnderMouse;
-    ta_bool32 isMouseOverGadget = ta_gui_get_gadget_under_point(&pGame->mainMenu, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
+    taUInt32 iGadgetUnderMouse;
+    taBool32 isMouseOverGadget = ta_gui_get_gadget_under_point(&pGame->mainMenu, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
 
     ta_gui_input_event e;
-    ta_bool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->mainMenu, &e);
+    taBool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->mainMenu, &e);
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
             if (strcmp(e.pGadget->name, "SINGLE") == 0) {
@@ -758,7 +758,7 @@ void ta_step__sp_menu(ta_game* pGame, double dt)
     // Input
     // =====
     ta_gui_input_event e;
-    ta_bool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->spMenu, &e);
+    taBool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->spMenu, &e);
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
             if (strcmp(e.pGadget->name, "NewCamp") == 0) {
@@ -805,7 +805,7 @@ void ta_step__mp_menu(ta_game* pGame, double dt)
     // Input
     // =====
     ta_gui_input_event e;
-    ta_bool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->mpMenu, &e);
+    taBool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->mpMenu, &e);
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
             if (strcmp(e.pGadget->name, "PREVMENU") == 0) {
@@ -838,7 +838,7 @@ void ta_step__options_menu(ta_game* pGame, double dt)
     // Input
     // =====
     ta_gui_input_event e;
-    ta_bool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->optionsMenu, &e);
+    taBool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->optionsMenu, &e);
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
             if (strcmp(e.pGadget->name, "PREV") == 0) {     // This is the OK button
@@ -873,7 +873,7 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
     // Input
     // =====
     ta_gui_input_event e;
-    ta_bool32 hasGUIEvent;
+    taBool32 hasGUIEvent;
     if (pGame->pCurrentDialog == NULL) {
         hasGUIEvent = ta_handle_gui_input(pGame, &pGame->skirmishMenu, &e);
         if (hasGUIEvent) {
@@ -903,7 +903,7 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
                     pGame->pCurrentDialog = NULL;   // Close the dialog.
                 }
                 if (strcmp(e.pGadget->name, "LOAD") == 0) {
-                    ta_uint32 iMapListGadget;
+                    taUInt32 iMapListGadget;
                     ta_gui_find_gadget_by_name(&pGame->selectMapDialog, "MAPNAMES", &iMapListGadget);
 
                     pGame->iSelectedMPMap = pGame->selectMapDialog.pGadgets[iMapListGadget].listbox.iSelectedItem;
@@ -936,7 +936,7 @@ void ta_step__campaign_menu(ta_game* pGame, double dt)
     // Input
     // =====
     ta_gui_input_event e;
-    ta_bool32 hasGUIEvent;
+    taBool32 hasGUIEvent;
     if (pGame->pCurrentDialog == NULL) {
         hasGUIEvent = ta_handle_gui_input(pGame, &pGame->campaignMenu, &e);
         if (hasGUIEvent) {
@@ -1027,7 +1027,7 @@ void ta_game_on_step(taEngineContext* pEngine)
 }
 
 
-void ta_goto_screen(ta_game* pGame, ta_uint32 newScreenType)
+void ta_goto_screen(ta_game* pGame, taUInt32 newScreenType)
 {
     if (pGame == NULL) return;
     pGame->prevScreen = pGame->screen;
@@ -1039,38 +1039,38 @@ void ta_goto_screen(ta_game* pGame, ta_uint32 newScreenType)
 }
 
 
-ta_bool32 ta_is_mouse_button_down(ta_game* pGame, ta_uint32 button)
+taBool32 ta_is_mouse_button_down(ta_game* pGame, taUInt32 button)
 {
     if (pGame == NULL) return TA_FALSE;
     return ta_input_state_is_mouse_button_down(&pGame->engine.input, button);
 }
 
-ta_bool32 ta_was_mouse_button_pressed(ta_game* pGame, ta_uint32 button)
+taBool32 ta_was_mouse_button_pressed(ta_game* pGame, taUInt32 button)
 {
     if (pGame == NULL) return TA_FALSE;
     return ta_input_state_was_mouse_button_pressed(&pGame->engine.input, button);
 }
 
-ta_bool32 ta_was_mouse_button_released(ta_game* pGame, ta_uint32 button)
+taBool32 ta_was_mouse_button_released(ta_game* pGame, taUInt32 button)
 {
     if (pGame == NULL) return TA_FALSE;
     return ta_input_state_was_mouse_button_released(&pGame->engine.input, button);
 }
 
 
-ta_bool32 ta_is_key_down(ta_game* pGame, ta_uint32 key)
+taBool32 ta_is_key_down(ta_game* pGame, taUInt32 key)
 {
     if (pGame == NULL) return TA_FALSE;
     return ta_input_state_is_key_down(&pGame->engine.input, key);
 }
 
-ta_bool32 ta_was_key_pressed(ta_game* pGame, ta_uint32 key)
+taBool32 ta_was_key_pressed(ta_game* pGame, taUInt32 key)
 {
     if (pGame == NULL) return TA_FALSE;
     return ta_input_state_was_key_pressed(&pGame->engine.input, key);
 }
 
-ta_bool32 ta_was_key_released(ta_game* pGame, ta_uint32 key)
+taBool32 ta_was_key_released(ta_game* pGame, taUInt32 key)
 {
     if (pGame == NULL) return TA_FALSE;
     return ta_input_state_was_key_released(&pGame->engine.input, key);
