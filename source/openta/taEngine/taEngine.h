@@ -1,5 +1,8 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
+#ifndef TA_ENGINE_H
+#define TA_ENGINE_H
+
 // Standard headers.
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,9 +22,9 @@
 #endif
 
 // External libraries.
-#include "../../external/dr_libs/dr_wav.h"
 #include "../../external/dr_libs/dr_math.h"
 #include "../../external/dr_libs/dr_pcx.h"
+#include "../../external/dr_libs/dr_wav.h"
 #include "../../external/mini_al/mini_al.h"
 
 // TODO: Remove this dependency.
@@ -78,17 +81,31 @@ typedef ta_uint32        ta_bool32;
 #define TA_MAX_TEXTURE_ATLAS_SIZE   512 /*4096*/
 
 typedef struct taEngineContext taEngineContext;
+typedef struct ta_graphics_context ta_graphics_context;
+typedef struct ta_font ta_font;
+typedef enum ta_seek_origin ta_seek_origin;
 
 // Total Annihilation headers.
 #include "taErrors.h"
 #include "taPlatformLayer.h"
-#include "taTypeDeclarations.h"
 #include "taMisc.h"
+#include "taFS.h"
+#include "taConfig.h"
+#include "taTypeDeclarations.h"
 #include "taString.h"
+#include "taPropertyManager.h"
+#include "taFeatures.h"
 #include "taInput.h"
 #include "taTexturePacker.h"
 #include "taMeshBuilder.h"
 #include "taAudio.h"
 #include "taGraphics.h"
 #include "taFont.h"
+#include "taGAF.h"
+#include "ta3DO.h"
+#include "taCOB.h"
+#include "taGUI.h"
+#include "taMap.h"
 #include "taEngineContext.h"
+
+#endif

@@ -1,14 +1,17 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
+typedef void (* taLoadPropertiesProc)(taEngineContext* pEngine, ta_property_manager* pProperties);
 typedef void (* taStepProc)(taEngineContext* pEngine);
 
 struct taEngineContext
 {
     int argc;
     char** argv;
+    taLoadPropertiesProc onLoadProperties;
     taStepProc onStep;
     void* pUserData;
 
+    ta_property_manager properties;
     ta_fs* pFS;
     ta_graphics_context* pGraphics;
     ta_uint32 palette[256];     // The standard palette. PALETTE.PAL
@@ -16,12 +19,23 @@ struct taEngineContext
     ta_input_state input;
     ta_font font;               // The main font to use for basically all GUI text.
     ta_font fontSmall;
+    ta_common_gui commonGUI;
     ta_audio_context* pAudio;
+
+    // The features library. This is initialized once at startup from every TDF file in the "features" directory, and it's sub-directories. The
+    // features library is immutable once it's initialized.
+    ta_features_library* pFeatures;
+
+    uint32_t textureGAFCount;
+    ta_gaf** ppTextureGAFs;     // The list of GAF files containing textures. This is initialized when the engine context is created.
 };
 
-ta_result taEngineContextInit(int argc, char** argv, taStepProc onStep, void* pUserData, taEngineContext* pEngine);
+ta_result taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadProperties, taStepProc onStep, void* pUserData, taEngineContext* pEngine);
 ta_result taEngineContextUninit(taEngineContext* pEngine);
 
+
+// Creates a texture from a file.
+ta_texture* ta_load_image(taEngineContext* pEngine, const char* filePath);
 
 
 // Captures the mouse so that all mouse events get directed to the game window.

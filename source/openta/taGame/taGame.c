@@ -1,6 +1,12 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-int ta_qsort_cb_map(const void* a, const void* b)
+#include "taGame.h"
+#include "../taEngine/taEngine.c"
+
+void ta_game_on_step(taEngineContext* pEngine);
+void ta_game_on_load_properties(taEngineContext* pEngine, ta_property_manager* pProperties);
+
+TA_PRIVATE int ta_qsort_cb_map(const void* a, const void* b)
 {
     const ta_config_obj** ppOTA_0 = (const ta_config_obj**)a;
     const ta_config_obj** ppOTA_1 = (const ta_config_obj**)b;
@@ -11,7 +17,223 @@ int ta_qsort_cb_map(const void* a, const void* b)
     return _stricmp(name0, name1);
 }
 
-void ta_game_on_step(taEngineContext* pEngine);
+
+TA_PRIVATE ta_result ta_load_default_totala_settings(ta_property_manager* pProperties)
+{
+    assert(pProperties != NULL);
+
+    // TODO: Implement me.
+    return TA_SUCCESS;
+}
+
+TA_PRIVATE ta_result ta_load_totala_settings__config(ta_property_manager* pProperties)
+{
+    assert(pProperties != NULL);
+
+    // TODO: Implement me.
+    return TA_ERROR;
+}
+
+#ifdef _WIN32
+TA_PRIVATE ta_uint32 ta_registry_read_uint32(HKEY hKey, const char* name)
+{
+    DWORD value = 0;
+    DWORD valueSize = sizeof(value);
+    LONG result = RegQueryValueExA(hKey, name, 0, NULL, (LPBYTE)&value, &valueSize);
+    if (result != ERROR_SUCCESS) {
+        return 0;
+    }
+
+    return value;
+}
+
+TA_PRIVATE char* ta_registry_read_string(HKEY hKey, const char* name, char* value, size_t valueBufferSize)  // Return value is <value> for convenience (null on error).
+{
+    LONG result = RegQueryValueExA(hKey, name, 0, NULL, (LPBYTE)value, (LPDWORD)&valueBufferSize);
+    if (result != ERROR_SUCCESS) {
+        return NULL;
+    }
+
+    return value;
+}
+
+TA_PRIVATE ta_result ta_load_totala_settings__registry(ta_property_manager* pProperties)
+{
+    assert(pProperties != NULL);
+
+    char strBuffer[256];
+
+    HKEY hKey;
+    LONG result = RegOpenKeyExA(HKEY_CURRENT_USER, "SOFTWARE\\Cavedog Entertainment\\Total Annihilation", 0, KEY_READ, &hKey);
+    if (result != ERROR_SUCCESS) {
+        return TA_ERROR;
+    }
+
+    ta_property_manager_set_int(pProperties, "totala.ackfx",                    (int)ta_registry_read_uint32(hKey, "ackfx"));
+    ta_property_manager_set_int(pProperties, "totala.anti-alias",               (int)ta_registry_read_uint32(hKey, "Anti-Alias"));
+    ta_property_manager_set_int(pProperties, "totala.buildfx",                  (int)ta_registry_read_uint32(hKey, "buildfx"));
+    ta_property_manager_set_int(pProperties, "totala.cdlists",                  (int)ta_registry_read_uint32(hKey, "CDLISTS"));
+    ta_property_manager_set_int(pProperties, "totala.cdmode",                   (int)ta_registry_read_uint32(hKey, "cdmode"));
+    ta_property_manager_set_int(pProperties, "totala.cdshell",                  (int)ta_registry_read_uint32(hKey, "cdshell"));
+    ta_property_manager_set_int(pProperties, "totala.clock",                    (int)ta_registry_read_uint32(hKey, "clock"));
+    ta_property_manager_set_int(pProperties, "totala.damagebars",               (int)ta_registry_read_uint32(hKey, "damagebars"));
+    ta_property_manager_set_int(pProperties, "totala.difficulty",               (int)ta_registry_read_uint32(hKey, "Difficulty"));
+    ta_property_manager_set_int(pProperties, "totala.display-width",            (int)ta_registry_read_uint32(hKey, "DisplaymodeWidth"));
+    ta_property_manager_set_int(pProperties, "totala.display-height",           (int)ta_registry_read_uint32(hKey, "DisplaymodeHeight"));
+    ta_property_manager_set_int(pProperties, "totala.dithered-fog",             (int)ta_registry_read_uint32(hKey, "DitheredFog"));
+    ta_property_manager_set_int(pProperties, "totala.feature-shadows",          (int)ta_registry_read_uint32(hKey, "FeatureShadows"));
+    ta_property_manager_set_int(pProperties, "totala.fixed-locations",          (int)ta_registry_read_uint32(hKey, "FixedLocations"));
+    ta_property_manager_set_int(pProperties, "totala.fxvol",                    (int)ta_registry_read_uint32(hKey, "fxvol"));
+    ta_property_manager_set(    pProperties, "totala.game-name",                     ta_registry_read_string(hKey, "Game Name", strBuffer, sizeof(strBuffer)));
+    ta_property_manager_set_int(pProperties, "totala.game-speed",               (int)ta_registry_read_uint32(hKey, "gamespeed"));
+    ta_property_manager_set_int(pProperties, "totala.gamma",                    (int)ta_registry_read_uint32(hKey, "Gamma"));
+    ta_property_manager_set_int(pProperties, "totala.interface-type",           (int)ta_registry_read_uint32(hKey, "Interface Type"));
+    ta_property_manager_set_int(pProperties, "totala.mixing-buffers",           (int)ta_registry_read_uint32(hKey, "MixingBuffers"));
+    ta_property_manager_set_int(pProperties, "totala.mouse-speed",              (int)ta_registry_read_uint32(hKey, "mousespeed"));
+    ta_property_manager_set_int(pProperties, "totala.multi-commander-death",    (int)ta_registry_read_uint32(hKey, "MultiCommanderDeath"));
+    ta_property_manager_set_int(pProperties, "totala.multi-line-of-sight",      (int)ta_registry_read_uint32(hKey, "MultiLineOfSight"));
+    ta_property_manager_set_int(pProperties, "totala.multi-los-type",           (int)ta_registry_read_uint32(hKey, "MultiLOSType"));
+    ta_property_manager_set_int(pProperties, "totala.multi-mapping",            (int)ta_registry_read_uint32(hKey, "MultiMapping"));
+    ta_property_manager_set_int(pProperties, "totala.music-mode",               (int)ta_registry_read_uint32(hKey, "musicmode"));
+    ta_property_manager_set_int(pProperties, "totala.musicvol",                 (int)ta_registry_read_uint32(hKey, "musicvol"));
+    ta_property_manager_set(    pProperties, "totala.nickname",                      ta_registry_read_string(hKey, "Nickname", strBuffer, sizeof(strBuffer)));
+    ta_property_manager_set(    pProperties, "totala.password",                      ta_registry_read_string(hKey, "Password", strBuffer, sizeof(strBuffer)));
+    ta_property_manager_set_int(pProperties, "totala.play-movie",               (int)ta_registry_read_uint32(hKey, "PlayMovie"));
+    ta_property_manager_set_int(pProperties, "totala.restore-volume",           (int)ta_registry_read_uint32(hKey, "RestoreVolume"));
+    ta_property_manager_set_int(pProperties, "totala.screen-chat",              (int)ta_registry_read_uint32(hKey, "screenchat"));
+    ta_property_manager_set_int(pProperties, "totala.scroll-speed",             (int)ta_registry_read_uint32(hKey, "scrollspeed"));
+    ta_property_manager_set_int(pProperties, "totala.shading",                  (int)ta_registry_read_uint32(hKey, "Shading"));
+    ta_property_manager_set_int(pProperties, "totala.shadows",                  (int)ta_registry_read_uint32(hKey, "Shadows"));
+    ta_property_manager_set_int(pProperties, "totala.side",                     (int)ta_registry_read_uint32(hKey, "side"));
+    ta_property_manager_set_int(pProperties, "totala.single-commander-death",   (int)ta_registry_read_uint32(hKey, "SingleCommanderDeath"));
+    ta_property_manager_set_int(pProperties, "totala.single-line-of-sight",     (int)ta_registry_read_uint32(hKey, "SingleLineOfSight"));
+    ta_property_manager_set_int(pProperties, "totala.single-los-type",          (int)ta_registry_read_uint32(hKey, "SingleLOSType"));
+    ta_property_manager_set_int(pProperties, "totala.single-mapping",           (int)ta_registry_read_uint32(hKey, "SingleMapping"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish-commander-death", (int)ta_registry_read_uint32(hKey, "SkirmishCommanderDeath"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish-difficulty",      (int)ta_registry_read_uint32(hKey, "SkirmishDifficulty"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish-line-of-sight",   (int)ta_registry_read_uint32(hKey, "SkirmishLineOfSight"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish-location",        (int)ta_registry_read_uint32(hKey, "SkirmishLocation"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish-los-type",        (int)ta_registry_read_uint32(hKey, "SkirmishLOSType"));
+    ta_property_manager_set(    pProperties, "totala.skirmish-map",                  ta_registry_read_string(hKey, "SkirmishMap", strBuffer, sizeof(strBuffer)));
+    ta_property_manager_set_int(pProperties, "totala.skirmish-mapping",         (int)ta_registry_read_uint32(hKey, "SkirmishMapping"));
+    ta_property_manager_set_int(pProperties, "totala.sound-mode",               (int)ta_registry_read_uint32(hKey, "Sound Mode"));
+    ta_property_manager_set_int(pProperties, "totala.speechfx",                 (int)ta_registry_read_uint32(hKey, "speechfx"));
+    ta_property_manager_set_int(pProperties, "totala.switch-alt",               (int)ta_registry_read_uint32(hKey, "SwitchAlt"));
+    ta_property_manager_set_int(pProperties, "totala.text-lines",               (int)ta_registry_read_uint32(hKey, "textlines"));
+    ta_property_manager_set_int(pProperties, "totala.text-scroll",              (int)ta_registry_read_uint32(hKey, "textscroll"));
+    ta_property_manager_set_int(pProperties, "totala.unit-chat",                (int)ta_registry_read_uint32(hKey, "unitchat"));
+    ta_property_manager_set_int(pProperties, "totala.unit-chat-text",           (int)ta_registry_read_uint32(hKey, "unitchattext"));
+    ta_property_manager_set_int(pProperties, "totala.vehicle-shadows",          (int)ta_registry_read_uint32(hKey, "VehicleShadows"));
+
+    RegCloseKey(hKey);
+
+
+    result = RegOpenKeyExA(HKEY_CURRENT_USER, "SOFTWARE\\Cavedog Entertainment\\Total Annihilation\\Skirmish", 0, KEY_READ, &hKey);
+    if (result != ERROR_SUCCESS) {
+        return TA_ERROR;
+    }
+
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player0-ally-group", (int)ta_registry_read_uint32(hKey, "Player0AllyGroup"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player0-color",      (int)ta_registry_read_uint32(hKey, "Player0Color"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player0-controller", (int)ta_registry_read_uint32(hKey, "Player0Controller"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player0-energy",     (int)ta_registry_read_uint32(hKey, "Player0Energy"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player0-metal",      (int)ta_registry_read_uint32(hKey, "Player0Metal"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player0-side",       (int)ta_registry_read_uint32(hKey, "Player0Side"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player1-ally-group", (int)ta_registry_read_uint32(hKey, "Player1AllyGroup"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player1-color",      (int)ta_registry_read_uint32(hKey, "Player1Color"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player1-controller", (int)ta_registry_read_uint32(hKey, "Player1Controller"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player1-energy",     (int)ta_registry_read_uint32(hKey, "Player1Energy"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player1-metal",      (int)ta_registry_read_uint32(hKey, "Player1Metal"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player1-side",       (int)ta_registry_read_uint32(hKey, "Player1Side"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player2-ally-group", (int)ta_registry_read_uint32(hKey, "Player2AllyGroup"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player2-color",      (int)ta_registry_read_uint32(hKey, "Player2Color"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player2-controller", (int)ta_registry_read_uint32(hKey, "Player2Controller"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player2-energy",     (int)ta_registry_read_uint32(hKey, "Player2Energy"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player2-metal",      (int)ta_registry_read_uint32(hKey, "Player2Metal"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player2-side",       (int)ta_registry_read_uint32(hKey, "Player2Side"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player3-ally-group", (int)ta_registry_read_uint32(hKey, "Player3AllyGroup"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player3-color",      (int)ta_registry_read_uint32(hKey, "Player3Color"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player3-controller", (int)ta_registry_read_uint32(hKey, "Player3Controller"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player3-energy",     (int)ta_registry_read_uint32(hKey, "Player3Energy"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player3-metal",      (int)ta_registry_read_uint32(hKey, "Player3Metal"));
+    ta_property_manager_set_int(pProperties, "totala.skirmish.player3-side",       (int)ta_registry_read_uint32(hKey, "Player3Side"));
+
+    RegCloseKey(hKey);
+
+    return TA_SUCCESS;
+}
+#endif
+
+TA_PRIVATE ta_result ta_load_totala_settings(ta_property_manager* pProperties)
+{
+    assert(pProperties != NULL);
+
+    // Load defaults first, and then overwrite them with the actual settings from the config file or registry.
+    ta_result result = ta_load_default_totala_settings(pProperties);
+    if (result != TA_SUCCESS) {
+        return result;
+    }
+
+    // Try loading the original Total Annihilation settings from a config file first. If that fails and we're running on Windows,
+    // try the registry.
+    result = ta_load_totala_settings__config(pProperties);
+    if (result != TA_SUCCESS) {
+#ifdef _WIN32
+        return ta_load_totala_settings__registry(pProperties);
+#else
+        return result;
+#endif
+    }
+
+    return TA_SUCCESS;
+}
+
+TA_PRIVATE ta_result ta_load_settings(ta_property_manager* pProperties)
+{
+    if (pProperties == NULL) return TA_INVALID_ARGS;
+
+    // Original Total Annihilation settings from the registry.
+    ta_result result = ta_load_totala_settings(pProperties);
+    if (result != TA_SUCCESS) {
+        return result;
+    }
+
+    // Here is where OpenTA-specific properties would be loaded from openta.cfg.
+
+    return TA_SUCCESS;
+}
+
+
+TA_PRIVATE ta_result ta_save_totala_settings(ta_property_manager* pProperties)
+{
+    assert(pProperties != NULL);
+
+    // Just save these to totala.cfg for now, but may want to consider writing to the registry
+    // for compatibility with totala.exe later on.
+
+    // TODO: Implement me.
+    return TA_SUCCESS;
+}
+
+TA_PRIVATE ta_result ta_save_settings(ta_property_manager* pProperties)
+{
+    if (pProperties != NULL) return TA_INVALID_ARGS;
+
+    // Save the original Total Annihilation settings first.
+    ta_save_totala_settings(pProperties);
+
+    // Here is where OpenTA-specific properties should be saved to openta.cfg.
+
+    return TA_SUCCESS;
+}
+
+void ta_game_on_load_properties(taEngineContext* pEngine, ta_property_manager* pProperties)
+{
+    (void)pEngine;
+    ta_load_settings(pProperties);
+}
+
+
 
 ta_game* ta_create_game(int argc, char** argv)
 {
@@ -20,7 +242,7 @@ ta_game* ta_create_game(int argc, char** argv)
         return NULL;
     }
 
-    ta_result result = taEngineContextInit(argc, argv, ta_game_on_step, pGame, &pGame->engine);
+    ta_result result = taEngineContextInit(argc, argv, ta_game_on_load_properties, ta_game_on_step, pGame, &pGame->engine);
     if (result != TA_SUCCESS) {
         free(pGame);
         return NULL;
@@ -35,94 +257,44 @@ ta_game* ta_create_game(int argc, char** argv)
     }
 
 
-    // Properties.
-    if (ta_property_manager_init(&pGame->properties) != TA_SUCCESS) {
-        goto on_error;
-    }
-
-    ta_property_manager_load_settings(&pGame->properties);
-
-
-    // GUI
-    // ===
-    if (ta_common_gui_load(pGame, &pGame->commonGUI) != TA_SUCCESS) {
-        goto on_error;
-    }
-
-    
-
-
-    // Texture GAFs. This is every GAF file contained in the "textures" directory. These are loaded in two passes. The first
-    // pass counts the number of GAF files, and the second pass opens them.
-    pGame->textureGAFCount = 0;
-    ta_fs_iterator* iGAF = ta_fs_begin(pGame->engine.pFS, "textures", TA_FALSE);
-    while (ta_fs_next(iGAF)) {
-        if (drpath_extension_equal(iGAF->fileInfo.relativePath, "gaf")) {
-            pGame->textureGAFCount += 1;
-        }
-    }
-    ta_fs_end(iGAF);
-
-    pGame->ppTextureGAFs = (ta_gaf**)malloc(pGame->textureGAFCount * sizeof(*pGame->ppTextureGAFs));
-    if (pGame->ppTextureGAFs == NULL) {
-        goto on_error;  // Failed to load texture GAFs.
-    }
-
-    pGame->textureGAFCount = 0;
-    iGAF = ta_fs_begin(pGame->engine.pFS, "textures", TA_FALSE);
-    while (ta_fs_next(iGAF)) {
-        if (drpath_extension_equal(iGAF->fileInfo.relativePath, "gaf")) {
-            pGame->ppTextureGAFs[pGame->textureGAFCount] = ta_open_gaf(pGame->engine.pFS, iGAF->fileInfo.relativePath);
-            pGame->textureGAFCount += 1;
-        }
-    }
-    ta_fs_end(iGAF);
-
-
     // Menus.
     ta_set_property(pGame, "MAINMENU.GUI.BACKGROUND", "bitmaps/FrontendX.pcx");
-    if (ta_gui_load(pGame, "guis/MAINMENU.GUI", &pGame->mainMenu) != TA_SUCCESS) {
+    if (ta_gui_load(&pGame->engine, "guis/MAINMENU.GUI", &pGame->mainMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
     ta_set_property(pGame, "SINGLE.GUI.BACKGROUND", "bitmaps/SINGLEBG.PCX");
-    if (ta_gui_load(pGame, "guis/SINGLE.GUI", &pGame->spMenu) != TA_SUCCESS) {
+    if (ta_gui_load(&pGame->engine, "guis/SINGLE.GUI", &pGame->spMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
     ta_set_property(pGame, "SELPROV.GUI.BACKGROUND", "bitmaps/selconnect2.pcx");
-    if (ta_gui_load(pGame, "guis/SELPROV.GUI", &pGame->mpMenu) != TA_SUCCESS) {
+    if (ta_gui_load(&pGame->engine, "guis/SELPROV.GUI", &pGame->mpMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
     ta_set_property(pGame, "STARTOPT.GUI.BACKGROUND", "bitmaps/options4x.pcx");
-    if (ta_gui_load(pGame, "guis/STARTOPT.GUI", &pGame->optionsMenu) != TA_SUCCESS) {
+    if (ta_gui_load(&pGame->engine, "guis/STARTOPT.GUI", &pGame->optionsMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
     ta_set_property(pGame, "SKIRMISH.GUI.BACKGROUND", "bitmaps/Skirmsetup4x.pcx");
-    if (ta_gui_load(pGame, "guis/SKIRMISH.GUI", &pGame->skirmishMenu) != TA_SUCCESS) {
+    if (ta_gui_load(&pGame->engine, "guis/SKIRMISH.GUI", &pGame->skirmishMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
     ta_set_property(pGame, "NEWGAME.GUI.BACKGROUND", "bitmaps/playanygame4.pcx");
-    if (ta_gui_load(pGame, "guis/NEWGAME.GUI", &pGame->campaignMenu) != TA_SUCCESS) {
+    if (ta_gui_load(&pGame->engine, "guis/NEWGAME.GUI", &pGame->campaignMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
     ta_set_property(pGame, "SELMAP.GUI.BACKGROUND", "bitmaps/DSelectmap2.pcx");
-    if (ta_gui_load(pGame, "guis/SELMAP.GUI", &pGame->selectMapDialog) != TA_SUCCESS) {
+    if (ta_gui_load(&pGame->engine, "guis/SELMAP.GUI", &pGame->selectMapDialog) != TA_SUCCESS) {
         goto on_error;
     }
 
 
-    // Features.
-    pGame->pFeatures = ta_create_features_library(pGame->engine.pFS);
-    if (pGame->pFeatures == NULL) {
-        goto on_error;
-    }
-
-
+    
 
     dr_timer_init(&pGame->timer);
 
@@ -204,7 +376,6 @@ void ta_delete_game(ta_game* pGame)
     }
 
     ta_delete_window(pGame->pWindow);
-    ta_property_manager_uninit(&pGame->properties);
     taEngineContextUninit(&pGame->engine);
     free(pGame);
 }
@@ -212,7 +383,7 @@ void ta_delete_game(ta_game* pGame)
 
 ta_result ta_set_property(ta_game* pGame, const char* key, const char* value)
 {
-    return ta_property_manager_set(&pGame->properties, key, value);
+    return ta_property_manager_set(&pGame->engine.properties, key, value);
 }
 
 ta_result ta_set_property_int(ta_game* pGame, const char* key, ta_int32 value)
@@ -237,24 +408,17 @@ ta_result ta_set_property_bool(ta_game* pGame, const char* key, ta_bool32 value)
 
 const char* ta_get_property(ta_game* pGame, const char* key)
 {
-    return ta_property_manager_get(&pGame->properties, key);
+    return ta_property_manager_get(&pGame->engine.properties, key);
 }
 
 const char* ta_get_propertyf(ta_game* pGame, const char* key, ...)
 {
-    const char* value = NULL;
-
     va_list args;
     va_start(args, key);
-    {
-        char* formattedKey = ta_make_stringv(key, args);
-        if (formattedKey != NULL) {
-            value = ta_get_property(pGame, formattedKey);
-            ta_free_string(formattedKey);
-        }
-    }
-    va_end(args);
 
+    const char* value = ta_property_manager_getv(&pGame->engine.properties, key, args);
+
+    va_end(args);
     return value;
 }
 
@@ -723,7 +887,7 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
                     return;
                 }
                 if (strcmp(e.pGadget->name, "Start") == 0) {
-                    pGame->pCurrentMap = ta_load_map(pGame, ta_config_get_string(pGame->ppMPMaps[pGame->iSelectedMPMap], "GlobalHeader/missionname"));    // TODO: Free this when the user leaves the game!
+                    pGame->pCurrentMap = ta_load_map(&pGame->engine, ta_config_get_string(pGame->ppMPMaps[pGame->iSelectedMPMap], "GlobalHeader/missionname"));    // TODO: Free this when the user leaves the game!
                     ta_goto_screen(pGame, TA_SCREEN_IN_GAME);
                     return;
                 }
@@ -914,33 +1078,4 @@ ta_bool32 ta_was_key_released(ta_game* pGame, ta_uint32 key)
 
 
 
-ta_texture* ta_load_image(ta_game* pGame, const char* filePath)
-{
-    if (pGame == NULL || filePath == NULL) return NULL;
-    
-    if (drpath_extension_equal(filePath, "pcx")) {
-        ta_file* pFile = ta_open_file(pGame->engine.pFS, filePath, 0);
-        if (pFile == NULL) {
-            return NULL;    // File not found.
-        }
 
-        int width;
-        int height;
-        dr_uint8* pImageData = drpcx_load_memory(pFile->pFileData, pFile->sizeInBytes, TA_FALSE, &width, &height, NULL, 4);
-        if (pImageData == NULL) {
-            return NULL;    // Not a valid PCX file.
-        }
-
-        ta_texture* pTexture = ta_create_texture(pGame->engine.pGraphics, (unsigned int)width, (unsigned int)height, 4, pImageData);
-        if (pTexture == NULL) {
-            drpcx_free(pImageData);
-            return NULL;    // Failed to create texture.
-        }
-
-        drpcx_free(pImageData);
-        return pTexture;
-    }
-
-    // Failed to open file.
-    return NULL;
-}

@@ -2,38 +2,7 @@
 
 // The main file containing the entry point. This is the only compiled file for the entire game.
 
-#include "taEngine/taEngine.h"
-
-#include "taGame/taFS.h"
-#include "taGame/taGAF.h"
-#include "taGame/taGUI.h"
-#include "taGame/taPropertyManager.h"
-#include "taGame/taGame.h"
-#include "taGame/ta3DO.h"
-#include "taGame/taConfig.h"
-#include "taGame/taFeatures.h"
-#include "taGame/taMap.h"
-
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-//
-// IMPLEMENTATION
-//
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-#include "taEngine/taEngine.c"
-
-#include "taGame/taFS.c"
-#include "taGame/taGAF.c"
-#include "taGame/taGUI.c"
-#include "taGame/taPropertyManager.c"
 #include "taGame/taGame.c"
-#include "taGame/ta3DO.c"
-#include "taGame/taConfig.c"
-#include "taGame/taFeatures.c"
-#include "taGame/taMap.c"
 
 int main(int argc, char** argv)
 {

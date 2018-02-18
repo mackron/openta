@@ -1,5 +1,8 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
+typedef struct ta_config_obj ta_config_obj;
+typedef struct ta_config_var ta_config_var;
+
 struct ta_config_var
 {
     // The name of the variable.

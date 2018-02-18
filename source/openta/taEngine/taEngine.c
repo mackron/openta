@@ -1,5 +1,7 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
+#include "taEngine.h"
+
 // miniz
 #define MINIZ_NO_ARCHIVE_APIS
 #define MINIZ_NO_STDIO
@@ -12,11 +14,6 @@
 #include "../../external/stretchy_buffer.h"
 
 
-// dr_wav
-#define DR_WAV_IMPLEMENTATION
-#define DR_WAV_NO_STDIO
-#include "../../external/dr_libs/dr_wav.h"
-
 // dr_math
 #define DR_MATH_IMPLEMENTATION
 #include "../../external/dr_libs/dr_math.h"
@@ -24,6 +21,11 @@
 // dr_pcx
 #define DR_PCX_IMPLEMENTATION
 #include "../../external/dr_libs/dr_pcx.h"
+
+// dr_wav
+#define DR_WAV_IMPLEMENTATION
+#define DR_WAV_NO_STDIO
+#include "../../external/dr_libs/dr_wav.h"
 
 // mini_al
 #define MAL_IMPLEMENTATION
@@ -45,11 +47,20 @@
 // Total Annihilation source files.
 #include "taPlatformLayer.c"
 #include "taMisc.c"
+#include "taFS.c"
+#include "taConfig.c"
 #include "taString.c"
+#include "taPropertyManager.c"
+#include "taFeatures.c"
 #include "taInput.c"
 #include "taTexturePacker.c"
 #include "taMeshBuilder.c"
 #include "taAudio.c"
 #include "taGraphics.c"
 #include "taFont.c"
+#include "taGAF.c"
+#include "ta3DO.c"
+#include "taCOB.c"
+#include "taGUI.c"
+#include "taMap.c"
 #include "taEngineContext.c"

@@ -24,15 +24,11 @@ typedef struct
 ta_result ta_property_manager_init(ta_property_manager* pProperties);
 ta_result ta_property_manager_uninit(ta_property_manager* pProperties);
 
-// Loads game settings from either the registry (Windows) or a config file.
-ta_result ta_property_manager_load_settings(ta_property_manager* pProperties);
-
-// Saves game settings to either the registry (Windows) or a config file.
-ta_result ta_property_manager_save_settings(ta_property_manager* pProperties);
-
 ta_result ta_property_manager_set(ta_property_manager* pProperties, const char* key, const char* val);
 ta_result ta_property_manager_set_int(ta_property_manager* pProperties, const char* key, int val);
 ta_result ta_property_manager_set_bool(ta_property_manager* pProperties, const char* key, ta_bool32 val);
 ta_result ta_property_manager_unset(ta_property_manager* pProperties, const char* key);
 
 const char* ta_property_manager_get(ta_property_manager* pProperties, const char* key);
+const char* ta_property_manager_getv(ta_property_manager* pProperties, const char* key, va_list args);
+const char* ta_property_manager_getf(ta_property_manager* pProperties, const char* key, ...);

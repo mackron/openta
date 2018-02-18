@@ -1,5 +1,10 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
+#ifndef TA_GAME_H
+#define TA_GAME_H
+
+#include "../taEngine/taEngine.h"
+
 #define TA_SCREEN_NONE          0
 #define TA_SCREEN_IN_GAME       1
 #define TA_SCREEN_MAIN_MENU     2
@@ -11,7 +16,7 @@
 #define TA_SCREEN_SKIRMISH_MENU 8
 #define TA_SCREEN_CAMPAIGN_MENU 9
 
-struct ta_game
+typedef struct
 {
     taEngineContext engine;
 
@@ -21,28 +26,10 @@ struct ta_game
     // The game timer for stepping the game.
     dr_timer timer;
 
-    // Global properties.
-    ta_property_manager properties;
-
-
-    // The features library. This is initialized once at startup from every TDF file in the "features" directory, and it's sub-directories. The
-    // features library is immutable once it's initialized.
-    ta_features_library* pFeatures;
 
     // The current map instance. Set to null when there is no map running.
     ta_map_instance* pCurrentMap;
 
-
-    // The number of opened texture GAFs.
-    uint32_t textureGAFCount;
-
-    // The list of GAF files containing textures. This is initialized when the game context is created.
-    ta_gaf** ppTextureGAFs;
-
-
-
-    // The Common GUI.
-    ta_common_gui commonGUI;
 
     // The main menu.
     ta_gui mainMenu;
@@ -73,7 +60,7 @@ struct ta_game
 
 
     ta_texture* pTexture;
-};
+} ta_game;
 
 // Creates a game instance.
 ta_game* ta_create_game(int argc, char** argv);
@@ -129,7 +116,4 @@ ta_bool32 ta_was_key_released(ta_game* pGame, ta_uint32 key);
 
 
 
-// Creates a texture from a file.
-ta_texture* ta_load_image(ta_game* pGame, const char* filePath);
-
-
+#endif

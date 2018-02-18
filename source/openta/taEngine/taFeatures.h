@@ -52,11 +52,10 @@ typedef enum
 } ta_feature_category;
 #endif
 
-// Structure describing a feature. This is not a feature instantiation. The name of the feature is not
-// currently stored for the sake of keeping this structure as small and simple as possible.
+// Structure describing a feature. This is not a feature instantiation.
 //
 // Note that not every property is stored in this structure - only what we need.
-struct ta_feature_desc
+typedef struct
 {
     // The name of the feature. This is used when searching for the feature.
     char name[64];
@@ -110,11 +109,11 @@ struct ta_feature_desc
     //  TA_FEATURE_RECLAIMABLE -> "reclaimable"
     //  TA_FEATURE_SHADOWTRANSPARENT -> "shadtrans"
     uint16_t flags;
-};
+} ta_feature_desc;
 
 // Structure containing the descriptors of every known feature. This structure is filled
 // once during load time from TDF files contained in the "features" directory.
-struct ta_features_library
+typedef struct
 {
     // The number of features in the library.
     uint32_t featuresCount;
@@ -127,7 +126,7 @@ struct ta_features_library
 
     // Whether or not the library is optimized. If so, we can so a binary search for items.
     ta_bool32 isOptimized;
-};
+} ta_features_library;
 
 // Creates a features library by loading every TDF file in the "features" directory and all of it's sub-directories.
 ta_features_library* ta_create_features_library(ta_fs* pFS);

@@ -3,7 +3,7 @@
 // GAF files are just a collection of relatively small images. Often they are used in animations, but they
 // are also used more generically for things like icons and textures.
 
-struct ta_gaf
+typedef struct
 {
     // The name of the file as specified by ta_open_gaf().
     char filename[TA_MAX_PATH];
@@ -22,7 +22,7 @@ struct ta_gaf
 
     // Internal use only. The number of frames in the currently selected sequence.
     uint32_t _sequenceFrameCount;
-};
+} ta_gaf;
 
 // Opens a GAF archive.
 ta_gaf* ta_open_gaf(ta_fs* pFS, const char* filename);
@@ -70,7 +70,7 @@ typedef struct
 
 typedef struct
 {
-	ta_game* pGame;
+	taEngineContext* pEngine;
     ta_texture** ppAtlases;
     ta_uint32 atlasCount;
 	ta_gaf_texture_group_sequence* pSequences;
@@ -80,6 +80,6 @@ typedef struct
 	ta_uint8* _pPayload;
 } ta_gaf_texture_group;
 
-ta_result ta_gaf_texture_group_init(ta_game* pGame, const char* filePath, ta_color_mode colorMode, ta_gaf_texture_group* pGroup);
+ta_result ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePath, ta_color_mode colorMode, ta_gaf_texture_group* pGroup);
 ta_result ta_gaf_texture_group_uninit(ta_gaf_texture_group* pGroup);
 ta_bool32 ta_gaf_texture_group_find_sequence_by_name(ta_gaf_texture_group* pGroup, const char* sequenceName, ta_uint32* pSequenceIndex);

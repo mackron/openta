@@ -1,5 +1,8 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
+typedef struct ta_texture ta_texture;
+typedef struct ta_mesh ta_mesh;
+
 typedef struct
 {
     float x;

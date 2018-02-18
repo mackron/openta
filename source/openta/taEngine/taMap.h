@@ -192,8 +192,8 @@ typedef struct
 // features, units and anything else making up the game at any given time.
 struct ta_map_instance
 {
-    // The game that owns this map instance.
-    ta_game* pGame;
+    // The engine context that owns this map instance.
+    taEngineContext* pEngine;
 
 
     // The map's terrain.
@@ -226,7 +226,7 @@ struct ta_map_instance
 // Loads a map by it's name.
 //
 // This will search for "maps/<mapName>.ota" and "maps/<mapName>.tnt" files. If one of these are not present, loading will fail.
-ta_map_instance* ta_load_map(ta_game* pGame, const char* mapName);
+ta_map_instance* ta_load_map(taEngineContext* pEngine, const char* mapName);
 
 // Deletes the given map.
 void ta_unload_map(ta_map_instance* pMap);

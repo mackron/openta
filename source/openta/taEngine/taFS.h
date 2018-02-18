@@ -2,6 +2,9 @@
 
 #define TA_OPEN_FILE_WITH_NULL_TERMINATOR    0x0001      // Opens a file with a null terminator at the end.
 
+typedef struct ta_fs ta_fs;
+typedef struct ta_file ta_file;
+
 enum ta_seek_origin
 {
     ta_seek_origin_start,

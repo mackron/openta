@@ -156,7 +156,7 @@ typedef struct
 
 struct ta_gui
 {
-    ta_game* pGame;
+    taEngineContext* pEngine;
     ta_gaf_texture_group textureGroupGAF;
     ta_bool32 hasGAF;
     ta_texture* pBackgroundTexture;
@@ -171,7 +171,7 @@ struct ta_gui
     ta_uint8* _pPayload;
 };
 
-ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI);
+ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pGUI);
 ta_result ta_gui_unload(ta_gui* pGUI);
 
 // Retrieves information about how the GUI is mapped to the screen of a specific resolution.
@@ -228,7 +228,7 @@ typedef struct
 
 typedef struct
 {
-    ta_game* pGame;
+    taEngineContext* pEngine;
     ta_gaf_texture_group textureGroup;
 
     // Button backgrounds for each size.
@@ -257,7 +257,7 @@ typedef struct
     } scrollbar;
 } ta_common_gui;
 
-ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI);
+ta_result ta_common_gui_load(taEngineContext* pEngine, ta_common_gui* pCommonGUI);
 ta_result ta_common_gui_unload(ta_common_gui* pCommonGUI);
 ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, ta_uint32 width, ta_uint32 height, ta_uint32* pFrameIndex);
 ta_result ta_common_gui_get_multistage_button_frame(ta_common_gui* pCommonGUI, ta_uint32 stages, ta_uint32* pFrameIndex);

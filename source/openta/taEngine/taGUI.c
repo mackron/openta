@@ -14,19 +14,19 @@ TA_INLINE char* ta_gui__copy_string_prop(char** ppNextStr, const char* src)
     return pNextStr;
 }
 
-ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
+ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pGUI)
 {
     if (pGUI == NULL) return TA_INVALID_ARGS;
     ta_zero_object(pGUI);
 
-    if (pGame == NULL || filePath == NULL) return TA_INVALID_ARGS;
-    pGUI->pGame = pGame;
+    if (pEngine == NULL || filePath == NULL) return TA_INVALID_ARGS;
+    pGUI->pEngine = pEngine;
     pGUI->heldGadgetIndex = (ta_uint32)-1;
     pGUI->hoveredGadgetIndex = (ta_uint32)-1;
     pGUI->focusedGadgetIndex = (ta_uint32)-1;
 
     // GUI's are loaded from configs.
-    ta_config_obj* pConfig = ta_parse_config_from_file(pGame->engine.pFS, filePath);
+    ta_config_obj* pConfig = ta_parse_config_from_file(pEngine->pFS, filePath);
     if (pConfig == NULL) {
         return TA_FILE_NOT_FOUND;
     }
@@ -161,7 +161,7 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                     pGadget->listbox.itemCount = 0;
                     pGadget->listbox.iSelectedItem = (ta_uint32)-1;
                     pGadget->listbox.scrollPos = 0;
-                    pGadget->listbox.pageSize = (ta_uint32)max(1, pGadget->height / pGame->engine.font.height);
+                    pGadget->listbox.pageSize = (ta_uint32)max(1, pGadget->height / pEngine->font.height);
                 } break;
 
                 case TA_GUI_GADGET_TYPE_TEXTBOX:
@@ -236,13 +236,13 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
 
     char filePathGAF[TA_MAX_PATH];
     drpath_copy_and_append(filePathGAF, sizeof(filePathGAF), "anims", fileNameGAF);
-    pGUI->hasGAF = ta_gaf_texture_group_init(pGame, filePathGAF, ta_color_mode_truecolor, &pGUI->textureGroupGAF) == TA_SUCCESS;
+    pGUI->hasGAF = ta_gaf_texture_group_init(pEngine, filePathGAF, ta_color_mode_truecolor, &pGUI->textureGroupGAF) == TA_SUCCESS;
 
 
     // I haven't yet found a way to determine the background image to use for GUIs, so for the moment we will hard code these.
-    const char* propVal = ta_get_propertyf(pGame, "%s.BACKGROUND", fileName);
+    const char* propVal = ta_property_manager_getf(&pEngine->properties, "%s.BACKGROUND", fileName);
     if (propVal != NULL) {
-        pGUI->pBackgroundTexture = ta_load_image(pGame, propVal);
+        pGUI->pBackgroundTexture = ta_load_image(pEngine, propVal);
     }
 
 
@@ -260,12 +260,12 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
                     pGadget->button.iBackgroundFrame = pGUI->textureGroupGAF.pSequences[iSequence].firstFrameIndex + pGadget->button.status;
                 } else {
                     if (pGadget->button.stages == 0) {
-                        if (ta_common_gui_get_button_frame(&pGame->commonGUI, pGadget->width, pGadget->height, &pGadget->button.iBackgroundFrame) == TA_SUCCESS) {
-                            pGadget->button.pBackgroundTextureGroup = &pGame->commonGUI.textureGroup;
+                        if (ta_common_gui_get_button_frame(&pEngine->commonGUI, pGadget->width, pGadget->height, &pGadget->button.iBackgroundFrame) == TA_SUCCESS) {
+                            pGadget->button.pBackgroundTextureGroup = &pEngine->commonGUI.textureGroup;
                         }
                     } else {
-                        if (ta_common_gui_get_multistage_button_frame(&pGame->commonGUI, pGadget->button.stages, &pGadget->button.iBackgroundFrame) == TA_SUCCESS) {
-                            pGadget->button.pBackgroundTextureGroup = &pGame->commonGUI.textureGroup;
+                        if (ta_common_gui_get_multistage_button_frame(&pEngine->commonGUI, pGadget->button.stages, &pGadget->button.iBackgroundFrame) == TA_SUCCESS) {
+                            pGadget->button.pBackgroundTextureGroup = &pEngine->commonGUI.textureGroup;
                         }
                     }
                 }
@@ -279,25 +279,25 @@ ta_result ta_gui_load(ta_game* pGame, const char* filePath, ta_gui* pGUI)
 
             case TA_GUI_GADGET_TYPE_SCROLLBAR:
             {
-                pGadget->scrollbar.pTextureGroup = &pGame->commonGUI.textureGroup;
+                pGadget->scrollbar.pTextureGroup = &pEngine->commonGUI.textureGroup;
                 if (pGadget->attribs & TA_GUI_SCROLLBAR_TYPE_VERTICAL) {
-                    pGadget->scrollbar.iArrow0Frame = pGame->commonGUI.scrollbar.arrowUpFrameIndex;
-                    pGadget->scrollbar.iArrow1Frame = pGame->commonGUI.scrollbar.arrowDownFrameIndex;
-                    pGadget->scrollbar.iTrackBegFrame = pGame->commonGUI.scrollbar.trackTopFrameIndex;
-                    pGadget->scrollbar.iTrackEndFrame = pGame->commonGUI.scrollbar.trackBottomFrameIndex;
-                    pGadget->scrollbar.iTrackMidFrame = pGame->commonGUI.scrollbar.trackMidVertFrameIndex;
-                    pGadget->scrollbar.iThumbFrame = pGame->commonGUI.scrollbar.thumbVertFrameIndex;
+                    pGadget->scrollbar.iArrow0Frame = pEngine->commonGUI.scrollbar.arrowUpFrameIndex;
+                    pGadget->scrollbar.iArrow1Frame = pEngine->commonGUI.scrollbar.arrowDownFrameIndex;
+                    pGadget->scrollbar.iTrackBegFrame = pEngine->commonGUI.scrollbar.trackTopFrameIndex;
+                    pGadget->scrollbar.iTrackEndFrame = pEngine->commonGUI.scrollbar.trackBottomFrameIndex;
+                    pGadget->scrollbar.iTrackMidFrame = pEngine->commonGUI.scrollbar.trackMidVertFrameIndex;
+                    pGadget->scrollbar.iThumbFrame = pEngine->commonGUI.scrollbar.thumbVertFrameIndex;
                 } else {
-                    pGadget->scrollbar.iArrow0Frame = pGame->commonGUI.scrollbar.arrowLeftFrameIndex;
-                    pGadget->scrollbar.iArrow1Frame = pGame->commonGUI.scrollbar.arrowRightFrameIndex;
-                    pGadget->scrollbar.iTrackBegFrame = pGame->commonGUI.scrollbar.trackLeftFrameIndex;
-                    pGadget->scrollbar.iTrackEndFrame = pGame->commonGUI.scrollbar.trackRightFrameIndex;
-                    pGadget->scrollbar.iTrackMidFrame = pGame->commonGUI.scrollbar.trackMidHorzFrameIndex;
-                    pGadget->scrollbar.iThumbFrame = pGame->commonGUI.scrollbar.thumbHorzFrameIndex;
+                    pGadget->scrollbar.iArrow0Frame = pEngine->commonGUI.scrollbar.arrowLeftFrameIndex;
+                    pGadget->scrollbar.iArrow1Frame = pEngine->commonGUI.scrollbar.arrowRightFrameIndex;
+                    pGadget->scrollbar.iTrackBegFrame = pEngine->commonGUI.scrollbar.trackLeftFrameIndex;
+                    pGadget->scrollbar.iTrackEndFrame = pEngine->commonGUI.scrollbar.trackRightFrameIndex;
+                    pGadget->scrollbar.iTrackMidFrame = pEngine->commonGUI.scrollbar.trackMidHorzFrameIndex;
+                    pGadget->scrollbar.iThumbFrame = pEngine->commonGUI.scrollbar.thumbHorzFrameIndex;
                 }
                 
-                pGadget->scrollbar.iThumbCapTopFrame = pGame->commonGUI.scrollbar.thumbCapTopFrameIndex;
-                pGadget->scrollbar.iThumbCapBotFrame = pGame->commonGUI.scrollbar.thumbCapBotFrameIndex;
+                pGadget->scrollbar.iThumbCapTopFrame = pEngine->commonGUI.scrollbar.thumbCapTopFrameIndex;
+                pGadget->scrollbar.iThumbCapBotFrame = pEngine->commonGUI.scrollbar.thumbCapBotFrameIndex;
             } break;
 
             // TESTING. TODO: DELETE ME.
@@ -579,14 +579,14 @@ const char* ta_gui_get_listbox_item(ta_gui_gadget* pGadget, ta_uint32 index)
 
 // Common GUI
 // ==========
-ta_result ta_common_gui__create_texture_atlas(ta_game* pGame, ta_common_gui* pCommonGUI, ta_texture_packer* pPacker, ta_texture** ppTexture)
+ta_result ta_common_gui__create_texture_atlas(taEngineContext* pEngine, ta_common_gui* pCommonGUI, ta_texture_packer* pPacker, ta_texture** ppTexture)
 {
-    assert(pGame != NULL);
+    assert(pEngine != NULL);
     assert(pCommonGUI != NULL);
     assert(pPacker != NULL);
     assert(ppTexture != NULL);
     
-    *ppTexture = ta_create_texture(pGame->engine.pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
+    *ppTexture = ta_create_texture(pEngine->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
     if (*ppTexture == NULL) {
         return TA_FAILED_TO_CREATE_RESOURCE;
     }
@@ -594,14 +594,14 @@ ta_result ta_common_gui__create_texture_atlas(ta_game* pGame, ta_common_gui* pCo
     return TA_SUCCESS;
 }
 
-ta_result ta_common_gui_load(ta_game* pGame, ta_common_gui* pCommonGUI)
+ta_result ta_common_gui_load(taEngineContext* pEngine, ta_common_gui* pCommonGUI)
 {
     if (pCommonGUI == NULL) return TA_INVALID_ARGS;
     ta_zero_object(pCommonGUI);
 
-    pCommonGUI->pGame = pGame;
+    pCommonGUI->pEngine = pEngine;
 
-    ta_result result = ta_gaf_texture_group_init(pGame, "anims/commongui.GAF", ta_color_mode_truecolor, &pCommonGUI->textureGroup);
+    ta_result result = ta_gaf_texture_group_init(pEngine, "anims/commongui.GAF", ta_color_mode_truecolor, &pCommonGUI->textureGroup);
     if (result != TA_SUCCESS) {
         return result;
     }
