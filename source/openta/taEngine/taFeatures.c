@@ -2,7 +2,7 @@
 
 #define TA_FEATURE_CHUNK_SIZE   1024
 
-static uint32_t ta_features_library__hash_string(const char* str)
+static taUInt32 ta_features_library__hash_string(const char* str)
 {
     return hashlittle(str, strlen(str), 0);
 }
@@ -122,7 +122,7 @@ static taBool32 ta_features_library__load_feature(ta_features_library* pLib, con
     if (pLib->featuresCount == pLib->featuresBufferSize)
     {
         // Need to reallocate.
-        uint32_t newBufferSize = pLib->featuresBufferSize + TA_FEATURE_CHUNK_SIZE;
+        taUInt32 newBufferSize = pLib->featuresBufferSize + TA_FEATURE_CHUNK_SIZE;
         ta_feature_desc* pNewFeatures = realloc(pLib->pFeatures, newBufferSize * sizeof(*pLib->pFeatures));
         if (pNewFeatures == NULL) {
             return TA_FALSE;   // Failed to allocate memory.
@@ -136,7 +136,7 @@ static taBool32 ta_features_library__load_feature(ta_features_library* pLib, con
     memset(pFeature, 0, sizeof(*pFeature));
     strcpy_s(pFeature->name, sizeof(pFeature->name), featureName);
 
-    for (uint32_t iVar = 0; iVar < pFeatureConfig->varCount; ++iVar)
+    for (taUInt32 iVar = 0; iVar < pFeatureConfig->varCount; ++iVar)
     {
         ta_config_var* pVar = pFeatureConfig->pVars + iVar;
 
@@ -305,7 +305,7 @@ static ta_feature_desc* ta_features_library__find_by_name(ta_features_library* p
     else
     {
         // Linear search.
-        for (uint32_t iFeature = 0; iFeature < pLib->featuresCount; ++iFeature) {
+        for (taUInt32 iFeature = 0; iFeature < pLib->featuresCount; ++iFeature) {
             if (_stricmp(pLib->pFeatures[iFeature].name, name) == 0) {
                 return pLib->pFeatures + iFeature;
             }

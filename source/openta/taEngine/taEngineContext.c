@@ -1,6 +1,6 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-taBool32 ta_load_palette(ta_fs* pFS, const char* filePath, uint32_t* paletteOut)
+taBool32 ta_load_palette(ta_fs* pFS, const char* filePath, taUInt32* paletteOut)
 {
     ta_file* pPaletteFile = ta_open_file(pFS, filePath, 0);
     if (pPaletteFile == NULL) {
@@ -338,7 +338,7 @@ void ta_on_key_up(taEngineContext* pEngine, ta_key key, unsigned int stateFlags)
     }
 }
 
-void ta_on_printable_key_down(taEngineContext* pEngine, uint32_t utf32, unsigned int stateFlags)
+void ta_on_printable_key_down(taEngineContext* pEngine, taUInt32 utf32, unsigned int stateFlags)
 {
     assert(pEngine != NULL);
     (void)pEngine;

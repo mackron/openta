@@ -26,7 +26,7 @@ struct taEngineContext
     // features library is immutable once it's initialized.
     ta_features_library* pFeatures;
 
-    uint32_t textureGAFCount;
+    taUInt32 textureGAFCount;
     ta_gaf** ppTextureGAFs;     // The list of GAF files containing textures. This is initialized when the engine context is created.
 };
 
@@ -79,4 +79,4 @@ void ta_on_key_down(taEngineContext* pEngine, ta_key key, unsigned int stateFlag
 void ta_on_key_up(taEngineContext* pEngine, ta_key key, unsigned int stateFlags);
 
 // Called when a printable key is pressed or auto-repeated. Use this for text boxes.
-void ta_on_printable_key_down(taEngineContext* pEngine, uint32_t utf32, unsigned int stateFlags);
+void ta_on_printable_key_down(taEngineContext* pEngine, taUInt32 utf32, unsigned int stateFlags);

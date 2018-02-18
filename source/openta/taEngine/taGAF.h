@@ -12,16 +12,16 @@ typedef struct
     ta_file* pFile;
 
     // The number of sequences making up the GAF archive.
-    uint32_t sequenceCount;
+    taUInt32 sequenceCount;
 
     // Internal use only. The name of the currently selected sequence.
     const char* _sequenceName;
 
     // Internal use only. The position in the file of the list of frame pointers for the current sequence.
-    uint32_t _sequencePointer;
+    taUInt32 _sequencePointer;
 
     // Internal use only. The number of frames in the currently selected sequence.
-    uint32_t _sequenceFrameCount;
+    taUInt32 _sequenceFrameCount;
 } ta_gaf;
 
 // Opens a GAF archive.
@@ -31,12 +31,12 @@ ta_gaf* ta_open_gaf(ta_fs* pFS, const char* filename);
 void ta_close_gaf(ta_gaf* pGAF);
 
 // Selects the sequence with the given name. After calling this you can get information about each frame in a sequence.
-taBool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, uint32_t* pFrameCountOut);
-taBool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, taUInt32 index, uint32_t* pFrameCountOut);
+taBool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, taUInt32* pFrameCountOut);
+taBool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, taUInt32 index, taUInt32* pFrameCountOut);
 
 // Retrieves the image data of the frame at the given index of the currently selected sequence. Free the returned
 // pointer with ta_gaf_free().
-ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOut, uint32_t* pHeightOut, int32_t* pPosXOut, int32_t* pPosYOut, taUInt8** ppImageData);
+ta_result ta_gaf_get_frame(ta_gaf* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut, taUInt32* pHeightOut, taInt32* pPosXOut, taInt32* pPosYOut, taUInt8** ppImageData);
 
 // Retrieves the name of the currently selected sequence.
 const char* ta_gaf_get_current_sequence_name(ta_gaf* pGAF);

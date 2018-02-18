@@ -3,32 +3,32 @@
 typedef struct
 {
     // The width of the frame.
-    uint16_t width;
+    taUInt16 width;
 
     // The height of the frame.
-    uint16_t height;
+    taUInt16 height;
 
     // The offset of the frame on the X axis. This is NOT the position within the texture atlas.
-    int16_t offsetX;
+    taInt16 offsetX;
 
     // The offset of the frame on the Y axis. This is NOT the position within the texture atlas.
-    int16_t offsetY;
+    taInt16 offsetY;
 
     // The position on the x axis within the texture atlas this frame is located at.
-    uint16_t texturePosX;
+    taUInt16 texturePosX;
 
     // The position on the y axis within the texture atlas this frame is located at.
-    uint16_t texturePosY;
+    taUInt16 texturePosY;
 
     // The index of the texture atlas that the frame's graphic is contained in.
-    uint16_t textureIndex;
+    taUInt16 textureIndex;
 
 } ta_map_feature_frame;
 
 typedef struct
 {
     // The number of frames making up the sequence.
-    uint32_t frameCount;
+    taUInt32 frameCount;
 
     // The frames making up the sequence.
     ta_map_feature_frame pFrames[1];
@@ -38,17 +38,17 @@ typedef struct
 typedef struct
 {
     // The index of the texture to use when drawing the mesh.
-    uint16_t textureIndex;
+    taUInt16 textureIndex;
 
     // The mesh data.
     ta_mesh* pMesh;
 
     // The index count.
-    uint32_t indexCount;
+    taUInt32 indexCount;
 
     // The index offset. A mesh can be contained within a larger monolithic mesh. This property keeps track of the position
     // within that mesh where this submesh begins.
-    uint32_t indexOffset;
+    taUInt32 indexOffset;
 
 } ta_map_3do_mesh;
 
@@ -59,10 +59,10 @@ typedef struct
     float relativePosZ;
 
     // The index of the next sibling.
-    uint32_t nextSiblingIndex;
+    taUInt32 nextSiblingIndex;
 
     // The index of the first child.
-    uint32_t firstChildIndex;
+    taUInt32 firstChildIndex;
 
     // The number of meshes making up the object. Meshes are split based on the texture index. 
     size_t meshCount;
@@ -75,14 +75,14 @@ typedef struct
 typedef struct
 {
     // The number of objects making up the 3DO.
-    uint32_t objectCount;
+    taUInt32 objectCount;
     
     // The list of objects making up the 3DO. The root object is always at index 0.
     ta_map_3do_object* pObjects;
 
     // The number of meshes making up the geometric data of every object. There is usually one mesh per object,
     // but there may be more if an object's mesh data is split over multiple texture atlases.
-    uint32_t meshCount;
+    taUInt32 meshCount;
 
     // The list of meshes making up the geometric data of every object. These are grouped per-object.
     ta_map_3do_mesh* pMeshes;
@@ -117,7 +117,7 @@ typedef struct
     ta_map_3do* p3DO;
 
     // The original index of the feature. Internal use only.
-    uint32_t _index;
+    taUInt32 _index;
 
 } ta_map_feature_type;
 
@@ -136,7 +136,7 @@ typedef struct
     ta_map_feature_sequence* pCurrentSequence;
 
     // The index of the current frame in the sequence. This is used for for determining which frame to draw at render time.
-    uint32_t currentFrameIndex;
+    taUInt32 currentFrameIndex;
 
 } ta_map_feature;
 
@@ -144,13 +144,13 @@ typedef struct
 typedef struct
 {
     // The index of the texture to use when drawing this mesh.
-    uint32_t textureIndex;
+    taUInt32 textureIndex;
 
     // The number of indices in the index buffer. Should always be a multiple of 4.
-    uint32_t indexCount;
+    taUInt32 indexCount;
 
     // The offset of the first index in the main index buffer.
-    uint32_t indexOffset;
+    taUInt32 indexOffset;
 
 } ta_map_terrain_submesh;
 
@@ -160,7 +160,7 @@ typedef struct
 typedef struct
 {
     // The number of meshes making up this chunk.
-    uint32_t meshCount;
+    taUInt32 meshCount;
 
     // The meshes making up this chunk. When the chunk is rendered, it will iterate over each of these
     // and draw them one-by-one.
@@ -173,12 +173,12 @@ typedef struct
 typedef struct
 {
     // The total number of tiles on each axis.
-    uint32_t tileCountX;
-    uint32_t tileCountY;
+    taUInt32 tileCountX;
+    taUInt32 tileCountY;
 
     // The number of chunks on each axis.
-    uint32_t chunkCountX;
-    uint32_t chunkCountY;
+    taUInt32 chunkCountX;
+    taUInt32 chunkCountY;
 
     // The chunks making up the map. These are stored in linear order, row-by-row.
     ta_map_terrain_chunk* pChunks;
@@ -201,7 +201,7 @@ struct ta_map_instance
 
 
     // The number of textures containing every 2D graphic used in this map instance.
-    uint32_t textureCount;
+    taUInt32 textureCount;
 
     // The list of textures containing every 2D graphic used in this map instance. Each texture is
     // an atlas containing many sub-textures. Whenever a graphic is loaded it is placed into one of
@@ -210,14 +210,14 @@ struct ta_map_instance
 
 
     // The number of feature types as specified by the TNT file.
-    uint32_t featureTypesCount;
+    taUInt32 featureTypesCount;
 
     // The list of feature types as specified by the TNT file.
     ta_map_feature_type* pFeatureTypes;
 
 
     // The number of features sitting on the map.
-    uint32_t featureCount;
+    taUInt32 featureCount;
 
     // The list of features sitting on the map.
     ta_map_feature* pFeatures;

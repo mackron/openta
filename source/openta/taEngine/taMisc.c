@@ -44,13 +44,13 @@ size_t ta_memory_stream_peek(ta_memory_stream* pStream, void* pDataOut, size_t b
     return bytesToRead;
 }
 
-taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, int64_t bytesToSeek, ta_seek_origin origin)
+taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, taInt64 bytesToSeek, ta_seek_origin origin)
 {
-    uint64_t newPos = pStream->currentReadPos;
+    taUInt64 newPos = pStream->currentReadPos;
     if (origin == ta_seek_origin_current)
     {
-        if ((int64_t)newPos + bytesToSeek >= 0) {
-            newPos = (uint64_t)((int64_t)newPos + bytesToSeek);
+        if ((taInt64)newPos + bytesToSeek >= 0) {
+            newPos = (taUInt64)((taInt64)newPos + bytesToSeek);
         } else {
             // Trying to seek to before the beginning of the file.
             return TA_FALSE;
@@ -59,13 +59,13 @@ taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, int64_t bytesToSeek, t
     else if (origin == ta_seek_origin_start)
     {
         assert(bytesToSeek >= 0);
-        newPos = (uint64_t)bytesToSeek;
+        newPos = (taUInt64)bytesToSeek;
     }
     else if (origin == ta_seek_origin_end)
     {
         assert(bytesToSeek >= 0);
-        if ((uint64_t)bytesToSeek <= pStream->dataSize) {
-            newPos = pStream->dataSize - (uint64_t)bytesToSeek;
+        if ((taUInt64)bytesToSeek <= pStream->dataSize) {
+            newPos = pStream->dataSize - (taUInt64)bytesToSeek;
         } else {
             // Trying to seek to before the beginning of the file.
             return TA_FALSE;
@@ -95,7 +95,7 @@ size_t ta_memory_stream_tell(ta_memory_stream* pStream)
     return pStream->currentReadPos;
 }
 
-taBool32 ta_memory_stream_write_uint32(ta_memory_stream* pStream, uint32_t value)
+taBool32 ta_memory_stream_write_uint32(ta_memory_stream* pStream, taUInt32 value)
 {
     if (pStream == NULL) {
         return TA_FALSE;
@@ -105,8 +105,8 @@ taBool32 ta_memory_stream_write_uint32(ta_memory_stream* pStream, uint32_t value
         return TA_FALSE;
     }
 
-    *((uint32_t*)(pStream->pData + pStream->currentReadPos)) = value;
-    pStream->currentReadPos += sizeof(uint32_t);
+    *((taUInt32*)(pStream->pData + pStream->currentReadPos)) = value;
+    pStream->currentReadPos += sizeof(taUInt32);
 
     return TA_TRUE;
 }

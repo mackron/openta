@@ -126,13 +126,13 @@ struct ta_texture
     GLuint objectGL;
 
     // The width of the texture.
-    uint32_t width;
+    taUInt32 width;
 
     // The height of the texture.
-    uint32_t height;
+    taUInt32 height;
 
     // The number of components in the texture. If this is set to 1, the texture will be treated as paletted.
-    uint32_t components;
+    taUInt32 components;
 };
 
 struct ta_mesh
@@ -228,7 +228,7 @@ taBool32 ta_graphics__compile_shader(ta_graphics_context* pGraphics, ta_graphics
 }
 
 
-ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, uint32_t palette[256])
+ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, taUInt32 palette[256])
 {
     if (pEngine == NULL) {
         return NULL;
@@ -476,7 +476,7 @@ ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, uint32
 
 
     // Built-in resources.
-    uint16_t pFeaturesMeshIndices[4] = {0, 1, 2, 3};
+    taUInt16 pFeaturesMeshIndices[4] = {0, 1, 2, 3};
     pGraphics->pFeaturesMesh = ta_create_mutable_mesh(pGraphics, ta_primitive_type_quad, ta_vertex_format_p2t2, 4, NULL, ta_index_format_uint16, 4, pFeaturesMeshIndices);
     if (pGraphics->pFeaturesMesh == NULL) {
         goto on_error;
@@ -700,7 +700,7 @@ ta_mesh* ta_create_empty_mesh(ta_graphics_context* pGraphics, ta_primitive_type 
     return pMesh;
 }
 
-ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_index_format indexFormat, uint32_t indexCount, const void* pIndexData)
+ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, taUInt32 vertexCount, const void* pVertexData, ta_index_format indexFormat, taUInt32 indexCount, const void* pIndexData)
 {
     ta_mesh* pMesh = ta_create_empty_mesh(pGraphics, primitiveType, vertexFormat, indexFormat);
     if (pMesh == NULL) {
@@ -708,7 +708,7 @@ ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primit
     }
 
 
-    uint32_t vertexBufferSize = vertexCount;
+    taUInt32 vertexBufferSize = vertexCount;
     if (vertexFormat == ta_vertex_format_p2t2) {
         vertexBufferSize *= sizeof(ta_vertex_p2t2);
     } else if (vertexFormat == ta_vertex_format_p3t2) {
@@ -717,7 +717,7 @@ ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primit
         vertexBufferSize *= sizeof(ta_vertex_p3t2n3);
     }
 
-    uint32_t indexBufferSize = indexCount * ((uint32_t)indexFormat);
+    taUInt32 indexBufferSize = indexCount * ((taUInt32)indexFormat);
 
 
     if (pGraphics->supportsVBO)
@@ -768,14 +768,14 @@ ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primit
     return pMesh;
 }
 
-ta_mesh* ta_create_mutable_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_index_format indexFormat, uint32_t indexCount, const void* pIndexData)
+ta_mesh* ta_create_mutable_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, taUInt32 vertexCount, const void* pVertexData, ta_index_format indexFormat, taUInt32 indexCount, const void* pIndexData)
 {
     ta_mesh* pMesh = ta_create_empty_mesh(pGraphics, primitiveType, vertexFormat, indexFormat);
     if (pMesh == NULL) {
         return NULL;
     }
 
-    uint32_t vertexBufferSize = vertexCount;
+    taUInt32 vertexBufferSize = vertexCount;
     if (vertexFormat == ta_vertex_format_p2t2) {
         vertexBufferSize *= sizeof(ta_vertex_p2t2);
     } else if (vertexFormat == ta_vertex_format_p3t2) {
@@ -795,7 +795,7 @@ ta_mesh* ta_create_mutable_mesh(ta_graphics_context* pGraphics, ta_primitive_typ
     }
 
 
-    uint32_t indexBufferSize = indexCount * ((uint32_t)indexFormat);
+    taUInt32 indexBufferSize = indexCount * ((taUInt32)indexFormat);
     pMesh->pIndexData = malloc(indexBufferSize);
     if (pMesh->pIndexData == NULL) {
         free(pMesh->pVertexData);
@@ -975,15 +975,15 @@ static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_
 
             if (pMesh->vertexFormat == ta_vertex_format_p2t2) {
                 glVertexPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), pMesh->pVertexData);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), ((uint8_t*)pMesh->pVertexData) + (2*sizeof(float)));
+                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), ((taUInt8*)pMesh->pVertexData) + (2*sizeof(float)));
             } else if (pMesh->vertexFormat == ta_vertex_format_p3t2) {
                 glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2), pMesh->pVertexData);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2), ((uint8_t*)pMesh->pVertexData) + (3*sizeof(float)));
+                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2), ((taUInt8*)pMesh->pVertexData) + (3*sizeof(float)));
             } else {
                 glEnableClientState(GL_NORMAL_ARRAY);
                 glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2n3), pMesh->pVertexData);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2n3), ((uint8_t*)pMesh->pVertexData) + (3*sizeof(float)));
-                glNormalPointer(GL_FLOAT, sizeof(ta_vertex_p3t2n3), ((uint8_t*)pMesh->pVertexData) + (5*sizeof(float)));
+                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2n3), ((taUInt8*)pMesh->pVertexData) + (3*sizeof(float)));
+                glNormalPointer(GL_FLOAT, sizeof(ta_vertex_p3t2n3), ((taUInt8*)pMesh->pVertexData) + (5*sizeof(float)));
             }
         }
         else if (pMesh->vertexObjectGL)
@@ -1020,19 +1020,19 @@ static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_
     pGraphics->pCurrentMesh = pMesh;
 }
 
-static TA_INLINE void ta_graphics__draw_mesh(ta_graphics_context* pGraphics, ta_mesh* pMesh, uint32_t indexCount, uint32_t indexOffset)
+static TA_INLINE void ta_graphics__draw_mesh(ta_graphics_context* pGraphics, ta_mesh* pMesh, taUInt32 indexCount, taUInt32 indexOffset)
 {
     // Pre: The mesh is assumed to be bound.
     assert(pGraphics != NULL);
     assert(pGraphics->pCurrentMesh = pMesh);
     assert(pMesh != NULL);
 
-    uint32_t byteOffset = indexOffset * ((uint32_t)pMesh->indexFormat);
+    taUInt32 byteOffset = indexOffset * ((taUInt32)pMesh->indexFormat);
 
     if (pMesh->pIndexData != NULL) {
-        glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (uint8_t*)pMesh->pIndexData + byteOffset);
+        glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (taUInt8*)pMesh->pIndexData + byteOffset);
     } else {
-        glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (const GLvoid*)((uint8_t*)0 + byteOffset));
+        glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (const GLvoid*)((taUInt8*)0 + byteOffset));
     }
 }
 
@@ -1456,8 +1456,8 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
 
     // The terrain is the base layer so there's no need to clear the color buffer - we just draw over it anyway.
     GLbitfield clearFlags = GL_DEPTH_BUFFER_BIT;
-    if (pGraphics->cameraPosX < 0 || (uint32_t)pGraphics->cameraPosX + pGraphics->resolutionX > (pMap->terrain.tileCountX * 32) ||
-        pGraphics->cameraPosY < 0 || (uint32_t)pGraphics->cameraPosY + pGraphics->resolutionY > (pMap->terrain.tileCountY * 32)) {
+    if (pGraphics->cameraPosX < 0 || (taUInt32)pGraphics->cameraPosX + pGraphics->resolutionX > (pMap->terrain.tileCountX * 32) ||
+        pGraphics->cameraPosY < 0 || (taUInt32)pGraphics->cameraPosY + pGraphics->resolutionY > (pMap->terrain.tileCountY * 32)) {
         clearFlags |= GL_COLOR_BUFFER_BIT;
     }
 
@@ -1526,12 +1526,12 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     }
 
 
-    for (int32_t chunkY = 0; chunkY < visibleChunkCountY; ++chunkY)
+    for (taInt32 chunkY = 0; chunkY < visibleChunkCountY; ++chunkY)
     {
-        for (int32_t chunkX = 0; chunkX < visibleChunkCountX; ++chunkX)
+        for (taInt32 chunkX = 0; chunkX < visibleChunkCountX; ++chunkX)
         {
             ta_map_terrain_chunk* pChunk =  &pMap->terrain.pChunks[((chunkY+firstChunkPosY) * pMap->terrain.chunkCountX) + (chunkX+firstChunkPosX)];
-            for (uint32_t iMesh = 0; iMesh < pChunk->meshCount; ++iMesh)
+            for (taUInt32 iMesh = 0; iMesh < pChunk->meshCount; ++iMesh)
             {
                 ta_map_terrain_submesh* pSubmesh = &pChunk->pMeshes[iMesh];
                 ta_graphics__bind_texture(pGraphics, pMap->ppTextures[pSubmesh->textureIndex]);
@@ -1541,7 +1541,7 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     }
 }
 
-void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_feature_sequence* pSequence, uint32_t frameIndex, taBool32 transparent)
+void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_feature_sequence* pSequence, taUInt32 frameIndex, taBool32 transparent)
 {
     if (pSequence == NULL) {
         return;
@@ -1595,7 +1595,7 @@ void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instanc
     ta_graphics__draw_mesh(pGraphics, pGraphics->pFeaturesMesh, 4, 0);
 }
 
-void ta_draw_map_feature_3do_object_recursive(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_3do* p3DO, uint32_t objectIndex)
+void ta_draw_map_feature_3do_object_recursive(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_3do* p3DO, taUInt32 objectIndex)
 {
     ta_map_3do_object* pObject = &p3DO->pObjects[objectIndex];
     assert(pObject != NULL);
@@ -1674,7 +1674,7 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    for (uint32_t iFeature = 0; iFeature < pMap->featureCount; ++iFeature)
+    for (taUInt32 iFeature = 0; iFeature < pMap->featureCount; ++iFeature)
     {
         ta_map_feature* pFeature = pMap->pFeatures + iFeature;
         if (pFeature->pType->pSequenceDefault)

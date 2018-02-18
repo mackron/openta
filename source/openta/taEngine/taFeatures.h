@@ -108,7 +108,7 @@ typedef struct
     //  TA_FEATURE_PERMANENT -> "permanent"
     //  TA_FEATURE_RECLAIMABLE -> "reclaimable"
     //  TA_FEATURE_SHADOWTRANSPARENT -> "shadtrans"
-    uint16_t flags;
+    taUInt16 flags;
 } ta_feature_desc;
 
 // Structure containing the descriptors of every known feature. This structure is filled
@@ -116,10 +116,10 @@ typedef struct
 typedef struct
 {
     // The number of features in the library.
-    uint32_t featuresCount;
+    taUInt32 featuresCount;
 
     // The size of the buffer containing the features. This is used for determining whether or not the buffer needs to be reallocated.
-    uint32_t featuresBufferSize;
+    taUInt32 featuresBufferSize;
 
     // The list of feature descriptors making up the library.
     ta_feature_desc* pFeatures;

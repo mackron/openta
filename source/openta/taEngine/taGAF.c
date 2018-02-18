@@ -5,13 +5,13 @@
 // Note that this structure is not the same layout as the header in the file.
 typedef struct
 {
-    uint16_t width;
-    uint16_t height;
-    int16_t offsetX;
-    int16_t offsetY;
-    uint8_t isCompressed;
-    uint16_t subframeCount;
-    uint32_t dataPtr;
+    taUInt16 width;
+    taUInt16 height;
+    taInt16 offsetX;
+    taInt16 offsetY;
+    taUInt8 isCompressed;
+    taUInt16 subframeCount;
+    taUInt32 dataPtr;
 } ta_gaf_frame_header;
 
 taBool32 ta_gaf__read_frame_header(ta_gaf* pGAF, ta_gaf_frame_header* pHeader)
@@ -55,7 +55,7 @@ taBool32 ta_gaf__read_frame_header(ta_gaf* pGAF, ta_gaf_frame_header* pHeader)
     return TA_TRUE;
 }
 
-taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHeader, uint16_t dstWidth, uint16_t dstHeight, uint16_t dstOffsetX, uint16_t dstOffsetY, uint8_t* pDstImageData)
+taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHeader, taUInt16 dstWidth, taUInt16 dstHeight, taUInt16 dstOffsetX, taUInt16 dstOffsetY, taUInt8* pDstImageData)
 {
     assert(pGAF != NULL);
     assert(pFrameHeader != NULL);
@@ -65,27 +65,27 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
         return TA_FALSE;
     }
 
-    uint16_t offsetX = dstOffsetX - pFrameHeader->offsetX;
-    uint16_t offsetY = dstOffsetY - pFrameHeader->offsetY;
+    taUInt16 offsetX = dstOffsetX - pFrameHeader->offsetX;
+    taUInt16 offsetY = dstOffsetY - pFrameHeader->offsetY;
 
     if (pFrameHeader->isCompressed)
     {
-        for (uint32_t y = 0; y < pFrameHeader->height; ++y)
+        for (taUInt32 y = 0; y < pFrameHeader->height; ++y)
         {
-            uint16_t rowSize;
+            taUInt16 rowSize;
             if (!ta_read_file_uint16(pGAF->pFile, &rowSize)) {
                 return TA_FALSE;
             }
 
-            uint8_t* pDstRow = pDstImageData + ((offsetY + y) * dstWidth);
+            taUInt8* pDstRow = pDstImageData + ((offsetY + y) * dstWidth);
             if (rowSize > 0)
             {
                 unsigned int x = 0;
 
-                uint16_t bytesProcessed = 0;
+                taUInt16 bytesProcessed = 0;
                 while (bytesProcessed < rowSize)
                 {
-                    uint8_t mask;
+                    taUInt8 mask;
                     if (!ta_read_file_uint8(pGAF->pFile, &mask)) {
                         return TA_FALSE;
                     }
@@ -93,14 +93,14 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
                     if ((mask & 0x01) == 0x01)
                     {
                         // Transparent.
-                        uint8_t repeat = (mask >> 1);
+                        taUInt8 repeat = (mask >> 1);
                         x += repeat;
                     }
                     else if ((mask & 0x02) == 0x02)
                     {
                         // The next byte is repeated.
-                        uint8_t repeat = (mask >> 2) + 1;
-                        uint8_t value;
+                        taUInt8 repeat = (mask >> 2) + 1;
+                        taUInt8 value;
                         if (!ta_read_file_uint8(pGAF->pFile, &value)) {
                             return TA_FALSE;
                         }
@@ -120,10 +120,10 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
                     else
                     {
                         // The next bytes are verbatim.
-                        uint8_t repeat = (mask >> 2) + 1;
+                        taUInt8 repeat = (mask >> 2) + 1;
                         while (repeat > 0)
                         {
-                            uint8_t value;
+                            taUInt8 value;
                             if (!ta_read_file_uint8(pGAF->pFile, &value)) {
                                 return TA_FALSE;
                             }
@@ -153,7 +153,7 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
     {
         for (unsigned int y = 0; y < pFrameHeader->height; ++y)
         {
-            uint8_t* pDstRow = pDstImageData + ((offsetY + y) * dstWidth);
+            taUInt8* pDstRow = pDstImageData + ((offsetY + y) * dstWidth);
             if (!ta_read_file(pGAF->pFile, pDstRow + offsetX, pFrameHeader->width, NULL)) {
                 return TA_FALSE;
             }
@@ -200,7 +200,7 @@ ta_gaf* ta_open_gaf(ta_fs* pFS, const char* filename)
         goto on_error;
     }
     
-    uint32_t version;
+    taUInt32 version;
     if (!ta_read_file_uint32(pGAF->pFile, &version)) {
         goto on_error;    
     }
@@ -239,21 +239,21 @@ void ta_close_gaf(ta_gaf* pGAF)
 }
 
 
-taBool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, uint32_t* pFrameCountOut)
+taBool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, taUInt32* pFrameCountOut)
 {
     if (pGAF == NULL || sequenceName == NULL || pFrameCountOut == NULL) {
         return TA_FALSE;
     }
 
     // We need to find the sequence which we do by simply iterating over each one and comparing it's name.
-    for (uint32_t iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence)
+    for (taUInt32 iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence)
     {
         // The sequence pointers are located at byte position 12.
-        if (!ta_seek_file(pGAF->pFile, 12 + (iSequence * sizeof(uint32_t)), ta_seek_origin_start)) {
+        if (!ta_seek_file(pGAF->pFile, 12 + (iSequence * sizeof(taUInt32)), ta_seek_origin_start)) {
             return TA_FALSE;
         }
 
-        uint32_t sequencePointer;
+        taUInt32 sequencePointer;
         if (!ta_read_file_uint32(pGAF->pFile, &sequencePointer)) {
             return TA_FALSE;
         }
@@ -263,7 +263,7 @@ taBool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, uint32_t
         }
 
 
-        uint16_t frameCount;
+        taUInt16 frameCount;
         if (!ta_read_file_uint16(pGAF->pFile, &frameCount)) {
             return TA_FALSE;
         }
@@ -289,7 +289,7 @@ taBool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, uint32_t
     return TA_FALSE;
 }
 
-taBool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, taUInt32 index, uint32_t* pFrameCountOut)
+taBool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, taUInt32 index, taUInt32* pFrameCountOut)
 {
     if (pFrameCountOut) *pFrameCountOut = 0;
     if (pGAF == NULL || index >= pGAF->sequenceCount) {
@@ -297,11 +297,11 @@ taBool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, taUInt32 index, uint32_t*
     }
 
     // The sequence pointers are located at byte position 12.
-    if (!ta_seek_file(pGAF->pFile, 12 + (index * sizeof(uint32_t)), ta_seek_origin_start)) {
+    if (!ta_seek_file(pGAF->pFile, 12 + (index * sizeof(taUInt32)), ta_seek_origin_start)) {
         return TA_FALSE;
     }
 
-    uint32_t sequencePointer;
+    taUInt32 sequencePointer;
     if (!ta_read_file_uint32(pGAF->pFile, &sequencePointer)) {
         return TA_FALSE;
     }
@@ -311,7 +311,7 @@ taBool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, taUInt32 index, uint32_t*
     }
 
 
-    uint16_t frameCount;
+    taUInt16 frameCount;
     if (!ta_read_file_uint16(pGAF->pFile, &frameCount)) {
         return TA_FALSE;
     }
@@ -328,7 +328,7 @@ taBool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, taUInt32 index, uint32_t*
     return TA_TRUE;
 }
 
-ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOut, uint32_t* pHeightOut, int32_t* pPosXOut, int32_t* pPosYOut, taUInt8** ppImageData)
+ta_result ta_gaf_get_frame(ta_gaf* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut, taUInt32* pHeightOut, taInt32* pPosXOut, taInt32* pPosYOut, taUInt8** ppImageData)
 {
     if (ppImageData) *ppImageData = NULL;
     if (pGAF == NULL || frameIndex >= pGAF->_sequenceFrameCount || pWidthOut == NULL || pHeightOut == NULL || pPosXOut == NULL || pPosYOut == NULL) {
@@ -343,11 +343,11 @@ ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOu
 
     // Each frame pointer is grouped as a 64-bit value. We want the first 32-bits. The frame pointers start 40 bytes
     // after the beginning of the sequence.
-    if (!ta_seek_file(pGAF->pFile, pGAF->_sequencePointer + 40 + (frameIndex * sizeof(uint64_t)), ta_seek_origin_start)) {
+    if (!ta_seek_file(pGAF->pFile, pGAF->_sequencePointer + 40 + (frameIndex * sizeof(taUInt64)), ta_seek_origin_start)) {
         return TA_ERROR;
     }
 
-    uint32_t framePointer;
+    taUInt32 framePointer;
     if (!ta_read_file_uint32(pGAF->pFile, &framePointer)) {
         return TA_ERROR;
     }
@@ -367,7 +367,7 @@ ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOu
     *pPosYOut = frameHeader.offsetY;
     
     if (ppImageData != NULL) {
-        uint8_t* pImageData = malloc(frameHeader.width * frameHeader.height);
+        taUInt8* pImageData = malloc(frameHeader.width * frameHeader.height);
         if (pImageData == NULL) {
             return TA_ERROR;
         }
@@ -396,7 +396,7 @@ ta_result ta_gaf_get_frame(ta_gaf* pGAF, uint32_t frameIndex, uint32_t* pWidthOu
                     return TA_ERROR;
                 }
 
-                uint32_t subframePointer;
+                taUInt32 subframePointer;
                 if (!ta_read_file_uint32(pGAF->pFile, &subframePointer)) {
                     free(pImageData);
                     return TA_FALSE;

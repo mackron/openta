@@ -165,14 +165,14 @@ taBool32 ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* p
     return TA_TRUE;
 }
 
-uint32_t ta_3do_count_objects(ta_file* pFile)
+taUInt32 ta_3do_count_objects(ta_file* pFile)
 {
     ta_3do_object_header header;
     if (!ta_3do_read_object_header(pFile, &header)) {
         return 0;
     }
 
-    uint32_t count = 1;
+    taUInt32 count = 1;
 
     // Siblings.
     if (header.nextSiblingPtr != 0) {

@@ -14,7 +14,7 @@
 #define TA_KEY_STATE_ALT_DOWN       (1 << 7)        // Whether or not an alt key is down at the time the input event is handled.
 #define TA_KEY_STATE_AUTO_REPEATED  (1 << 31)       // Whether or not the key press is generated due to auto-repeating. Only used with key down events.
 
-typedef uint32_t ta_key;
+typedef taUInt32 ta_key;
 
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -5,34 +5,34 @@
 
 typedef struct
 {
-    uint32_t id;
-    uint32_t width;
-    uint32_t height;
-    uint32_t mapdataPtr;
-    uint32_t mapattrPtr;
-    uint32_t tilegfxPtr;
-    uint32_t tileCount;
-    uint32_t featureTypesCount;
-    uint32_t featureTypesPtr;
-    uint32_t seaLevel;
-    uint32_t minimapPtr;
+    taUInt32 id;
+    taUInt32 width;
+    taUInt32 height;
+    taUInt32 mapdataPtr;
+    taUInt32 mapattrPtr;
+    taUInt32 tilegfxPtr;
+    taUInt32 tileCount;
+    taUInt32 featureTypesCount;
+    taUInt32 featureTypesPtr;
+    taUInt32 seaLevel;
+    taUInt32 minimapPtr;
 } ta_tnt_header;
 
 typedef struct
 {
-    uint32_t posX;
-    uint32_t posY;
-    uint32_t textureIndex;
+    taUInt32 posX;
+    taUInt32 posY;
+    taUInt32 textureIndex;
 } ta_tnt_tile_subimage;
 
 typedef struct
 {
     char name[256];
-    uint32_t posX;
-    uint32_t posY;
-    uint32_t sizeX;
-    uint32_t sizeY;
-    uint32_t textureIndex;
+    taUInt32 posX;
+    taUInt32 posY;
+    taUInt32 sizeX;
+    taUInt32 sizeY;
+    taUInt32 textureIndex;
 } ta_map_loaded_texture;
 
 typedef struct
@@ -69,7 +69,7 @@ taBool32 ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_packe
     return TA_TRUE;
 }
 
-taBool32 ta_map__pack_subtexture(ta_map_instance* pMap, ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pImageData, ta_texture_packer_slot* pSlotOut)
+taBool32 ta_map__pack_subtexture(ta_map_instance* pMap, ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, const void* pImageData, ta_texture_packer_slot* pSlotOut)
 {
     // If we can't pack the image we just create a new texture on the graphics system and then reset the packer and try again.
     if (ta_texture_packer_pack_subtexture(pPacker, width, height, pImageData, pSlotOut)) {
@@ -117,7 +117,7 @@ void ta_map__reset_mesh_builders(ta_map_load_context* pLoadContext)
 
 ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_texture_packer* pPacker, ta_gaf* pGAF, const char* sequenceName)
 {
-    uint32_t frameCount;
+    taUInt32 frameCount;
     if (!ta_gaf_select_sequence(pGAF, sequenceName, &frameCount)) {
         return NULL;
     }
@@ -133,13 +133,13 @@ ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_tex
 
     pSeq->frameCount = frameCount;
 
-    for (uint32_t iFrame = 0; iFrame < frameCount; ++iFrame)
+    for (taUInt32 iFrame = 0; iFrame < frameCount; ++iFrame)
     {
-        uint32_t frameWidth;
-        uint32_t frameHeight;
-        int32_t offsetX;
-        int32_t offsetY;
-        uint8_t* pFrameImageData;
+        taUInt32 frameWidth;
+        taUInt32 frameHeight;
+        taInt32 offsetX;
+        taInt32 offsetY;
+        taUInt8* pFrameImageData;
         if (ta_gaf_get_frame(pGAF, iFrame, &frameWidth, &frameHeight, &offsetX, &offsetY, &pFrameImageData) != TA_SUCCESS) {
             free(pSeq);
             return NULL;
@@ -199,14 +199,14 @@ taBool32 ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadC
 
     for (size_t iGAF = 0; iGAF < pMap->pEngine->textureGAFCount; ++iGAF)
     {
-        uint32_t frameCount;
+        taUInt32 frameCount;
         if (ta_gaf_select_sequence(pMap->pEngine->ppTextureGAFs[iGAF], textureName, &frameCount))
         {
-            uint32_t width;
-            uint32_t height;
-            uint32_t posX;
-            uint32_t posY;
-            uint8_t* pTextureData;
+            taUInt32 width;
+            taUInt32 height;
+            taUInt32 posX;
+            taUInt32 posY;
+            taUInt8* pTextureData;
             if (ta_gaf_get_frame(pMap->pEngine->ppTextureGAFs[iGAF], 0, &width, &height, &posX, &posY, &pTextureData) != TA_SUCCESS) {
                 return TA_FALSE;
             }
@@ -237,7 +237,7 @@ taBool32 ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadC
     return TA_FALSE;
 }
 
-uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_context* pLoadContext, ta_file* pFile, ta_map_3do* p3DO, uint32_t nextObjectIndex)
+taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_context* pLoadContext, ta_file* pFile, ta_map_3do* p3DO, taUInt32 nextObjectIndex)
 {
     assert(pMap != NULL);
     assert(pFile != NULL);
@@ -250,8 +250,8 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
         return 0;
     }
 
-    uint32_t thisIndex = nextObjectIndex;
-    uint32_t firstChildIndex = thisIndex + 1;
+    taUInt32 thisIndex = nextObjectIndex;
+    taUInt32 firstChildIndex = thisIndex + 1;
 
     p3DO->pObjects[thisIndex].meshCount = 0;
     p3DO->pObjects[thisIndex].relativePosX = objectHeader.relativePosX / 65536.0f;
@@ -273,7 +273,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
         return 0;
     }
 
-    for (uint32_t iPrim = 0; iPrim < objectHeader.primitiveCount; ++iPrim)
+    for (taUInt32 iPrim = 0; iPrim < objectHeader.primitiveCount; ++iPrim)
     {
         // The first thing to do is load the texture. We need to do this so we can know whether or not we should add the primitive to
         // an already-in-progress mesh or to start a new one. This is based on the index of the texture atlas the texture is contained
@@ -352,7 +352,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
             assert(pMeshBuilder != NULL);
 
             if (primHeader.indexCount >= 3) {
-                uint16_t* indices = (uint16_t*)(pFile->pFileData + primHeader.indexArrayPtr);
+                taUInt16* indices = (taUInt16*)(pFile->pFileData + primHeader.indexArrayPtr);
 
                 float uvLeft;
                 float uvBottom;
@@ -375,8 +375,8 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                 {
                     ta_vertex_p3t2n3 vertices[4];
                     for (int i = 0; i < 4; ++i) {
-                        int32_t position[3];
-                        memcpy(position, pFile->pFileData + objectHeader.vertexPtr + (indices[i]*sizeof(int32_t)*3), sizeof(int32_t)*3);
+                        taInt32 position[3];
+                        memcpy(position, pFile->pFileData + objectHeader.vertexPtr + (indices[i]*sizeof(taInt32)*3), sizeof(taInt32)*3);
 
                         // Note that the Y and Z positions are intentionally swapped.
                         vertices[i].x = position[0] / -65536.0f;
@@ -413,10 +413,10 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                     ta_vertex_p3t2n3 vertices[3];
                     memset(vertices, 0, sizeof(vertices));
 
-                    for (uint32_t iVertex = 0; iVertex < primHeader.indexCount-2; ++iVertex) {
-                        int32_t* position0 = (int32_t*)(pFile->pFileData + objectHeader.vertexPtr + (indices[0]*sizeof(int32_t)*3));
-                        int32_t* position1 = (int32_t*)(pFile->pFileData + objectHeader.vertexPtr + (indices[iVertex+1]*sizeof(int32_t)*3));
-                        int32_t* position2 = (int32_t*)(pFile->pFileData + objectHeader.vertexPtr + (indices[iVertex+2]*sizeof(int32_t)*3));
+                    for (taUInt32 iVertex = 0; iVertex < primHeader.indexCount-2; ++iVertex) {
+                        taInt32* position0 = (taInt32*)(pFile->pFileData + objectHeader.vertexPtr + (indices[0]*sizeof(taInt32)*3));
+                        taInt32* position1 = (taInt32*)(pFile->pFileData + objectHeader.vertexPtr + (indices[iVertex+1]*sizeof(taInt32)*3));
+                        taInt32* position2 = (taInt32*)(pFile->pFileData + objectHeader.vertexPtr + (indices[iVertex+2]*sizeof(taInt32)*3));
 
                         // Note that the Y and Z positions are intentionally swapped.
                         vertices[0].x = position0[0] / -65536.0f;
@@ -453,7 +453,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
 
 
     // Here is where we convert the mesh builders to actual meshes. The meshes are stored in an array in the main 3DO object.
-    uint32_t objectMeshCount = (uint32_t)pLoadContext->meshBuildersCount;
+    taUInt32 objectMeshCount = (taUInt32)pLoadContext->meshBuildersCount;
     p3DO->pObjects[thisIndex].meshCount = objectMeshCount;
     p3DO->pObjects[thisIndex].firstMeshIndex = p3DO->meshCount;
 
@@ -462,7 +462,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
         return 0;
     }
 
-    for (uint32_t iMesh = 0; iMesh < objectMeshCount; ++iMesh) {
+    for (taUInt32 iMesh = 0; iMesh < objectMeshCount; ++iMesh) {
         ta_mesh_builder* pMeshBuilder = &pLoadContext->pMeshBuilders[iMesh];
 
         p3DO->pMeshes[p3DO->meshCount + iMesh].textureIndex = pMeshBuilder->textureIndex;
@@ -481,7 +481,7 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
 
 
 
-    uint32_t childCount = 0;
+    taUInt32 childCount = 0;
     if (objectHeader.firstChildPtr != 0) {
         if (!ta_seek_file(pFile, objectHeader.firstChildPtr, ta_seek_origin_start)) {
             return 0;
@@ -496,8 +496,8 @@ uint32_t ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
         p3DO->pObjects[thisIndex].firstChildIndex = 0;
     }
     
-    uint32_t siblingCount = 0;
-    uint32_t nextSiblingIndex = firstChildIndex + childCount;
+    taUInt32 siblingCount = 0;
+    taUInt32 nextSiblingIndex = firstChildIndex + childCount;
     if (objectHeader.nextSiblingPtr != 0) {
         if (!ta_seek_file(pFile, objectHeader.nextSiblingPtr, ta_seek_origin_start)) {
             return 0;
@@ -533,7 +533,7 @@ ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadCo
         return NULL;
     }
 
-    uint32_t objectCount = ta_3do_count_objects(pFile);
+    taUInt32 objectCount = ta_3do_count_objects(pFile);
     if (objectCount == 0) {
         ta_close_file(pFile);
         return NULL;
@@ -558,7 +558,7 @@ ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadCo
 
     ta_seek_file(pFile, 0, ta_seek_origin_start);
 
-    uint32_t objectsLoaded = ta_map__load_3do_objects_recursive(pMap, pLoadContext, pFile, p3DO, 0);
+    taUInt32 objectsLoaded = ta_map__load_3do_objects_recursive(pMap, pLoadContext, pFile, p3DO, 0);
     if (objectsLoaded != p3DO->objectCount) {
         ta_close_file(pFile);
         free(p3DO->pMeshes);
@@ -572,7 +572,7 @@ ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadCo
 }
 
 
-void ta_map__calculate_object_position_xy(uint32_t tileX, uint32_t tileY, uint16_t objectFootprintX, uint16_t objectFootprintY, float* pPosXOut, float* pPosYOut)
+void ta_map__calculate_object_position_xy(taUInt32 tileX, taUInt32 tileY, taUInt16 objectFootprintX, taUInt16 objectFootprintY, float* pPosXOut, float* pPosYOut)
 {
     assert(pPosXOut != NULL);
     assert(pPosYOut != NULL);
@@ -668,9 +668,9 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
 
 
     // At this point we have enough information to allocate memory for per-tile data.
-    uint32_t tilesPerChunk = TA_TERRAIN_CHUNK_SIZE*TA_TERRAIN_CHUNK_SIZE;
-    uint32_t totalChunkCount = pMap->terrain.chunkCountX * pMap->terrain.chunkCountY;
-    uint32_t totalTileCount = tilesPerChunk * totalChunkCount;
+    taUInt32 tilesPerChunk = TA_TERRAIN_CHUNK_SIZE*TA_TERRAIN_CHUNK_SIZE;
+    taUInt32 totalChunkCount = pMap->terrain.chunkCountX * pMap->terrain.chunkCountY;
+    taUInt32 totalTileCount = tilesPerChunk * totalChunkCount;
 
     pMap->terrain.pChunks = calloc(totalChunkCount, sizeof(*pMap->terrain.pChunks));
     if (pMap->terrain.pChunks == NULL) {
@@ -682,7 +682,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
         goto on_error;
     }
 
-    uint32_t* pIndexData = malloc(totalTileCount*4 * sizeof(uint32_t));
+    taUInt32* pIndexData = malloc(totalTileCount*4 * sizeof(taUInt32));
     if (pIndexData == NULL) {
         free(pVertexData);
         goto on_error;
@@ -707,7 +707,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
         goto on_error;
     }
 
-    for (uint32_t iTile = 0; iTile < header.tileCount; /* DO NOTHING */)
+    for (taUInt32 iTile = 0; iTile < header.tileCount; /* DO NOTHING */)
     {
         char* pTileImageData = pTNT->pFileData + ta_tell_file(pTNT) + (iTile*32*32);
 
@@ -736,16 +736,16 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
 
     
     // For every chunk...
-    for (uint32_t chunkY = 0; chunkY < pMap->terrain.chunkCountY; ++chunkY)
+    for (taUInt32 chunkY = 0; chunkY < pMap->terrain.chunkCountY; ++chunkY)
     {
-        uint32_t chunkTileCountY = TA_TERRAIN_CHUNK_SIZE;
+        taUInt32 chunkTileCountY = TA_TERRAIN_CHUNK_SIZE;
         if ((chunkY*TA_TERRAIN_CHUNK_SIZE) + chunkTileCountY > pMap->terrain.tileCountY) {
             chunkTileCountY = pMap->terrain.tileCountY - (chunkY*TA_TERRAIN_CHUNK_SIZE);
         }
 
-        for (uint32_t chunkX = 0; chunkX < pMap->terrain.chunkCountX; ++chunkX)
+        for (taUInt32 chunkX = 0; chunkX < pMap->terrain.chunkCountX; ++chunkX)
         {
-            uint32_t chunkTileCountX = TA_TERRAIN_CHUNK_SIZE;
+            taUInt32 chunkTileCountX = TA_TERRAIN_CHUNK_SIZE;
             if ((chunkX*TA_TERRAIN_CHUNK_SIZE) + chunkTileCountX > pMap->terrain.tileCountX) {
                 chunkTileCountX = pMap->terrain.tileCountX - (chunkX*TA_TERRAIN_CHUNK_SIZE);
             }
@@ -753,30 +753,30 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
 
             ta_map_terrain_chunk* pChunk = pMap->terrain.pChunks + ((chunkY*pMap->terrain.chunkCountX) + chunkX);
 
-            uint32_t chunkVertexOffset = ((chunkY*pMap->terrain.chunkCountX) + chunkX) * (tilesPerChunk*4);
-            uint32_t chunkIndexOffset  = ((chunkY*pMap->terrain.chunkCountX) + chunkX) * (tilesPerChunk*4);
+            taUInt32 chunkVertexOffset = ((chunkY*pMap->terrain.chunkCountX) + chunkX) * (tilesPerChunk*4);
+            taUInt32 chunkIndexOffset  = ((chunkY*pMap->terrain.chunkCountX) + chunkX) * (tilesPerChunk*4);
 
 
             // We want to group each mesh in the chunk by texture...
-            for (uint32_t iTexture = 0; iTexture < pMap->textureCount+1; ++iTexture)    // <-- +1 because there is a texture sitting in the packer that hasn't yet been added to the list.
+            for (taUInt32 iTexture = 0; iTexture < pMap->textureCount+1; ++iTexture)    // <-- +1 because there is a texture sitting in the packer that hasn't yet been added to the list.
             {
                 taBool32 isMeshAllocatedForThisTextures = TA_FALSE;
                 
                 // For every tile in the chunk...
-                for (uint32_t tileY = 0; tileY < chunkTileCountY; ++tileY)
+                for (taUInt32 tileY = 0; tileY < chunkTileCountY; ++tileY)
                 {
                     // Seek to the first tile in this row.
-                    uint32_t firstTileOnRow = ((chunkY*TA_TERRAIN_CHUNK_SIZE + tileY) * pMap->terrain.tileCountX) + (chunkX*TA_TERRAIN_CHUNK_SIZE);
-                    if (!ta_seek_file(pTNT, header.mapdataPtr + (firstTileOnRow * sizeof(uint16_t)), ta_seek_origin_start)) {
+                    taUInt32 firstTileOnRow = ((chunkY*TA_TERRAIN_CHUNK_SIZE + tileY) * pMap->terrain.tileCountX) + (chunkX*TA_TERRAIN_CHUNK_SIZE);
+                    if (!ta_seek_file(pTNT, header.mapdataPtr + (firstTileOnRow * sizeof(taUInt16)), ta_seek_origin_start)) {
                         free(pIndexData);
                         free(pVertexData);
                         free(pTileSubImages);
                         goto on_error;
                     }
 
-                    for (uint32_t tileX = 0; tileX < chunkTileCountX; ++tileX)
+                    for (taUInt32 tileX = 0; tileX < chunkTileCountX; ++tileX)
                     {
-                        uint16_t tileIndex;
+                        taUInt16 tileIndex;
                         if (!ta_read_file_uint16(pTNT, &tileIndex)) {
                             free(pIndexData);
                             free(pVertexData);
@@ -842,7 +842,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
 
 
 
-                            uint32_t* pQuadIndices = pIndexData + chunkIndexOffset;
+                            taUInt32* pQuadIndices = pIndexData + chunkIndexOffset;
                             pQuadIndices[0] = chunkVertexOffset + 0;
                             pQuadIndices[1] = chunkVertexOffset + 1;
                             pQuadIndices[2] = chunkVertexOffset + 2;
@@ -887,7 +887,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
         goto on_error;
     }
 
-    for (uint32_t iFeatureType = 0; iFeatureType < pMap->featureTypesCount; ++iFeatureType) {
+    for (taUInt32 iFeatureType = 0; iFeatureType < pMap->featureTypesCount; ++iFeatureType) {
         if (!ta_seek_file(pTNT, 4, ta_seek_origin_current)) {
             goto on_error;
         }
@@ -906,7 +906,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
 
 
     ta_gaf* pCurrentGAF = NULL;
-    for (uint32_t iFeatureType = 0; iFeatureType < pMap->featureTypesCount; ++iFeatureType)
+    for (taUInt32 iFeatureType = 0; iFeatureType < pMap->featureTypesCount; ++iFeatureType)
     {
         ta_map_feature_type* pFeatureType = &pMap->pFeatureTypes[iFeatureType];
         if (pFeatureType->pDesc->filename[0] != '\0')
@@ -957,15 +957,15 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
         goto on_error;
     }
 
-    uint32_t featureCount = 0;
-    for (uint32_t y = 0; y < header.height; ++y) {
-        for (uint32_t x = 0; x < header.width; ++x) {
-            uint32_t tile;
+    taUInt32 featureCount = 0;
+    for (taUInt32 y = 0; y < header.height; ++y) {
+        for (taUInt32 x = 0; x < header.width; ++x) {
+            taUInt32 tile;
             if (!ta_read_file_uint32(pTNT, &tile)) {
                 goto on_error;
             }
 
-            uint16_t featureTypeIndex = (uint16_t)((tile & 0x00FFFF00) >> 8);
+            taUInt16 featureTypeIndex = (taUInt16)((tile & 0x00FFFF00) >> 8);
             if (featureTypeIndex != 0xFFFF && featureTypeIndex != 0xFFFC && featureTypeIndex != 0xFFFE) {
                 featureCount += 1;
             }
@@ -983,16 +983,16 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     }
 
     pMap->featureCount = 0;
-    for (uint32_t y = 0; y < header.height; ++y) {
-        for (uint32_t x = 0; x < header.width; ++x) {
-            uint32_t tile;
+    for (taUInt32 y = 0; y < header.height; ++y) {
+        for (taUInt32 x = 0; x < header.width; ++x) {
+            taUInt32 tile;
             if (!ta_read_file_uint32(pTNT, &tile)) {
                 goto on_error;
             }
 
-            uint8_t tileHeight = (uint8_t)((tile & 0xFF));
+            taUInt8 tileHeight = (taUInt8)((tile & 0xFF));
 
-            uint16_t featureTypeIndex = (uint16_t)((tile & 0x00FFFF00) >> 8);
+            taUInt16 featureTypeIndex = (taUInt16)((tile & 0x00FFFF00) >> 8);
             if (featureTypeIndex != 0xFFFF && featureTypeIndex != 0xFFFC && featureTypeIndex != 0xFFFE)
             {
                 ta_map_feature feature;
@@ -1062,7 +1062,7 @@ taBool32 ta_map_load_context_init(ta_map_load_context* pLoadContext, taEngineCon
 
     // Clamp the texture size to avoid excessive wastage. Modern GPUs support 16K textures which is way more than we need, and
     // I'd rather avoid wasting the player's system resources.
-    uint32_t maxTextureSize = ta_get_max_texture_size(pEngine->pGraphics);
+    taUInt32 maxTextureSize = ta_get_max_texture_size(pEngine->pGraphics);
     if (maxTextureSize > TA_MAX_TEXTURE_ATLAS_SIZE) {
         maxTextureSize = TA_MAX_TEXTURE_ATLAS_SIZE;
     }
@@ -1105,9 +1105,9 @@ ta_map_instance* ta_load_map(taEngineContext* pEngine, const char* mapName)
     pMap->pEngine = pEngine;
 
     // The first 16x16 texture needs to be set to the palette.
-    uint8_t paletteIndices[256];
+    taUInt8 paletteIndices[256];
     for (int i = 0; i < 256; ++i) {
-        paletteIndices[i] = (uint8_t)i;
+        paletteIndices[i] = (taUInt8)i;
     }
 
     ta_map__pack_subtexture(pMap, &loadContext.texturePacker, 16, 16, paletteIndices, &loadContext.paletteTextureSlot);

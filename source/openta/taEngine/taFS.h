@@ -18,10 +18,10 @@ typedef struct
     char relativePath[TA_MAX_PATH];
 
     // The decryption key.
-    uint32_t decryptionKey;
+    taUInt32 decryptionKey;
 
     // The size in bytes of the central directory.
-    uint32_t centralDirectorySize;
+    taUInt32 centralDirectorySize;
 
     // The archive's central directory. This is exactly as contained within the archive file, but with the name pointers
     // adjusted such that they can be used as offsets into pCentralDirectory directly. When a file is being loaded, an
@@ -38,7 +38,7 @@ struct ta_fs
     char rootDir[TA_MAX_PATH];
 
     // The number of HPI archives in the search list.
-    uint32_t archiveCount;
+    taUInt32 archiveCount;
 
     // The list of HPI archives in the search list. These are listed in order of priority, and must include at least
     // the following, in order of priority:
@@ -97,23 +97,23 @@ void ta_close_file(ta_file* pFile);
 taBool32 ta_read_file(ta_file* pFile, void* pBufferOut, size_t bytesToRead, size_t* pBytesReadOut);
 
 // Seeks the given file.
-taBool32 ta_seek_file(ta_file* pFile, int64_t offset, ta_seek_origin origin);
+taBool32 ta_seek_file(ta_file* pFile, taInt64 offset, ta_seek_origin origin);
 
 // Retrieves the current read position of the file.
-uint64_t ta_tell_file(ta_file* pFile);
+taUInt64 ta_tell_file(ta_file* pFile);
 
 
 // High level helper for reading an unsigned 32-bit integer.
-taBool32 ta_read_file_uint32(ta_file* pFile, uint32_t* pBufferOut);
+taBool32 ta_read_file_uint32(ta_file* pFile, taUInt32* pBufferOut);
 
 // High level helper for reading a signed 32-bit integer.
-taBool32 ta_read_file_int32(ta_file* pFile, int32_t* pBufferOut);
+taBool32 ta_read_file_int32(ta_file* pFile, taInt32* pBufferOut);
 
 // High level helper for reading an unsigned 16-bit integer.
-taBool32 ta_read_file_uint16(ta_file* pFile, uint16_t* pBufferOut);
+taBool32 ta_read_file_uint16(ta_file* pFile, taUInt16* pBufferOut);
 
 // High level helper for reading an unsigned 8-bit integer.
-taBool32 ta_read_file_uint8(ta_file* pFile, uint8_t* pBufferOut);
+taBool32 ta_read_file_uint8(ta_file* pFile, taUInt8* pBufferOut);
 
 
 // Iteration should work like the following:
@@ -174,16 +174,16 @@ taBool32 ta_fs_next(ta_fs_iterator* pIter);
 //// HPI Helpers ////
 
 // LZ77 decompression for HPI archives.
-taBool32 ta_hpi_decompress_lz77(const unsigned char* pIn, uint32_t compressedSize, unsigned char* pOut, uint32_t uncompressedSize);
+taBool32 ta_hpi_decompress_lz77(const unsigned char* pIn, taUInt32 compressedSize, unsigned char* pOut, taUInt32 uncompressedSize);
 
 // ZLib decompression for HPI archives.
-taBool32 ta_hpi_decompress_zlib(const void* pIn, uint32_t compressedSize, void* pOut, uint32_t uncompressedSize);
+taBool32 ta_hpi_decompress_zlib(const void* pIn, taUInt32 compressedSize, void* pOut, taUInt32 uncompressedSize);
 
 // Decrypts data from a HPI archive.
-void ta_hpi_decrypt(uint8_t* pData, size_t sizeInBytes, uint32_t decryptionKey, uint32_t firstBytePos);
+void ta_hpi_decrypt(taUInt8* pData, size_t sizeInBytes, taUInt32 decryptionKey, taUInt32 firstBytePos);
 
 // Reads and decrypts data from a HPI archive file.
-size_t ta_hpi_read_and_decrypt(FILE* pFile, void* pBufferOut, size_t bytesToRead, uint32_t decryptionKey);
+size_t ta_hpi_read_and_decrypt(FILE* pFile, void* pBufferOut, size_t bytesToRead, taUInt32 decryptionKey);
 
 // Reads, decrypts and decompresses data from a HPI archive file.
-size_t ta_hpi_read_and_decrypt_compressed(FILE* pFile, void* pBufferOut, size_t uncompressedBytesToRead, uint32_t decryptionKey);
+size_t ta_hpi_read_and_decrypt_compressed(FILE* pFile, void* pBufferOut, size_t uncompressedBytesToRead, taUInt32 decryptionKey);

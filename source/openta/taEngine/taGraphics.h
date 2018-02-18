@@ -70,7 +70,7 @@ typedef enum
 
 
 // Creates a new graphics.
-ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, uint32_t palette[256]);
+ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, taUInt32 palette[256]);
 
 // Deletes the given graphics context.
 void ta_delete_graphics_context(ta_graphics_context* pGraphics);
@@ -104,10 +104,10 @@ void ta_delete_texture(ta_texture* pTexture);
 
 
 // Creates an immutable mesh.
-ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_index_format indexFormat, uint32_t indexCount, const void* pIndexData);
+ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, taUInt32 vertexCount, const void* pVertexData, ta_index_format indexFormat, taUInt32 indexCount, const void* pIndexData);
 
 // Creates a mutable mesh.
-ta_mesh* ta_create_mutable_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, uint32_t vertexCount, const void* pVertexData, ta_index_format indexFormat, uint32_t indexCount, const void* pIndexData);
+ta_mesh* ta_create_mutable_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, taUInt32 vertexCount, const void* pVertexData, ta_index_format indexFormat, taUInt32 indexCount, const void* pIndexData);
 
 // Deletes a mesh.
 void ta_delete_mesh(ta_mesh* pMesh);

@@ -28,42 +28,42 @@
 typedef struct
 {
     // The current width of the texture atlas. This is constant.
-    uint32_t width;
+    taUInt32 width;
 
     // The current height of the texture atlas. This is constant.
-    uint32_t height;
+    taUInt32 height;
 
     // The number of bytes per pixel.
-    uint32_t bpp;
+    taUInt32 bpp;
 
     // Option flags: TA_TEXTURE_PACKER_FLAG_*
     taUInt32 flags;
 
 
     // The cursor position on the x axis. This is where the next image will try to be placed.
-    uint32_t cursorPosX;
-    uint32_t cursorPosY;
+    taUInt32 cursorPosX;
+    taUInt32 cursorPosY;
 
     // The height of the current row.
-    uint32_t currentRowHeight;
+    taUInt32 currentRowHeight;
 
 
     // The buffer containing the packed image data.
-    uint8_t* pImageData;
+    taUInt8* pImageData;
 
 } ta_texture_packer;
 
 typedef struct
 {
-    uint32_t posX;
-    uint32_t posY;
-    uint32_t width;
-    uint32_t height;
+    taUInt32 posX;
+    taUInt32 posY;
+    taUInt32 width;
+    taUInt32 height;
 } ta_texture_packer_slot;
 
 
 // Initializes the given texture packer. The minimum and maximum size should be a power of 2.
-taBool32 ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t bytesPerPixel, taUInt32 flags);
+taBool32 ta_texture_packer_init(ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, taUInt32 bytesPerPixel, taUInt32 flags);
 
 // Uninitializes the given texture packer.
 void ta_texture_packer_uninit(ta_texture_packer* pPacker);
@@ -73,7 +73,7 @@ void ta_texture_packer_uninit(ta_texture_packer* pPacker);
 void ta_texture_packer_reset(ta_texture_packer* pPacker);
 
 // Packs a sub-texture into the packer. If there is no room this will simply return TA_FALSE.
-taBool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut);
+taBool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut);
 
 // Determines if the texture packer is empty or not.
 taBool32 ta_texture_packer_is_empty(const ta_texture_packer* pPacker);

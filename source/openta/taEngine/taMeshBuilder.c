@@ -33,7 +33,7 @@ taBool32 ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVe
     if (pBuilder->indexCount == pBuilder->indexBufferSize)
     {
         size_t newIndexBufferSize = (pBuilder->indexBufferSize == 0) ? 128 : pBuilder->indexBufferSize*2;
-        void* pNewIndexData = realloc(pBuilder->pIndexData, newIndexBufferSize * sizeof(uint32_t));
+        void* pNewIndexData = realloc(pBuilder->pIndexData, newIndexBufferSize * sizeof(taUInt32));
         if (pNewIndexData == NULL) {
             return TA_FALSE;
         }
@@ -63,7 +63,7 @@ taBool32 ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVe
 
     assert(pBuilder->vertexCount < pBuilder->vertexBufferSize);
 
-    memcpy((uint8_t*)pBuilder->pVertexData + pBuilder->vertexCount*pBuilder->vertexSize, pVertexData, pBuilder->vertexSize);
+    memcpy((taUInt8*)pBuilder->pVertexData + pBuilder->vertexCount*pBuilder->vertexSize, pVertexData, pBuilder->vertexSize);
     pBuilder->vertexCount += 1;
 
     return TA_TRUE;

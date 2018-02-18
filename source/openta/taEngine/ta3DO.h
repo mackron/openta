@@ -4,38 +4,38 @@ typedef struct ta_3do_object ta_3do_object;
 
 typedef struct
 {
-    int32_t x;
-    int32_t y;
-    int32_t z;
+    taInt32 x;
+    taInt32 y;
+    taInt32 z;
 } ta_3do_vec3;
 
 typedef struct
 {
-    uint32_t colorIndex;
-    uint32_t indexCount;
-    uint32_t unused0;
-    uint32_t indexArrayPtr;
-    uint32_t textureNamePtr;
-    uint32_t unused1;
-    uint32_t unused2;
-    uint32_t isColored;
+    taUInt32 colorIndex;
+    taUInt32 indexCount;
+    taUInt32 unused0;
+    taUInt32 indexArrayPtr;
+    taUInt32 textureNamePtr;
+    taUInt32 unused1;
+    taUInt32 unused2;
+    taUInt32 isColored;
 } ta_3do_primitive_header;
 
 typedef struct
 {
-    uint32_t version;
-    uint32_t vertexCount;
-    uint32_t primitiveCount;
-    uint32_t selectionPrimitivePtr; // Only used by the root object.
-    int32_t  relativePosX;
-    int32_t  relativePosY;
-    int32_t  relativePosZ;
-    uint32_t namePtr;
-    uint32_t unused;
-    uint32_t vertexPtr;
-    uint32_t primitivePtr;
-    uint32_t nextSiblingPtr;
-    uint32_t firstChildPtr;
+    taUInt32 version;
+    taUInt32 vertexCount;
+    taUInt32 primitiveCount;
+    taUInt32 selectionPrimitivePtr; // Only used by the root object.
+    taInt32  relativePosX;
+    taInt32  relativePosY;
+    taInt32  relativePosZ;
+    taUInt32 namePtr;
+    taUInt32 unused;
+    taUInt32 vertexPtr;
+    taUInt32 primitivePtr;
+    taUInt32 nextSiblingPtr;
+    taUInt32 firstChildPtr;
 } ta_3do_object_header;
 
 struct ta_3do_object
@@ -82,4 +82,4 @@ taBool32 ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* p
 // Counts the number of objects in the given 3DO file.
 //
 // This function assumes the file is sitting on the first by the object.
-uint32_t ta_3do_count_objects(ta_file* pFile);
+taUInt32 ta_3do_count_objects(ta_file* pFile);

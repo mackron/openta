@@ -24,7 +24,7 @@ static TA_INLINE taBool32 ta__is_little_endian()
     return (*(char*)&n) == 1;
 }
 
-static TA_INLINE uint32_t ta__swap_endian_uint32(uint32_t n)
+static TA_INLINE taUInt32 ta__swap_endian_uint32(taUInt32 n)
 {
 #ifdef _MSC_VER
     return _byteswap_ulong(n);
@@ -38,7 +38,7 @@ static TA_INLINE uint32_t ta__swap_endian_uint32(uint32_t n)
 #endif
 }
 
-static TA_INLINE uint32_t ta__be2host_32(uint32_t n)
+static TA_INLINE taUInt32 ta__be2host_32(taUInt32 n)
 {
 #ifdef __linux__
     return be32toh(n);
@@ -53,7 +53,7 @@ static TA_INLINE uint32_t ta__be2host_32(uint32_t n)
 
 
 
-static TA_INLINE uint32_t ta_next_power_of_2(uint32_t value)
+static TA_INLINE taUInt32 ta_next_power_of_2(taUInt32 value)
 {
     --value;
 
@@ -95,7 +95,7 @@ size_t ta_memory_stream_read(ta_memory_stream* pStream, void* pDataOut, size_t b
 size_t ta_memory_stream_peek(ta_memory_stream* pStream, void* pDataOut, size_t bytesToRead);
 
 // Seeks to the given position.
-taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, int64_t bytesToSeek, ta_seek_origin origin);
+taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, taInt64 bytesToSeek, ta_seek_origin origin);
 
 // A simple helper for retrieving the current read position of a memory stream.
 size_t ta_memory_stream_tell(ta_memory_stream* pStream);
@@ -103,4 +103,4 @@ size_t ta_memory_stream_tell(ta_memory_stream* pStream);
 // Helper for writing a uint32 at the current position. This replaces the next 4 bytes of data - it does NOT insert it. This will move
 // the read position to past the value. This will fail if the stream is at the end and there is no room to fit the value. The stream
 // does not expand.
-taBool32 ta_memory_stream_write_uint32(ta_memory_stream* pStream, uint32_t value);
+taBool32 ta_memory_stream_write_uint32(ta_memory_stream* pStream, taUInt32 value);

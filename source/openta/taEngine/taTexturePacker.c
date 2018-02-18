@@ -1,6 +1,6 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-taBool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t* pPosXOut, uint32_t* pPosYOut)
+taBool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, taUInt32* pPosXOut, taUInt32* pPosYOut)
 {
     assert(pPacker != NULL);
     assert(pPosXOut != NULL);
@@ -66,7 +66,7 @@ taBool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, uint32_t width
     }
 }
 
-taBool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, const ta_texture_packer_slot* pSlot, const uint8_t* pSubTextureData)
+taBool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, const ta_texture_packer_slot* pSlot, const taUInt8* pSubTextureData)
 {
     assert(pPacker != NULL);
     assert(pSlot != NULL);
@@ -76,13 +76,13 @@ taBool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, const ta
         return TA_TRUE;
     }
 
-    uint32_t srcStride = pPacker->bpp * pSlot->width;
-    uint32_t dstStride = pPacker->bpp * pPacker->width;
+    taUInt32 srcStride = pPacker->bpp * pSlot->width;
+    taUInt32 dstStride = pPacker->bpp * pPacker->width;
 
-    for (uint32_t y = 0; y < pSlot->height; ++y)
+    for (taUInt32 y = 0; y < pSlot->height; ++y)
     {
-        const uint8_t* pSrcRow = pSubTextureData + (y * srcStride);
-        uint8_t* pDstRow = pPacker->pImageData + ((pSlot->posY + y) * dstStride);
+        const taUInt8* pSrcRow = pSubTextureData + (y * srcStride);
+        taUInt8* pDstRow = pPacker->pImageData + ((pSlot->posY + y) * dstStride);
         memcpy(pDstRow + pSlot->posX*pPacker->bpp, pSrcRow, srcStride);
     }
 
@@ -92,21 +92,21 @@ taBool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, const ta
     taUInt32 edge = (pPacker->flags & TA_TEXTURE_PACKER_FLAG_HARD_EDGE) ? 1 : 0;
     if (edge > 0) {
         // Top and bottom edges.
-        const uint8_t* pSrcRow0 = pSubTextureData     + (0                               * srcStride);
-        const uint8_t* pSrcRow1 = pSubTextureData     + ((pSlot->height-1)               * srcStride);
-              uint8_t* pDstRow0 = pPacker->pImageData + ((pSlot->posY - 1)               * dstStride);
-              uint8_t* pDstRow1 = pPacker->pImageData + ((pSlot->posY + (pSlot->height)) * dstStride);
+        const taUInt8* pSrcRow0 = pSubTextureData     + (0                               * srcStride);
+        const taUInt8* pSrcRow1 = pSubTextureData     + ((pSlot->height-1)               * srcStride);
+              taUInt8* pDstRow0 = pPacker->pImageData + ((pSlot->posY - 1)               * dstStride);
+              taUInt8* pDstRow1 = pPacker->pImageData + ((pSlot->posY + (pSlot->height)) * dstStride);
 
         memcpy(pDstRow0 + pSlot->posX*pPacker->bpp, pSrcRow0, srcStride);
         memcpy(pDstRow1 + pSlot->posX*pPacker->bpp, pSrcRow1, srcStride);
 
         // Side edges.
         for (taUInt32 y = pSlot->posY-1; y < pSlot->posY+pSlot->height+1; ++y) {
-            uint8_t* pDstRow = pPacker->pImageData + (y * dstStride) + ((pSlot->posX-1) * pPacker->bpp);
-            uint8_t* pDstOuter0 = pDstRow;
-            uint8_t* pDstInner0 = pDstRow + pPacker->bpp;
-            uint8_t* pDstOuter1 = pDstRow + ((pSlot->width+1) * pPacker->bpp);
-            uint8_t* pDstInner1 = pDstRow + ((pSlot->width+0) * pPacker->bpp);
+            taUInt8* pDstRow = pPacker->pImageData + (y * dstStride) + ((pSlot->posX-1) * pPacker->bpp);
+            taUInt8* pDstOuter0 = pDstRow;
+            taUInt8* pDstInner0 = pDstRow + pPacker->bpp;
+            taUInt8* pDstOuter1 = pDstRow + ((pSlot->width+1) * pPacker->bpp);
+            taUInt8* pDstInner1 = pDstRow + ((pSlot->width+0) * pPacker->bpp);
 
             memcpy(pDstOuter0, pDstInner0, pPacker->bpp);
             memcpy(pDstOuter1, pDstInner1, pPacker->bpp);
@@ -117,7 +117,7 @@ taBool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, const ta
 }
 
 
-taBool32 ta_texture_packer_init(ta_texture_packer* pPacker, uint32_t width, uint32_t height, uint32_t bytesPerPixel, taUInt32 flags)
+taBool32 ta_texture_packer_init(ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, taUInt32 bytesPerPixel, taUInt32 flags)
 {
     if (pPacker == NULL || width == 0 || height == 0) {
         return TA_FALSE;
@@ -169,7 +169,7 @@ void ta_texture_packer_reset(ta_texture_packer* pPacker)
     }
 }
 
-taBool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, uint32_t width, uint32_t height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut)
+taBool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut)
 {
     if (pSlotOut) ta_zero_object(pSlotOut);
     if (pPacker == NULL) {
