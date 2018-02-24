@@ -28,7 +28,7 @@
 #include "../../external/mini_al/mini_al.h"
 
 // TODO: Remove this dependency.
-#include "../../external/dr_libs/dr.h"
+#include "../../external/dr_libs/old/dr.h"
 
 
 // Options.

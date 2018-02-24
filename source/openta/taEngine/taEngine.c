@@ -35,7 +35,7 @@
 
 // TODO: Remove this dependency.
 #define DR_IMPLEMENTATION
-#include "../../external/dr_libs/dr.h"
+#include "../../external/dr_libs/old/dr.h"
 
 
 // Private Options
