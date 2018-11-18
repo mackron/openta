@@ -112,7 +112,7 @@ static ta_feature_category ta_parse_feature_category(const char* featureStr)
 }
 #endif
 
-static taBool32 ta_features_library__load_feature(ta_features_library* pLib, const char* featureName, ta_config_obj* pFeatureConfig)
+static taBool32 ta_features_library__load_feature(ta_features_library* pLib, const char* featureName, taConfigObj* pFeatureConfig)
 {
     if (pLib == NULL || pFeatureConfig == NULL) {
         return TA_FALSE;
@@ -138,7 +138,7 @@ static taBool32 ta_features_library__load_feature(ta_features_library* pLib, con
 
     for (taUInt32 iVar = 0; iVar < pFeatureConfig->varCount; ++iVar)
     {
-        ta_config_var* pVar = pFeatureConfig->pVars + iVar;
+        taConfigVar* pVar = pFeatureConfig->pVars + iVar;
 
         if (_stricmp(pVar->name, "description") == 0) {
             strncpy_s(pFeature->description, sizeof(pFeature->description), pVar->value, _TRUNCATE);
@@ -248,7 +248,7 @@ static taBool32 ta_features_library__load_feature(ta_features_library* pLib, con
     return TA_TRUE;
 }
 
-static taBool32 ta_features_library__load_features_from_config(ta_features_library* pLib, ta_config_obj* pConfig)
+static taBool32 ta_features_library__load_features_from_config(ta_features_library* pLib, taConfigObj* pConfig)
 {
     if (pLib == NULL) {
         return TA_FALSE;
@@ -271,7 +271,7 @@ static taBool32 ta_features_library__load_and_parse_script(ta_features_library* 
     assert(pFS != NULL);
     assert(fileRelativePath != NULL);
 
-    ta_config_obj* pConfig = ta_parse_config_from_specific_file(pFS, archiveRelativePath, fileRelativePath);
+    taConfigObj* pConfig = taParseConfigFromSpecificFile(pFS, archiveRelativePath, fileRelativePath);
     if (pConfig == NULL) {
         return TA_FALSE;
     }
@@ -279,7 +279,7 @@ static taBool32 ta_features_library__load_and_parse_script(ta_features_library* 
     taBool32 result = ta_features_library__load_features_from_config(pLib, pConfig);
     //printf("FILE: %s/%s\n", archiveRelativePath, fileRelativePath);
 
-    ta_delete_config(pConfig);
+    taDeleteConfig(pConfig);
     return result;
 }
 

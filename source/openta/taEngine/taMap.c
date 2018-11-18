@@ -1020,7 +1020,7 @@ on_error:
 }
 
 
-ta_config_obj* ta_map__open_ota_file(ta_fs* pFS, const char* mapName)
+taConfigObj* ta_map__open_ota_file(ta_fs* pFS, const char* mapName)
 {
     char filename[TA_MAX_PATH];
     if (!drpath_copy_and_append(filename, sizeof(filename), "maps", mapName)) {
@@ -1030,17 +1030,17 @@ ta_config_obj* ta_map__open_ota_file(ta_fs* pFS, const char* mapName)
         return NULL;
     }
 
-    return ta_parse_config_from_file(pFS, filename);
+    return taParseConfigFromFile(pFS, filename);
 }
 
-void ta_map__close_ota_file(ta_config_obj* pOTA)
+void ta_map__close_ota_file(taConfigObj* pOTA)
 {
-    ta_delete_config(pOTA);
+    taDeleteConfig(pOTA);
 }
 
 taBool32 ta_map__load_ota(ta_map_instance* pMap, const char* mapName)
 {
-    ta_config_obj* pOTA = ta_map__open_ota_file(pMap->pEngine->pFS, mapName);
+    taConfigObj* pOTA = ta_map__open_ota_file(pMap->pEngine->pFS, mapName);
     if (pOTA == NULL) {
         return TA_FALSE;
     }

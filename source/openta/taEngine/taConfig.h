@@ -1,9 +1,9 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-typedef struct ta_config_obj ta_config_obj;
-typedef struct ta_config_var ta_config_var;
+typedef struct taConfigObj taConfigObj;
+typedef struct taConfigVar taConfigVar;
 
-struct ta_config_var
+struct taConfigVar
 {
     // The name of the variable.
     const char* name;
@@ -12,10 +12,10 @@ struct ta_config_var
     const char* value;
 
     // A pointer to the sub-object, if applicable.
-    ta_config_obj* pObject;
+    taConfigObj* pObject;
 };
 
-struct ta_config_obj
+struct taConfigObj
 {
     // The number of varibles making up the object.
     unsigned int varCount;
@@ -24,7 +24,7 @@ struct ta_config_obj
     unsigned int bufferSize;
 
     // The list of variables making up the object.
-    ta_config_var* pVars;
+    taConfigVar* pVars;
 
 
     // Internal use only. The file used to load the config. This is only set for the root object.
@@ -34,32 +34,32 @@ struct ta_config_obj
 // Parses a script.
 //
 // Configs are immutable after parsing.
-ta_config_obj* ta_parse_config_from_specific_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath);
-ta_config_obj* ta_parse_config_from_file(ta_fs* pFS, const char* fileRelativePath);
+taConfigObj* taParseConfigFromSpecificFile(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath);
+taConfigObj* taParseConfigFromFile(ta_fs* pFS, const char* fileRelativePath);
 
 // Deletes the given config object.
-void ta_delete_config(ta_config_obj* pConfig);
+void taDeleteConfig(taConfigObj* pConfig);
 
 
 // Retrieves a pointer to a generic variable from the given config.
-ta_config_var* ta_config_get_var(const ta_config_obj* pConfig, const char* varName);
+taConfigVar* taConfigGetVar(const taConfigObj* pConfig, const char* varName);
 
 // Retrieves the value of the given config variable as a sub-object. Returns NULL if the variable does not exist.
-ta_config_obj* ta_config_get_subobj(const ta_config_obj* pConfig, const char* varName);
+taConfigObj* taConfigGetSubObj(const taConfigObj* pConfig, const char* varName);
 
 // Retrieves the value of the given config variable as an integer. Returns NULL if the variable does not exist.
-const char* ta_config_get_string(const ta_config_obj* pConfig, const char* varName);
+const char* taConfigGetString(const taConfigObj* pConfig, const char* varName);
 
 // Retrieves the value of the given config variable as an integer. Returns 0 if the variable does not exist.
-int ta_config_get_int(const ta_config_obj* pConfig, const char* varName);
+int taConfigGetInt(const taConfigObj* pConfig, const char* varName);
 
 // Retrieves the value of the given config variable as a float. Returns 0.0f if the variable does not exist.
-float ta_config_get_float(const ta_config_obj* pConfig, const char* varName);
+float taConfigGetFloat(const taConfigObj* pConfig, const char* varName);
 
 // Retrieves the value of the given config variable as a boolean. Returns false if the variable does not exist. If the
 // variable _does_ exist, it will return false if the value is equal to "false" (case-insensitive) or "0".
-taBool32 ta_config_get_bool(const ta_config_obj* pConfig, const char* varName);
+taBool32 taConfigGetBool(const taConfigObj* pConfig, const char* varName);
 
 
 // Determines if the variable at the given index is a sub-object.
-taBool32 ta_config_is_subobj_by_index(const ta_config_obj* pConfig, taUInt32 varIndex);
+taBool32 taConfigIsSubObjByIndex(const taConfigObj* pConfig, taUInt32 varIndex);

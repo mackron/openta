@@ -8,11 +8,11 @@ void ta_game_on_load_properties(taEngineContext* pEngine, ta_property_manager* p
 
 TA_PRIVATE int ta_qsort_cb_map(const void* a, const void* b)
 {
-    const ta_config_obj** ppOTA_0 = (const ta_config_obj**)a;
-    const ta_config_obj** ppOTA_1 = (const ta_config_obj**)b;
+    const taConfigObj** ppOTA_0 = (const taConfigObj**)a;
+    const taConfigObj** ppOTA_1 = (const taConfigObj**)b;
 
-    const char* name0 = ta_config_get_string(*ppOTA_0, "GlobalHeader/missionname");
-    const char* name1 = ta_config_get_string(*ppOTA_1, "GlobalHeader/missionname");
+    const char* name0 = taConfigGetString(*ppOTA_0, "GlobalHeader/missionname");
+    const char* name1 = taConfigGetString(*ppOTA_1, "GlobalHeader/missionname");
 
     return _stricmp(name0, name1);
 }
@@ -304,7 +304,7 @@ ta_game* ta_create_game(int argc, char** argv)
     
     // TODO:
     // - Only load these when needed, i.e. when the Select Map dialog or campaign menu is opened.
-    // - Save memory by converting OTA data to a struct rather than just holding a pointer to the ta_config_obj.
+    // - Save memory by converting OTA data to a struct rather than just holding a pointer to the taConfigObj.
     //
     // Grab the maps for skirmish and multiplayer.
     ta_fs_iterator* pIter = ta_fs_begin(pGame->engine.pFS, "maps", TA_FALSE);
@@ -313,9 +313,9 @@ ta_game* ta_create_game(int argc, char** argv)
         // From what I can tell, it looks like skirmish/mp maps are determined by the "type" property of the first
         // schema in the OTA file.
         if (drpath_extension_equal(pIter->fileInfo.relativePath, "ota")) {
-            ta_config_obj* pOTA = ta_parse_config_from_file(pGame->engine.pFS, pIter->fileInfo.relativePath);
+            taConfigObj* pOTA = taParseConfigFromFile(pGame->engine.pFS, pIter->fileInfo.relativePath);
             if (pOTA != NULL) {
-                const char* type = ta_config_get_string(pOTA, "GlobalHeader/Schema 0/Type");
+                const char* type = taConfigGetString(pOTA, "GlobalHeader/Schema 0/Type");
                 if (type != NULL && _stricmp(type, "Network 1") == 0) {
                     stb_sb_push(pGame->ppMPMaps, pOTA);
                     printf("MP Map: %s\n", pIter->fileInfo.relativePath);
@@ -336,7 +336,7 @@ ta_game* ta_create_game(int argc, char** argv)
     if (ta_gui_find_gadget_by_name(&pGame->selectMapDialog, "MAPNAMES", &iMapListGadget)) {
         const char** ppMPMapNames = (const char**)malloc(stb_sb_count(pGame->ppMPMaps) * sizeof(*ppMPMapNames));
         for (int i = 0; i < stb_sb_count(pGame->ppMPMaps); ++i) {
-            ppMPMapNames[i] = ta_config_get_string(pGame->ppMPMaps[i], "GlobalHeader/missionname");
+            ppMPMapNames[i] = taConfigGetString(pGame->ppMPMaps[i], "GlobalHeader/missionname");
         }
 
         ta_gui_set_listbox_items(&pGame->selectMapDialog.pGadgets[iMapListGadget], ppMPMapNames, stb_sb_count(pGame->ppMPMaps));
@@ -887,7 +887,7 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
                     return;
                 }
                 if (strcmp(e.pGadget->name, "Start") == 0) {
-                    pGame->pCurrentMap = ta_load_map(&pGame->engine, ta_config_get_string(pGame->ppMPMaps[pGame->iSelectedMPMap], "GlobalHeader/missionname"));    // TODO: Free this when the user leaves the game!
+                    pGame->pCurrentMap = ta_load_map(&pGame->engine, taConfigGetString(pGame->ppMPMaps[pGame->iSelectedMPMap], "GlobalHeader/missionname"));    // TODO: Free this when the user leaves the game!
                     ta_goto_screen(pGame, TA_SCREEN_IN_GAME);
                     return;
                 }

@@ -26,7 +26,7 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
     pGUI->focusedGadgetIndex = (taUInt32)-1;
 
     // GUI's are loaded from configs.
-    ta_config_obj* pConfig = ta_parse_config_from_file(pEngine->pFS, filePath);
+    taConfigObj* pConfig = taParseConfigFromFile(pEngine->pFS, filePath);
     if (pConfig == NULL) {
         return TA_FILE_NOT_FOUND;
     }
@@ -37,45 +37,45 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
     // PASS #1
     size_t payloadSize = 0;
     for (unsigned int i = 0; i < pConfig->varCount; ++i) {
-        if (ta_config_is_subobj_by_index(pConfig, i)) {
+        if (taConfigIsSubObjByIndex(pConfig, i)) {
             payloadSize += sizeof(ta_gui_gadget);
             pGUI->gadgetCount += 1;
 
             // The length of each string property needs to be included with the size of the payload, including their null terminator.
-            ta_config_obj* pGadgetObj = pConfig->pVars[i].pObject;
+            taConfigObj* pGadgetObj = pConfig->pVars[i].pObject;
             assert(pGadgetObj != NULL);
 
-            ta_config_obj* pCommonObj = ta_config_get_subobj(pGadgetObj, "COMMON");
+            taConfigObj* pCommonObj = taConfigGetSubObj(pGadgetObj, "COMMON");
             if (pCommonObj != NULL) {
-                taInt32 id = ta_config_get_int(pCommonObj, "id");
+                taInt32 id = taConfigGetInt(pCommonObj, "id");
 
-                payloadSize += ta_strlen_or_zero(ta_config_get_string(pCommonObj, "name"))+1;
-                payloadSize += ta_strlen_or_zero(ta_config_get_string(pCommonObj, "help"))+1;
+                payloadSize += ta_strlen_or_zero(taConfigGetString(pCommonObj, "name"))+1;
+                payloadSize += ta_strlen_or_zero(taConfigGetString(pCommonObj, "help"))+1;
 
                 switch (id)
                 {
                     case TA_GUI_GADGET_TYPE_ROOT:
                     {
-                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "panel"))+1;
-                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "crdefault"))+1;
-                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "escdefault"))+1;
-                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "defaultfocus"))+1;
+                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "panel"))+1;
+                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "crdefault"))+1;
+                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "escdefault"))+1;
+                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "defaultfocus"))+1;
                     } break;
 
                     case TA_GUI_GADGET_TYPE_BUTTON:
                     {
-                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "text"))+1;
+                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "text"))+1;
                     } break;
 
                     case TA_GUI_GADGET_TYPE_LABEL:
                     {
-                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "text"))+1;
-                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "link"))+1;
+                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "text"))+1;
+                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "link"))+1;
                     } break;
 
                     case TA_GUI_GADGET_TYPE_FONT:
                     {
-                        payloadSize += ta_strlen_or_zero(ta_config_get_string(pGadgetObj, "filename"))+1;
+                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "filename"))+1;
                     } break;
 
                     default: break;
@@ -88,7 +88,7 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
 
     pGUI->_pPayload = (taUInt8*)calloc(1, payloadSize);
     if (pGUI->_pPayload == NULL) {
-        ta_delete_config(pConfig);
+        taDeleteConfig(pConfig);
         return TA_OUT_OF_MEMORY;
     }
 
@@ -97,58 +97,58 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
     // PASS #2
     char* pNextStr = pGUI->_pPayload + (sizeof(*pGUI->pGadgets) * pGUI->gadgetCount);
     for (unsigned int i = 0; i < pConfig->varCount; ++i) {
-        if (ta_config_is_subobj_by_index(pConfig, i)) {
-            ta_config_obj* pGadgetObj = pConfig->pVars[i].pObject;
+        if (taConfigIsSubObjByIndex(pConfig, i)) {
+            taConfigObj* pGadgetObj = pConfig->pVars[i].pObject;
             assert(pGadgetObj != NULL);
 
             ta_gui_gadget* pGadget = pGUI->pGadgets + i;
 
             // [COMMON]
-            ta_config_obj* pCommonObj = ta_config_get_subobj(pGadgetObj, "COMMON");
+            taConfigObj* pCommonObj = taConfigGetSubObj(pGadgetObj, "COMMON");
             if (pCommonObj != NULL) {
-                pGadget->id            = ta_config_get_int(pCommonObj, "id");
-                pGadget->assoc         = ta_config_get_int(pCommonObj, "assoc");
-                pGadget->name          = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pCommonObj, "name")); 
-                pGadget->xpos          = ta_config_get_int(pCommonObj, "xpos");
-                pGadget->ypos          = ta_config_get_int(pCommonObj, "ypos");
-                pGadget->width         = ta_config_get_int(pCommonObj, "width");
-                pGadget->height        = ta_config_get_int(pCommonObj, "height");
-                pGadget->attribs       = ta_config_get_int(pCommonObj, "attribs");
-                pGadget->colorf        = ta_config_get_int(pCommonObj, "colorf");
-                pGadget->colorb        = ta_config_get_int(pCommonObj, "colorb");
-                pGadget->texturenumber = ta_config_get_int(pCommonObj, "texturenumber");
-                pGadget->fontnumber    = ta_config_get_int(pCommonObj, "fontnumber");
-                pGadget->active        = ta_config_get_int(pCommonObj, "active");
-                pGadget->commonattribs = ta_config_get_int(pCommonObj, "commonattribs");
-                pGadget->help          = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pCommonObj, "help"));
+                pGadget->id            = taConfigGetInt(pCommonObj, "id");
+                pGadget->assoc         = taConfigGetInt(pCommonObj, "assoc");
+                pGadget->name          = ta_gui__copy_string_prop(&pNextStr, taConfigGetString(pCommonObj, "name")); 
+                pGadget->xpos          = taConfigGetInt(pCommonObj, "xpos");
+                pGadget->ypos          = taConfigGetInt(pCommonObj, "ypos");
+                pGadget->width         = taConfigGetInt(pCommonObj, "width");
+                pGadget->height        = taConfigGetInt(pCommonObj, "height");
+                pGadget->attribs       = taConfigGetInt(pCommonObj, "attribs");
+                pGadget->colorf        = taConfigGetInt(pCommonObj, "colorf");
+                pGadget->colorb        = taConfigGetInt(pCommonObj, "colorb");
+                pGadget->texturenumber = taConfigGetInt(pCommonObj, "texturenumber");
+                pGadget->fontnumber    = taConfigGetInt(pCommonObj, "fontnumber");
+                pGadget->active        = taConfigGetInt(pCommonObj, "active");
+                pGadget->commonattribs = taConfigGetInt(pCommonObj, "commonattribs");
+                pGadget->help          = ta_gui__copy_string_prop(&pNextStr, taConfigGetString(pCommonObj, "help"));
             }
 
             switch (pGadget->id)
             {
                 case TA_GUI_GADGET_TYPE_ROOT:
                 {
-                    pGadget->root.totalgadgets = ta_config_get_int(pGadgetObj, "totalgadgets");
-                    pGadget->root.panel        = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "panel"));
-                    pGadget->root.crdefault    = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "crdefault"));
-                    pGadget->root.escdefault   = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "escdefault"));
-                    pGadget->root.defaultfocus = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "defaultfocus"));
+                    pGadget->root.totalgadgets = taConfigGetInt(pGadgetObj, "totalgadgets");
+                    pGadget->root.panel        = ta_gui__copy_string_prop(&pNextStr, taConfigGetString(pGadgetObj, "panel"));
+                    pGadget->root.crdefault    = ta_gui__copy_string_prop(&pNextStr, taConfigGetString(pGadgetObj, "crdefault"));
+                    pGadget->root.escdefault   = ta_gui__copy_string_prop(&pNextStr, taConfigGetString(pGadgetObj, "escdefault"));
+                    pGadget->root.defaultfocus = ta_gui__copy_string_prop(&pNextStr, taConfigGetString(pGadgetObj, "defaultfocus"));
 
                     // [VERSION]
-                    ta_config_obj* pVersionObj = ta_config_get_subobj(pGadgetObj, "VERSION");
+                    taConfigObj* pVersionObj = taConfigGetSubObj(pGadgetObj, "VERSION");
                     if (pVersionObj != NULL) {
-                        pGadget->root.version.major    = ta_config_get_int(pVersionObj, "major");
-                        pGadget->root.version.minor    = ta_config_get_int(pVersionObj, "minor");
-                        pGadget->root.version.revision = ta_config_get_int(pVersionObj, "revision");
+                        pGadget->root.version.major    = taConfigGetInt(pVersionObj, "major");
+                        pGadget->root.version.minor    = taConfigGetInt(pVersionObj, "minor");
+                        pGadget->root.version.revision = taConfigGetInt(pVersionObj, "revision");
                     }
                 } break;
 
                 case TA_GUI_GADGET_TYPE_BUTTON:
                 {
-                    pGadget->button.status    = ta_config_get_int(pGadgetObj, "status");
-                    pGadget->button.text      = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "text"));
-                    pGadget->button.quickkey  = (taUInt32)ta_config_get_int(pGadgetObj, "quickkey");
-                    pGadget->button.grayedout = ta_config_get_bool(pGadgetObj, "grayedout");
-                    pGadget->button.stages    = ta_config_get_int(pGadgetObj, "stages");
+                    pGadget->button.status    = taConfigGetInt(pGadgetObj, "status");
+                    pGadget->button.text      = ta_gui__copy_string_prop(&pNextStr, taConfigGetString(pGadgetObj, "text"));
+                    pGadget->button.quickkey  = (taUInt32)taConfigGetInt(pGadgetObj, "quickkey");
+                    pGadget->button.grayedout = taConfigGetBool(pGadgetObj, "grayedout");
+                    pGadget->button.stages    = taConfigGetInt(pGadgetObj, "stages");
 
                     // For multi-stage buttons, the text for each stage is separated with a '|' character. To make rendering easier we will
                     // replace '|' characters with '\0'.
@@ -166,32 +166,32 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
 
                 case TA_GUI_GADGET_TYPE_TEXTBOX:
                 {
-                    pGadget->textbox.maxchars = ta_config_get_int(pGadgetObj, "maxchars");
+                    pGadget->textbox.maxchars = taConfigGetInt(pGadgetObj, "maxchars");
                 } break;
 
                 case TA_GUI_GADGET_TYPE_SCROLLBAR:
                 {
-                    pGadget->scrollbar.range    = ta_config_get_int(pGadgetObj, "range");
-                    pGadget->scrollbar.thick    = ta_config_get_int(pGadgetObj, "thick");
-                    pGadget->scrollbar.knobpos  = ta_config_get_int(pGadgetObj, "knobpos");
-                    pGadget->scrollbar.knobsize = ta_config_get_int(pGadgetObj, "knobsize");
+                    pGadget->scrollbar.range    = taConfigGetInt(pGadgetObj, "range");
+                    pGadget->scrollbar.thick    = taConfigGetInt(pGadgetObj, "thick");
+                    pGadget->scrollbar.knobpos  = taConfigGetInt(pGadgetObj, "knobpos");
+                    pGadget->scrollbar.knobsize = taConfigGetInt(pGadgetObj, "knobsize");
                 } break;
 
                 case TA_GUI_GADGET_TYPE_LABEL:
                 {
-                    pGadget->label.text = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "text"));
-                    pGadget->label.link = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "link"));
+                    pGadget->label.text = ta_gui__copy_string_prop(&pNextStr, taConfigGetString(pGadgetObj, "text"));
+                    pGadget->label.link = ta_gui__copy_string_prop(&pNextStr, taConfigGetString(pGadgetObj, "link"));
                     pGadget->label.iLinkedGadget = (taUInt32)-1;
                 } break;
 
                 case TA_GUI_GADGET_TYPE_SURFACE:
                 {
-                    pGadget->surface.hotornot = ta_config_get_bool(pGadgetObj, "hotornot");
+                    pGadget->surface.hotornot = taConfigGetBool(pGadgetObj, "hotornot");
                 } break;
 
                 case TA_GUI_GADGET_TYPE_FONT:
                 {
-                    pGadget->font.filename = ta_gui__copy_string_prop(&pNextStr, ta_config_get_string(pGadgetObj, "filename"));
+                    pGadget->font.filename = ta_gui__copy_string_prop(&pNextStr, taConfigGetString(pGadgetObj, "filename"));
                 } break;
 
                 case TA_GUI_GADGET_TYPE_PICTURE:
@@ -204,7 +204,7 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
         }
     }
 
-    ta_delete_config(pConfig);
+    taDeleteConfig(pConfig);
 
 
     // Default focus.

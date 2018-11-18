@@ -50,10 +50,10 @@ typedef struct
     
 
     // The list of multi-player/skirmish maps.
-    ta_config_obj** ppMPMaps;   // <-- stb_stretchy_buffer
+    taConfigObj** ppMPMaps;   // <-- stb_stretchy_buffer
 
     // The list of single-player maps.
-    ta_config_obj** ppSPMaps;   // <-- stb_stretchy_buffer
+    taConfigObj** ppSPMaps;   // <-- stb_stretchy_buffer
 
     // The selected multi-player/skirmish map.
     taUInt32 iSelectedMPMap;

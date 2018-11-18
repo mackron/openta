@@ -7,9 +7,9 @@
 // - The contents of an object are wrapped in { ... } pairs
 // - Each key/value pair is terminated with a semi-colon
 
-ta_config_obj* ta_allocate_config_object()
+taConfigObj* taAllocateConfigObject()
 {
-    ta_config_obj* pObj = calloc(1, sizeof(*pObj));
+    taConfigObj* pObj = calloc(1, sizeof(*pObj));
     if (pObj == NULL) {
         return NULL;
     }
@@ -17,12 +17,12 @@ ta_config_obj* ta_allocate_config_object()
     return pObj;
 }
 
-taBool32 ta_config_is_whitespace(char c)
+taBool32 taConfigIsWhitespace(char c)
 {
     return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
 }
 
-char* ta_config_first_non_whitespace(char* str)
+char* taConfigFirstNonWhitespace(char* str)
 {
     if (str == NULL) {
         return NULL;
@@ -35,17 +35,17 @@ char* ta_config_first_non_whitespace(char* str)
     return str;
 }
 
-taBool32 ta_config_is_on_line_comment(const char* configString)
+taBool32 taConfigIsOnLineComment(const char* configString)
 {
     return configString[0] == '/' && configString[1] == '/';
 }
 
-taBool32 ta_config_is_on_block_comment(const char* configString)
+taBool32 taConfigIsOnBlockComment(const char* configString)
 {
     return configString[0] == '/' && configString[1] == '*';
 }
 
-char* ta_config_seek_to_end_of_line_comment(char* configString)
+char* taConfigSeekToEndOfLineComment(char* configString)
 {
     while (*configString != '\0')
     {
@@ -57,7 +57,7 @@ char* ta_config_seek_to_end_of_line_comment(char* configString)
     return configString;
 }
 
-char* ta_config_seek_to_end_of_block_comment(char* configString)
+char* taConfigSeekToEndOfBlockComment(char* configString)
 {
     while (*configString != '\0')
     {
@@ -72,12 +72,12 @@ char* ta_config_seek_to_end_of_block_comment(char* configString)
     return configString;
 }
 
-char* ta_config_next_token(char* configString)
+char* taConfigNextToken(char* configString)
 {
     while (*configString != '\0')
     {
         // Skip any whitespace.
-        configString = ta_config_first_non_whitespace(configString);
+        configString = taConfigFirstNonWhitespace(configString);
         if (configString == NULL) {
             return NULL;
         }
@@ -87,15 +87,15 @@ char* ta_config_next_token(char* configString)
         }
 
         // Skip comments.
-        if (ta_config_is_on_line_comment(configString))
+        if (taConfigIsOnLineComment(configString))
         {
             configString += 2;
-            configString = ta_config_seek_to_end_of_line_comment(configString);
+            configString = taConfigSeekToEndOfLineComment(configString);
         }
-        else if (ta_config_is_on_block_comment(configString))
+        else if (taConfigIsOnBlockComment(configString))
         {
             configString += 2;
-            configString = ta_config_seek_to_end_of_block_comment(configString);
+            configString = taConfigSeekToEndOfBlockComment(configString);
         }
         else
         {
@@ -107,7 +107,7 @@ char* ta_config_next_token(char* configString)
     return configString;
 }
 
-ta_config_var* ta_config_push_new_var(ta_config_obj* pParentObj, const char* name, const char* value)
+taConfigVar* taConfigPushNewVar(taConfigObj* pParentObj, const char* name, const char* value)
 {
     assert(pParentObj != NULL);
     assert(name != NULL);
@@ -119,7 +119,7 @@ ta_config_var* ta_config_push_new_var(ta_config_obj* pParentObj, const char* nam
         // Not enough space in the buffer - reallocate.
         pParentObj->bufferSize += chunkSize;
 
-        ta_config_var* pNewVars = realloc(pParentObj->pVars, pParentObj->bufferSize * sizeof(*pNewVars));
+        taConfigVar* pNewVars = realloc(pParentObj->pVars, pParentObj->bufferSize * sizeof(*pNewVars));
         if (pNewVars == NULL) {
             return NULL;    // Failed to allocate new buffer.
         }
@@ -128,7 +128,7 @@ ta_config_var* ta_config_push_new_var(ta_config_obj* pParentObj, const char* nam
     }
 
 
-    ta_config_var* pVar = pParentObj->pVars + pParentObj->varCount;
+    taConfigVar* pVar = pParentObj->pVars + pParentObj->varCount;
     pVar->pObject = NULL;
     pVar->name = name;
     pVar->value = value;
@@ -137,7 +137,7 @@ ta_config_var* ta_config_push_new_var(ta_config_obj* pParentObj, const char* nam
     return pVar;
 }
 
-ta_config_obj* ta_config_push_new_subobj(ta_config_obj* pParentObj, const char* name, const char* value)
+taConfigObj* taConfigPushNewSubObj(taConfigObj* pParentObj, const char* name, const char* value)
 {
     assert(pParentObj != NULL);
     assert(name != NULL);
@@ -147,12 +147,12 @@ ta_config_obj* ta_config_push_new_subobj(ta_config_obj* pParentObj, const char* 
     assert(value[0] == '\0');
 
 
-    ta_config_obj* pSubObj = ta_allocate_config_object();
+    taConfigObj* pSubObj = taAllocateConfigObject();
     if (pSubObj == NULL) {
         return NULL;
     }
 
-    ta_config_var* pVar = ta_config_push_new_var(pParentObj, name, value);
+    taConfigVar* pVar = taConfigPushNewVar(pParentObj, name, value);
     if (pVar == NULL) {
         return NULL;
     }
@@ -162,12 +162,12 @@ ta_config_obj* ta_config_push_new_subobj(ta_config_obj* pParentObj, const char* 
 }
 
 
-char* ta_parse_config_object(char* configString, ta_config_obj* pObj)
+char* taParseConfigObject(char* configString, taConfigObj* pObj)
 {
     // This is the where the real meat of the parsing is done. It assumes the config string is sitting on the byte just
     // after the opening curly bracket of the object.
 
-    while (configString = ta_config_next_token(configString))
+    while (configString = taConfigNextToken(configString))
     {
         if (*configString == '\0') {
             return NULL;            // Reached the end of the string. Technically an error because we were expecting a closing curly bracket.
@@ -189,10 +189,10 @@ char* ta_parse_config_object(char* configString, ta_config_obj* pObj)
                 if (*nameEnd == '\0') {
                     return NULL;   // Unexpected end of file.
                 }
-                if (ta_config_is_on_line_comment(nameEnd)) {
+                if (taConfigIsOnLineComment(nameEnd)) {
                     return NULL;    // Expecting closing ']' but found a comment instead.
                 }
-                if (ta_config_is_on_block_comment(nameEnd)) {
+                if (taConfigIsOnBlockComment(nameEnd)) {
                     return NULL;    // Expecting closing ']' but found a comment instead.
                 }
                 nameEnd += 1;
@@ -203,7 +203,7 @@ char* ta_parse_config_object(char* configString, ta_config_obj* pObj)
 
 
             // Expecting an opening curly bracket.
-            configString = ta_config_next_token(nameEnd + 1);
+            configString = taConfigNextToken(nameEnd + 1);
             if (configString == NULL || *configString == '\0') {
                 return NULL;    // Unexpected end of file.
             }
@@ -214,12 +214,12 @@ char* ta_parse_config_object(char* configString, ta_config_obj* pObj)
 
 
             // We are beginning a sub-object so we'll need to call this recursively.
-            ta_config_obj* pSubObj = ta_config_push_new_subobj(pObj, nameBeg, nameEnd);     // <-- Set the value to "nameEnd" which simply makes it an empty string rather than NULL which is a bit safer.
+            taConfigObj* pSubObj = taConfigPushNewSubObj(pObj, nameBeg, nameEnd);     // <-- Set the value to "nameEnd" which simply makes it an empty string rather than NULL which is a bit safer.
             if (pSubObj == NULL) {
                 return NULL;    // Failed to allocate the sub-object.
             }
 
-            configString = ta_parse_config_object(configString, pSubObj);
+            configString = taParseConfigObject(configString, pSubObj);
             if (configString == NULL) {
                 return NULL;
             }
@@ -237,15 +237,15 @@ char* ta_parse_config_object(char* configString, ta_config_obj* pObj)
                 if (*configString == '\0') {
                     return NULL;    // Unexpected end of file.
                 }
-                if (ta_config_is_on_line_comment(configString)) {
+                if (taConfigIsOnLineComment(configString)) {
                     return NULL;
                 }
-                if (ta_config_is_on_block_comment(configString)) {
+                if (taConfigIsOnBlockComment(configString)) {
                     return NULL;
                 }
 
                 configString += 1;
-                if (!ta_config_is_whitespace(*configString)) {
+                if (!taConfigIsWhitespace(*configString)) {
                     nameEnd = configString;
                 }
             }
@@ -266,15 +266,15 @@ char* ta_parse_config_object(char* configString, ta_config_obj* pObj)
                 if (*configString == '\0') {
                     return NULL;    // Unexpected end of file.
                 }
-                if (ta_config_is_on_line_comment(configString)) {
+                if (taConfigIsOnLineComment(configString)) {
                     return NULL;
                 }
-                if (ta_config_is_on_block_comment(configString)) {
+                if (taConfigIsOnBlockComment(configString)) {
                     return NULL;
                 }
 
                 configString += 1;
-                if (!ta_config_is_whitespace(*configString)) {
+                if (!taConfigIsWhitespace(*configString)) {
                     valueEnd = configString;
                 }
             }
@@ -289,7 +289,7 @@ char* ta_parse_config_object(char* configString, ta_config_obj* pObj)
             // Skip past the ';'
             configString += 1;
 
-            ta_config_var* pVar = ta_config_push_new_var(pObj, nameBeg, valueBeg);
+            taConfigVar* pVar = taConfigPushNewVar(pObj, nameBeg, valueBeg);
             if (pVar == NULL) {
                 return NULL;
             }
@@ -299,11 +299,11 @@ char* ta_parse_config_object(char* configString, ta_config_obj* pObj)
     return configString;
 }
 
-ta_config_obj* ta_parse_config_from_open_file(ta_file* pFile)
+taConfigObj* taParseConfigFromOpenFile(ta_file* pFile)
 {
     assert(pFile != NULL);
 
-    ta_config_obj* pConfig = ta_allocate_config_object();
+    taConfigObj* pConfig = taAllocateConfigObject();
     if (pConfig == NULL) {
         return NULL;
     }
@@ -314,11 +314,11 @@ ta_config_obj* ta_parse_config_from_open_file(ta_file* pFile)
         return NULL;
     }
 
-    ta_parse_config_object(pConfig->_pFile->pFileData, pConfig);
+    taParseConfigObject(pConfig->_pFile->pFileData, pConfig);
     return pConfig;
 }
 
-ta_config_obj* ta_parse_config_from_specific_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath)
+taConfigObj* taParseConfigFromSpecificFile(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath)
 {
     if (pFS == NULL || fileRelativePath == NULL) {
         return NULL;
@@ -329,10 +329,10 @@ ta_config_obj* ta_parse_config_from_specific_file(ta_fs* pFS, const char* archiv
         return NULL;
     }
 
-    return ta_parse_config_from_open_file(pFile);
+    return taParseConfigFromOpenFile(pFile);
 }
 
-ta_config_obj* ta_parse_config_from_file(ta_fs* pFS, const char* fileRelativePath)
+taConfigObj* taParseConfigFromFile(ta_fs* pFS, const char* fileRelativePath)
 {
     if (pFS == NULL || fileRelativePath == NULL) {
         return NULL;
@@ -343,10 +343,10 @@ ta_config_obj* ta_parse_config_from_file(ta_fs* pFS, const char* fileRelativePat
         return NULL;
     }
 
-    return ta_parse_config_from_open_file(pFile);
+    return taParseConfigFromOpenFile(pFile);
 }
 
-void ta_delete_config(ta_config_obj* pConfig)
+void taDeleteConfig(taConfigObj* pConfig)
 {
     if (pConfig == NULL) {
         return;
@@ -360,7 +360,7 @@ void ta_delete_config(ta_config_obj* pConfig)
     // Sub objects need to be deleted recursively.
     for (unsigned int iVar = 0; iVar < pConfig->varCount; ++iVar) {
         if (pConfig->pVars[iVar].pObject != NULL) {
-            ta_delete_config(pConfig->pVars[iVar].pObject);
+            taDeleteConfig(pConfig->pVars[iVar].pObject);
         }
     }
 
@@ -369,7 +369,7 @@ void ta_delete_config(ta_config_obj* pConfig)
 }
 
 
-ta_config_var* ta_config_get_var(const ta_config_obj* pConfig, const char* varName)
+taConfigVar* taConfigGetVar(const taConfigObj* pConfig, const char* varName)
 {
     if (pConfig == NULL || varName == NULL) {
         return NULL;
@@ -381,9 +381,9 @@ ta_config_var* ta_config_get_var(const ta_config_obj* pConfig, const char* varNa
         if (drpath_next(&iNextSeg)) {
             char subobjName[256];
             drpath_copy_and_append_iterator(subobjName, sizeof(subobjName), "", iSeg);
-            ta_config_obj* pSubObj = ta_config_get_subobj(pConfig, subobjName);
+            taConfigObj* pSubObj = taConfigGetSubObj(pConfig, subobjName);
             if (pSubObj != NULL) {
-                return ta_config_get_var(pSubObj, iNextSeg.path + iNextSeg.segment.offset);
+                return taConfigGetVar(pSubObj, iNextSeg.path + iNextSeg.segment.offset);
             }
         } else {
             for (unsigned int i = 0; i < pConfig->varCount; ++i) {
@@ -397,9 +397,9 @@ ta_config_var* ta_config_get_var(const ta_config_obj* pConfig, const char* varNa
     return NULL;
 }
 
-ta_config_obj* ta_config_get_subobj(const ta_config_obj* pConfig, const char* varName)
+taConfigObj* taConfigGetSubObj(const taConfigObj* pConfig, const char* varName)
 {
-    ta_config_var* pVar = ta_config_get_var(pConfig, varName);
+    taConfigVar* pVar = taConfigGetVar(pConfig, varName);
     if (pVar == NULL) {
         return NULL;
     }
@@ -407,9 +407,9 @@ ta_config_obj* ta_config_get_subobj(const ta_config_obj* pConfig, const char* va
     return pVar->pObject;
 }
 
-const char* ta_config_get_string(const ta_config_obj* pConfig, const char* varName)
+const char* taConfigGetString(const taConfigObj* pConfig, const char* varName)
 {
-    ta_config_var* pVar = ta_config_get_var(pConfig, varName);
+    taConfigVar* pVar = taConfigGetVar(pConfig, varName);
     if (pVar == NULL) {
         return NULL;
     }
@@ -417,9 +417,9 @@ const char* ta_config_get_string(const ta_config_obj* pConfig, const char* varNa
     return pVar->value;
 }
 
-int ta_config_get_int(const ta_config_obj* pConfig, const char* varName)
+int taConfigGetInt(const taConfigObj* pConfig, const char* varName)
 {
-    const char* value = ta_config_get_string(pConfig, varName);
+    const char* value = taConfigGetString(pConfig, varName);
     if (value == NULL) {
         return 0;
     }
@@ -427,9 +427,9 @@ int ta_config_get_int(const ta_config_obj* pConfig, const char* varName)
     return atoi(value);
 }
 
-float ta_config_get_float(const ta_config_obj* pConfig, const char* varName)
+float taConfigGetFloat(const taConfigObj* pConfig, const char* varName)
 {
-    const char* value = ta_config_get_string(pConfig, varName);
+    const char* value = taConfigGetString(pConfig, varName);
     if (value == NULL) {
         return 0;
     }
@@ -437,9 +437,9 @@ float ta_config_get_float(const ta_config_obj* pConfig, const char* varName)
     return (float)atof(value);
 }
 
-taBool32 ta_config_get_bool(const ta_config_obj* pConfig, const char* varName)
+taBool32 taConfigGetBool(const taConfigObj* pConfig, const char* varName)
 {
-    const char* value = ta_config_get_string(pConfig, varName);
+    const char* value = taConfigGetString(pConfig, varName);
     if (value == NULL) {
         return TA_FALSE;
     }
@@ -451,7 +451,7 @@ taBool32 ta_config_get_bool(const ta_config_obj* pConfig, const char* varName)
     return TA_TRUE;
 }
 
-taBool32 ta_config_is_subobj_by_index(const ta_config_obj* pConfig, taUInt32 varIndex)
+taBool32 taConfigIsSubObjByIndex(const taConfigObj* pConfig, taUInt32 varIndex)
 {
     if (pConfig == NULL || varIndex >= pConfig->varCount) {
         return TA_FALSE;
