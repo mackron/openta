@@ -46,7 +46,7 @@ typedef struct
 
     size_t meshBuildersBufferSize;
     size_t meshBuildersCount;
-    ta_mesh_builder* pMeshBuilders;
+    taMeshBuilder* pMeshBuilders;
 } taMapLoadContext;
 
 TA_PRIVATE taBool32 taMapCreateAndPushTexture(taMapInstance* pMap, ta_texture_packer* pPacker)
@@ -109,7 +109,7 @@ TA_PRIVATE int taMapSortFeatureTypesByIndex(const void* a, const void* b)
 TA_PRIVATE void taMapResetMeshBuilders(taMapLoadContext* pLoadContext)
 {
     for (size_t i = 0; i < pLoadContext->meshBuildersCount; ++i) {
-        ta_mesh_builder_reset(&pLoadContext->pMeshBuilders[i]);
+        taMeshBuilderReset(&pLoadContext->pMeshBuilders[i]);
     }
 
     pLoadContext->meshBuildersCount = 0;
@@ -315,7 +315,7 @@ TA_PRIVATE taUInt32 taMapLoad3DOObjectsRecursive(taMapInstance* pMap, taMapLoadC
 
         if (!isClear) {
             // We need to find the mesh builder that's tied to the texture index. If it doesn't exist we'll need to create a new one.
-            ta_mesh_builder* pMeshBuilder = NULL;
+            taMeshBuilder* pMeshBuilder = NULL;
             for (size_t i = 0; i < pLoadContext->meshBuildersCount; ++i) {
                 if (pLoadContext->pMeshBuilders[i].textureIndex == texture.textureIndex) {
                     pMeshBuilder = &pLoadContext->pMeshBuilders[i];
@@ -329,7 +329,7 @@ TA_PRIVATE taUInt32 taMapLoad3DOObjectsRecursive(taMapInstance* pMap, taMapLoadC
                 if (pLoadContext->meshBuildersCount == pLoadContext->meshBuildersBufferSize)
                 {
                     size_t newMeshBuildersBufferSize = pLoadContext->meshBuildersCount + 1;
-                    ta_mesh_builder* pNewMeshBuilders = (ta_mesh_builder*)realloc(pLoadContext->pMeshBuilders, newMeshBuildersBufferSize * sizeof(*pNewMeshBuilders));
+                    taMeshBuilder* pNewMeshBuilders = (taMeshBuilder*)realloc(pLoadContext->pMeshBuilders, newMeshBuildersBufferSize * sizeof(*pNewMeshBuilders));
                     if (pNewMeshBuilders == NULL) {
                         return 0;
                     }
@@ -337,7 +337,7 @@ TA_PRIVATE taUInt32 taMapLoad3DOObjectsRecursive(taMapInstance* pMap, taMapLoadC
                     pLoadContext->meshBuildersBufferSize = newMeshBuildersBufferSize;
                     pLoadContext->pMeshBuilders = pNewMeshBuilders;
 
-                    ta_mesh_builder_init(&pLoadContext->pMeshBuilders[pLoadContext->meshBuildersCount], sizeof(taVertexP3T2N3));
+                    taMeshBuilderInit(&pLoadContext->pMeshBuilders[pLoadContext->meshBuildersCount], sizeof(taVertexP3T2N3));
                 }
 
                 size_t iMeshBuilder = pLoadContext->meshBuildersCount;
@@ -400,13 +400,13 @@ TA_PRIVATE taUInt32 taMapLoad3DOObjectsRecursive(taMapInstance* pMap, taMapLoadC
                         vertices[i].nz = normal.z;
                     }
 
-                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[0]);
-                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[2]);
-                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[1]);
+                    taMeshBuilderWriteVertex(pMeshBuilder, &vertices[0]);
+                    taMeshBuilderWriteVertex(pMeshBuilder, &vertices[2]);
+                    taMeshBuilderWriteVertex(pMeshBuilder, &vertices[1]);
 
-                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[0]);
-                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[3]);
-                    ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[2]);
+                    taMeshBuilderWriteVertex(pMeshBuilder, &vertices[0]);
+                    taMeshBuilderWriteVertex(pMeshBuilder, &vertices[3]);
+                    taMeshBuilderWriteVertex(pMeshBuilder, &vertices[2]);
                 }
                 else
                 {
@@ -439,9 +439,9 @@ TA_PRIVATE taUInt32 taMapLoad3DOObjectsRecursive(taMapInstance* pMap, taMapLoadC
                             vertices[i].v = uvTop;
                         }
 
-                        ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[0]);
-                        ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[2]);
-                        ta_mesh_builder_write_vertex(pMeshBuilder, &vertices[1]);
+                        taMeshBuilderWriteVertex(pMeshBuilder, &vertices[0]);
+                        taMeshBuilderWriteVertex(pMeshBuilder, &vertices[2]);
+                        taMeshBuilderWriteVertex(pMeshBuilder, &vertices[1]);
                     }
                 }
             } else {
@@ -463,7 +463,7 @@ TA_PRIVATE taUInt32 taMapLoad3DOObjectsRecursive(taMapInstance* pMap, taMapLoadC
     }
 
     for (taUInt32 iMesh = 0; iMesh < objectMeshCount; ++iMesh) {
-        ta_mesh_builder* pMeshBuilder = &pLoadContext->pMeshBuilders[iMesh];
+        taMeshBuilder* pMeshBuilder = &pLoadContext->pMeshBuilders[iMesh];
 
         p3DO->pMeshes[p3DO->meshCount + iMesh].textureIndex = pMeshBuilder->textureIndex;
         p3DO->pMeshes[p3DO->meshCount + iMesh].pMesh = taCreateMesh(pMap->pEngine->pGraphics, taPrimitiveTypeTriangle,

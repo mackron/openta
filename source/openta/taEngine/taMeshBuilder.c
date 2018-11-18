@@ -1,6 +1,6 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-taBool32 ta_mesh_builder_init(ta_mesh_builder* pBuilder, size_t vertexSize)
+taBool32 taMeshBuilderInit(taMeshBuilder* pBuilder, size_t vertexSize)
 {
     if (pBuilder == NULL || vertexSize == 0) {
         return TA_FALSE;
@@ -12,7 +12,7 @@ taBool32 ta_mesh_builder_init(ta_mesh_builder* pBuilder, size_t vertexSize)
     return TA_TRUE;
 }
 
-void ta_mesh_builder_uninit(ta_mesh_builder* pBuilder)
+void taMeshBuilderUninit(taMeshBuilder* pBuilder)
 {
     if (pBuilder == NULL) {
         return;
@@ -23,15 +23,14 @@ void ta_mesh_builder_uninit(ta_mesh_builder* pBuilder)
 }
 
 
-taBool32 ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVertexData)
+taBool32 taMeshBuilderWriteVertex(taMeshBuilder* pBuilder, const void* pVertexData)
 {
     if (pBuilder == NULL || pVertexData == NULL) {
         return TA_FALSE;
     }
 
     // Index.
-    if (pBuilder->indexCount == pBuilder->indexBufferSize)
-    {
+    if (pBuilder->indexCount == pBuilder->indexBufferSize) {
         size_t newIndexBufferSize = (pBuilder->indexBufferSize == 0) ? 128 : pBuilder->indexBufferSize*2;
         void* pNewIndexData = realloc(pBuilder->pIndexData, newIndexBufferSize * sizeof(taUInt32));
         if (pNewIndexData == NULL) {
@@ -49,8 +48,7 @@ taBool32 ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVe
 
 
     // Vertex.
-    if (pBuilder->vertexCount == pBuilder->vertexBufferSize)
-    {
+    if (pBuilder->vertexCount == pBuilder->vertexBufferSize) {
         size_t newVertexBufferSize = (pBuilder->vertexBufferSize == 0) ? 128 : pBuilder->vertexBufferSize*2;
         void* pNewVertexData = realloc(pBuilder->pVertexData, newVertexBufferSize * pBuilder->vertexSize);
         if (pNewVertexData == NULL) {
@@ -70,7 +68,7 @@ taBool32 ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVe
 }
 
 
-void ta_mesh_builder_reset(ta_mesh_builder* pBuilder)
+void taMeshBuilderReset(taMeshBuilder* pBuilder)
 {
     if (pBuilder == NULL) {
         return;

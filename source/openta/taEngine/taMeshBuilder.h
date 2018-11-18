@@ -28,15 +28,14 @@ typedef struct
     // The texture index for use by loaders. This isn't actually used by the mesh builder, but is included here in order
     // to avoid a wrapper when loading building a mesh from taLoadMap().
     taUInt32 textureIndex;
+} taMeshBuilder;
 
-} ta_mesh_builder;
+taBool32 taMeshBuilderInit(taMeshBuilder* pBuilder, size_t vertexSize);
+void taMeshBuilderUninit(taMeshBuilder* pBuilder);
 
-taBool32 ta_mesh_builder_init(ta_mesh_builder* pBuilder, size_t vertexSize);
-void ta_mesh_builder_uninit(ta_mesh_builder* pBuilder);
-
-taBool32 ta_mesh_builder_write_vertex(ta_mesh_builder* pBuilder, const void* pVertexData);
+taBool32 taMeshBuilderWriteVertex(taMeshBuilder* pBuilder, const void* pVertexData);
 
 // Resets the mesh builder.
 //
-// Do not call ta_mesh_builder_init() after calling this, otherwise memory will leak.
-void ta_mesh_builder_reset(ta_mesh_builder* pBuilder);
+// Do not call taMeshBuilderInit() after calling this, otherwise memory will leak.
+void taMeshBuilderReset(taMeshBuilder* pBuilder);
