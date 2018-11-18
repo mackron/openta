@@ -128,14 +128,14 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
         return TA_FILE_NOT_FOUND;
     }
 
-    ta_gaf* pGAF = ta_open_gaf(pEngine->pFS, packagePath);
+    taGAF* pGAF = taOpenGAF(pEngine->pFS, packagePath);
     if (pGAF == NULL) {
         return TA_FILE_NOT_FOUND;
     }
 
     taUInt32 frameCount;
-    if (!ta_gaf_select_sequence(pGAF, sequenceName, &frameCount) || frameCount < 256) {
-        ta_close_gaf(pGAF);
+    if (!taGAFSelectSequence(pGAF, sequenceName, &frameCount) || frameCount < 256) {
+        taCloseGAF(pGAF);
         return TA_INVALID_RESOURCE;
     }
 
@@ -147,7 +147,7 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
         taUInt32 sizeY;
         taInt32 posX;
         taInt32 posY;
-        if (ta_gaf_get_frame(pGAF, i, &sizeX, &sizeY, &posX, &posY, NULL) == TA_SUCCESS) {
+        if (taGAFGetFrame(pGAF, i, &sizeX, &sizeY, &posX, &posY, NULL) == TA_SUCCESS) {
             totalWidth += sizeX;
             if (totalHeight < sizeY) {
                 totalHeight = sizeY;
@@ -177,7 +177,7 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
         taInt32 posX;
         taInt32 posY;
         taUInt8* pixels;
-        if (ta_gaf_get_frame(pGAF, i, &sizeX, &sizeY, &posX, &posY, &pixels) == TA_SUCCESS) {
+        if (taGAFGetFrame(pGAF, i, &sizeX, &sizeY, &posX, &posY, &pixels) == TA_SUCCESS) {
             totalWidth += sizeX;
             if (totalHeight < sizeY) {
                 totalHeight = sizeY;
@@ -208,11 +208,11 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
             // We need to add a padding row in between each character.
             ta_texture_packer_pack_subtexture(&packer, 1, totalHeight, paddingPixels, NULL);
 
-            ta_gaf_free(pixels);
+            taGAFFree(pixels);
         }
     }
 
-    ta_close_gaf(pGAF);
+    taCloseGAF(pGAF);
 
     taUInt32* pImageDataRGBA = (taUInt32*)malloc(packer.width * packer.height * 4);
     if (pImageDataRGBA == NULL) {

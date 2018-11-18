@@ -12,9 +12,9 @@ typedef struct
     taUInt8 isCompressed;
     taUInt16 subframeCount;
     taUInt32 dataPtr;
-} ta_gaf_frame_header;
+} taGAFFrameHeader;
 
-taBool32 ta_gaf__read_frame_header(ta_gaf* pGAF, ta_gaf_frame_header* pHeader)
+TA_PRIVATE taBool32 taGAFReadFrameHeader(taGAF* pGAF, taGAFFrameHeader* pHeader)
 {
     assert(pGAF != NULL);
     assert(pHeader != NULL);
@@ -55,7 +55,7 @@ taBool32 ta_gaf__read_frame_header(ta_gaf* pGAF, ta_gaf_frame_header* pHeader)
     return TA_TRUE;
 }
 
-taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHeader, taUInt16 dstWidth, taUInt16 dstHeight, taUInt16 dstOffsetX, taUInt16 dstOffsetY, taUInt8* pDstImageData)
+TA_PRIVATE taBool32 taGAFReadFramePixels(taGAF* pGAF, taGAFFrameHeader* pFrameHeader, taUInt16 dstWidth, taUInt16 dstHeight, taUInt16 dstOffsetX, taUInt16 dstOffsetY, taUInt8* pDstImageData)
 {
     assert(pGAF != NULL);
     assert(pFrameHeader != NULL);
@@ -68,36 +68,29 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
     taUInt16 offsetX = dstOffsetX - pFrameHeader->offsetX;
     taUInt16 offsetY = dstOffsetY - pFrameHeader->offsetY;
 
-    if (pFrameHeader->isCompressed)
-    {
-        for (taUInt32 y = 0; y < pFrameHeader->height; ++y)
-        {
+    if (pFrameHeader->isCompressed) {
+        for (taUInt32 y = 0; y < pFrameHeader->height; ++y) {
             taUInt16 rowSize;
             if (!taReadFileUInt16(pGAF->pFile, &rowSize)) {
                 return TA_FALSE;
             }
 
             taUInt8* pDstRow = pDstImageData + ((offsetY + y) * dstWidth);
-            if (rowSize > 0)
-            {
+            if (rowSize > 0) {
                 unsigned int x = 0;
 
                 taUInt16 bytesProcessed = 0;
-                while (bytesProcessed < rowSize)
-                {
+                while (bytesProcessed < rowSize) {
                     taUInt8 mask;
                     if (!taReadFileUInt8(pGAF->pFile, &mask)) {
                         return TA_FALSE;
                     }
 
-                    if ((mask & 0x01) == 0x01)
-                    {
+                    if ((mask & 0x01) == 0x01) {
                         // Transparent.
                         taUInt8 repeat = (mask >> 1);
                         x += repeat;
-                    }
-                    else if ((mask & 0x02) == 0x02)
-                    {
+                    } else if ((mask & 0x02) == 0x02) {
                         // The next byte is repeated.
                         taUInt8 repeat = (mask >> 2) + 1;
                         taUInt8 value;
@@ -116,13 +109,10 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
                         }
 
                         bytesProcessed += 1;
-                    }
-                    else
-                    {
+                    } else {
                         // The next bytes are verbatim.
                         taUInt8 repeat = (mask >> 2) + 1;
-                        while (repeat > 0)
-                        {
+                        while (repeat > 0) {
                             taUInt8 value;
                             if (!taReadFileUInt8(pGAF->pFile, &value)) {
                                 return TA_FALSE;
@@ -142,17 +132,12 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
 
                     bytesProcessed += 1;
                 }
-            }
-            else
-            {
+            } else {
                 // rowSize == 0. Assume the whole row is transparent.
             }
         }
-    }
-    else
-    {
-        for (unsigned int y = 0; y < pFrameHeader->height; ++y)
-        {
+    } else {
+        for (unsigned int y = 0; y < pFrameHeader->height; ++y) {
             taUInt8* pDstRow = pDstImageData + ((offsetY + y) * dstWidth);
             if (!taReadFile(pGAF->pFile, pDstRow + offsetX, pFrameHeader->width, NULL)) {
                 return TA_FALSE;
@@ -160,12 +145,11 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
         }
     }
 
-
     return TA_TRUE;
 }
 
 
-ta_gaf* ta_open_gaf(taFS* pFS, const char* filename)
+taGAF* taOpenGAF(taFS* pFS, const char* filename)
 {
     if (pFS == NULL || filename == NULL) {
         return NULL;
@@ -186,7 +170,7 @@ ta_gaf* ta_open_gaf(taFS* pFS, const char* filename)
         }
     }
 
-    ta_gaf* pGAF = calloc(1, sizeof(*pGAF));
+    taGAF* pGAF = calloc(1, sizeof(*pGAF));
     if (pGAF == NULL) {
         return NULL;
     }
@@ -228,7 +212,7 @@ on_error:
     return NULL;
 }
 
-void ta_close_gaf(ta_gaf* pGAF)
+void taCloseGAF(taGAF* pGAF)
 {
     if (pGAF == NULL) {
         return;
@@ -239,15 +223,14 @@ void ta_close_gaf(ta_gaf* pGAF)
 }
 
 
-taBool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, taUInt32* pFrameCountOut)
+taBool32 taGAFSelectSequence(taGAF* pGAF, const char* sequenceName, taUInt32* pFrameCountOut)
 {
     if (pGAF == NULL || sequenceName == NULL || pFrameCountOut == NULL) {
         return TA_FALSE;
     }
 
     // We need to find the sequence which we do by simply iterating over each one and comparing it's name.
-    for (taUInt32 iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence)
-    {
+    for (taUInt32 iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence) {
         // The sequence pointers are located at byte position 12.
         if (!taSeekFile(pGAF->pFile, 12 + (iSequence * sizeof(taUInt32)), taSeekOriginStart)) {
             return TA_FALSE;
@@ -274,8 +257,7 @@ taBool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, taUInt32
 
         // The file will be sitting on the sequence's name, so we just need to compare. If they're not equal just try the next sequence.
         const char* pName = pGAF->pFile->pFileData + taTellFile(pGAF->pFile);
-        if (_stricmp(pName, sequenceName) == 0)
-        {
+        if (_stricmp(pName, sequenceName) == 0) {
             // It's the sequence we're looking for.
             pGAF->_sequenceName = pName;
             pGAF->_sequencePointer = sequencePointer;
@@ -289,9 +271,12 @@ taBool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, taUInt32
     return TA_FALSE;
 }
 
-taBool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, taUInt32 index, taUInt32* pFrameCountOut)
+taBool32 taGAFSelectSequenceByIndex(taGAF* pGAF, taUInt32 index, taUInt32* pFrameCountOut)
 {
-    if (pFrameCountOut) *pFrameCountOut = 0;
+    if (pFrameCountOut) {
+        *pFrameCountOut = 0;
+    }
+
     if (pGAF == NULL || index >= pGAF->sequenceCount) {
         return TA_FALSE;
     }
@@ -324,13 +309,19 @@ taBool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, taUInt32 index, taUInt32*
     pGAF->_sequencePointer = sequencePointer;
     pGAF->_sequenceFrameCount = frameCount;
 
-    if (pFrameCountOut) *pFrameCountOut = frameCount;
+    if (pFrameCountOut) {
+        *pFrameCountOut = frameCount;
+    }
+
     return TA_TRUE;
 }
 
-taResult ta_gaf_get_frame(ta_gaf* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut, taUInt32* pHeightOut, taInt32* pPosXOut, taInt32* pPosYOut, taUInt8** ppImageData)
+taResult taGAFGetFrame(taGAF* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut, taUInt32* pHeightOut, taInt32* pPosXOut, taInt32* pPosYOut, taUInt8** ppImageData)
 {
-    if (ppImageData) *ppImageData = NULL;
+    if (ppImageData) {
+        *ppImageData = NULL;
+    }
+
     if (pGAF == NULL || frameIndex >= pGAF->_sequenceFrameCount || pWidthOut == NULL || pHeightOut == NULL || pPosXOut == NULL || pPosYOut == NULL) {
         return TA_ERROR;
     }
@@ -356,8 +347,8 @@ taResult ta_gaf_get_frame(ta_gaf* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut
         return TA_ERROR;
     }
 
-    ta_gaf_frame_header frameHeader;
-    if (!ta_gaf__read_frame_header(pGAF, &frameHeader)) {
+    taGAFFrameHeader frameHeader;
+    if (!taGAFReadFrameHeader(pGAF, &frameHeader)) {
         return TA_ERROR;
     }
 
@@ -376,20 +367,16 @@ taResult ta_gaf_get_frame(ta_gaf* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut
         memset(pImageData, TA_TRANSPARENT_COLOR, frameHeader.width * frameHeader.height);
 
         // We need to branch depending on whether or not we are loading pixel data or sub-frames.
-        if (frameHeader.subframeCount == 0)
-        {
+        if (frameHeader.subframeCount == 0) {
             // It's raw pixel data.
-            if (!ta_gaf__read_frame_pixels(pGAF, &frameHeader, frameHeader.width, frameHeader.height, frameHeader.offsetX, frameHeader.offsetY, pImageData)) {
+            if (!taGAFReadFramePixels(pGAF, &frameHeader, frameHeader.width, frameHeader.height, frameHeader.offsetX, frameHeader.offsetY, pImageData)) {
                 free(pImageData);
                 return TA_ERROR;
             }
-        }
-        else
-        {
+        } else {
             // The frame is made up of a bunch of sub-frames. They need to be combined by simply layering them on top
             // of each other.
-            for (unsigned short iSubframe = 0; iSubframe < frameHeader.subframeCount; ++iSubframe)
-            {
+            for (unsigned short iSubframe = 0; iSubframe < frameHeader.subframeCount; ++iSubframe) {
                 // frameHeader.dataPtr points to a list of frameHeader.subframeCount pointers to frame headers.
                 if (!taSeekFile(pGAF->pFile, frameHeader.dataPtr + (iSubframe * 4), taSeekOriginStart)) {
                     free(pImageData);
@@ -406,31 +393,36 @@ taResult ta_gaf_get_frame(ta_gaf* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut
                     return TA_ERROR;
                 }
 
-                ta_gaf_frame_header subframeHeader;
-                if (!ta_gaf__read_frame_header(pGAF, &subframeHeader)) {
+                taGAFFrameHeader subframeHeader;
+                if (!taGAFReadFrameHeader(pGAF, &subframeHeader)) {
                     return TA_ERROR;
                 }
 
-                if (!ta_gaf__read_frame_pixels(pGAF, &subframeHeader, frameHeader.width, frameHeader.height, frameHeader.offsetX, frameHeader.offsetY, pImageData)) {
+                if (!taGAFReadFramePixels(pGAF, &subframeHeader, frameHeader.width, frameHeader.height, frameHeader.offsetX, frameHeader.offsetY, pImageData)) {
                     free(pImageData);
                     return TA_ERROR;
                 }
             }
         }
 
-        if (ppImageData) *ppImageData = pImageData;
+        if (ppImageData) {
+            *ppImageData = pImageData;
+        }
     }
 
     return TA_SUCCESS;
 }
 
-const char* ta_gaf_get_current_sequence_name(ta_gaf* pGAF)
+const char* taGAFGetCurrentSequenceName(taGAF* pGAF)
 {
-    if (pGAF == NULL) return NULL;
+    if (pGAF == NULL) {
+        return NULL;
+    }
+
     return pGAF->_sequenceName;
 }
 
-void ta_gaf_free(void* pBuffer)
+void taGAFFree(void* pBuffer)
 {
     free(pBuffer);
 }
@@ -439,7 +431,7 @@ void ta_gaf_free(void* pBuffer)
 
 // GAF Texture Groups
 // ==================
-TA_INLINE char* ta_gaf_texture_group__copy_sequence_name(char** ppNextStr, const char* src)
+TA_INLINE char* taGAFTextureGroupCopySequenceName(char** ppNextStr, const char* src)
 {
     char* pNextStr = *ppNextStr;
     size_t srcLen = strlen(src);
@@ -449,7 +441,7 @@ TA_INLINE char* ta_gaf_texture_group__copy_sequence_name(char** ppNextStr, const
     return pNextStr;
 }
 
-taResult ta_gaf_texture_group__create_texture_atlas(taEngineContext* pEngine, ta_gaf_texture_group* pGroup, ta_texture_packer* pPacker, ta_color_mode colorMode, taTexture** ppTexture)
+TA_PRIVATE taResult taGAFTextureGroupCreateTextureAtlas(taEngineContext* pEngine, taGAFTextureGroup* pGroup, ta_texture_packer* pPacker, ta_color_mode colorMode, taTexture** ppTexture)
 {
     assert(pEngine != NULL);
     assert(pGroup != NULL);
@@ -485,14 +477,17 @@ taResult ta_gaf_texture_group__create_texture_atlas(taEngineContext* pEngine, ta
     return TA_SUCCESS;
 }
 
-taResult ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePath, ta_color_mode colorMode, ta_gaf_texture_group* pGroup)
+taResult taGAFTextureGroupInit(taEngineContext* pEngine, const char* filePath, ta_color_mode colorMode, taGAFTextureGroup* pGroup)
 {
-    if (pGroup == NULL) return TA_INVALID_ARGS;
+    if (pGroup == NULL) {
+        return TA_INVALID_ARGS;
+    }
+
     taZeroObject(pGroup);
     
     pGroup->pEngine = pEngine;
 
-    ta_gaf* pGAF = ta_open_gaf(pEngine->pFS, filePath);
+    taGAF* pGAF = taOpenGAF(pEngine->pFS, filePath);
     if (pGAF == NULL) {
         return TA_FILE_NOT_FOUND;
     }
@@ -512,22 +507,22 @@ taResult ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePat
 
     size_t payloadSize = 0;
     for (taUInt32 iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence) {
-        payloadSize += sizeof(ta_gaf_texture_group_sequence);
+        payloadSize += sizeof(taGAFTextureGroupSequence);
         totalSequenceCount += 1;
 
         taUInt32 frameCount;
-        if (ta_gaf_select_sequence_by_index(pGAF, iSequence, &frameCount)) {
-            payloadSize += strlen(ta_gaf_get_current_sequence_name(pGAF))+1;
+        if (taGAFSelectSequenceByIndex(pGAF, iSequence, &frameCount)) {
+            payloadSize += strlen(taGAFGetCurrentSequenceName(pGAF))+1;
 
             for (taUInt32 iFrame = 0; iFrame < frameCount; ++iFrame) {
-                payloadSize += sizeof(ta_gaf_texture_group_frame);
+                payloadSize += sizeof(taGAFTextureGroupFrame);
                 totalFrameCount += 1;
 
                 taUInt32 sizeX;
                 taUInt32 sizeY;
                 taUInt32 posX;
                 taUInt32 posY;
-                if (ta_gaf_get_frame(pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, NULL) == TA_SUCCESS) {
+                if (taGAFGetFrame(pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, NULL) == TA_SUCCESS) {
                     if (!ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, NULL, NULL)) {
                         // We failed to pack the subtexture which probably means there's not enough room. We just need to reset this packer and try again.
                         totalAtlasCount += 1;
@@ -549,18 +544,18 @@ taResult ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePat
 
     size_t atlasesPayloadOffset       = 0;
     size_t sequencesPayloadOffset     = atlasesPayloadOffset   + (sizeof(taTexture*)                   * totalAtlasCount);
-    size_t framesPayloadOffset        = sequencesPayloadOffset + (sizeof(ta_gaf_texture_group_sequence) * totalSequenceCount);
-    size_t sequenceNamesPayloadOffset = framesPayloadOffset    + (sizeof(ta_gaf_texture_group_frame)    * totalFrameCount);
+    size_t framesPayloadOffset        = sequencesPayloadOffset + (sizeof(taGAFTextureGroupSequence) * totalSequenceCount);
+    size_t sequenceNamesPayloadOffset = framesPayloadOffset    + (sizeof(taGAFTextureGroupFrame)    * totalFrameCount);
 
     pGroup->_pPayload = (taUInt8*)calloc(1, payloadSize);
     if (pGroup->_pPayload == NULL) {
-        ta_close_gaf(pGAF);
+        taCloseGAF(pGAF);
         return TA_OUT_OF_MEMORY;
     }
 
     pGroup->ppAtlases  = (taTexture**                  )(pGroup->_pPayload + atlasesPayloadOffset);
-    pGroup->pSequences = (ta_gaf_texture_group_sequence*)(pGroup->_pPayload + sequencesPayloadOffset);
-    pGroup->pFrames    = (ta_gaf_texture_group_frame*   )(pGroup->_pPayload + framesPayloadOffset);
+    pGroup->pSequences = (taGAFTextureGroupSequence*)(pGroup->_pPayload + sequencesPayloadOffset);
+    pGroup->pFrames    = (taGAFTextureGroupFrame*   )(pGroup->_pPayload + framesPayloadOffset);
 
     pGroup->atlasCount    = totalAtlasCount;
     pGroup->sequenceCount = totalSequenceCount;
@@ -578,8 +573,8 @@ taResult ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePat
 
     for (taUInt32 iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence) {
         taUInt32 frameCount;
-        if (ta_gaf_select_sequence_by_index(pGAF, iSequence, &frameCount)) {
-            pGroup->pSequences[totalSequenceCount].name            = ta_gaf_texture_group__copy_sequence_name(&pNextStr, ta_gaf_get_current_sequence_name(pGAF));
+        if (taGAFSelectSequenceByIndex(pGAF, iSequence, &frameCount)) {
+            pGroup->pSequences[totalSequenceCount].name            = taGAFTextureGroupCopySequenceName(&pNextStr, taGAFGetCurrentSequenceName(pGAF));
             pGroup->pSequences[totalSequenceCount].firstFrameIndex = totalFrameCount;
             pGroup->pSequences[totalSequenceCount].frameCount      = frameCount;
 
@@ -590,11 +585,11 @@ taResult ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePat
                 taUInt32 posX;
                 taUInt32 posY;
                 taUInt8* pImageData;
-                if (ta_gaf_get_frame(pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, &pImageData) == TA_SUCCESS) {
+                if (taGAFGetFrame(pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, &pImageData) == TA_SUCCESS) {
                     ta_texture_packer_slot slot;
                     if (!ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, pImageData, &slot)) {
                         // We failed to pack the subtexture which probably means there's not enough room. We just need to reset this packer and try again.
-                        ta_gaf_texture_group__create_texture_atlas(pEngine, pGroup, &packer, colorMode, &pGroup->ppAtlases[totalAtlasCount]);
+                        taGAFTextureGroupCreateTextureAtlas(pEngine, pGroup, &packer, colorMode, &pGroup->ppAtlases[totalAtlasCount]);
                         totalAtlasCount += 1;
 
                         ta_texture_packer_reset(&packer);
@@ -619,7 +614,7 @@ taResult ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePat
 
     // There might be textures still sitting in the packer needing to be uploaded.
     if (!ta_texture_packer_is_empty(&packer)) {
-        ta_gaf_texture_group__create_texture_atlas(pEngine, pGroup, &packer, colorMode, &pGroup->ppAtlases[totalAtlasCount]);
+        taGAFTextureGroupCreateTextureAtlas(pEngine, pGroup, &packer, colorMode, &pGroup->ppAtlases[totalAtlasCount]);
         totalAtlasCount += 1;
     }
 
@@ -627,18 +622,25 @@ taResult ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePat
     return TA_SUCCESS;
 }
 
-taResult ta_gaf_texture_group_uninit(ta_gaf_texture_group* pGroup)
+taResult taGAFTextureGroupUninit(taGAFTextureGroup* pGroup)
 {
-    if (pGroup == NULL) return TA_INVALID_ARGS;
+    if (pGroup == NULL) {
+        return TA_INVALID_ARGS;
+    }
 
     free(pGroup->_pPayload);
     return TA_SUCCESS;
 }
 
-taBool32 ta_gaf_texture_group_find_sequence_by_name(ta_gaf_texture_group* pGroup, const char* sequenceName, taUInt32* pSequenceIndex)
+taBool32 taGAFTextureGroupFindSequenceByName(taGAFTextureGroup* pGroup, const char* sequenceName, taUInt32* pSequenceIndex)
 {
-    if (pSequenceIndex) *pSequenceIndex = (taUInt32)-1;
-    if (pGroup == NULL || sequenceName == NULL) return TA_FALSE;
+    if (pSequenceIndex) {
+        *pSequenceIndex = (taUInt32)-1;
+    }
+
+    if (pGroup == NULL || sequenceName == NULL) {
+        return TA_FALSE;
+    }
 
     for (taUInt32 iSequence = 0; iSequence < pGroup->sequenceCount; ++iSequence) {
         if (_stricmp(pGroup->pSequences[iSequence].name, sequenceName) == 0) {

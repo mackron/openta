@@ -115,10 +115,10 @@ void ta_map__reset_mesh_builders(ta_map_load_context* pLoadContext)
     pLoadContext->meshBuildersCount = 0;
 }
 
-ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_texture_packer* pPacker, ta_gaf* pGAF, const char* sequenceName)
+ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_texture_packer* pPacker, taGAF* pGAF, const char* sequenceName)
 {
     taUInt32 frameCount;
-    if (!ta_gaf_select_sequence(pGAF, sequenceName, &frameCount)) {
+    if (!taGAFSelectSequence(pGAF, sequenceName, &frameCount)) {
         return NULL;
     }
 
@@ -140,7 +140,7 @@ ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_tex
         taInt32 offsetX;
         taInt32 offsetY;
         taUInt8* pFrameImageData;
-        if (ta_gaf_get_frame(pGAF, iFrame, &frameWidth, &frameHeight, &offsetX, &offsetY, &pFrameImageData) != TA_SUCCESS) {
+        if (taGAFGetFrame(pGAF, iFrame, &frameWidth, &frameHeight, &offsetX, &offsetY, &pFrameImageData) != TA_SUCCESS) {
             free(pSeq);
             return NULL;
         }
@@ -200,25 +200,25 @@ taBool32 ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadC
     for (size_t iGAF = 0; iGAF < pMap->pEngine->textureGAFCount; ++iGAF)
     {
         taUInt32 frameCount;
-        if (ta_gaf_select_sequence(pMap->pEngine->ppTextureGAFs[iGAF], textureName, &frameCount))
+        if (taGAFSelectSequence(pMap->pEngine->ppTextureGAFs[iGAF], textureName, &frameCount))
         {
             taUInt32 width;
             taUInt32 height;
             taUInt32 posX;
             taUInt32 posY;
             taUInt8* pTextureData;
-            if (ta_gaf_get_frame(pMap->pEngine->ppTextureGAFs[iGAF], 0, &width, &height, &posX, &posY, &pTextureData) != TA_SUCCESS) {
+            if (taGAFGetFrame(pMap->pEngine->ppTextureGAFs[iGAF], 0, &width, &height, &posX, &posY, &pTextureData) != TA_SUCCESS) {
                 return TA_FALSE;
             }
 
             // The texture was successfully loaded, so now it needs to be packed into an atlas.
             ta_texture_packer_slot subtextureSlot;
             if (!ta_map__pack_subtexture(pMap, &pLoadContext->texturePacker, width, height, pTextureData, &subtextureSlot)) {
-                ta_gaf_free(pTextureData);
+                taGAFFree(pTextureData);
                 return TA_FALSE;
             }
 
-            ta_gaf_free(pTextureData);
+            taGAFFree(pTextureData);
 
 
             // The texture has been packed.
@@ -905,7 +905,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     qsort(pMap->pFeatureTypes, pMap->featureTypesCount, sizeof(*pMap->pFeatureTypes), ta_map__sort_feature_types_by_filename);
 
 
-    ta_gaf* pCurrentGAF = NULL;
+    taGAF* pCurrentGAF = NULL;
     for (taUInt32 iFeatureType = 0; iFeatureType < pMap->featureTypesCount; ++iFeatureType)
     {
         ta_map_feature_type* pFeatureType = &pMap->pFeatureTypes[iFeatureType];
@@ -919,8 +919,8 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
                     goto on_error;
                 }
 
-                ta_close_gaf(pCurrentGAF);
-                pCurrentGAF = ta_open_gaf(pMap->pEngine->pFS, filename);
+                taCloseGAF(pCurrentGAF);
+                pCurrentGAF = taOpenGAF(pMap->pEngine->pFS, filename);
                 if (pCurrentGAF == NULL) {
                     goto on_error;
                 }
@@ -944,7 +944,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
         }
     }
 
-    ta_close_gaf(pCurrentGAF);
+    taCloseGAF(pCurrentGAF);
 
 
 

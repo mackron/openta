@@ -90,7 +90,7 @@ typedef struct
             taInt32 stages;        // The number of stages in a multi-stage button. Set to 0 for simple buttons.
 
             // ...
-            ta_gaf_texture_group* pBackgroundTextureGroup;
+            taGAFTextureGroup* pBackgroundTextureGroup;
             taUInt32 iBackgroundFrame; // +0 for normal, +1 for pressed, +2 for disabled.
             taUInt32 currentStage;     // Used by multi-stage buttons.
         } button;
@@ -117,7 +117,7 @@ typedef struct
             taInt32 knobsize;
 
             // ...
-            ta_gaf_texture_group* pTextureGroup;
+            taGAFTextureGroup* pTextureGroup;
             taUInt32 iArrow0Frame;     // UP/LEFT arrow
             taUInt32 iArrow1Frame;     // DOWN/RIGHT arrow
             taUInt32 iTrackBegFrame;   // TOP/LEFT end of the track.
@@ -157,7 +157,7 @@ typedef struct
 struct ta_gui
 {
     taEngineContext* pEngine;
-    ta_gaf_texture_group textureGroupGAF;
+    taGAFTextureGroup textureGroupGAF;
     taBool32 hasGAF;
     taTexture* pBackgroundTexture;
 
@@ -229,7 +229,7 @@ typedef struct
 typedef struct
 {
     taEngineContext* pEngine;
-    ta_gaf_texture_group textureGroup;
+    taGAFTextureGroup textureGroup;
 
     // Button backgrounds for each size.
     ta_common_gui_texture_button buttons[6];

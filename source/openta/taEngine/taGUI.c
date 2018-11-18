@@ -236,7 +236,7 @@ taResult ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pGU
 
     char filePathGAF[TA_MAX_PATH];
     drpath_copy_and_append(filePathGAF, sizeof(filePathGAF), "anims", fileNameGAF);
-    pGUI->hasGAF = ta_gaf_texture_group_init(pEngine, filePathGAF, ta_color_mode_truecolor, &pGUI->textureGroupGAF) == TA_SUCCESS;
+    pGUI->hasGAF = taGAFTextureGroupInit(pEngine, filePathGAF, ta_color_mode_truecolor, &pGUI->textureGroupGAF) == TA_SUCCESS;
 
 
     // I haven't yet found a way to determine the background image to use for GUIs, so for the moment we will hard code these.
@@ -255,7 +255,7 @@ taResult ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pGU
             case TA_GUI_GADGET_TYPE_BUTTON:
             {
                 taUInt32 iSequence;
-                if (pGUI->hasGAF && ta_gaf_texture_group_find_sequence_by_name(&pGUI->textureGroupGAF, pGadget->name, &iSequence)) {
+                if (pGUI->hasGAF && taGAFTextureGroupFindSequenceByName(&pGUI->textureGroupGAF, pGadget->name, &iSequence)) {
                     pGadget->button.pBackgroundTextureGroup = &pGUI->textureGroupGAF;
                     pGadget->button.iBackgroundFrame = pGUI->textureGroupGAF.pSequences[iSequence].firstFrameIndex + pGadget->button.status;
                 } else {
@@ -323,7 +323,7 @@ taResult ta_gui_unload(ta_gui* pGUI)
     if (pGUI == NULL) return TA_INVALID_ARGS;
 
     if (pGUI->pBackgroundTexture) ta_delete_texture(pGUI->pBackgroundTexture);
-    if (pGUI->hasGAF) ta_gaf_texture_group_uninit(&pGUI->textureGroupGAF);
+    if (pGUI->hasGAF) taGAFTextureGroupUninit(&pGUI->textureGroupGAF);
     free(pGUI->_pPayload);
 
     return TA_SUCCESS;
@@ -601,14 +601,14 @@ taResult ta_common_gui_load(taEngineContext* pEngine, ta_common_gui* pCommonGUI)
 
     pCommonGUI->pEngine = pEngine;
 
-    taResult result = ta_gaf_texture_group_init(pEngine, "anims/commongui.GAF", ta_color_mode_truecolor, &pCommonGUI->textureGroup);
+    taResult result = taGAFTextureGroupInit(pEngine, "anims/commongui.GAF", ta_color_mode_truecolor, &pCommonGUI->textureGroup);
     if (result != TA_SUCCESS) {
         return result;
     }
 
     taUInt32 iSequence;
-    if (ta_gaf_texture_group_find_sequence_by_name(&pCommonGUI->textureGroup, "BUTTONS0", &iSequence)) {
-        ta_gaf_texture_group_sequence* pSequence = pCommonGUI->textureGroup.pSequences + iSequence;
+    if (taGAFTextureGroupFindSequenceByName(&pCommonGUI->textureGroup, "BUTTONS0", &iSequence)) {
+        taGAFTextureGroupSequence* pSequence = pCommonGUI->textureGroup.pSequences + iSequence;
 
         pCommonGUI->buttons[0].frameIndex = pSequence->firstFrameIndex + 4;
         pCommonGUI->buttons[1].frameIndex = pSequence->firstFrameIndex + 8;
@@ -618,7 +618,7 @@ taResult ta_common_gui_load(taEngineContext* pEngine, ta_common_gui* pCommonGUI)
         pCommonGUI->buttons[5].frameIndex = pSequence->firstFrameIndex + 24;
     }
 
-    if (ta_gaf_texture_group_find_sequence_by_name(&pCommonGUI->textureGroup, "SLIDERS", &iSequence)) {
+    if (taGAFTextureGroupFindSequenceByName(&pCommonGUI->textureGroup, "SLIDERS", &iSequence)) {
         taUInt32 firstFrameIndex = pCommonGUI->textureGroup.pSequences[iSequence].firstFrameIndex;
         pCommonGUI->scrollbar.arrowUpFrameIndex           = firstFrameIndex + 6;
         pCommonGUI->scrollbar.arrowUpPressedFrameIndex    = firstFrameIndex + 7;
@@ -649,7 +649,7 @@ taResult ta_common_gui_unload(ta_common_gui* pCommonGUI)
 {
     if (pCommonGUI == NULL) return TA_INVALID_ARGS;
 
-    ta_gaf_texture_group_uninit(&pCommonGUI->textureGroup);
+    taGAFTextureGroupUninit(&pCommonGUI->textureGroup);
     return TA_SUCCESS;
 }
 
@@ -697,7 +697,7 @@ taResult ta_common_gui_get_multistage_button_frame(ta_common_gui* pCommonGUI, ta
     }
 
     taUInt32 iSequence;
-    if (!ta_gaf_texture_group_find_sequence_by_name(&pCommonGUI->textureGroup, sequenceName, &iSequence)) {
+    if (!taGAFTextureGroupFindSequenceByName(&pCommonGUI->textureGroup, sequenceName, &iSequence)) {
         return TA_RESOURCE_NOT_FOUND;
     }
 

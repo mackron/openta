@@ -1156,7 +1156,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                         buttonState = TA_GUI_BUTTON_STATE_DISABLED;
                     }
 
-                    ta_gaf_texture_group_frame* pFrame = NULL;
+                    taGAFTextureGroupFrame* pFrame = NULL;
                     if (pGadget->button.stages == 0) {
                         pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + buttonState;
                     } else {
@@ -1266,8 +1266,8 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
 
             case TA_GUI_GADGET_TYPE_SCROLLBAR:
             {
-                ta_gaf_texture_group_frame* pArrow0Frame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iArrow0Frame; // UP/LEFT arrow
-                ta_gaf_texture_group_frame* pArrow1Frame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iArrow1Frame; // DOWN/RIGHT arrow
+                taGAFTextureGroupFrame* pArrow0Frame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iArrow0Frame; // UP/LEFT arrow
+                taGAFTextureGroupFrame* pArrow1Frame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iArrow1Frame; // DOWN/RIGHT arrow
                 taTexture* pArrow0Texture = pGadget->scrollbar.pTextureGroup->ppAtlases[pArrow0Frame->atlasIndex];
                 taTexture* pArrow1Texture = pGadget->scrollbar.pTextureGroup->ppAtlases[pArrow1Frame->atlasIndex];
                 float arrow0PosX = 0;
@@ -1275,9 +1275,9 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                 float arrow1PosX = 0;
                 float arrow1PosY = 0;
 
-                ta_gaf_texture_group_frame* pTrackBegFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackBegFrame;
-                ta_gaf_texture_group_frame* pTrackEndFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackEndFrame;
-                ta_gaf_texture_group_frame* pTrackMidFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackMidFrame;
+                taGAFTextureGroupFrame* pTrackBegFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackBegFrame;
+                taGAFTextureGroupFrame* pTrackEndFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackEndFrame;
+                taGAFTextureGroupFrame* pTrackMidFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackMidFrame;
                 taTexture* pTrackBegTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackBegFrame->atlasIndex];
                 taTexture* pTrackEndTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackEndFrame->atlasIndex];
                 taTexture* pTrackMidTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackMidFrame->atlasIndex];
@@ -1286,9 +1286,9 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                 float trackEndPosX = 0;
                 float trackEndPosY = 0;
 
-                ta_gaf_texture_group_frame* pThumbFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iThumbFrame;
-                ta_gaf_texture_group_frame* pThumbCapTopFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iThumbCapTopFrame;
-                ta_gaf_texture_group_frame* pThumbCapBotFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iThumbCapBotFrame;
+                taGAFTextureGroupFrame* pThumbFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iThumbFrame;
+                taGAFTextureGroupFrame* pThumbCapTopFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iThumbCapTopFrame;
+                taGAFTextureGroupFrame* pThumbCapBotFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iThumbCapBotFrame;
                 taTexture* pThumbTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pThumbFrame->atlasIndex];
                 taTexture* pThumbCapTopTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pThumbCapTopFrame->atlasIndex];
                 taTexture* pThumbCapBotTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pThumbCapBotFrame->atlasIndex];

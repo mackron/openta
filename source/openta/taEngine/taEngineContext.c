@@ -141,7 +141,7 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
     }
     taFSEnd(iGAF);
 
-    pEngine->ppTextureGAFs = (ta_gaf**)malloc(pEngine->textureGAFCount * sizeof(*pEngine->ppTextureGAFs));
+    pEngine->ppTextureGAFs = (taGAF**)malloc(pEngine->textureGAFCount * sizeof(*pEngine->ppTextureGAFs));
     if (pEngine->ppTextureGAFs == NULL) {
         goto on_error9;  // Failed to load texture GAFs.
     }
@@ -150,7 +150,7 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
     iGAF = taFSBegin(pEngine->pFS, "textures", TA_FALSE);
     while (taFSNext(iGAF)) {
         if (drpath_extension_equal(iGAF->fileInfo.relativePath, "gaf")) {
-            pEngine->ppTextureGAFs[pEngine->textureGAFCount] = ta_open_gaf(pEngine->pFS, iGAF->fileInfo.relativePath);
+            pEngine->ppTextureGAFs[pEngine->textureGAFCount] = taOpenGAF(pEngine->pFS, iGAF->fileInfo.relativePath);
             if (pEngine->ppTextureGAFs[pEngine->textureGAFCount] != NULL) {
                 pEngine->textureGAFCount += 1;
             } else {
@@ -165,7 +165,7 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
 
     return TA_SUCCESS;
 
-//on_error11: for (taUInt32 i = 0; i < pEngine->textureGAFCount; ++i) { ta_close_gaf(pEngine->ppTextureGAFs[i]); }
+//on_error11: for (taUInt32 i = 0; i < pEngine->textureGAFCount; ++i) { taCloseGAF(pEngine->ppTextureGAFs[i]); }
 //on_error10: free(pEngine->ppTextureGAFs);
 on_error9:  taDeleteFeaturesLibrary(pEngine->pFeatures);
 on_error8:  ta_common_gui_unload(&pEngine->commonGUI);
@@ -186,7 +186,7 @@ taResult taEngineContextUninit(taEngineContext* pEngine)
         return TA_INVALID_ARGS;
     }
 
-    for (taUInt32 i = 0; i < pEngine->textureGAFCount; ++i) { ta_close_gaf(pEngine->ppTextureGAFs[i]); }
+    for (taUInt32 i = 0; i < pEngine->textureGAFCount; ++i) { taCloseGAF(pEngine->ppTextureGAFs[i]); }
     free(pEngine->ppTextureGAFs);
     taDeleteFeaturesLibrary(pEngine->pFeatures);
     ta_common_gui_unload(&pEngine->commonGUI);

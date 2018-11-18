@@ -27,7 +27,7 @@ struct taEngineContext
     taFeaturesLibrary* pFeatures;
 
     taUInt32 textureGAFCount;
-    ta_gaf** ppTextureGAFs;     // The list of GAF files containing textures. This is initialized when the engine context is created.
+    taGAF** ppTextureGAFs;     // The list of GAF files containing textures. This is initialized when the engine context is created.
 };
 
 taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadProperties, taStepProc onStep, void* pUserData, taEngineContext* pEngine);
