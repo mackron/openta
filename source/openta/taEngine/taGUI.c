@@ -246,7 +246,7 @@ taResult taGUILoad(taEngineContext* pEngine, const char* filePath, taGUI* pGUI)
 
 
     // I haven't yet found a way to determine the background image to use for GUIs, so for the moment we will hard code these.
-    const char* propVal = ta_property_manager_getf(&pEngine->properties, "%s.BACKGROUND", fileName);
+    const char* propVal = taPropertyManagerGetF(&pEngine->properties, "%s.BACKGROUND", fileName);
     if (propVal != NULL) {
         pGUI->pBackgroundTexture = taLoadImage(pEngine, propVal);
     }

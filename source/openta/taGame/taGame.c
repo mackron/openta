@@ -4,7 +4,7 @@
 #include "../taEngine/taEngine.c"
 
 void ta_game_on_step(taEngineContext* pEngine);
-void ta_game_on_load_properties(taEngineContext* pEngine, ta_property_manager* pProperties);
+void ta_game_on_load_properties(taEngineContext* pEngine, taPropertyManager* pProperties);
 
 TA_PRIVATE int ta_qsort_cb_map(const void* a, const void* b)
 {
@@ -18,7 +18,7 @@ TA_PRIVATE int ta_qsort_cb_map(const void* a, const void* b)
 }
 
 
-TA_PRIVATE taResult ta_load_default_totala_settings(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_load_default_totala_settings(taPropertyManager* pProperties)
 {
     assert(pProperties != NULL);
 
@@ -26,7 +26,7 @@ TA_PRIVATE taResult ta_load_default_totala_settings(ta_property_manager* pProper
     return TA_SUCCESS;
 }
 
-TA_PRIVATE taResult ta_load_totala_settings__config(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_load_totala_settings__config(taPropertyManager* pProperties)
 {
     assert(pProperties != NULL);
 
@@ -57,7 +57,7 @@ TA_PRIVATE char* ta_registry_read_string(HKEY hKey, const char* name, char* valu
     return value;
 }
 
-TA_PRIVATE taResult ta_load_totala_settings__registry(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_load_totala_settings__registry(taPropertyManager* pProperties)
 {
     assert(pProperties != NULL);
 
@@ -69,61 +69,61 @@ TA_PRIVATE taResult ta_load_totala_settings__registry(ta_property_manager* pProp
         return TA_ERROR;
     }
 
-    ta_property_manager_set_int(pProperties, "totala.ackfx",                    (int)ta_registry_read_uint32(hKey, "ackfx"));
-    ta_property_manager_set_int(pProperties, "totala.anti-alias",               (int)ta_registry_read_uint32(hKey, "Anti-Alias"));
-    ta_property_manager_set_int(pProperties, "totala.buildfx",                  (int)ta_registry_read_uint32(hKey, "buildfx"));
-    ta_property_manager_set_int(pProperties, "totala.cdlists",                  (int)ta_registry_read_uint32(hKey, "CDLISTS"));
-    ta_property_manager_set_int(pProperties, "totala.cdmode",                   (int)ta_registry_read_uint32(hKey, "cdmode"));
-    ta_property_manager_set_int(pProperties, "totala.cdshell",                  (int)ta_registry_read_uint32(hKey, "cdshell"));
-    ta_property_manager_set_int(pProperties, "totala.clock",                    (int)ta_registry_read_uint32(hKey, "clock"));
-    ta_property_manager_set_int(pProperties, "totala.damagebars",               (int)ta_registry_read_uint32(hKey, "damagebars"));
-    ta_property_manager_set_int(pProperties, "totala.difficulty",               (int)ta_registry_read_uint32(hKey, "Difficulty"));
-    ta_property_manager_set_int(pProperties, "totala.display-width",            (int)ta_registry_read_uint32(hKey, "DisplaymodeWidth"));
-    ta_property_manager_set_int(pProperties, "totala.display-height",           (int)ta_registry_read_uint32(hKey, "DisplaymodeHeight"));
-    ta_property_manager_set_int(pProperties, "totala.dithered-fog",             (int)ta_registry_read_uint32(hKey, "DitheredFog"));
-    ta_property_manager_set_int(pProperties, "totala.feature-shadows",          (int)ta_registry_read_uint32(hKey, "FeatureShadows"));
-    ta_property_manager_set_int(pProperties, "totala.fixed-locations",          (int)ta_registry_read_uint32(hKey, "FixedLocations"));
-    ta_property_manager_set_int(pProperties, "totala.fxvol",                    (int)ta_registry_read_uint32(hKey, "fxvol"));
-    ta_property_manager_set(    pProperties, "totala.game-name",                     ta_registry_read_string(hKey, "Game Name", strBuffer, sizeof(strBuffer)));
-    ta_property_manager_set_int(pProperties, "totala.game-speed",               (int)ta_registry_read_uint32(hKey, "gamespeed"));
-    ta_property_manager_set_int(pProperties, "totala.gamma",                    (int)ta_registry_read_uint32(hKey, "Gamma"));
-    ta_property_manager_set_int(pProperties, "totala.interface-type",           (int)ta_registry_read_uint32(hKey, "Interface Type"));
-    ta_property_manager_set_int(pProperties, "totala.mixing-buffers",           (int)ta_registry_read_uint32(hKey, "MixingBuffers"));
-    ta_property_manager_set_int(pProperties, "totala.mouse-speed",              (int)ta_registry_read_uint32(hKey, "mousespeed"));
-    ta_property_manager_set_int(pProperties, "totala.multi-commander-death",    (int)ta_registry_read_uint32(hKey, "MultiCommanderDeath"));
-    ta_property_manager_set_int(pProperties, "totala.multi-line-of-sight",      (int)ta_registry_read_uint32(hKey, "MultiLineOfSight"));
-    ta_property_manager_set_int(pProperties, "totala.multi-los-type",           (int)ta_registry_read_uint32(hKey, "MultiLOSType"));
-    ta_property_manager_set_int(pProperties, "totala.multi-mapping",            (int)ta_registry_read_uint32(hKey, "MultiMapping"));
-    ta_property_manager_set_int(pProperties, "totala.music-mode",               (int)ta_registry_read_uint32(hKey, "musicmode"));
-    ta_property_manager_set_int(pProperties, "totala.musicvol",                 (int)ta_registry_read_uint32(hKey, "musicvol"));
-    ta_property_manager_set(    pProperties, "totala.nickname",                      ta_registry_read_string(hKey, "Nickname", strBuffer, sizeof(strBuffer)));
-    ta_property_manager_set(    pProperties, "totala.password",                      ta_registry_read_string(hKey, "Password", strBuffer, sizeof(strBuffer)));
-    ta_property_manager_set_int(pProperties, "totala.play-movie",               (int)ta_registry_read_uint32(hKey, "PlayMovie"));
-    ta_property_manager_set_int(pProperties, "totala.restore-volume",           (int)ta_registry_read_uint32(hKey, "RestoreVolume"));
-    ta_property_manager_set_int(pProperties, "totala.screen-chat",              (int)ta_registry_read_uint32(hKey, "screenchat"));
-    ta_property_manager_set_int(pProperties, "totala.scroll-speed",             (int)ta_registry_read_uint32(hKey, "scrollspeed"));
-    ta_property_manager_set_int(pProperties, "totala.shading",                  (int)ta_registry_read_uint32(hKey, "Shading"));
-    ta_property_manager_set_int(pProperties, "totala.shadows",                  (int)ta_registry_read_uint32(hKey, "Shadows"));
-    ta_property_manager_set_int(pProperties, "totala.side",                     (int)ta_registry_read_uint32(hKey, "side"));
-    ta_property_manager_set_int(pProperties, "totala.single-commander-death",   (int)ta_registry_read_uint32(hKey, "SingleCommanderDeath"));
-    ta_property_manager_set_int(pProperties, "totala.single-line-of-sight",     (int)ta_registry_read_uint32(hKey, "SingleLineOfSight"));
-    ta_property_manager_set_int(pProperties, "totala.single-los-type",          (int)ta_registry_read_uint32(hKey, "SingleLOSType"));
-    ta_property_manager_set_int(pProperties, "totala.single-mapping",           (int)ta_registry_read_uint32(hKey, "SingleMapping"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish-commander-death", (int)ta_registry_read_uint32(hKey, "SkirmishCommanderDeath"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish-difficulty",      (int)ta_registry_read_uint32(hKey, "SkirmishDifficulty"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish-line-of-sight",   (int)ta_registry_read_uint32(hKey, "SkirmishLineOfSight"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish-location",        (int)ta_registry_read_uint32(hKey, "SkirmishLocation"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish-los-type",        (int)ta_registry_read_uint32(hKey, "SkirmishLOSType"));
-    ta_property_manager_set(    pProperties, "totala.skirmish-map",                  ta_registry_read_string(hKey, "SkirmishMap", strBuffer, sizeof(strBuffer)));
-    ta_property_manager_set_int(pProperties, "totala.skirmish-mapping",         (int)ta_registry_read_uint32(hKey, "SkirmishMapping"));
-    ta_property_manager_set_int(pProperties, "totala.sound-mode",               (int)ta_registry_read_uint32(hKey, "Sound Mode"));
-    ta_property_manager_set_int(pProperties, "totala.speechfx",                 (int)ta_registry_read_uint32(hKey, "speechfx"));
-    ta_property_manager_set_int(pProperties, "totala.switch-alt",               (int)ta_registry_read_uint32(hKey, "SwitchAlt"));
-    ta_property_manager_set_int(pProperties, "totala.text-lines",               (int)ta_registry_read_uint32(hKey, "textlines"));
-    ta_property_manager_set_int(pProperties, "totala.text-scroll",              (int)ta_registry_read_uint32(hKey, "textscroll"));
-    ta_property_manager_set_int(pProperties, "totala.unit-chat",                (int)ta_registry_read_uint32(hKey, "unitchat"));
-    ta_property_manager_set_int(pProperties, "totala.unit-chat-text",           (int)ta_registry_read_uint32(hKey, "unitchattext"));
-    ta_property_manager_set_int(pProperties, "totala.vehicle-shadows",          (int)ta_registry_read_uint32(hKey, "VehicleShadows"));
+    taPropertyManagerSetInt(pProperties, "totala.ackfx",                    (int)ta_registry_read_uint32(hKey, "ackfx"));
+    taPropertyManagerSetInt(pProperties, "totala.anti-alias",               (int)ta_registry_read_uint32(hKey, "Anti-Alias"));
+    taPropertyManagerSetInt(pProperties, "totala.buildfx",                  (int)ta_registry_read_uint32(hKey, "buildfx"));
+    taPropertyManagerSetInt(pProperties, "totala.cdlists",                  (int)ta_registry_read_uint32(hKey, "CDLISTS"));
+    taPropertyManagerSetInt(pProperties, "totala.cdmode",                   (int)ta_registry_read_uint32(hKey, "cdmode"));
+    taPropertyManagerSetInt(pProperties, "totala.cdshell",                  (int)ta_registry_read_uint32(hKey, "cdshell"));
+    taPropertyManagerSetInt(pProperties, "totala.clock",                    (int)ta_registry_read_uint32(hKey, "clock"));
+    taPropertyManagerSetInt(pProperties, "totala.damagebars",               (int)ta_registry_read_uint32(hKey, "damagebars"));
+    taPropertyManagerSetInt(pProperties, "totala.difficulty",               (int)ta_registry_read_uint32(hKey, "Difficulty"));
+    taPropertyManagerSetInt(pProperties, "totala.display-width",            (int)ta_registry_read_uint32(hKey, "DisplaymodeWidth"));
+    taPropertyManagerSetInt(pProperties, "totala.display-height",           (int)ta_registry_read_uint32(hKey, "DisplaymodeHeight"));
+    taPropertyManagerSetInt(pProperties, "totala.dithered-fog",             (int)ta_registry_read_uint32(hKey, "DitheredFog"));
+    taPropertyManagerSetInt(pProperties, "totala.feature-shadows",          (int)ta_registry_read_uint32(hKey, "FeatureShadows"));
+    taPropertyManagerSetInt(pProperties, "totala.fixed-locations",          (int)ta_registry_read_uint32(hKey, "FixedLocations"));
+    taPropertyManagerSetInt(pProperties, "totala.fxvol",                    (int)ta_registry_read_uint32(hKey, "fxvol"));
+    taPropertyManagerSet(    pProperties, "totala.game-name",                     ta_registry_read_string(hKey, "Game Name", strBuffer, sizeof(strBuffer)));
+    taPropertyManagerSetInt(pProperties, "totala.game-speed",               (int)ta_registry_read_uint32(hKey, "gamespeed"));
+    taPropertyManagerSetInt(pProperties, "totala.gamma",                    (int)ta_registry_read_uint32(hKey, "Gamma"));
+    taPropertyManagerSetInt(pProperties, "totala.interface-type",           (int)ta_registry_read_uint32(hKey, "Interface Type"));
+    taPropertyManagerSetInt(pProperties, "totala.mixing-buffers",           (int)ta_registry_read_uint32(hKey, "MixingBuffers"));
+    taPropertyManagerSetInt(pProperties, "totala.mouse-speed",              (int)ta_registry_read_uint32(hKey, "mousespeed"));
+    taPropertyManagerSetInt(pProperties, "totala.multi-commander-death",    (int)ta_registry_read_uint32(hKey, "MultiCommanderDeath"));
+    taPropertyManagerSetInt(pProperties, "totala.multi-line-of-sight",      (int)ta_registry_read_uint32(hKey, "MultiLineOfSight"));
+    taPropertyManagerSetInt(pProperties, "totala.multi-los-type",           (int)ta_registry_read_uint32(hKey, "MultiLOSType"));
+    taPropertyManagerSetInt(pProperties, "totala.multi-mapping",            (int)ta_registry_read_uint32(hKey, "MultiMapping"));
+    taPropertyManagerSetInt(pProperties, "totala.music-mode",               (int)ta_registry_read_uint32(hKey, "musicmode"));
+    taPropertyManagerSetInt(pProperties, "totala.musicvol",                 (int)ta_registry_read_uint32(hKey, "musicvol"));
+    taPropertyManagerSet(    pProperties, "totala.nickname",                      ta_registry_read_string(hKey, "Nickname", strBuffer, sizeof(strBuffer)));
+    taPropertyManagerSet(    pProperties, "totala.password",                      ta_registry_read_string(hKey, "Password", strBuffer, sizeof(strBuffer)));
+    taPropertyManagerSetInt(pProperties, "totala.play-movie",               (int)ta_registry_read_uint32(hKey, "PlayMovie"));
+    taPropertyManagerSetInt(pProperties, "totala.restore-volume",           (int)ta_registry_read_uint32(hKey, "RestoreVolume"));
+    taPropertyManagerSetInt(pProperties, "totala.screen-chat",              (int)ta_registry_read_uint32(hKey, "screenchat"));
+    taPropertyManagerSetInt(pProperties, "totala.scroll-speed",             (int)ta_registry_read_uint32(hKey, "scrollspeed"));
+    taPropertyManagerSetInt(pProperties, "totala.shading",                  (int)ta_registry_read_uint32(hKey, "Shading"));
+    taPropertyManagerSetInt(pProperties, "totala.shadows",                  (int)ta_registry_read_uint32(hKey, "Shadows"));
+    taPropertyManagerSetInt(pProperties, "totala.side",                     (int)ta_registry_read_uint32(hKey, "side"));
+    taPropertyManagerSetInt(pProperties, "totala.single-commander-death",   (int)ta_registry_read_uint32(hKey, "SingleCommanderDeath"));
+    taPropertyManagerSetInt(pProperties, "totala.single-line-of-sight",     (int)ta_registry_read_uint32(hKey, "SingleLineOfSight"));
+    taPropertyManagerSetInt(pProperties, "totala.single-los-type",          (int)ta_registry_read_uint32(hKey, "SingleLOSType"));
+    taPropertyManagerSetInt(pProperties, "totala.single-mapping",           (int)ta_registry_read_uint32(hKey, "SingleMapping"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish-commander-death", (int)ta_registry_read_uint32(hKey, "SkirmishCommanderDeath"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish-difficulty",      (int)ta_registry_read_uint32(hKey, "SkirmishDifficulty"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish-line-of-sight",   (int)ta_registry_read_uint32(hKey, "SkirmishLineOfSight"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish-location",        (int)ta_registry_read_uint32(hKey, "SkirmishLocation"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish-los-type",        (int)ta_registry_read_uint32(hKey, "SkirmishLOSType"));
+    taPropertyManagerSet(    pProperties, "totala.skirmish-map",                  ta_registry_read_string(hKey, "SkirmishMap", strBuffer, sizeof(strBuffer)));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish-mapping",         (int)ta_registry_read_uint32(hKey, "SkirmishMapping"));
+    taPropertyManagerSetInt(pProperties, "totala.sound-mode",               (int)ta_registry_read_uint32(hKey, "Sound Mode"));
+    taPropertyManagerSetInt(pProperties, "totala.speechfx",                 (int)ta_registry_read_uint32(hKey, "speechfx"));
+    taPropertyManagerSetInt(pProperties, "totala.switch-alt",               (int)ta_registry_read_uint32(hKey, "SwitchAlt"));
+    taPropertyManagerSetInt(pProperties, "totala.text-lines",               (int)ta_registry_read_uint32(hKey, "textlines"));
+    taPropertyManagerSetInt(pProperties, "totala.text-scroll",              (int)ta_registry_read_uint32(hKey, "textscroll"));
+    taPropertyManagerSetInt(pProperties, "totala.unit-chat",                (int)ta_registry_read_uint32(hKey, "unitchat"));
+    taPropertyManagerSetInt(pProperties, "totala.unit-chat-text",           (int)ta_registry_read_uint32(hKey, "unitchattext"));
+    taPropertyManagerSetInt(pProperties, "totala.vehicle-shadows",          (int)ta_registry_read_uint32(hKey, "VehicleShadows"));
 
     RegCloseKey(hKey);
 
@@ -133,30 +133,30 @@ TA_PRIVATE taResult ta_load_totala_settings__registry(ta_property_manager* pProp
         return TA_ERROR;
     }
 
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player0-ally-group", (int)ta_registry_read_uint32(hKey, "Player0AllyGroup"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player0-color",      (int)ta_registry_read_uint32(hKey, "Player0Color"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player0-controller", (int)ta_registry_read_uint32(hKey, "Player0Controller"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player0-energy",     (int)ta_registry_read_uint32(hKey, "Player0Energy"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player0-metal",      (int)ta_registry_read_uint32(hKey, "Player0Metal"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player0-side",       (int)ta_registry_read_uint32(hKey, "Player0Side"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player1-ally-group", (int)ta_registry_read_uint32(hKey, "Player1AllyGroup"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player1-color",      (int)ta_registry_read_uint32(hKey, "Player1Color"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player1-controller", (int)ta_registry_read_uint32(hKey, "Player1Controller"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player1-energy",     (int)ta_registry_read_uint32(hKey, "Player1Energy"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player1-metal",      (int)ta_registry_read_uint32(hKey, "Player1Metal"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player1-side",       (int)ta_registry_read_uint32(hKey, "Player1Side"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player2-ally-group", (int)ta_registry_read_uint32(hKey, "Player2AllyGroup"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player2-color",      (int)ta_registry_read_uint32(hKey, "Player2Color"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player2-controller", (int)ta_registry_read_uint32(hKey, "Player2Controller"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player2-energy",     (int)ta_registry_read_uint32(hKey, "Player2Energy"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player2-metal",      (int)ta_registry_read_uint32(hKey, "Player2Metal"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player2-side",       (int)ta_registry_read_uint32(hKey, "Player2Side"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player3-ally-group", (int)ta_registry_read_uint32(hKey, "Player3AllyGroup"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player3-color",      (int)ta_registry_read_uint32(hKey, "Player3Color"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player3-controller", (int)ta_registry_read_uint32(hKey, "Player3Controller"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player3-energy",     (int)ta_registry_read_uint32(hKey, "Player3Energy"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player3-metal",      (int)ta_registry_read_uint32(hKey, "Player3Metal"));
-    ta_property_manager_set_int(pProperties, "totala.skirmish.player3-side",       (int)ta_registry_read_uint32(hKey, "Player3Side"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-ally-group", (int)ta_registry_read_uint32(hKey, "Player0AllyGroup"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-color",      (int)ta_registry_read_uint32(hKey, "Player0Color"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-controller", (int)ta_registry_read_uint32(hKey, "Player0Controller"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-energy",     (int)ta_registry_read_uint32(hKey, "Player0Energy"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-metal",      (int)ta_registry_read_uint32(hKey, "Player0Metal"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-side",       (int)ta_registry_read_uint32(hKey, "Player0Side"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-ally-group", (int)ta_registry_read_uint32(hKey, "Player1AllyGroup"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-color",      (int)ta_registry_read_uint32(hKey, "Player1Color"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-controller", (int)ta_registry_read_uint32(hKey, "Player1Controller"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-energy",     (int)ta_registry_read_uint32(hKey, "Player1Energy"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-metal",      (int)ta_registry_read_uint32(hKey, "Player1Metal"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-side",       (int)ta_registry_read_uint32(hKey, "Player1Side"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-ally-group", (int)ta_registry_read_uint32(hKey, "Player2AllyGroup"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-color",      (int)ta_registry_read_uint32(hKey, "Player2Color"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-controller", (int)ta_registry_read_uint32(hKey, "Player2Controller"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-energy",     (int)ta_registry_read_uint32(hKey, "Player2Energy"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-metal",      (int)ta_registry_read_uint32(hKey, "Player2Metal"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-side",       (int)ta_registry_read_uint32(hKey, "Player2Side"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-ally-group", (int)ta_registry_read_uint32(hKey, "Player3AllyGroup"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-color",      (int)ta_registry_read_uint32(hKey, "Player3Color"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-controller", (int)ta_registry_read_uint32(hKey, "Player3Controller"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-energy",     (int)ta_registry_read_uint32(hKey, "Player3Energy"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-metal",      (int)ta_registry_read_uint32(hKey, "Player3Metal"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-side",       (int)ta_registry_read_uint32(hKey, "Player3Side"));
 
     RegCloseKey(hKey);
 
@@ -164,7 +164,7 @@ TA_PRIVATE taResult ta_load_totala_settings__registry(ta_property_manager* pProp
 }
 #endif
 
-TA_PRIVATE taResult ta_load_totala_settings(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_load_totala_settings(taPropertyManager* pProperties)
 {
     assert(pProperties != NULL);
 
@@ -188,7 +188,7 @@ TA_PRIVATE taResult ta_load_totala_settings(ta_property_manager* pProperties)
     return TA_SUCCESS;
 }
 
-TA_PRIVATE taResult ta_load_settings(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_load_settings(taPropertyManager* pProperties)
 {
     if (pProperties == NULL) return TA_INVALID_ARGS;
 
@@ -204,7 +204,7 @@ TA_PRIVATE taResult ta_load_settings(ta_property_manager* pProperties)
 }
 
 
-TA_PRIVATE taResult ta_save_totala_settings(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_save_totala_settings(taPropertyManager* pProperties)
 {
     assert(pProperties != NULL);
 
@@ -215,7 +215,7 @@ TA_PRIVATE taResult ta_save_totala_settings(ta_property_manager* pProperties)
     return TA_SUCCESS;
 }
 
-TA_PRIVATE taResult ta_save_settings(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_save_settings(taPropertyManager* pProperties)
 {
     if (pProperties != NULL) return TA_INVALID_ARGS;
 
@@ -227,7 +227,7 @@ TA_PRIVATE taResult ta_save_settings(ta_property_manager* pProperties)
     return TA_SUCCESS;
 }
 
-void ta_game_on_load_properties(taEngineContext* pEngine, ta_property_manager* pProperties)
+void ta_game_on_load_properties(taEngineContext* pEngine, taPropertyManager* pProperties)
 {
     (void)pEngine;
     ta_load_settings(pProperties);
@@ -383,7 +383,7 @@ void ta_delete_game(ta_game* pGame)
 
 taResult ta_set_property(ta_game* pGame, const char* key, const char* value)
 {
-    return ta_property_manager_set(&pGame->engine.properties, key, value);
+    return taPropertyManagerSet(&pGame->engine.properties, key, value);
 }
 
 taResult ta_set_property_int(ta_game* pGame, const char* key, taInt32 value)
@@ -408,7 +408,7 @@ taResult ta_set_property_bool(ta_game* pGame, const char* key, taBool32 value)
 
 const char* ta_get_property(ta_game* pGame, const char* key)
 {
-    return ta_property_manager_get(&pGame->engine.properties, key);
+    return taPropertyManagerGet(&pGame->engine.properties, key);
 }
 
 const char* ta_get_propertyf(ta_game* pGame, const char* key, ...)
@@ -416,7 +416,7 @@ const char* ta_get_propertyf(ta_game* pGame, const char* key, ...)
     va_list args;
     va_start(args, key);
 
-    const char* value = ta_property_manager_getv(&pGame->engine.properties, key, args);
+    const char* value = taPropertyManagerGetV(&pGame->engine.properties, key, args);
 
     va_end(args);
     return value;
@@ -730,11 +730,11 @@ void ta_step__main_menu(ta_game* pGame, double dt)
     // Rendering
     // =========
     taDrawFullscreenGUI(pGame->engine.pGraphics, &pGame->mainMenu);
-    taDrawTextf(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16,                           "Mouse Position: %d %d", (int)pGame->engine.input.mousePosX, (int)pGame->engine.input.mousePosY);
-    taDrawTextf(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16+pGame->engine.font.height, "Mouse Position (GUI): %d %d", mousePosXGUI, mousePosYGUI);
+    taDrawTextF(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16,                           "Mouse Position: %d %d", (int)pGame->engine.input.mousePosX, (int)pGame->engine.input.mousePosY);
+    taDrawTextF(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16+pGame->engine.font.height, "Mouse Position (GUI): %d %d", mousePosXGUI, mousePosYGUI);
 
     if (isMouseOverGadget) {
-        taDrawTextf(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16+(2*pGame->engine.font.height), "Gadget Under Mouse: %s", pGame->mainMenu.pGadgets[iGadgetUnderMouse].name);
+        taDrawTextF(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16+(2*pGame->engine.font.height), "Gadget Under Mouse: %s", pGame->mainMenu.pGadgets[iGadgetUnderMouse].name);
     }
 
     float scale;
@@ -746,7 +746,7 @@ void ta_step__main_menu(ta_game* pGame, double dt)
     float versionSizeX;
     float versionSizeY;
     taFontMeasureText(&pGame->engine.fontSmall, scale, versionStr, &versionSizeX, &versionSizeY);
-    taDrawTextf(pGame->engine.pGraphics, &pGame->engine.fontSmall, 255, scale, (pGame->engine.pGraphics->resolutionX - versionSizeX)/2, 300*scale + offsetY, "%s", versionStr);
+    taDrawTextF(pGame->engine.pGraphics, &pGame->engine.fontSmall, 255, scale, (pGame->engine.pGraphics->resolutionX - versionSizeX)/2, 300*scale + offsetY, "%s", versionStr);
 }
 
 void ta_step__sp_menu(ta_game* pGame, double dt)

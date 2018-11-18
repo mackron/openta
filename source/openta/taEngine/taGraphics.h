@@ -146,7 +146,7 @@ void taDrawMap(taGraphicsContext* pGraphics, taMapInstance* pMap);
 
 // Draws a string of text.
 void taDrawText(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text);
-void taDrawTextf(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...);
+void taDrawTextF(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...);
 
 // Draws a textured rectangle.
 void taDrawSubTexture(taTexture* pTexture, float posX, float posY, float width, float height, taBool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY);

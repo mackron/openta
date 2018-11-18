@@ -1,6 +1,6 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-typedef void (* taLoadPropertiesProc)(taEngineContext* pEngine, ta_property_manager* pProperties);
+typedef void (* taLoadPropertiesProc)(taEngineContext* pEngine, taPropertyManager* pProperties);
 typedef void (* taStepProc)(taEngineContext* pEngine);
 
 struct taEngineContext
@@ -11,7 +11,7 @@ struct taEngineContext
     taStepProc onStep;
     void* pUserData;
 
-    ta_property_manager properties;
+    taPropertyManager properties;
     taFS* pFS;
     taGraphicsContext* pGraphics;
     taUInt32 palette[256];     // The standard palette. PALETTE.PAL

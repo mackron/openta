@@ -1747,7 +1747,7 @@ void taDrawText(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex,
     glEnd();
 }
 
-void taDrawTextf(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...)
+void taDrawTextF(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...)
 {
     va_list args;
     va_start(args, text);

@@ -41,7 +41,7 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
     //// Property Manager ////
     //
     // Properties are loaded first because we may want to use them for initialization of other components.
-    result = ta_property_manager_init(&pEngine->properties);
+    result = taPropertyManagerInit(&pEngine->properties);
     if (result != TA_SUCCESS) {
         goto on_error0;
     }
@@ -175,7 +175,7 @@ on_error5:  taInputStateUninit(&pEngine->input);
 on_error4:  taDeleteAudioContext(pEngine->pAudio);
 on_error3:  taDeleteGraphicsContext(pEngine->pGraphics);
 on_error2:  taDeleteFileSystem(pEngine->pFS);
-on_error1:  ta_property_manager_uninit(&pEngine->properties);
+on_error1:  taPropertyManagerUninit(&pEngine->properties);
 on_error0:
     return result;
 }
@@ -196,7 +196,7 @@ taResult taEngineContextUninit(taEngineContext* pEngine)
     taDeleteAudioContext(pEngine->pAudio);
     taDeleteGraphicsContext(pEngine->pGraphics);
     taDeleteFileSystem(pEngine->pFS);
-    ta_property_manager_uninit(&pEngine->properties);
+    taPropertyManagerUninit(&pEngine->properties);
     return TA_SUCCESS;
 }
 

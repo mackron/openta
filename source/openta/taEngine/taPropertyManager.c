@@ -1,6 +1,6 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-taResult ta_property_manager_init(ta_property_manager* pProperties)
+taResult taPropertyManagerInit(taPropertyManager* pProperties)
 {
     if (pProperties == NULL) return TA_INVALID_ARGS;
     taZeroObject(pProperties);
@@ -8,7 +8,7 @@ taResult ta_property_manager_init(ta_property_manager* pProperties)
     return TA_SUCCESS;
 }
 
-taResult ta_property_manager_uninit(ta_property_manager* pProperties)
+taResult taPropertyManagerUninit(taPropertyManager* pProperties)
 {
     if (pProperties == NULL) return TA_INVALID_ARGS;
 
@@ -22,7 +22,7 @@ taResult ta_property_manager_uninit(ta_property_manager* pProperties)
 }
 
 
-taResult ta_property_manager_set(ta_property_manager* pProperties, const char* key, const char* val)
+taResult taPropertyManagerSet(taPropertyManager* pProperties, const char* key, const char* val)
 {
     if (pProperties == NULL || key == NULL) return TA_INVALID_ARGS;
 
@@ -30,7 +30,7 @@ taResult ta_property_manager_set(ta_property_manager* pProperties, const char* k
         size_t keyLen = strlen(key);
         size_t valLen = strlen(val);
 
-        ta_property prop;
+        taProperty prop;
         prop.key = (char*)malloc(keyLen+1 + valLen+1); if (prop.key == NULL) return TA_OUT_OF_MEMORY;
         dr_strcpy_s(prop.key, keyLen+1, key);
 
@@ -39,7 +39,7 @@ taResult ta_property_manager_set(ta_property_manager* pProperties, const char* k
 
         if (pProperties->capacity == pProperties->count) {
             taUInt32 newCapacity = (pProperties->capacity == 0) ? 16 : pProperties->capacity*2;
-            ta_property* pNewProperties = (ta_property*)realloc(pProperties->pProperties, newCapacity * sizeof(ta_property));
+            taProperty* pNewProperties = (taProperty*)realloc(pProperties->pProperties, newCapacity * sizeof(taProperty));
             if (pNewProperties == NULL) {
                 return TA_OUT_OF_MEMORY;
             }
@@ -70,27 +70,27 @@ taResult ta_property_manager_set(ta_property_manager* pProperties, const char* k
     }
 }
 
-taResult ta_property_manager_set_int(ta_property_manager* pProperties, const char* key, int val)
+taResult taPropertyManagerSetInt(taPropertyManager* pProperties, const char* key, int val)
 {
     char valStr[16];
     if (_itoa_s(val, valStr, sizeof(valStr), 10) != 0) {
         return TA_ERROR;
     }
 
-    return ta_property_manager_set(pProperties, key, valStr);
+    return taPropertyManagerSet(pProperties, key, valStr);
 }
 
-taResult ta_property_manager_set_bool(ta_property_manager* pProperties, const char* key, taBool32 val)
+taResult taPropertyManagerSetBool(taPropertyManager* pProperties, const char* key, taBool32 val)
 {
-    return ta_property_manager_set(pProperties, key, (val) ? "true" : "false");
+    return taPropertyManagerSet(pProperties, key, (val) ? "true" : "false");
 }
 
-taResult ta_property_manager_unset(ta_property_manager* pProperties, const char* key)
+taResult taPropertyManagerUnset(taPropertyManager* pProperties, const char* key)
 {
-    return ta_property_manager_set(pProperties, key, NULL);
+    return taPropertyManagerSet(pProperties, key, NULL);
 }
 
-const char* ta_property_manager_get(ta_property_manager* pProperties, const char* key)
+const char* taPropertyManagerGet(taPropertyManager* pProperties, const char* key)
 {
     if (pProperties == NULL || key == NULL) return NULL;
 
@@ -104,25 +104,25 @@ const char* ta_property_manager_get(ta_property_manager* pProperties, const char
     return NULL;
 }
 
-const char* ta_property_manager_getv(ta_property_manager* pProperties, const char* key, va_list args)
+const char* taPropertyManagerGetV(taPropertyManager* pProperties, const char* key, va_list args)
 {
     const char* value = NULL;
 
     char* formattedKey = ta_make_stringv(key, args);
     if (formattedKey != NULL) {
-        value = ta_property_manager_get(pProperties, formattedKey);
+        value = taPropertyManagerGet(pProperties, formattedKey);
         ta_free_string(formattedKey);
     }
 
     return value;
 }
 
-const char* ta_property_manager_getf(ta_property_manager* pProperties, const char* key, ...)
+const char* taPropertyManagerGetF(taPropertyManager* pProperties, const char* key, ...)
 {
     va_list args;
     va_start(args, key);
 
-    const char* str = ta_property_manager_getv(pProperties, key, args);
+    const char* str = taPropertyManagerGetV(pProperties, key, args);
 
     va_end(args);
     return str;
