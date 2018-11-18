@@ -1,6 +1,6 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-taBool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, taUInt32* pPosXOut, taUInt32* pPosYOut)
+TA_PRIVATE taBool32 taTexturePackerFindSlot(taTexturePacker* pPacker, taUInt32 width, taUInt32 height, taUInt32* pPosXOut, taUInt32* pPosYOut)
 {
     assert(pPacker != NULL);
     assert(pPosXOut != NULL);
@@ -66,7 +66,7 @@ taBool32 ta_texture_packer__find_slot(ta_texture_packer* pPacker, taUInt32 width
     }
 }
 
-taBool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, const ta_texture_packer_slot* pSlot, const taUInt8* pSubTextureData)
+TA_PRIVATE taBool32 taTexturePackerCopyImageData(taTexturePacker* pPacker, const taTexturePackerSlot* pSlot, const taUInt8* pSubTextureData)
 {
     assert(pPacker != NULL);
     assert(pSlot != NULL);
@@ -117,7 +117,7 @@ taBool32 ta_texture_packer__copy_image_data(ta_texture_packer* pPacker, const ta
 }
 
 
-taBool32 ta_texture_packer_init(ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, taUInt32 bytesPerPixel, taUInt32 flags)
+taBool32 taTexturePackerInit(taTexturePacker* pPacker, taUInt32 width, taUInt32 height, taUInt32 bytesPerPixel, taUInt32 flags)
 {
     if (pPacker == NULL || width == 0 || height == 0) {
         return TA_FALSE;
@@ -142,7 +142,7 @@ taBool32 ta_texture_packer_init(ta_texture_packer* pPacker, taUInt32 width, taUI
     return TA_TRUE;
 }
 
-void ta_texture_packer_uninit(ta_texture_packer* pPacker)
+void taTexturePackerUninit(taTexturePacker* pPacker)
 {
     if (pPacker == NULL) {
         return;
@@ -151,7 +151,7 @@ void ta_texture_packer_uninit(ta_texture_packer* pPacker)
     free(pPacker->pImageData);
 }
 
-void ta_texture_packer_reset(ta_texture_packer* pPacker)
+void taTexturePackerReset(taTexturePacker* pPacker)
 {
     if (pPacker == NULL) {
         return;
@@ -169,15 +169,15 @@ void ta_texture_packer_reset(ta_texture_packer* pPacker)
     }
 }
 
-taBool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut)
+taBool32 taTexturePackerPackSubTexture(taTexturePacker* pPacker, taUInt32 width, taUInt32 height, const void* pSubTextureData, taTexturePackerSlot* pSlotOut)
 {
     if (pSlotOut) taZeroObject(pSlotOut);
     if (pPacker == NULL) {
         return TA_FALSE;
     }
 
-    ta_texture_packer_slot slot;
-    if (!ta_texture_packer__find_slot(pPacker, width, height, &slot.posX, &slot.posY)) {
+    taTexturePackerSlot slot;
+    if (!taTexturePackerFindSlot(pPacker, width, height, &slot.posX, &slot.posY)) {
         return TA_FALSE;
     }
 
@@ -185,7 +185,7 @@ taBool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, taUInt32 
     slot.height = height;
 
     if (pSubTextureData != NULL) {
-        if (!ta_texture_packer__copy_image_data(pPacker, &slot, pSubTextureData)) {
+        if (!taTexturePackerCopyImageData(pPacker, &slot, pSubTextureData)) {
             return TA_FALSE;
         }
     }
@@ -194,7 +194,7 @@ taBool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, taUInt32 
     return TA_TRUE;
 }
 
-taBool32 ta_texture_packer_is_empty(const ta_texture_packer* pPacker)
+taBool32 taTexturePackerIsEmpty(const taTexturePacker* pPacker)
 {
     if (pPacker == NULL) return TA_FALSE;
     return pPacker->cursorPosX == 0 && pPacker->cursorPosY;

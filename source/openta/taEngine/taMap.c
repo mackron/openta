@@ -37,8 +37,8 @@ typedef struct
 
 typedef struct
 {
-    ta_texture_packer texturePacker;
-    ta_texture_packer_slot paletteTextureSlot;
+    taTexturePacker texturePacker;
+    taTexturePackerSlot paletteTextureSlot;
 
     size_t loadedTexturesBufferSize;
     size_t loadedTexturesCount;
@@ -49,7 +49,7 @@ typedef struct
     taMeshBuilder* pMeshBuilders;
 } taMapLoadContext;
 
-TA_PRIVATE taBool32 taMapCreateAndPushTexture(taMapInstance* pMap, ta_texture_packer* pPacker)
+TA_PRIVATE taBool32 taMapCreateAndPushTexture(taMapInstance* pMap, taTexturePacker* pPacker)
 {
     taTexture* pNewTexture = taCreateTexture(pMap->pEngine->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
     if (pNewTexture == NULL) {
@@ -65,14 +65,14 @@ TA_PRIVATE taBool32 taMapCreateAndPushTexture(taMapInstance* pMap, ta_texture_pa
     pMap->ppTextures = ppNewTextures;
     pMap->ppTextures[pMap->textureCount++] = pNewTexture;
 
-    ta_texture_packer_reset(pPacker);
+    taTexturePackerReset(pPacker);
     return TA_TRUE;
 }
 
-TA_PRIVATE taBool32 taMapPackSubTexture(taMapInstance* pMap, ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, const void* pImageData, ta_texture_packer_slot* pSlotOut)
+TA_PRIVATE taBool32 taMapPackSubTexture(taMapInstance* pMap, taTexturePacker* pPacker, taUInt32 width, taUInt32 height, const void* pImageData, taTexturePackerSlot* pSlotOut)
 {
     // If we can't pack the image we just create a new texture on the graphics system and then reset the packer and try again.
-    if (ta_texture_packer_pack_subtexture(pPacker, width, height, pImageData, pSlotOut)) {
+    if (taTexturePackerPackSubTexture(pPacker, width, height, pImageData, pSlotOut)) {
         return TA_TRUE;
     }
 
@@ -80,7 +80,7 @@ TA_PRIVATE taBool32 taMapPackSubTexture(taMapInstance* pMap, ta_texture_packer* 
         return TA_FALSE;
     }
 
-    return ta_texture_packer_pack_subtexture(pPacker, width, height, pImageData, pSlotOut);
+    return taTexturePackerPackSubTexture(pPacker, width, height, pImageData, pSlotOut);
 }
 
 TA_PRIVATE int taMapSortFeatureTypesByFileName(const void* a, const void* b)
@@ -115,7 +115,7 @@ TA_PRIVATE void taMapResetMeshBuilders(taMapLoadContext* pLoadContext)
     pLoadContext->meshBuildersCount = 0;
 }
 
-TA_PRIVATE taMapFeatureSequence* taMapLoadGAFSequence(taMapInstance* pMap, ta_texture_packer* pPacker, taGAF* pGAF, const char* sequenceName)
+TA_PRIVATE taMapFeatureSequence* taMapLoadGAFSequence(taMapInstance* pMap, taTexturePacker* pPacker, taGAF* pGAF, const char* sequenceName)
 {
     taUInt32 frameCount;
     if (!taGAFSelectSequence(pGAF, sequenceName, &frameCount)) {
@@ -145,7 +145,7 @@ TA_PRIVATE taMapFeatureSequence* taMapLoadGAFSequence(taMapInstance* pMap, ta_te
             return NULL;
         }
 
-        ta_texture_packer_slot slot;
+        taTexturePackerSlot slot;
         if (!taMapPackSubTexture(pMap, pPacker, frameWidth, frameHeight, pFrameImageData, &slot)) {
             free(pSeq);
             return NULL;
@@ -212,7 +212,7 @@ TA_PRIVATE taBool32 taMapLoadTexture(taMapInstance* pMap, taMapLoadContext* pLoa
             }
 
             // The texture was successfully loaded, so now it needs to be packed into an atlas.
-            ta_texture_packer_slot subtextureSlot;
+            taTexturePackerSlot subtextureSlot;
             if (!taMapPackSubTexture(pMap, &pLoadContext->texturePacker, width, height, pTextureData, &subtextureSlot)) {
                 taGAFFree(pTextureData);
                 return TA_FALSE;
@@ -711,8 +711,8 @@ TA_PRIVATE taBool32 taMapLoadTNT(taMapInstance* pMap, const char* mapName, taMap
     {
         char* pTileImageData = pTNT->pFileData + taTellFile(pTNT) + (iTile*32*32);
 
-        ta_texture_packer_slot slot;
-        if (ta_texture_packer_pack_subtexture(&pLoadContext->texturePacker, 32, 32, pTileImageData, &slot))
+        taTexturePackerSlot slot;
+        if (taTexturePackerPackSubTexture(&pLoadContext->texturePacker, 32, 32, pTileImageData, &slot))
         {
             pTileSubImages[iTile].posX = slot.posX;
             pTileSubImages[iTile].posY = slot.posY;
@@ -1068,7 +1068,7 @@ TA_PRIVATE taBool32 taMapLoadContextInit(taMapLoadContext* pLoadContext, taEngin
     }
 
     // We'll need a texture packer to help us pack images into atlases.
-    if (!ta_texture_packer_init(&pLoadContext->texturePacker, maxTextureSize, maxTextureSize, 1, 0)) {
+    if (!taTexturePackerInit(&pLoadContext->texturePacker, maxTextureSize, maxTextureSize, 1, 0)) {
         return TA_FALSE;
     }
 
@@ -1081,7 +1081,7 @@ TA_PRIVATE void taMapLoadContextUninit(taMapLoadContext* pLoadContext)
         return;
     }
 
-    ta_texture_packer_uninit(&pLoadContext->texturePacker);
+    taTexturePackerUninit(&pLoadContext->texturePacker);
 }
 
 

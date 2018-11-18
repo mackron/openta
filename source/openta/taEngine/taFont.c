@@ -49,8 +49,8 @@ taResult taFontLoadFNT(taEngineContext* pEngine, const char* filePath, taFont* p
     taUInt32 atlasSizeX = taNextPowerOf2(totalWidth);
     taUInt32 atlasSizeY = taNextPowerOf2(height);
 
-    ta_texture_packer packer;
-    ta_texture_packer_init(&packer, atlasSizeX, atlasSizeY, 1, TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE);
+    taTexturePacker packer;
+    taTexturePackerInit(&packer, atlasSizeX, atlasSizeY, 1, TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE);
 
     taUInt8 pixels[256*256];
 
@@ -82,8 +82,8 @@ taResult taFontLoadFNT(taEngineContext* pEngine, const char* filePath, taFont* p
                 bits -= 8;  // Might underflow, but it doesn't matter.
             }
 
-            ta_texture_packer_slot slot;
-            ta_texture_packer_pack_subtexture(&packer, widths[i], height, pixels, &slot);
+            taTexturePackerSlot slot;
+            taTexturePackerPackSubTexture(&packer, widths[i], height, pixels, &slot);
 
             pFont->glyphs[i].u = slot.posX / (float)packer.width;
             pFont->glyphs[i].v = slot.posY / (float)packer.height;
@@ -164,8 +164,8 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
     taUInt32 atlasSizeX = taNextPowerOf2(totalWidth);
     taUInt32 atlasSizeY = taNextPowerOf2(totalHeight+1);   // Add 1 to ensure we have at least row of padding for interpolation.
 
-    ta_texture_packer packer;
-    ta_texture_packer_init(&packer, atlasSizeX, atlasSizeY, 1, TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE);
+    taTexturePacker packer;
+    taTexturePackerInit(&packer, atlasSizeX, atlasSizeY, 1, TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE);
     memset(packer.pImageData, TA_TRANSPARENT_COLOR, packer.width*packer.height);
 
     taUInt8 paddingPixels[TA_MAX_FONT_SIZE];
@@ -183,7 +183,7 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
                 totalHeight = sizeY;
             }
 
-            ta_texture_packer_slot slot;
+            taTexturePackerSlot slot;
 
             // Spaces are a special case because the graphic for them is not blank for some reason. To fix this we just
             // need to use a different image for spaces.
@@ -191,11 +191,11 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
                 taUInt8* spacePixels = (taUInt8*)malloc(sizeX * sizeY);
                 if (spacePixels != NULL) {
                     memset(spacePixels, TA_TRANSPARENT_COLOR, sizeX * sizeY);
-                    ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, spacePixels, &slot);
+                    taTexturePackerPackSubTexture(&packer, sizeX, sizeY, spacePixels, &slot);
                     free(spacePixels);
                 }
             } else {
-                ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, pixels, &slot);
+                taTexturePackerPackSubTexture(&packer, sizeX, sizeY, pixels, &slot);
             }
 
             pFont->glyphs[i].u = slot.posX / (float)packer.width;
@@ -206,7 +206,7 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
             pFont->glyphs[i].sizeY = (float)sizeY;
 
             // We need to add a padding row in between each character.
-            ta_texture_packer_pack_subtexture(&packer, 1, totalHeight, paddingPixels, NULL);
+            taTexturePackerPackSubTexture(&packer, 1, totalHeight, paddingPixels, NULL);
 
             taGAFFree(pixels);
         }
@@ -216,7 +216,7 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
 
     taUInt32* pImageDataRGBA = (taUInt32*)malloc(packer.width * packer.height * 4);
     if (pImageDataRGBA == NULL) {
-        ta_texture_packer_uninit(&packer);
+        taTexturePackerUninit(&packer);
         return TA_OUT_OF_MEMORY;
     }
 
@@ -230,12 +230,12 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
     pFont->pTexture = taCreateTexture(pEngine->pGraphics, packer.width, packer.height, 4, pImageDataRGBA);
     if (pFont->pTexture == NULL) {
         free(pImageDataRGBA);
-        ta_texture_packer_uninit(&packer);
+        taTexturePackerUninit(&packer);
         return TA_ERROR;
     }
 
     free(pImageDataRGBA);
-    ta_texture_packer_uninit(&packer);
+    taTexturePackerUninit(&packer);
     return TA_SUCCESS;
 }
 

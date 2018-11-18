@@ -441,7 +441,7 @@ TA_INLINE char* taGAFTextureGroupCopySequenceName(char** ppNextStr, const char* 
     return pNextStr;
 }
 
-TA_PRIVATE taResult taGAFTextureGroupCreateTextureAtlas(taEngineContext* pEngine, taGAFTextureGroup* pGroup, ta_texture_packer* pPacker, taColorMode colorMode, taTexture** ppTexture)
+TA_PRIVATE taResult taGAFTextureGroupCreateTextureAtlas(taEngineContext* pEngine, taGAFTextureGroup* pGroup, taTexturePacker* pPacker, taColorMode colorMode, taTexture** ppTexture)
 {
     assert(pEngine != NULL);
     assert(pGroup != NULL);
@@ -496,8 +496,8 @@ taResult taGAFTextureGroupInit(taEngineContext* pEngine, const char* filePath, t
     // We load in two passes. The first pass is used to calculate the size of the memory allocation and the second
     // pass performs the actual loading.
 
-    ta_texture_packer packer;
-    ta_texture_packer_init(&packer, TA_MAX_TEXTURE_ATLAS_SIZE, TA_MAX_TEXTURE_ATLAS_SIZE, 1, TA_TEXTURE_PACKER_FLAG_HARD_EDGE);
+    taTexturePacker packer;
+    taTexturePackerInit(&packer, TA_MAX_TEXTURE_ATLAS_SIZE, TA_MAX_TEXTURE_ATLAS_SIZE, 1, TA_TEXTURE_PACKER_FLAG_HARD_EDGE);
 
     // PASS #1
     // =======
@@ -523,11 +523,11 @@ taResult taGAFTextureGroupInit(taEngineContext* pEngine, const char* filePath, t
                 taUInt32 posX;
                 taUInt32 posY;
                 if (taGAFGetFrame(pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, NULL) == TA_SUCCESS) {
-                    if (!ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, NULL, NULL)) {
+                    if (!taTexturePackerPackSubTexture(&packer, sizeX, sizeY, NULL, NULL)) {
                         // We failed to pack the subtexture which probably means there's not enough room. We just need to reset this packer and try again.
                         totalAtlasCount += 1;
-                        ta_texture_packer_reset(&packer);
-                        ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, NULL, NULL);   // <-- It doesn't really matter if this fails - we'll handle it organically later on in the second pass.
+                        taTexturePackerReset(&packer);
+                        taTexturePackerPackSubTexture(&packer, sizeX, sizeY, NULL, NULL);   // <-- It doesn't really matter if this fails - we'll handle it organically later on in the second pass.
                     }
                 }
             }
@@ -535,7 +535,7 @@ taResult taGAFTextureGroupInit(taEngineContext* pEngine, const char* filePath, t
     }
 
     // There might be textures still sitting in the packer needing to be uploaded.
-    if (!ta_texture_packer_is_empty(&packer)) {
+    if (!taTexturePackerIsEmpty(&packer)) {
         totalAtlasCount += 1;
     }
 
@@ -565,7 +565,7 @@ taResult taGAFTextureGroupInit(taEngineContext* pEngine, const char* filePath, t
     // PASS #2
     // =======
     char* pNextStr = (char*)(pGroup->_pPayload + sequenceNamesPayloadOffset);
-    ta_texture_packer_reset(&packer);
+    taTexturePackerReset(&packer);
 
     totalSequenceCount = 0;
     totalFrameCount    = 0;
@@ -586,14 +586,14 @@ taResult taGAFTextureGroupInit(taEngineContext* pEngine, const char* filePath, t
                 taUInt32 posY;
                 taUInt8* pImageData;
                 if (taGAFGetFrame(pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, &pImageData) == TA_SUCCESS) {
-                    ta_texture_packer_slot slot;
-                    if (!ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, pImageData, &slot)) {
+                    taTexturePackerSlot slot;
+                    if (!taTexturePackerPackSubTexture(&packer, sizeX, sizeY, pImageData, &slot)) {
                         // We failed to pack the subtexture which probably means there's not enough room. We just need to reset this packer and try again.
                         taGAFTextureGroupCreateTextureAtlas(pEngine, pGroup, &packer, colorMode, &pGroup->ppAtlases[totalAtlasCount]);
                         totalAtlasCount += 1;
 
-                        ta_texture_packer_reset(&packer);
-                        ta_texture_packer_pack_subtexture(&packer, sizeX, sizeY, pImageData, &slot);
+                        taTexturePackerReset(&packer);
+                        taTexturePackerPackSubTexture(&packer, sizeX, sizeY, pImageData, &slot);
                     }
 
                     pGroup->pFrames[totalFrameCount].renderOffsetX   = (float)posX;
@@ -613,7 +613,7 @@ taResult taGAFTextureGroupInit(taEngineContext* pEngine, const char* filePath, t
     }
 
     // There might be textures still sitting in the packer needing to be uploaded.
-    if (!ta_texture_packer_is_empty(&packer)) {
+    if (!taTexturePackerIsEmpty(&packer)) {
         taGAFTextureGroupCreateTextureAtlas(pEngine, pGroup, &packer, colorMode, &pGroup->ppAtlases[totalAtlasCount]);
         totalAtlasCount += 1;
     }

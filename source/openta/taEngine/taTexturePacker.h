@@ -50,8 +50,7 @@ typedef struct
 
     // The buffer containing the packed image data.
     taUInt8* pImageData;
-
-} ta_texture_packer;
+} taTexturePacker;
 
 typedef struct
 {
@@ -59,21 +58,21 @@ typedef struct
     taUInt32 posY;
     taUInt32 width;
     taUInt32 height;
-} ta_texture_packer_slot;
+} taTexturePackerSlot;
 
 
 // Initializes the given texture packer. The minimum and maximum size should be a power of 2.
-taBool32 ta_texture_packer_init(ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, taUInt32 bytesPerPixel, taUInt32 flags);
+taBool32 taTexturePackerInit(taTexturePacker* pPacker, taUInt32 width, taUInt32 height, taUInt32 bytesPerPixel, taUInt32 flags);
 
 // Uninitializes the given texture packer.
-void ta_texture_packer_uninit(ta_texture_packer* pPacker);
+void taTexturePackerUninit(taTexturePacker* pPacker);
 
 // Efficiently resets the texture packer. If you need to use a different sized packer you will need to uninitialize
 // and re-initialize it.
-void ta_texture_packer_reset(ta_texture_packer* pPacker);
+void taTexturePackerReset(taTexturePacker* pPacker);
 
 // Packs a sub-texture into the packer. If there is no room this will simply return TA_FALSE.
-taBool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut);
+taBool32 taTexturePackerPackSubTexture(taTexturePacker* pPacker, taUInt32 width, taUInt32 height, const void* pSubTextureData, taTexturePackerSlot* pSlotOut);
 
 // Determines if the texture packer is empty or not.
-taBool32 ta_texture_packer_is_empty(const ta_texture_packer* pPacker);
+taBool32 taTexturePackerIsEmpty(const taTexturePacker* pPacker);

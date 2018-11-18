@@ -629,7 +629,7 @@ const char* taGUIGetListboxItem(taGUIGadget* pGadget, taUInt32 index)
 
 // Common GUI
 // ==========
-TA_PRIVATE taResult taCommonGUICreateTextureAtlas(taEngineContext* pEngine, taCommonGUI* pCommonGUI, ta_texture_packer* pPacker, taTexture** ppTexture)
+TA_PRIVATE taResult taCommonGUICreateTextureAtlas(taEngineContext* pEngine, taCommonGUI* pCommonGUI, taTexturePacker* pPacker, taTexture** ppTexture)
 {
     assert(pEngine != NULL);
     assert(pCommonGUI != NULL);
