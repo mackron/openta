@@ -49,7 +49,7 @@ typedef enum
     ta_feature_category_craters,
     ta_feature_category_kelp,
     ta_feature_category_monuments,
-} ta_feature_category;
+} taFeatureCategory;
 #endif
 
 // Structure describing a feature. This is not a feature instantiation.
@@ -66,7 +66,7 @@ typedef struct
 #if 0
     // The category. We're only using a set of predefined categories that we use which means this can be represented
     // with an enumerator.
-    ta_feature_category category;
+    taFeatureCategory category;
 #endif
 
     // The width of the object, in 16x16 tiles.
@@ -109,7 +109,7 @@ typedef struct
     //  TA_FEATURE_RECLAIMABLE -> "reclaimable"
     //  TA_FEATURE_SHADOWTRANSPARENT -> "shadtrans"
     taUInt16 flags;
-} ta_feature_desc;
+} taFeatureDesc;
 
 // Structure containing the descriptors of every known feature. This structure is filled
 // once during load time from TDF files contained in the "features" directory.
@@ -122,18 +122,18 @@ typedef struct
     taUInt32 featuresBufferSize;
 
     // The list of feature descriptors making up the library.
-    ta_feature_desc* pFeatures;
+    taFeatureDesc* pFeatures;
 
     // Whether or not the library is optimized. If so, we can so a binary search for items.
     taBool32 isOptimized;
-} ta_features_library;
+} taFeaturesLibrary;
 
 // Creates a features library by loading every TDF file in the "features" directory and all of it's sub-directories.
-ta_features_library* ta_create_features_library(ta_fs* pFS);
+taFeaturesLibrary* taCreateFeaturesLibrary(ta_fs* pFS);
 
 // Deletes the given features library.
-void ta_delete_features_library(ta_features_library* pLib);
+void taDeleteFeaturesLibrary(taFeaturesLibrary* pLib);
 
 
 // Finds a descriptor by name.
-ta_feature_desc* ta_find_feature_desc(ta_features_library* pLib, const char* featureName);
+taFeatureDesc* taFindFeatureDesc(taFeaturesLibrary* pLib, const char* featureName);

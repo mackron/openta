@@ -896,7 +896,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
             goto on_error;
         }
 
-        pMap->pFeatureTypes[iFeatureType].pDesc = ta_find_feature_desc(pMap->pEngine->pFeatures, pMap->pFeatureTypes[iFeatureType].name);
+        pMap->pFeatureTypes[iFeatureType].pDesc = taFindFeatureDesc(pMap->pEngine->pFeatures, pMap->pFeatureTypes[iFeatureType].name);
         pMap->pFeatureTypes[iFeatureType]._index = iFeatureType;
         //printf("%s\n", pMap->pFeatureTypes[iFeatureType].pDesc->filename);
     }

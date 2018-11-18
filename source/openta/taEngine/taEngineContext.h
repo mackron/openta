@@ -24,7 +24,7 @@ struct taEngineContext
 
     // The features library. This is initialized once at startup from every TDF file in the "features" directory, and it's sub-directories. The
     // features library is immutable once it's initialized.
-    ta_features_library* pFeatures;
+    taFeaturesLibrary* pFeatures;
 
     taUInt32 textureGAFCount;
     ta_gaf** ppTextureGAFs;     // The list of GAF files containing textures. This is initialized when the engine context is created.

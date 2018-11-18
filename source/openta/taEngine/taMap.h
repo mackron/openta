@@ -92,7 +92,7 @@ typedef struct
 typedef struct
 {
     // The base feature descriptor.
-    ta_feature_desc* pDesc;
+    taFeatureDesc* pDesc;
 
     // The name of the feature.
     char name[128];
