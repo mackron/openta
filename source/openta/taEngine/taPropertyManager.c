@@ -108,10 +108,10 @@ const char* taPropertyManagerGetV(taPropertyManager* pProperties, const char* ke
 {
     const char* value = NULL;
 
-    char* formattedKey = ta_make_stringv(key, args);
+    char* formattedKey = taMakeStringV(key, args);
     if (formattedKey != NULL) {
         value = taPropertyManagerGet(pProperties, formattedKey);
-        ta_free_string(formattedKey);
+        taFreeString(formattedKey);
     }
 
     return value;

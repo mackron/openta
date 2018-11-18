@@ -1,6 +1,6 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-char* ta_make_stringv(const char* format, va_list args)
+char* taMakeStringV(const char* format, va_list args)
 {
     if (format == NULL) return NULL;
 
@@ -33,18 +33,18 @@ char* ta_make_stringv(const char* format, va_list args)
     return str;
 }
 
-char* ta_make_stringf(const char* format, ...)
+char* taMakeStringF(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
 
-    char* str = ta_make_stringv(format, args);
+    char* str = taMakeStringV(format, args);
 
     va_end(args);
     return str;
 }
 
-void ta_free_string(char* str)
+void taFreeString(char* str)
 {
     free(str);
 }

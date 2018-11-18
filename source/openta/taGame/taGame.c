@@ -522,7 +522,7 @@ taBool32 taHandleGUIInput(taGame* pGame, taGUI* pGUI, ta_gui_input_event* pEvent
     taGUIGadget* pRootGadget = &pGUI->pGadgets[0];
     if (taWasKeyPressed(pGame, TA_KEY_ENTER)) {
         // When the enter key is pressed we want to prioritize crdefault. It that is not set we fall back to the focused gadget.
-        if (!ta_is_string_null_or_empty(pRootGadget->root.crdefault)) {
+        if (!taIsStringNullOrEmpty(pRootGadget->root.crdefault)) {
             taUInt32 iGadget;
             taBool32 foundGadget = taGUIFindGadgetByName(pGUI, pRootGadget->root.crdefault, &iGadget);
             if (foundGadget) {
@@ -549,7 +549,7 @@ taBool32 taHandleGUIInput(taGame* pGame, taGUI* pGUI, ta_gui_input_event* pEvent
             return TA_TRUE;
         }
     } else if (taWasKeyPressed(pGame, TA_KEY_ESCAPE)) {
-        if (!ta_is_string_null_or_empty(pRootGadget->root.escdefault)) {
+        if (!taIsStringNullOrEmpty(pRootGadget->root.escdefault)) {
             taUInt32 iGadget;
             taBool32 foundGadget = taGUIFindGadgetByName(pGUI, pRootGadget->root.escdefault, &iGadget);
             if (foundGadget) {

@@ -457,5 +457,5 @@ taBool32 taConfigIsSubObjByIndex(const taConfigObj* pConfig, taUInt32 varIndex)
         return TA_FALSE;
     }
 
-    return ta_is_string_null_or_empty(pConfig->pVars[varIndex].value);
+    return taIsStringNullOrEmpty(pConfig->pVars[varIndex].value);
 }

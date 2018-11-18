@@ -3,7 +3,7 @@
 TA_INLINE char* taGUICopyStringProp(char** ppNextStr, const char* src)
 {
     char* pNextStr = *ppNextStr;
-    size_t srcLen = ta_strlen_or_zero(src);
+    size_t srcLen = taStrlenOrZero(src);
     if (src != NULL) {
         memcpy(pNextStr, src, srcLen+1);
     } else {
@@ -55,33 +55,33 @@ taResult taGUILoad(taEngineContext* pEngine, const char* filePath, taGUI* pGUI)
             if (pCommonObj != NULL) {
                 taInt32 id = taConfigGetInt(pCommonObj, "id");
 
-                payloadSize += ta_strlen_or_zero(taConfigGetString(pCommonObj, "name"))+1;
-                payloadSize += ta_strlen_or_zero(taConfigGetString(pCommonObj, "help"))+1;
+                payloadSize += taStrlenOrZero(taConfigGetString(pCommonObj, "name"))+1;
+                payloadSize += taStrlenOrZero(taConfigGetString(pCommonObj, "help"))+1;
 
                 switch (id)
                 {
                     case TA_GUI_GADGET_TYPE_ROOT:
                     {
-                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "panel"))+1;
-                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "crdefault"))+1;
-                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "escdefault"))+1;
-                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "defaultfocus"))+1;
+                        payloadSize += taStrlenOrZero(taConfigGetString(pGadgetObj, "panel"))+1;
+                        payloadSize += taStrlenOrZero(taConfigGetString(pGadgetObj, "crdefault"))+1;
+                        payloadSize += taStrlenOrZero(taConfigGetString(pGadgetObj, "escdefault"))+1;
+                        payloadSize += taStrlenOrZero(taConfigGetString(pGadgetObj, "defaultfocus"))+1;
                     } break;
 
                     case TA_GUI_GADGET_TYPE_BUTTON:
                     {
-                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "text"))+1;
+                        payloadSize += taStrlenOrZero(taConfigGetString(pGadgetObj, "text"))+1;
                     } break;
 
                     case TA_GUI_GADGET_TYPE_LABEL:
                     {
-                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "text"))+1;
-                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "link"))+1;
+                        payloadSize += taStrlenOrZero(taConfigGetString(pGadgetObj, "text"))+1;
+                        payloadSize += taStrlenOrZero(taConfigGetString(pGadgetObj, "link"))+1;
                     } break;
 
                     case TA_GUI_GADGET_TYPE_FONT:
                     {
-                        payloadSize += ta_strlen_or_zero(taConfigGetString(pGadgetObj, "filename"))+1;
+                        payloadSize += taStrlenOrZero(taConfigGetString(pGadgetObj, "filename"))+1;
                     } break;
 
                     default: break;
@@ -214,7 +214,7 @@ taResult taGUILoad(taEngineContext* pEngine, const char* filePath, taGUI* pGUI)
 
 
     // Default focus.
-    if (!ta_is_string_null_or_empty(pGUI->pGadgets[0].root.defaultfocus)) {
+    if (!taIsStringNullOrEmpty(pGUI->pGadgets[0].root.defaultfocus)) {
         taGUIFindGadgetByName(pGUI, pGUI->pGadgets[0].root.defaultfocus, &pGUI->focusedGadgetIndex);
     }
 
@@ -223,7 +223,7 @@ taResult taGUILoad(taEngineContext* pEngine, const char* filePath, taGUI* pGUI)
     for (taUInt32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {
         taGUIGadget* pGadget = &pGUI->pGadgets[iGadget];
         if (pGadget->id == TA_GUI_GADGET_TYPE_LABEL) {
-            if (!ta_is_string_null_or_empty(pGadget->label.link)) {
+            if (!taIsStringNullOrEmpty(pGadget->label.link)) {
                 taGUIFindGadgetByName(pGUI, pGadget->label.link, &pGadget->label.iLinkedGadget);
             }
         }
@@ -591,7 +591,7 @@ taResult taGUISetListboxItems(taGUIGadget* pGadget, const char** pItems, taUInt3
     size_t payloadSize = 0;
     for (taUInt32 i = 0; i < count; ++i) {
         payloadSize += sizeof(*pGadget->listbox.pItems);
-        payloadSize += ta_strlen_or_zero(pItems[i]) + 1;    // +1 for null terminator.
+        payloadSize += taStrlenOrZero(pItems[i]) + 1;    // +1 for null terminator.
     }
 
     pGadget->listbox.pItems = (char**)malloc(payloadSize);
@@ -605,7 +605,7 @@ taResult taGUISetListboxItems(taGUIGadget* pGadget, const char** pItems, taUInt3
         const char* pSrcStr = pItems[i];
         if (pSrcStr == NULL) pSrcStr = "";
 
-        size_t srcLen = ta_strlen_or_zero(pItems[i]) + 1;
+        size_t srcLen = taStrlenOrZero(pItems[i]) + 1;
         memcpy(pDstStr, pSrcStr, srcLen);
 
         pGadget->listbox.pItems[i] = pDstStr;

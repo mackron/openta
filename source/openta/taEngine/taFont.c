@@ -119,7 +119,7 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
     //
     // The frame's x and y positions determine the origin of the glyph.
     const char* sequenceName = drpath_file_name(filePath);
-    if (ta_is_string_null_or_empty(sequenceName)) {
+    if (taIsStringNullOrEmpty(sequenceName)) {
         return TA_FILE_NOT_FOUND;
     }
 

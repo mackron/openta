@@ -1167,7 +1167,7 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
                 }
 
                 const char* text = taGUIGetButtonText(pGadget, pGadget->button.currentStage);
-                if (!ta_is_string_null_or_empty(text)) {
+                if (!taIsStringNullOrEmpty(text)) {
                     float textSizeX;
                     float textSizeY;
                     taFontMeasureText(&pGraphics->pEngine->font, scale, text, &textSizeX, &textSizeY);
@@ -1376,7 +1376,7 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
 
             case TA_GUI_GADGET_TYPE_LABEL:
             {
-                if (!ta_is_string_null_or_empty(pGadget->label.text)) {
+                if (!taIsStringNullOrEmpty(pGadget->label.text)) {
                     float textSizeX;
                     float textSizeY;
                     taFontMeasureText(&pGraphics->pEngine->fontSmall, scale, pGadget->label.text, &textSizeX, &textSizeY);
@@ -1752,10 +1752,10 @@ void taDrawTextF(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex
     va_list args;
     va_start(args, text);
     {
-        char* formattedText = ta_make_stringv(text, args);
+        char* formattedText = taMakeStringV(text, args);
         if (formattedText) {
             taDrawText(pGraphics, pFont, colorIndex, scale, posX, posY, formattedText);
-            ta_free_string(formattedText);
+            taFreeString(formattedText);
         }
     }
     va_end(args);
