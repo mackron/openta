@@ -18,13 +18,13 @@
 #endif
 
 //// Endian Management ////
-static TA_INLINE taBool32 ta__is_little_endian()
+static TA_INLINE taBool32 taIsLittleEndian()
 {
     int n = 1;
     return (*(char*)&n) == 1;
 }
 
-static TA_INLINE taUInt32 ta__swap_endian_uint32(taUInt32 n)
+static TA_INLINE taUInt32 taSwapEndianUInt32(taUInt32 n)
 {
 #ifdef _MSC_VER
     return _byteswap_ulong(n);
@@ -38,13 +38,13 @@ static TA_INLINE taUInt32 ta__swap_endian_uint32(taUInt32 n)
 #endif
 }
 
-static TA_INLINE taUInt32 ta__be2host_32(taUInt32 n)
+static TA_INLINE taUInt32 taBE2Host32(taUInt32 n)
 {
 #ifdef __linux__
     return be32toh(n);
 #else
-    if (ta__is_little_endian()) {
-        return ta__swap_endian_uint32(n);
+    if (taIsLittleEndian()) {
+        return taSwapEndianUInt32(n);
     }
 
     return n;
@@ -53,7 +53,7 @@ static TA_INLINE taUInt32 ta__be2host_32(taUInt32 n)
 
 
 
-static TA_INLINE taUInt32 ta_next_power_of_2(taUInt32 value)
+static TA_INLINE taUInt32 taNextPowerOf2(taUInt32 value)
 {
     --value;
 
@@ -67,7 +67,7 @@ static TA_INLINE taUInt32 ta_next_power_of_2(taUInt32 value)
 }
 
 
-#define ta_abs(x) (((x) < 0) ? (-(x)) : (x))
+#define taAbs(x) (((x) < 0) ? (-(x)) : (x))
 
 
 //// Memory Stream ////
