@@ -4,9 +4,9 @@
 
 //// Memory Stream ////
 
-ta_memory_stream ta_create_memory_stream(void* pData, size_t dataSize)
+taMemoryStream taCreateMemoryStream(void* pData, size_t dataSize)
 {
-    ta_memory_stream stream;
+    taMemoryStream stream;
     stream.pData = pData;
     stream.dataSize = dataSize;
     stream.currentReadPos = 0;
@@ -14,9 +14,9 @@ ta_memory_stream ta_create_memory_stream(void* pData, size_t dataSize)
     return stream;
 }
 
-size_t ta_memory_stream_read(ta_memory_stream* pStream, void* pDataOut, size_t bytesToRead)
+size_t taMemoryStreamRead(taMemoryStream* pStream, void* pDataOut, size_t bytesToRead)
 {
-    size_t bytesRead = ta_memory_stream_peek(pStream, pDataOut, bytesToRead);
+    size_t bytesRead = taMemoryStreamPeek(pStream, pDataOut, bytesToRead);
     if (bytesRead == 0) {
         return 0;
     }
@@ -26,7 +26,7 @@ size_t ta_memory_stream_read(ta_memory_stream* pStream, void* pDataOut, size_t b
     return bytesRead;
 }
 
-size_t ta_memory_stream_peek(ta_memory_stream* pStream, void* pDataOut, size_t bytesToRead)
+size_t taMemoryStreamPeek(taMemoryStream* pStream, void* pDataOut, size_t bytesToRead)
 {
     if (pStream == NULL) {
         return 0;
@@ -44,25 +44,20 @@ size_t ta_memory_stream_peek(ta_memory_stream* pStream, void* pDataOut, size_t b
     return bytesToRead;
 }
 
-taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, taInt64 bytesToSeek, taSeekOrigin origin)
+taBool32 taMemoryStreamSeek(taMemoryStream* pStream, taInt64 bytesToSeek, taSeekOrigin origin)
 {
     taUInt64 newPos = pStream->currentReadPos;
-    if (origin == taSeekOriginCurrent)
-    {
+    if (origin == taSeekOriginCurrent) {
         if ((taInt64)newPos + bytesToSeek >= 0) {
             newPos = (taUInt64)((taInt64)newPos + bytesToSeek);
         } else {
             // Trying to seek to before the beginning of the file.
             return TA_FALSE;
         }
-    }
-    else if (origin == taSeekOriginStart)
-    {
+    } else if (origin == taSeekOriginStart) {
         assert(bytesToSeek >= 0);
         newPos = (taUInt64)bytesToSeek;
-    }
-    else if (origin == taSeekOriginEnd)
-    {
+    } else if (origin == taSeekOriginEnd) {
         assert(bytesToSeek >= 0);
         if ((taUInt64)bytesToSeek <= pStream->dataSize) {
             newPos = pStream->dataSize - (taUInt64)bytesToSeek;
@@ -70,13 +65,10 @@ taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, taInt64 bytesToSeek, t
             // Trying to seek to before the beginning of the file.
             return TA_FALSE;
         }
-    }
-    else
-    {
+    } else {
         // Should never get here.
         return TA_FALSE;
     }
-
 
     if (newPos > pStream->dataSize) {
         return TA_FALSE;
@@ -86,7 +78,7 @@ taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, taInt64 bytesToSeek, t
     return TA_TRUE;
 }
 
-size_t ta_memory_stream_tell(ta_memory_stream* pStream)
+size_t taMemoryStreamTell(taMemoryStream* pStream)
 {
     if (pStream == NULL) {
         return 0;
@@ -95,7 +87,7 @@ size_t ta_memory_stream_tell(ta_memory_stream* pStream)
     return pStream->currentReadPos;
 }
 
-taBool32 ta_memory_stream_write_uint32(ta_memory_stream* pStream, taUInt32 value)
+taBool32 taMemoryStreamWriteUInt32(taMemoryStream* pStream, taUInt32 value)
 {
     if (pStream == NULL) {
         return TA_FALSE;

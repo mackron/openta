@@ -54,7 +54,7 @@ TA_PRIVATE taBool32 taFSFindFileInArchive(taFS* pFS, taFSArchive* pArchive, cons
     assert(fileRelativePath != NULL);
     assert(pDataPosOut != NULL);
 
-    ta_memory_stream stream = ta_create_memory_stream(pArchive->pCentralDirectory, pArchive->centralDirectorySize);
+    taMemoryStream stream = taCreateMemoryStream(pArchive->pCentralDirectory, pArchive->centralDirectorySize);
 
     // Finding the file within the archive is simple - we just search by each path segment in order and keep going until we
     // either find the file or don't find a segment.
@@ -66,29 +66,29 @@ TA_PRIVATE taBool32 taFSFindFileInArchive(taFS* pFS, taFSArchive* pArchive, cons
     do {
         // At this point we will be sitting on the first byte of the sub-directory.
         taUInt32 fileCount;
-        if (ta_memory_stream_read(&stream, &fileCount, 4) != 4) {
+        if (taMemoryStreamRead(&stream, &fileCount, 4) != 4) {
             return TA_FALSE;
         }
 
         taUInt32 entryOffset;
-        if (ta_memory_stream_read(&stream, &entryOffset, 4) != 4) {
+        if (taMemoryStreamRead(&stream, &entryOffset, 4) != 4) {
             return TA_FALSE;
         }
 
         taBool32 subdirExists = TA_FALSE;
         for (taUInt32 iFile = 0; iFile < fileCount; ++iFile) {
             taUInt32 namePos;
-            if (ta_memory_stream_read(&stream, &namePos, 4) != 4) {
+            if (taMemoryStreamRead(&stream, &namePos, 4) != 4) {
                 return TA_FALSE;
             }
 
             taUInt32 dataPos;
-            if (ta_memory_stream_read(&stream, &dataPos, 4) != 4) {
+            if (taMemoryStreamRead(&stream, &dataPos, 4) != 4) {
                 return TA_FALSE;
             }
 
             taUInt8 isDirectory;
-            if (ta_memory_stream_read(&stream, &isDirectory, 1) != 1) {
+            if (taMemoryStreamRead(&stream, &isDirectory, 1) != 1) {
                 return TA_FALSE;
             }
 
@@ -107,7 +107,7 @@ TA_PRIVATE taBool32 taFSFindFileInArchive(taFS* pFS, taFSArchive* pArchive, cons
                     }
 
                     // Before continuing we need to move the streamer to the start of the sub-directory.
-                    if (!ta_memory_stream_seek(&stream, dataPos, taSeekOriginStart)) {
+                    if (!taMemoryStreamSeek(&stream, dataPos, taSeekOriginStart)) {
                         return TA_FALSE;
                     }
                 }
@@ -214,34 +214,34 @@ TA_PRIVATE void taFSGatherFilesInNativeDirectory(taFS* pFS, const char* director
 
 TA_PRIVATE void taFSGatherFilesInArchiveDirectoryAtLocation(taFS* pFS, taFSArchive* pArchive, taUInt32 directoryDataPos, const char* parentPath, taBool32 recursive, taUInt32* pFileCountInOut, taFSFileInfo** ppFilesInOut, taUInt32 prevFileCount)
 {
-    ta_memory_stream stream = ta_create_memory_stream(pArchive->pCentralDirectory, pArchive->centralDirectorySize);
-    if (!ta_memory_stream_seek(&stream, directoryDataPos, taSeekOriginStart)) {
+    taMemoryStream stream = taCreateMemoryStream(pArchive->pCentralDirectory, pArchive->centralDirectorySize);
+    if (!taMemoryStreamSeek(&stream, directoryDataPos, taSeekOriginStart)) {
         return;
     }
 
     taUInt32 fileCount;
-    if (ta_memory_stream_read(&stream, &fileCount, 4) != 4) {
+    if (taMemoryStreamRead(&stream, &fileCount, 4) != 4) {
         return;
     }
 
     taUInt32 entryOffset;
-    if (ta_memory_stream_read(&stream, &entryOffset, 4) != 4) {
+    if (taMemoryStreamRead(&stream, &entryOffset, 4) != 4) {
         return;
     }
 
     for (taUInt32 iFile = 0; iFile < fileCount; ++iFile) {
         taUInt32 namePos;
-        if (ta_memory_stream_read(&stream, &namePos, 4) != 4) {
+        if (taMemoryStreamRead(&stream, &namePos, 4) != 4) {
             return;
         }
 
         taUInt32 dataPos;
-        if (ta_memory_stream_read(&stream, &dataPos, 4) != 4) {
+        if (taMemoryStreamRead(&stream, &dataPos, 4) != 4) {
             return;
         }
 
         taUInt8 isDirectory;
-        if (ta_memory_stream_read(&stream, &isDirectory, 1) != 1) {
+        if (taMemoryStreamRead(&stream, &isDirectory, 1) != 1) {
             return;
         }
 
@@ -299,63 +299,63 @@ TA_PRIVATE int taFSFileInfoQuickSortCallback(const void* a, const void* b)
 }
 
 
-TA_PRIVATE taBool32 taFSAdjustCentralDirectoryNamePointersRecursive(ta_memory_stream* pStream, taUInt32 negativeOffset)
+TA_PRIVATE taBool32 taFSAdjustCentralDirectoryNamePointersRecursive(taMemoryStream* pStream, taUInt32 negativeOffset)
 {
     assert(pStream != NULL);
 
     taUInt32 fileCount;
-    if (ta_memory_stream_read(pStream, &fileCount, 4) != 4) {
+    if (taMemoryStreamRead(pStream, &fileCount, 4) != 4) {
         return TA_FALSE;
     }
 
     taUInt32 entryOffset;
-    if (ta_memory_stream_peek(pStream, &entryOffset, 4) != 4) {     // <-- Note that it's a peek and not a read. Reason is because this value is going to be replaced.
+    if (taMemoryStreamPeek(pStream, &entryOffset, 4) != 4) {     // <-- Note that it's a peek and not a read. Reason is because this value is going to be replaced.
         return TA_FALSE;
     }
 
     // The entry offset is within the central directory. Need to adjust this pointer by simply subtracting negativeOffset.
     assert(entryOffset >= negativeOffset);
     entryOffset -= negativeOffset;
-    ta_memory_stream_write_uint32(pStream, entryOffset);
+    taMemoryStreamWriteUInt32(pStream, entryOffset);
 
     // Now we need to seek to each file and do the same offsetting for them.
-    if (!ta_memory_stream_seek(pStream, entryOffset, taSeekOriginStart)) {
+    if (!taMemoryStreamSeek(pStream, entryOffset, taSeekOriginStart)) {
         return TA_FALSE;
     }
 
     for (taUInt32 i = 0; i < fileCount; ++i) {
         taUInt32 namePos;
-        if (ta_memory_stream_peek(pStream, &namePos, 4) != 4) {     // <-- Note that it's a peek and not a read. Reason is because this value is going to be replaced.
+        if (taMemoryStreamPeek(pStream, &namePos, 4) != 4) {     // <-- Note that it's a peek and not a read. Reason is because this value is going to be replaced.
             return TA_FALSE;
         }
 
         assert(namePos >= negativeOffset);
         namePos -= negativeOffset;
-        ta_memory_stream_write_uint32(pStream, namePos);
+        taMemoryStreamWriteUInt32(pStream, namePos);
 
 
         taUInt32 dataPos;
-        if (ta_memory_stream_peek(pStream, &dataPos, 4) != 4) {     // <-- Note that it's a peek and not a read. Reason is because this value is going to be replaced.
+        if (taMemoryStreamPeek(pStream, &dataPos, 4) != 4) {     // <-- Note that it's a peek and not a read. Reason is because this value is going to be replaced.
             return TA_FALSE;
         }
 
         assert(dataPos >= negativeOffset);
         dataPos -= negativeOffset;
-        ta_memory_stream_write_uint32(pStream, dataPos);
+        taMemoryStreamWriteUInt32(pStream, dataPos);
 
 
         taUInt8 isDirectory;
-        if (ta_memory_stream_read(pStream, &isDirectory, 1) != 1) {
+        if (taMemoryStreamRead(pStream, &isDirectory, 1) != 1) {
             return TA_FALSE;
         }
 
         // If it's a directory we need to call this recursively. The current read position of the stream needs to be saved and restored in order for
         // the recursion to work correctly.
         if (isDirectory) {
-            taUInt32 currentReadPos = (taUInt32)ta_memory_stream_tell(pStream);
+            taUInt32 currentReadPos = (taUInt32)taMemoryStreamTell(pStream);
 
             // Before traversing the sub-directory we need to seek to it.
-            if (!ta_memory_stream_seek(pStream, dataPos, taSeekOriginStart)) {
+            if (!taMemoryStreamSeek(pStream, dataPos, taSeekOriginStart)) {
                 return TA_FALSE;
             }
 
@@ -366,7 +366,7 @@ TA_PRIVATE taBool32 taFSAdjustCentralDirectoryNamePointersRecursive(ta_memory_st
             
             // We're done with the sub-directory, but traversing that will have changed the read position of the memory stream, so that will need
             // to be restored before continuing.
-            if (!ta_memory_stream_seek(pStream, currentReadPos, taSeekOriginStart)) {
+            if (!taMemoryStreamSeek(pStream, currentReadPos, taSeekOriginStart)) {
                 return TA_FALSE;
             }
         }
@@ -380,7 +380,7 @@ TA_PRIVATE taBool32 taFSAdjustCentralDirectoryNamePointers(char* pCentralDirecto
     assert(pCentralDirectory != NULL);
     assert(negativeOffset > 0);
 
-    ta_memory_stream stream;
+    taMemoryStream stream;
     stream.pData = pCentralDirectory;
     stream.dataSize = centralDirectorySize;
     stream.currentReadPos = 0;
@@ -507,21 +507,21 @@ TA_PRIVATE taFile* taFSOpenFileFromArchive(taFS* pFS, taFSArchive* pArchive, con
     }
 
 
-    ta_memory_stream stream = ta_create_memory_stream(pArchive->pCentralDirectory, pArchive->centralDirectorySize);
-    ta_memory_stream_seek(&stream, dataPos, taSeekOriginStart);
+    taMemoryStream stream = taCreateMemoryStream(pArchive->pCentralDirectory, pArchive->centralDirectorySize);
+    taMemoryStreamSeek(&stream, dataPos, taSeekOriginStart);
 
     taUInt32 dataOffset;
-    if (ta_memory_stream_read(&stream, &dataOffset, 4) != 4) {
+    if (taMemoryStreamRead(&stream, &dataOffset, 4) != 4) {
         return NULL;
     }
 
     taUInt32 dataSize;
-    if (ta_memory_stream_read(&stream, &dataSize, 4) != 4) {
+    if (taMemoryStreamRead(&stream, &dataSize, 4) != 4) {
         return NULL;
     }
 
     taUInt8 compressionType;
-    if (ta_memory_stream_read(&stream, &compressionType, 1) != 1) {
+    if (taMemoryStreamRead(&stream, &compressionType, 1) != 1) {
         return NULL;
     }
 
@@ -544,7 +544,7 @@ TA_PRIVATE taFile* taFSOpenFileFromArchive(taFS* pFS, taFSArchive* pArchive, con
         return NULL;
     }
 
-    pFile->_stream = ta_create_memory_stream(pFile->pFileData, dataSize);
+    pFile->_stream = taCreateMemoryStream(pFile->pFileData, dataSize);
     pFile->pFS = pFS;
     pFile->sizeInBytes = dataSize;
 
@@ -704,7 +704,7 @@ taFile* taOpenSpecificFile(taFS* pFS, const char* archiveRelativePath, const cha
             return NULL;
         }
 
-        pFile->_stream = ta_create_memory_stream(pFile->pFileData, (size_t)sizeInBytes);
+        pFile->_stream = taCreateMemoryStream(pFile->pFileData, (size_t)sizeInBytes);
         pFile->pFS = pFS;
         pFile->sizeInBytes = (size_t)sizeInBytes;
 
@@ -774,7 +774,7 @@ taBool32 taReadFile(taFile* pFile, void* pBufferOut, size_t bytesToRead, size_t*
         return TA_FALSE;
     }
 
-    size_t bytesRead = ta_memory_stream_read(&pFile->_stream, pBufferOut, bytesToRead);
+    size_t bytesRead = taMemoryStreamRead(&pFile->_stream, pBufferOut, bytesToRead);
     if (pBytesReadOut) {
         *pBytesReadOut = bytesRead;
     }
@@ -788,7 +788,7 @@ taBool32 taSeekFile(taFile* pFile, taInt64 bytesToSeek, taSeekOrigin origin)
         return TA_FALSE;
     }
 
-    return ta_memory_stream_seek(&pFile->_stream, bytesToSeek, origin);
+    return taMemoryStreamSeek(&pFile->_stream, bytesToSeek, origin);
 }
 
 taUInt64 taTellFile(taFile* pFile)
@@ -797,7 +797,7 @@ taUInt64 taTellFile(taFile* pFile)
         return TA_FALSE;
     }
 
-    return (taUInt64)ta_memory_stream_tell(&pFile->_stream);
+    return (taUInt64)taMemoryStreamTell(&pFile->_stream);
 }
 
 

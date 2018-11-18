@@ -58,7 +58,7 @@ struct taFS
 struct taFile
 {
     // The memory stream that's used to from data from the file. Internal use only.
-    ta_memory_stream _stream;
+    taMemoryStream _stream;
 
 
     // The file system that owns this file.
