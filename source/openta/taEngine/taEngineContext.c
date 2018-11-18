@@ -1,18 +1,18 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-TA_PRIVATE taBool32 taLoadPalette(ta_fs* pFS, const char* filePath, taUInt32* paletteOut)
+TA_PRIVATE taBool32 taLoadPalette(taFS* pFS, const char* filePath, taUInt32* paletteOut)
 {
-    ta_file* pPaletteFile = ta_open_file(pFS, filePath, 0);
+    taFile* pPaletteFile = taOpenFile(pFS, filePath, 0);
     if (pPaletteFile == NULL) {
         return TA_FALSE;
     }
 
     size_t bytesRead;
-    if (!ta_read_file(pPaletteFile, paletteOut, 1024, &bytesRead) || bytesRead != 1024) {
+    if (!taReadFile(pPaletteFile, paletteOut, 1024, &bytesRead) || bytesRead != 1024) {
         return TA_FALSE;
     }
 
-    ta_close_file(pPaletteFile);
+    taCloseFile(pPaletteFile);
 
 
     // The palettes will include room for an alpha component, but it'll always be set to 0 (fully transparent). However, due
@@ -53,7 +53,7 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
 
 
     //// File System ////
-    pEngine->pFS = ta_create_file_system();
+    pEngine->pFS = taCreateFileSystem();
     if (pEngine->pFS == NULL) {
         result = TA_ERROR;
         goto on_error1;
@@ -133,13 +133,13 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
     // Texture GAFs. This is every GAF file contained in the "textures" directory. These are loaded in two passes. The first
     // pass counts the number of GAF files, and the second pass opens them.
     pEngine->textureGAFCount = 0;
-    ta_fs_iterator* iGAF = ta_fs_begin(pEngine->pFS, "textures", TA_FALSE);
-    while (ta_fs_next(iGAF)) {
+    taFSIterator* iGAF = taFSBegin(pEngine->pFS, "textures", TA_FALSE);
+    while (taFSNext(iGAF)) {
         if (drpath_extension_equal(iGAF->fileInfo.relativePath, "gaf")) {
             pEngine->textureGAFCount += 1;
         }
     }
-    ta_fs_end(iGAF);
+    taFSEnd(iGAF);
 
     pEngine->ppTextureGAFs = (ta_gaf**)malloc(pEngine->textureGAFCount * sizeof(*pEngine->ppTextureGAFs));
     if (pEngine->ppTextureGAFs == NULL) {
@@ -147,8 +147,8 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
     }
 
     pEngine->textureGAFCount = 0;
-    iGAF = ta_fs_begin(pEngine->pFS, "textures", TA_FALSE);
-    while (ta_fs_next(iGAF)) {
+    iGAF = taFSBegin(pEngine->pFS, "textures", TA_FALSE);
+    while (taFSNext(iGAF)) {
         if (drpath_extension_equal(iGAF->fileInfo.relativePath, "gaf")) {
             pEngine->ppTextureGAFs[pEngine->textureGAFCount] = ta_open_gaf(pEngine->pFS, iGAF->fileInfo.relativePath);
             if (pEngine->ppTextureGAFs[pEngine->textureGAFCount] != NULL) {
@@ -159,7 +159,7 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
             }
         }
     }
-    ta_fs_end(iGAF);
+    taFSEnd(iGAF);
 
     
 
@@ -174,7 +174,7 @@ on_error6:  taFontUnload(&pEngine->font);
 on_error5:  ta_input_state_uninit(&pEngine->input);
 on_error4:  taDeleteAudioContext(pEngine->pAudio);
 on_error3:  ta_delete_graphics_context(pEngine->pGraphics);
-on_error2:  ta_delete_file_system(pEngine->pFS);
+on_error2:  taDeleteFileSystem(pEngine->pFS);
 on_error1:  ta_property_manager_uninit(&pEngine->properties);
 on_error0:
     return result;
@@ -195,7 +195,7 @@ taResult taEngineContextUninit(taEngineContext* pEngine)
     ta_input_state_uninit(&pEngine->input);
     taDeleteAudioContext(pEngine->pAudio);
     ta_delete_graphics_context(pEngine->pGraphics);
-    ta_delete_file_system(pEngine->pFS);
+    taDeleteFileSystem(pEngine->pFS);
     ta_property_manager_uninit(&pEngine->properties);
     return TA_SUCCESS;
 }
@@ -209,7 +209,7 @@ taTexture* taLoadImage(taEngineContext* pEngine, const char* filePath)
     }
     
     if (drpath_extension_equal(filePath, "pcx")) {
-        ta_file* pFile = ta_open_file(pEngine->pFS, filePath, 0);
+        taFile* pFile = taOpenFile(pEngine->pFS, filePath, 0);
         if (pFile == NULL) {
             return NULL;    // File not found.
         }

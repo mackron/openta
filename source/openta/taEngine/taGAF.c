@@ -21,34 +21,34 @@ taBool32 ta_gaf__read_frame_header(ta_gaf* pGAF, ta_gaf_frame_header* pHeader)
 
     // This function assumes the file is sitting on the first byte of the header.
 
-    if (!ta_read_file_uint16(pGAF->pFile, &pHeader->width)) {
+    if (!taReadFileUInt16(pGAF->pFile, &pHeader->width)) {
         return TA_FALSE;
     }
-    if (!ta_read_file_uint16(pGAF->pFile, &pHeader->height)) {
+    if (!taReadFileUInt16(pGAF->pFile, &pHeader->height)) {
         return TA_FALSE;
     }
-    if (!ta_read_file_uint16(pGAF->pFile, &pHeader->offsetX)) {
+    if (!taReadFileUInt16(pGAF->pFile, &pHeader->offsetX)) {
         return TA_FALSE;
     }
-    if (!ta_read_file_uint16(pGAF->pFile, &pHeader->offsetY)) {
+    if (!taReadFileUInt16(pGAF->pFile, &pHeader->offsetY)) {
         return TA_FALSE;
     }
-    if (!ta_seek_file(pGAF->pFile, 1, ta_seek_origin_current)) {
+    if (!taSeekFile(pGAF->pFile, 1, taSeekOriginCurrent)) {
         return TA_FALSE;
     }
-    if (!ta_read_file_uint8(pGAF->pFile, &pHeader->isCompressed)) {
+    if (!taReadFileUInt8(pGAF->pFile, &pHeader->isCompressed)) {
         return TA_FALSE;
     }
-    if (!ta_read_file_uint16(pGAF->pFile, &pHeader->subframeCount)) {
+    if (!taReadFileUInt16(pGAF->pFile, &pHeader->subframeCount)) {
         return TA_FALSE;
     }
-    if (!ta_seek_file(pGAF->pFile, 4, ta_seek_origin_current)) {
+    if (!taSeekFile(pGAF->pFile, 4, taSeekOriginCurrent)) {
         return TA_FALSE;
     }
-    if (!ta_read_file_uint32(pGAF->pFile, &pHeader->dataPtr)) {
+    if (!taReadFileUInt32(pGAF->pFile, &pHeader->dataPtr)) {
         return TA_FALSE;
     }
-    if (!ta_seek_file(pGAF->pFile, 4, ta_seek_origin_current)) {
+    if (!taSeekFile(pGAF->pFile, 4, taSeekOriginCurrent)) {
         return TA_FALSE;
     }
 
@@ -61,7 +61,7 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
     assert(pFrameHeader != NULL);
     assert(pDstImageData != NULL);
 
-    if (!ta_seek_file(pGAF->pFile, pFrameHeader->dataPtr, ta_seek_origin_start)) {
+    if (!taSeekFile(pGAF->pFile, pFrameHeader->dataPtr, taSeekOriginStart)) {
         return TA_FALSE;
     }
 
@@ -73,7 +73,7 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
         for (taUInt32 y = 0; y < pFrameHeader->height; ++y)
         {
             taUInt16 rowSize;
-            if (!ta_read_file_uint16(pGAF->pFile, &rowSize)) {
+            if (!taReadFileUInt16(pGAF->pFile, &rowSize)) {
                 return TA_FALSE;
             }
 
@@ -86,7 +86,7 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
                 while (bytesProcessed < rowSize)
                 {
                     taUInt8 mask;
-                    if (!ta_read_file_uint8(pGAF->pFile, &mask)) {
+                    if (!taReadFileUInt8(pGAF->pFile, &mask)) {
                         return TA_FALSE;
                     }
 
@@ -101,7 +101,7 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
                         // The next byte is repeated.
                         taUInt8 repeat = (mask >> 2) + 1;
                         taUInt8 value;
-                        if (!ta_read_file_uint8(pGAF->pFile, &value)) {
+                        if (!taReadFileUInt8(pGAF->pFile, &value)) {
                             return TA_FALSE;
                         }
 
@@ -124,7 +124,7 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
                         while (repeat > 0)
                         {
                             taUInt8 value;
-                            if (!ta_read_file_uint8(pGAF->pFile, &value)) {
+                            if (!taReadFileUInt8(pGAF->pFile, &value)) {
                                 return TA_FALSE;
                             }
 
@@ -154,7 +154,7 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
         for (unsigned int y = 0; y < pFrameHeader->height; ++y)
         {
             taUInt8* pDstRow = pDstImageData + ((offsetY + y) * dstWidth);
-            if (!ta_read_file(pGAF->pFile, pDstRow + offsetX, pFrameHeader->width, NULL)) {
+            if (!taReadFile(pGAF->pFile, pDstRow + offsetX, pFrameHeader->width, NULL)) {
                 return TA_FALSE;
             }
         }
@@ -165,7 +165,7 @@ taBool32 ta_gaf__read_frame_pixels(ta_gaf* pGAF, ta_gaf_frame_header* pFrameHead
 }
 
 
-ta_gaf* ta_open_gaf(ta_fs* pFS, const char* filename)
+ta_gaf* ta_open_gaf(taFS* pFS, const char* filename)
 {
     if (pFS == NULL || filename == NULL) {
         return NULL;
@@ -195,20 +195,20 @@ ta_gaf* ta_open_gaf(ta_fs* pFS, const char* filename)
         goto on_error;
     }
     
-    pGAF->pFile = ta_open_file(pFS, fullFileName, 0);
+    pGAF->pFile = taOpenFile(pFS, fullFileName, 0);
     if (pGAF->pFile == NULL) {
         goto on_error;
     }
     
     taUInt32 version;
-    if (!ta_read_file_uint32(pGAF->pFile, &version)) {
+    if (!taReadFileUInt32(pGAF->pFile, &version)) {
         goto on_error;    
     }
     if (version != 0x0010100) {
         goto on_error;    // Not a GAF file.
     }
 
-    if (!ta_read_file_uint32(pGAF->pFile, &pGAF->sequenceCount)) {
+    if (!taReadFileUInt32(pGAF->pFile, &pGAF->sequenceCount)) {
         goto on_error;
     }
 
@@ -219,7 +219,7 @@ ta_gaf* ta_open_gaf(ta_fs* pFS, const char* filename)
 on_error:
     if (pGAF) {
         if (pGAF->pFile) {
-            ta_close_file(pGAF->pFile);
+            taCloseFile(pGAF->pFile);
         }
 
         free(pGAF);
@@ -234,7 +234,7 @@ void ta_close_gaf(ta_gaf* pGAF)
         return;
     }
 
-    ta_close_file(pGAF->pFile);
+    taCloseFile(pGAF->pFile);
     free(pGAF);
 }
 
@@ -249,31 +249,31 @@ taBool32 ta_gaf_select_sequence(ta_gaf* pGAF, const char* sequenceName, taUInt32
     for (taUInt32 iSequence = 0; iSequence < pGAF->sequenceCount; ++iSequence)
     {
         // The sequence pointers are located at byte position 12.
-        if (!ta_seek_file(pGAF->pFile, 12 + (iSequence * sizeof(taUInt32)), ta_seek_origin_start)) {
+        if (!taSeekFile(pGAF->pFile, 12 + (iSequence * sizeof(taUInt32)), taSeekOriginStart)) {
             return TA_FALSE;
         }
 
         taUInt32 sequencePointer;
-        if (!ta_read_file_uint32(pGAF->pFile, &sequencePointer)) {
+        if (!taReadFileUInt32(pGAF->pFile, &sequencePointer)) {
             return TA_FALSE;
         }
 
-        if (!ta_seek_file(pGAF->pFile, sequencePointer, ta_seek_origin_start)) {
+        if (!taSeekFile(pGAF->pFile, sequencePointer, taSeekOriginStart)) {
             return TA_FALSE;
         }
 
 
         taUInt16 frameCount;
-        if (!ta_read_file_uint16(pGAF->pFile, &frameCount)) {
+        if (!taReadFileUInt16(pGAF->pFile, &frameCount)) {
             return TA_FALSE;
         }
 
-        if (!ta_seek_file(pGAF->pFile, 6, ta_seek_origin_current)) {
+        if (!taSeekFile(pGAF->pFile, 6, taSeekOriginCurrent)) {
             return TA_FALSE;
         }
 
         // The file will be sitting on the sequence's name, so we just need to compare. If they're not equal just try the next sequence.
-        const char* pName = pGAF->pFile->pFileData + ta_tell_file(pGAF->pFile);
+        const char* pName = pGAF->pFile->pFileData + taTellFile(pGAF->pFile);
         if (_stricmp(pName, sequenceName) == 0)
         {
             // It's the sequence we're looking for.
@@ -297,30 +297,30 @@ taBool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, taUInt32 index, taUInt32*
     }
 
     // The sequence pointers are located at byte position 12.
-    if (!ta_seek_file(pGAF->pFile, 12 + (index * sizeof(taUInt32)), ta_seek_origin_start)) {
+    if (!taSeekFile(pGAF->pFile, 12 + (index * sizeof(taUInt32)), taSeekOriginStart)) {
         return TA_FALSE;
     }
 
     taUInt32 sequencePointer;
-    if (!ta_read_file_uint32(pGAF->pFile, &sequencePointer)) {
+    if (!taReadFileUInt32(pGAF->pFile, &sequencePointer)) {
         return TA_FALSE;
     }
 
-    if (!ta_seek_file(pGAF->pFile, sequencePointer, ta_seek_origin_start)) {
+    if (!taSeekFile(pGAF->pFile, sequencePointer, taSeekOriginStart)) {
         return TA_FALSE;
     }
 
 
     taUInt16 frameCount;
-    if (!ta_read_file_uint16(pGAF->pFile, &frameCount)) {
+    if (!taReadFileUInt16(pGAF->pFile, &frameCount)) {
         return TA_FALSE;
     }
 
-    if (!ta_seek_file(pGAF->pFile, 6, ta_seek_origin_current)) {
+    if (!taSeekFile(pGAF->pFile, 6, taSeekOriginCurrent)) {
         return TA_FALSE;
     }
 
-    pGAF->_sequenceName = pGAF->pFile->pFileData + ta_tell_file(pGAF->pFile);
+    pGAF->_sequenceName = pGAF->pFile->pFileData + taTellFile(pGAF->pFile);
     pGAF->_sequencePointer = sequencePointer;
     pGAF->_sequenceFrameCount = frameCount;
 
@@ -343,16 +343,16 @@ taResult ta_gaf_get_frame(ta_gaf* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut
 
     // Each frame pointer is grouped as a 64-bit value. We want the first 32-bits. The frame pointers start 40 bytes
     // after the beginning of the sequence.
-    if (!ta_seek_file(pGAF->pFile, pGAF->_sequencePointer + 40 + (frameIndex * sizeof(taUInt64)), ta_seek_origin_start)) {
+    if (!taSeekFile(pGAF->pFile, pGAF->_sequencePointer + 40 + (frameIndex * sizeof(taUInt64)), taSeekOriginStart)) {
         return TA_ERROR;
     }
 
     taUInt32 framePointer;
-    if (!ta_read_file_uint32(pGAF->pFile, &framePointer)) {
+    if (!taReadFileUInt32(pGAF->pFile, &framePointer)) {
         return TA_ERROR;
     }
 
-    if (!ta_seek_file(pGAF->pFile, framePointer, ta_seek_origin_start)) {
+    if (!taSeekFile(pGAF->pFile, framePointer, taSeekOriginStart)) {
         return TA_ERROR;
     }
 
@@ -391,18 +391,18 @@ taResult ta_gaf_get_frame(ta_gaf* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut
             for (unsigned short iSubframe = 0; iSubframe < frameHeader.subframeCount; ++iSubframe)
             {
                 // frameHeader.dataPtr points to a list of frameHeader.subframeCount pointers to frame headers.
-                if (!ta_seek_file(pGAF->pFile, frameHeader.dataPtr + (iSubframe * 4), ta_seek_origin_start)) {
+                if (!taSeekFile(pGAF->pFile, frameHeader.dataPtr + (iSubframe * 4), taSeekOriginStart)) {
                     free(pImageData);
                     return TA_ERROR;
                 }
 
                 taUInt32 subframePointer;
-                if (!ta_read_file_uint32(pGAF->pFile, &subframePointer)) {
+                if (!taReadFileUInt32(pGAF->pFile, &subframePointer)) {
                     free(pImageData);
                     return TA_FALSE;
                 }
 
-                if (!ta_seek_file(pGAF->pFile, subframePointer, ta_seek_origin_start)) {
+                if (!taSeekFile(pGAF->pFile, subframePointer, taSeekOriginStart)) {
                     return TA_ERROR;
                 }
 

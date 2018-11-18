@@ -9,7 +9,7 @@ typedef struct
     char filename[TA_MAX_PATH];
 
     // The file to load from.
-    ta_file* pFile;
+    taFile* pFile;
 
     // The number of sequences making up the GAF archive.
     taUInt32 sequenceCount;
@@ -25,7 +25,7 @@ typedef struct
 } ta_gaf;
 
 // Opens a GAF archive.
-ta_gaf* ta_open_gaf(ta_fs* pFS, const char* filename);
+ta_gaf* ta_open_gaf(taFS* pFS, const char* filename);
 
 // Closes the given GAF archive.
 void ta_close_gaf(ta_gaf* pGAF);

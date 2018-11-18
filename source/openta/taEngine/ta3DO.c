@@ -39,7 +39,7 @@ TA_PRIVATE ta3DOObject* ta3DOLoadObjectRecursive(ta3DO* p3DO)
 
     // Next sibling.
     if (header.nextSiblingPtr != 0) {
-        if (!ta_seek_file(p3DO->pFile, header.nextSiblingPtr, ta_seek_origin_start)) {
+        if (!taSeekFile(p3DO->pFile, header.nextSiblingPtr, taSeekOriginStart)) {
             free(pObject);
             return NULL;
         }
@@ -53,7 +53,7 @@ TA_PRIVATE ta3DOObject* ta3DOLoadObjectRecursive(ta3DO* p3DO)
     
     // First child.
     if (header.firstChildPtr != 0) {
-        if (!ta_seek_file(p3DO->pFile, header.firstChildPtr, ta_seek_origin_start)) {
+        if (!taSeekFile(p3DO->pFile, header.firstChildPtr, taSeekOriginStart)) {
             free(pObject);
             return NULL;
         }
@@ -69,7 +69,7 @@ TA_PRIVATE ta3DOObject* ta3DOLoadObjectRecursive(ta3DO* p3DO)
 }
 
 
-ta3DO* taOpen3DO(ta_fs* pFS, const char* fileName)
+ta3DO* taOpen3DO(taFS* pFS, const char* fileName)
 {
     if (pFS == NULL || fileName == NULL) {
         return NULL;
@@ -90,7 +90,7 @@ ta3DO* taOpen3DO(ta_fs* pFS, const char* fileName)
         goto on_error;
     }
 
-    p3DO->pFile = ta_open_file(pFS, fullFileName, 0);
+    p3DO->pFile = taOpenFile(pFS, fullFileName, 0);
     if (p3DO->pFile == NULL) {
         goto on_error;
     }
@@ -115,57 +115,57 @@ void taClose3DO(ta3DO* p3DO)
         return;
     }
 
-    ta_close_file(p3DO->pFile);
+    taCloseFile(p3DO->pFile);
     free(p3DO);
 }
 
-taBool32 ta3DOReadObjectHeader(ta_file* pFile, ta3DOObjectHeader* pHeader)
+taBool32 ta3DOReadObjectHeader(taFile* pFile, ta3DOObjectHeader* pHeader)
 {
     // PRE: The file must be sitting on the first byte of the header.
 
     assert(pFile != NULL);
     assert(pHeader != NULL);
 
-    if (!ta_read_file_uint32(pFile, &pHeader->version) || pHeader->version != 1 ||
-        !ta_read_file_uint32(pFile, &pHeader->vertexCount) ||
-        !ta_read_file_uint32(pFile, &pHeader->primitiveCount) ||
-        !ta_read_file_uint32(pFile, &pHeader->selectionPrimitivePtr) ||
-        !ta_read_file_int32( pFile, &pHeader->relativePosX) ||
-        !ta_read_file_int32( pFile, &pHeader->relativePosY) ||
-        !ta_read_file_int32( pFile, &pHeader->relativePosZ) ||
-        !ta_read_file_uint32(pFile, &pHeader->namePtr) ||
-        !ta_read_file_uint32(pFile, &pHeader->unused) ||
-        !ta_read_file_uint32(pFile, &pHeader->vertexPtr) ||
-        !ta_read_file_uint32(pFile, &pHeader->primitivePtr) ||
-        !ta_read_file_uint32(pFile, &pHeader->nextSiblingPtr) ||
-        !ta_read_file_uint32(pFile, &pHeader->firstChildPtr)) {
+    if (!taReadFileUInt32(pFile, &pHeader->version) || pHeader->version != 1 ||
+        !taReadFileUInt32(pFile, &pHeader->vertexCount) ||
+        !taReadFileUInt32(pFile, &pHeader->primitiveCount) ||
+        !taReadFileUInt32(pFile, &pHeader->selectionPrimitivePtr) ||
+        !taReadFileInt32( pFile, &pHeader->relativePosX) ||
+        !taReadFileInt32( pFile, &pHeader->relativePosY) ||
+        !taReadFileInt32( pFile, &pHeader->relativePosZ) ||
+        !taReadFileUInt32(pFile, &pHeader->namePtr) ||
+        !taReadFileUInt32(pFile, &pHeader->unused) ||
+        !taReadFileUInt32(pFile, &pHeader->vertexPtr) ||
+        !taReadFileUInt32(pFile, &pHeader->primitivePtr) ||
+        !taReadFileUInt32(pFile, &pHeader->nextSiblingPtr) ||
+        !taReadFileUInt32(pFile, &pHeader->firstChildPtr)) {
         return TA_FALSE;
     }
 
     return TA_TRUE;
 }
 
-taBool32 ta3DOReadPrimitiveHeader(ta_file* pFile, ta3DOPrimitiveHeader* pHeaderOut)
+taBool32 ta3DOReadPrimitiveHeader(taFile* pFile, ta3DOPrimitiveHeader* pHeaderOut)
 {
     if (pFile == NULL || pHeaderOut == NULL) {
         return TA_FALSE;
     }
 
-    if (!ta_read_file_uint32(pFile, &pHeaderOut->colorIndex) ||
-        !ta_read_file_uint32(pFile, &pHeaderOut->indexCount) ||
-        !ta_read_file_uint32(pFile, &pHeaderOut->unused0) ||
-        !ta_read_file_uint32(pFile, &pHeaderOut->indexArrayPtr) ||
-        !ta_read_file_uint32(pFile, &pHeaderOut->textureNamePtr) ||
-        !ta_read_file_uint32(pFile, &pHeaderOut->unused1) ||
-        !ta_read_file_uint32(pFile, &pHeaderOut->unused2) ||
-        !ta_read_file_uint32(pFile, &pHeaderOut->isColored)) {
+    if (!taReadFileUInt32(pFile, &pHeaderOut->colorIndex) ||
+        !taReadFileUInt32(pFile, &pHeaderOut->indexCount) ||
+        !taReadFileUInt32(pFile, &pHeaderOut->unused0) ||
+        !taReadFileUInt32(pFile, &pHeaderOut->indexArrayPtr) ||
+        !taReadFileUInt32(pFile, &pHeaderOut->textureNamePtr) ||
+        !taReadFileUInt32(pFile, &pHeaderOut->unused1) ||
+        !taReadFileUInt32(pFile, &pHeaderOut->unused2) ||
+        !taReadFileUInt32(pFile, &pHeaderOut->isColored)) {
         return TA_FALSE;
     }
 
     return TA_TRUE;
 }
 
-taUInt32 ta3DOCountObjects(ta_file* pFile)
+taUInt32 ta3DOCountObjects(taFile* pFile)
 {
     ta3DOObjectHeader header;
     if (!ta3DOReadObjectHeader(pFile, &header)) {
@@ -176,7 +176,7 @@ taUInt32 ta3DOCountObjects(ta_file* pFile)
 
     // Siblings.
     if (header.nextSiblingPtr != 0) {
-        if (!ta_seek_file(pFile, header.nextSiblingPtr, ta_seek_origin_start)) {
+        if (!taSeekFile(pFile, header.nextSiblingPtr, taSeekOriginStart)) {
             return 0;
         }
 
@@ -185,7 +185,7 @@ taUInt32 ta3DOCountObjects(ta_file* pFile)
 
     // Children.
     if (header.firstChildPtr != 0) {
-        if (!ta_seek_file(pFile, header.firstChildPtr, ta_seek_origin_start)) {
+        if (!taSeekFile(pFile, header.firstChildPtr, taSeekOriginStart)) {
             return 0;
         }
 

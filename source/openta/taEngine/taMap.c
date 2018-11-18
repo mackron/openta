@@ -237,7 +237,7 @@ taBool32 ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadC
     return TA_FALSE;
 }
 
-taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_context* pLoadContext, ta_file* pFile, ta_map_3do* p3DO, taUInt32 nextObjectIndex)
+taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_context* pLoadContext, taFile* pFile, ta_map_3do* p3DO, taUInt32 nextObjectIndex)
 {
     assert(pMap != NULL);
     assert(pFile != NULL);
@@ -269,7 +269,7 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
     ta_map__reset_mesh_builders(pLoadContext);
 
     // Primitives.
-    if (!ta_seek_file(pFile, objectHeader.primitivePtr, ta_seek_origin_start)) {
+    if (!taSeekFile(pFile, objectHeader.primitivePtr, taSeekOriginStart)) {
         return 0;
     }
 
@@ -483,7 +483,7 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
 
     taUInt32 childCount = 0;
     if (objectHeader.firstChildPtr != 0) {
-        if (!ta_seek_file(pFile, objectHeader.firstChildPtr, ta_seek_origin_start)) {
+        if (!taSeekFile(pFile, objectHeader.firstChildPtr, taSeekOriginStart)) {
             return 0;
         }
 
@@ -499,7 +499,7 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
     taUInt32 siblingCount = 0;
     taUInt32 nextSiblingIndex = firstChildIndex + childCount;
     if (objectHeader.nextSiblingPtr != 0) {
-        if (!ta_seek_file(pFile, objectHeader.nextSiblingPtr, ta_seek_origin_start)) {
+        if (!taSeekFile(pFile, objectHeader.nextSiblingPtr, taSeekOriginStart)) {
             return 0;
         }
 
@@ -528,20 +528,20 @@ ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadCo
         }
     }
 
-    ta_file* pFile = ta_open_file(pMap->pEngine->pFS, fullFileName, 0);
+    taFile* pFile = taOpenFile(pMap->pEngine->pFS, fullFileName, 0);
     if (pFile == NULL) {
         return NULL;
     }
 
     taUInt32 objectCount = ta3DOCountObjects(pFile);
     if (objectCount == 0) {
-        ta_close_file(pFile);
+        taCloseFile(pFile);
         return NULL;
     }
 
     ta_map_3do* p3DO = (ta_map_3do*)malloc(sizeof(*p3DO));
     if (p3DO == NULL) {
-        ta_close_file(pFile);
+        taCloseFile(pFile);
         return NULL;
     }
 
@@ -551,23 +551,23 @@ ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadCo
     p3DO->objectCount = objectCount;
     p3DO->pObjects = (ta_map_3do_object*)malloc(objectCount * sizeof(*p3DO->pObjects));
     if (p3DO->pObjects == NULL) {
-        ta_close_file(pFile);
+        taCloseFile(pFile);
         free(p3DO);
         return NULL;
     }
 
-    ta_seek_file(pFile, 0, ta_seek_origin_start);
+    taSeekFile(pFile, 0, taSeekOriginStart);
 
     taUInt32 objectsLoaded = ta_map__load_3do_objects_recursive(pMap, pLoadContext, pFile, p3DO, 0);
     if (objectsLoaded != p3DO->objectCount) {
-        ta_close_file(pFile);
+        taCloseFile(pFile);
         free(p3DO->pMeshes);
         free(p3DO->pObjects);
         free(p3DO);
         return NULL;
     }
 
-    ta_close_file(pFile);
+    taCloseFile(pFile);
     return p3DO;
 }
 
@@ -585,7 +585,7 @@ void ta_map__calculate_object_position_xy(taUInt32 tileX, taUInt32 tileY, taUInt
 }
 
 
-ta_file* ta_map__open_tnt_file(ta_fs* pFS, const char* mapName)
+taFile* ta_map__open_tnt_file(taFS* pFS, const char* mapName)
 {
     char filename[TA_MAX_PATH];
     if (!drpath_copy_and_append(filename, sizeof(filename), "maps", mapName)) {
@@ -595,20 +595,20 @@ ta_file* ta_map__open_tnt_file(ta_fs* pFS, const char* mapName)
         return NULL;
     }
 
-    return ta_open_file(pFS, filename, 0);
+    return taOpenFile(pFS, filename, 0);
 }
 
-void ta_map__close_tnt_file(ta_file* pTNT)
+void ta_map__close_tnt_file(taFile* pTNT)
 {
-    ta_close_file(pTNT);
+    taCloseFile(pTNT);
 }
 
-taBool32 ta_map__read_tnt_header(ta_file* pTNT, ta_tnt_header* pHeader)
+taBool32 ta_map__read_tnt_header(taFile* pTNT, ta_tnt_header* pHeader)
 {
     assert(pTNT != NULL);
     assert(pHeader != NULL);
 
-    if (!ta_read_file_uint32(pTNT, &pHeader->id)) {
+    if (!taReadFileUInt32(pTNT, &pHeader->id)) {
         return TA_FALSE;
     }
 
@@ -617,17 +617,17 @@ taBool32 ta_map__read_tnt_header(ta_file* pTNT, ta_tnt_header* pHeader)
     }
 
 
-    if (!ta_read_file_uint32(pTNT, &pHeader->width) ||
-        !ta_read_file_uint32(pTNT, &pHeader->height) ||
-        !ta_read_file_uint32(pTNT, &pHeader->mapdataPtr) ||
-        !ta_read_file_uint32(pTNT, &pHeader->mapattrPtr) ||
-        !ta_read_file_uint32(pTNT, &pHeader->tilegfxPtr) ||
-        !ta_read_file_uint32(pTNT, &pHeader->tileCount) ||
-        !ta_read_file_uint32(pTNT, &pHeader->featureTypesCount) ||
-        !ta_read_file_uint32(pTNT, &pHeader->featureTypesPtr) ||
-        !ta_read_file_uint32(pTNT, &pHeader->seaLevel) ||
-        !ta_read_file_uint32(pTNT, &pHeader->minimapPtr) ||
-        !ta_seek_file(pTNT, 20, ta_seek_origin_current))    // <-- Last 20 bytes are unused.
+    if (!taReadFileUInt32(pTNT, &pHeader->width) ||
+        !taReadFileUInt32(pTNT, &pHeader->height) ||
+        !taReadFileUInt32(pTNT, &pHeader->mapdataPtr) ||
+        !taReadFileUInt32(pTNT, &pHeader->mapattrPtr) ||
+        !taReadFileUInt32(pTNT, &pHeader->tilegfxPtr) ||
+        !taReadFileUInt32(pTNT, &pHeader->tileCount) ||
+        !taReadFileUInt32(pTNT, &pHeader->featureTypesCount) ||
+        !taReadFileUInt32(pTNT, &pHeader->featureTypesPtr) ||
+        !taReadFileUInt32(pTNT, &pHeader->seaLevel) ||
+        !taReadFileUInt32(pTNT, &pHeader->minimapPtr) ||
+        !taSeekFile(pTNT, 20, taSeekOriginCurrent))    // <-- Last 20 bytes are unused.
     {
         return TA_FALSE;
     }
@@ -641,7 +641,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     assert(mapName != NULL);
     assert(pLoadContext != NULL);
 
-    ta_file* pTNT = ta_map__open_tnt_file(pMap->pEngine->pFS, mapName);
+    taFile* pTNT = ta_map__open_tnt_file(pMap->pEngine->pFS, mapName);
     if (pTNT == NULL) {
         return TA_FALSE;
     }
@@ -700,7 +700,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     }
 
     // For every tile, pack it's graphic into a texture.
-    if (!ta_seek_file(pTNT, header.tilegfxPtr, ta_seek_origin_start)) {
+    if (!taSeekFile(pTNT, header.tilegfxPtr, taSeekOriginStart)) {
         free(pIndexData);
         free(pVertexData);
         free(pTileSubImages);
@@ -709,7 +709,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
 
     for (taUInt32 iTile = 0; iTile < header.tileCount; /* DO NOTHING */)
     {
-        char* pTileImageData = pTNT->pFileData + ta_tell_file(pTNT) + (iTile*32*32);
+        char* pTileImageData = pTNT->pFileData + taTellFile(pTNT) + (iTile*32*32);
 
         ta_texture_packer_slot slot;
         if (ta_texture_packer_pack_subtexture(&pLoadContext->texturePacker, 32, 32, pTileImageData, &slot))
@@ -767,7 +767,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
                 {
                     // Seek to the first tile in this row.
                     taUInt32 firstTileOnRow = ((chunkY*TA_TERRAIN_CHUNK_SIZE + tileY) * pMap->terrain.tileCountX) + (chunkX*TA_TERRAIN_CHUNK_SIZE);
-                    if (!ta_seek_file(pTNT, header.mapdataPtr + (firstTileOnRow * sizeof(taUInt16)), ta_seek_origin_start)) {
+                    if (!taSeekFile(pTNT, header.mapdataPtr + (firstTileOnRow * sizeof(taUInt16)), taSeekOriginStart)) {
                         free(pIndexData);
                         free(pVertexData);
                         free(pTileSubImages);
@@ -777,7 +777,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
                     for (taUInt32 tileX = 0; tileX < chunkTileCountX; ++tileX)
                     {
                         taUInt16 tileIndex;
-                        if (!ta_read_file_uint16(pTNT, &tileIndex)) {
+                        if (!taReadFileUInt16(pTNT, &tileIndex)) {
                             free(pIndexData);
                             free(pVertexData);
                             free(pTileSubImages);
@@ -877,7 +877,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     // At this point the graphics for the terrain will have been loaded, so now we need to move on to the features. The feature
     // types are listed in a group and we use these names to find the descriptors of each one. Once we have the descriptors we
     // simply sort them by file name and load each one.
-    if (!ta_seek_file(pTNT, header.featureTypesPtr, ta_seek_origin_start)) {
+    if (!taSeekFile(pTNT, header.featureTypesPtr, taSeekOriginStart)) {
         goto on_error;
     }
 
@@ -888,11 +888,11 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     }
 
     for (taUInt32 iFeatureType = 0; iFeatureType < pMap->featureTypesCount; ++iFeatureType) {
-        if (!ta_seek_file(pTNT, 4, ta_seek_origin_current)) {
+        if (!taSeekFile(pTNT, 4, taSeekOriginCurrent)) {
             goto on_error;
         }
 
-        if (!ta_read_file(pTNT, pMap->pFeatureTypes[iFeatureType].name, 128, NULL)) {
+        if (!taReadFile(pTNT, pMap->pFeatureTypes[iFeatureType].name, 128, NULL)) {
             goto on_error;
         }
 
@@ -953,7 +953,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     // sort it back to it's original order.
     qsort(pMap->pFeatureTypes, pMap->featureTypesCount, sizeof(*pMap->pFeatureTypes), ta_map__sort_feature_types_by_index);
 
-    if (!ta_seek_file(pTNT, header.mapattrPtr, ta_seek_origin_start)) {
+    if (!taSeekFile(pTNT, header.mapattrPtr, taSeekOriginStart)) {
         goto on_error;
     }
 
@@ -961,7 +961,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     for (taUInt32 y = 0; y < header.height; ++y) {
         for (taUInt32 x = 0; x < header.width; ++x) {
             taUInt32 tile;
-            if (!ta_read_file_uint32(pTNT, &tile)) {
+            if (!taReadFileUInt32(pTNT, &tile)) {
                 goto on_error;
             }
 
@@ -973,7 +973,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     }
 
 
-    if (!ta_seek_file(pTNT, header.mapattrPtr, ta_seek_origin_start)) {
+    if (!taSeekFile(pTNT, header.mapattrPtr, taSeekOriginStart)) {
         goto on_error;
     }
 
@@ -986,7 +986,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     for (taUInt32 y = 0; y < header.height; ++y) {
         for (taUInt32 x = 0; x < header.width; ++x) {
             taUInt32 tile;
-            if (!ta_read_file_uint32(pTNT, &tile)) {
+            if (!taReadFileUInt32(pTNT, &tile)) {
                 goto on_error;
             }
 
@@ -1020,7 +1020,7 @@ on_error:
 }
 
 
-taConfigObj* ta_map__open_ota_file(ta_fs* pFS, const char* mapName)
+taConfigObj* ta_map__open_ota_file(taFS* pFS, const char* mapName)
 {
     char filename[TA_MAX_PATH];
     if (!drpath_copy_and_append(filename, sizeof(filename), "maps", mapName)) {

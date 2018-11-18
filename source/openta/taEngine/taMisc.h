@@ -95,7 +95,7 @@ size_t ta_memory_stream_read(ta_memory_stream* pStream, void* pDataOut, size_t b
 size_t ta_memory_stream_peek(ta_memory_stream* pStream, void* pDataOut, size_t bytesToRead);
 
 // Seeks to the given position.
-taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, taInt64 bytesToSeek, ta_seek_origin origin);
+taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, taInt64 bytesToSeek, taSeekOrigin origin);
 
 // A simple helper for retrieving the current read position of a memory stream.
 size_t ta_memory_stream_tell(ta_memory_stream* pStream);

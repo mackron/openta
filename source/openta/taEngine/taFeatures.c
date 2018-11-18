@@ -263,7 +263,7 @@ TA_PRIVATE taBool32 taFeaturesLibraryLoadFeaturesFromConfig(taFeaturesLibrary* p
     return result;
 }
 
-TA_PRIVATE taBool32 taFeaturesLibraryLoadAndParseScript(taFeaturesLibrary* pLib, ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath)
+TA_PRIVATE taBool32 taFeaturesLibraryLoadAndParseScript(taFeaturesLibrary* pLib, taFS* pFS, const char* archiveRelativePath, const char* fileRelativePath)
 {
     assert(pLib != NULL);
     assert(pFS != NULL);
@@ -312,7 +312,7 @@ TA_PRIVATE taFeatureDesc* taFeaturesLibraryFindByName(taFeaturesLibrary* pLib, c
 
 
 
-taFeaturesLibrary* taCreateFeaturesLibrary(ta_fs* pFS)
+taFeaturesLibrary* taCreateFeaturesLibrary(taFS* pFS)
 {
     if (pFS == NULL) {
         return NULL;
@@ -331,13 +331,13 @@ taFeaturesLibrary* taCreateFeaturesLibrary(ta_fs* pFS)
         return NULL;
     }
 
-    ta_fs_iterator* pIter = ta_fs_begin(pFS, "features", TA_TRUE);     // <-- "TA_TRUE" means to search recursively.
-    while (ta_fs_next(pIter)) {
+    taFSIterator* pIter = taFSBegin(pFS, "features", TA_TRUE);     // <-- "TA_TRUE" means to search recursively.
+    while (taFSNext(pIter)) {
         if (!pIter->fileInfo.isDirectory && drpath_extension_equal(pIter->fileInfo.relativePath, "tdf")) {
             taFeaturesLibraryLoadAndParseScript(pLib, pFS, pIter->fileInfo.archiveRelativePath, pIter->fileInfo.relativePath);
         }
     }
-    ta_fs_end(pIter);
+    taFSEnd(pIter);
 
 
     // The features library is immutable which means we can optimize a few things for efficiency.

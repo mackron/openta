@@ -56,14 +56,14 @@ struct ta3DOObject
 typedef struct
 {
     // A pointer to the file to load from.
-    ta_file* pFile;
+    taFile* pFile;
 
     // The root 3DO object.
     ta3DOObject* pRootObject;
 } ta3DO;
 
 // Opens a 3DO object from a file.
-ta3DO* taOpen3DO(ta_fs* pFS, const char* fileName);
+ta3DO* taOpen3DO(taFS* pFS, const char* fileName);
 
 // Closes the given 3DO object.
 void taClose3DO(ta3DO* p3DO);
@@ -71,14 +71,14 @@ void taClose3DO(ta3DO* p3DO);
 // Reads the header of the next object.
 //
 // This function assumes the file is sitting on the first byte of the object header.
-taBool32 ta3DOReadObjectHeader(ta_file* pFile, ta3DOObjectHeader* pHeader);
+taBool32 ta3DOReadObjectHeader(taFile* pFile, ta3DOObjectHeader* pHeader);
 
 // Loads the primitive header from the given 3DO file.
 //
 // This function assumes the file is sitting on the first byte of the primitive header.
-taBool32 ta3DOReadPrimitiveHeader(ta_file* pFile, ta3DOPrimitiveHeader* pHeaderOut);
+taBool32 ta3DOReadPrimitiveHeader(taFile* pFile, ta3DOPrimitiveHeader* pHeaderOut);
 
 // Counts the number of objects in the given 3DO file.
 //
 // This function assumes the file is sitting on the first by the object.
-taUInt32 ta3DOCountObjects(ta_file* pFile);
+taUInt32 ta3DOCountObjects(taFile* pFile);

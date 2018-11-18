@@ -44,10 +44,10 @@ size_t ta_memory_stream_peek(ta_memory_stream* pStream, void* pDataOut, size_t b
     return bytesToRead;
 }
 
-taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, taInt64 bytesToSeek, ta_seek_origin origin)
+taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, taInt64 bytesToSeek, taSeekOrigin origin)
 {
     taUInt64 newPos = pStream->currentReadPos;
-    if (origin == ta_seek_origin_current)
+    if (origin == taSeekOriginCurrent)
     {
         if ((taInt64)newPos + bytesToSeek >= 0) {
             newPos = (taUInt64)((taInt64)newPos + bytesToSeek);
@@ -56,12 +56,12 @@ taBool32 ta_memory_stream_seek(ta_memory_stream* pStream, taInt64 bytesToSeek, t
             return TA_FALSE;
         }
     }
-    else if (origin == ta_seek_origin_start)
+    else if (origin == taSeekOriginStart)
     {
         assert(bytesToSeek >= 0);
         newPos = (taUInt64)bytesToSeek;
     }
-    else if (origin == ta_seek_origin_end)
+    else if (origin == taSeekOriginEnd)
     {
         assert(bytesToSeek >= 0);
         if ((taUInt64)bytesToSeek <= pStream->dataSize) {

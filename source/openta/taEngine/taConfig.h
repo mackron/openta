@@ -28,14 +28,14 @@ struct taConfigObj
 
 
     // Internal use only. The file used to load the config. This is only set for the root object.
-    ta_file* _pFile;
+    taFile* _pFile;
 };
 
 // Parses a script.
 //
 // Configs are immutable after parsing.
-taConfigObj* taParseConfigFromSpecificFile(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath);
-taConfigObj* taParseConfigFromFile(ta_fs* pFS, const char* fileRelativePath);
+taConfigObj* taParseConfigFromSpecificFile(taFS* pFS, const char* archiveRelativePath, const char* fileRelativePath);
+taConfigObj* taParseConfigFromFile(taFS* pFS, const char* fileRelativePath);
 
 // Deletes the given config object.
 void taDeleteConfig(taConfigObj* pConfig);

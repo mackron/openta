@@ -299,7 +299,7 @@ char* taParseConfigObject(char* configString, taConfigObj* pObj)
     return configString;
 }
 
-taConfigObj* taParseConfigFromOpenFile(ta_file* pFile)
+taConfigObj* taParseConfigFromOpenFile(taFile* pFile)
 {
     assert(pFile != NULL);
 
@@ -318,13 +318,13 @@ taConfigObj* taParseConfigFromOpenFile(ta_file* pFile)
     return pConfig;
 }
 
-taConfigObj* taParseConfigFromSpecificFile(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath)
+taConfigObj* taParseConfigFromSpecificFile(taFS* pFS, const char* archiveRelativePath, const char* fileRelativePath)
 {
     if (pFS == NULL || fileRelativePath == NULL) {
         return NULL;
     }
 
-    ta_file* pFile = ta_open_specific_file(pFS, archiveRelativePath, fileRelativePath, TA_OPEN_FILE_WITH_NULL_TERMINATOR);
+    taFile* pFile = taOpenSpecificFile(pFS, archiveRelativePath, fileRelativePath, TA_OPEN_FILE_WITH_NULL_TERMINATOR);
     if (pFile == NULL) {
         return NULL;
     }
@@ -332,13 +332,13 @@ taConfigObj* taParseConfigFromSpecificFile(ta_fs* pFS, const char* archiveRelati
     return taParseConfigFromOpenFile(pFile);
 }
 
-taConfigObj* taParseConfigFromFile(ta_fs* pFS, const char* fileRelativePath)
+taConfigObj* taParseConfigFromFile(taFS* pFS, const char* fileRelativePath)
 {
     if (pFS == NULL || fileRelativePath == NULL) {
         return NULL;
     }
 
-    ta_file* pFile = ta_open_file(pFS, fileRelativePath, TA_OPEN_FILE_WITH_NULL_TERMINATOR);
+    taFile* pFile = taOpenFile(pFS, fileRelativePath, TA_OPEN_FILE_WITH_NULL_TERMINATOR);
     if (pFile == NULL) {
         return NULL;
     }
@@ -353,7 +353,7 @@ void taDeleteConfig(taConfigObj* pConfig)
     }
 
     if (pConfig->_pFile) {
-        ta_close_file(pConfig->_pFile);
+        taCloseFile(pConfig->_pFile);
     }
 
 

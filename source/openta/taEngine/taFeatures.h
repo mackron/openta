@@ -129,7 +129,7 @@ typedef struct
 } taFeaturesLibrary;
 
 // Creates a features library by loading every TDF file in the "features" directory and all of it's sub-directories.
-taFeaturesLibrary* taCreateFeaturesLibrary(ta_fs* pFS);
+taFeaturesLibrary* taCreateFeaturesLibrary(taFS* pFS);
 
 // Deletes the given features library.
 void taDeleteFeaturesLibrary(taFeaturesLibrary* pLib);

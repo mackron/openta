@@ -2,14 +2,14 @@
 
 #define TA_OPEN_FILE_WITH_NULL_TERMINATOR    0x0001      // Opens a file with a null terminator at the end.
 
-typedef struct ta_fs ta_fs;
-typedef struct ta_file ta_file;
+typedef struct taFS taFS;
+typedef struct taFile taFile;
 
-enum ta_seek_origin
+enum taSeekOrigin
 {
-    ta_seek_origin_start,
-    ta_seek_origin_current,
-    ta_seek_origin_end,
+    taSeekOriginStart,
+    taSeekOriginCurrent,
+    taSeekOriginEnd,
 };
 
 typedef struct
@@ -29,10 +29,9 @@ typedef struct
     // keeping this in memory we can avoid unnecessarilly opening and decrypting the archive for whenever we need to
     // check for a single file.
     char* pCentralDirectory;
+} taFSArchive;
 
-} ta_fs_archive;
-
-struct ta_fs
+struct taFS
 {
     // The absolute path of the root directory on the real file system. This is where the executable is stored.
     char rootDir[TA_MAX_PATH];
@@ -53,17 +52,17 @@ struct ta_fs
     //   *.ufo
     //
     // Note that totala3.hpi and worlds.hpi are completely ignored.
-    ta_fs_archive* pArchives;
+    taFSArchive* pArchives;
 };
 
-struct ta_file
+struct taFile
 {
     // The memory stream that's used to from data from the file. Internal use only.
     ta_memory_stream _stream;
 
 
     // The file system that owns this file.
-    ta_fs* pFS;
+    taFS* pFS;
 
     // The size of the file.
     size_t sizeInBytes;
@@ -77,59 +76,59 @@ struct ta_file
 
 
 // Creates a file system instance.
-ta_fs* ta_create_file_system();
+taFS* taCreateFileSystem();
 
 // Deletes the given file system instance.
-void ta_delete_file_system(ta_fs* pFS);
+void taDeleteFileSystem(taFS* pFS);
 
 
 // Opens the file at the given path from the specified archive file.
-ta_file* ta_open_specific_file(ta_fs* pFS, const char* archiveRelativePath, const char* fileRelativePath, unsigned int options);
+taFile* taOpenSpecificFile(taFS* pFS, const char* archiveRelativePath, const char* fileRelativePath, unsigned int options);
 
 // Searches for the given file and opens the first occurance from the highest priority archive.
-ta_file* ta_open_file(ta_fs* pFS, const char* relativePath, unsigned int options);
+taFile* taOpenFile(taFS* pFS, const char* relativePath, unsigned int options);
 
 // Closes the given file.
-void ta_close_file(ta_file* pFile);
+void taCloseFile(taFile* pFile);
 
 
 // Reads data from the given file.
-taBool32 ta_read_file(ta_file* pFile, void* pBufferOut, size_t bytesToRead, size_t* pBytesReadOut);
+taBool32 taReadFile(taFile* pFile, void* pBufferOut, size_t bytesToRead, size_t* pBytesReadOut);
 
 // Seeks the given file.
-taBool32 ta_seek_file(ta_file* pFile, taInt64 offset, ta_seek_origin origin);
+taBool32 taSeekFile(taFile* pFile, taInt64 offset, taSeekOrigin origin);
 
 // Retrieves the current read position of the file.
-taUInt64 ta_tell_file(ta_file* pFile);
+taUInt64 taTellFile(taFile* pFile);
 
 
 // High level helper for reading an unsigned 32-bit integer.
-taBool32 ta_read_file_uint32(ta_file* pFile, taUInt32* pBufferOut);
+taBool32 taReadFileUInt32(taFile* pFile, taUInt32* pBufferOut);
 
 // High level helper for reading a signed 32-bit integer.
-taBool32 ta_read_file_int32(ta_file* pFile, taInt32* pBufferOut);
+taBool32 taReadFileInt32(taFile* pFile, taInt32* pBufferOut);
 
 // High level helper for reading an unsigned 16-bit integer.
-taBool32 ta_read_file_uint16(ta_file* pFile, taUInt16* pBufferOut);
+taBool32 taReadFileUInt16(taFile* pFile, taUInt16* pBufferOut);
 
 // High level helper for reading an unsigned 8-bit integer.
-taBool32 ta_read_file_uint8(ta_file* pFile, taUInt8* pBufferOut);
+taBool32 taReadFileUInt8(taFile* pFile, taUInt8* pBufferOut);
 
 
 // Iteration should work like the following:
 //
-// ta_fs_iterator* pIter = ta_fs_begin(pFS, "my/directory");
-// while (ta_fs_next(pIter)) {
+// taFSIterator* pIter = taFSBegin(pFS, "my/directory");
+// while (taFSNext(pIter)) {
 //     if (pIter->fileInfo.isDirectory) {
-//         ta_do_something_recursive(pIter->fileInfo.relativePath);
+//         taDoSomethingRecursive(pIter->fileInfo.relativePath);
 //     } else {
-//         ta_open_specific_file(pIter->pFS, pIter->fileInfo.archiveRelativePath, pIter->fileInfo.relativePath);
+//         taOpenSpecificFile(pIter->pFS, pIter->fileInfo.archiveRelativePath, pIter->fileInfo.relativePath);
 //     }
 // }
-// ta_fs_end(pIter);
+// taFSEnd(pIter);
 //
 //
-// Iteration must be terminated with ta_fs_end() at all times, even when the iteration ends naturally. Iteration is not recursive.
+// Iteration must be terminated with taFSEnd() at all times, even when the iteration ends naturally. Iteration is not recursive.
 
 typedef struct
 {
@@ -141,49 +140,46 @@ typedef struct
 
     // Whether or not the file is a directory.
     taBool32 isDirectory;
-
-} ta_fs_file_info;
+} taFSFileInfo;
 
 typedef struct
 {
     // The file system being iterated.
-    ta_fs* pFS;
+    taFS* pFS;
 
     // Information about the next file in the iteration. Use this for the path of the file and whatnot.
-    ta_fs_file_info fileInfo;
-
+    taFSFileInfo fileInfo;
 
     // Variables below are for internal use only.
     size_t _iFile;
     size_t _fileCount;
-    ta_fs_file_info* _pFiles;
-
-} ta_fs_iterator;
+    taFSFileInfo* _pFiles;
+} taFSIterator;
 
 // Begins iterating the contents of the given folder.
-ta_fs_iterator* ta_fs_begin(ta_fs* pFS, const char* directoryRelativePath, taBool32 recursive);
+taFSIterator* taFSBegin(taFS* pFS, const char* directoryRelativePath, taBool32 recursive);
 
 // Ends the iteration.
-void ta_fs_end(ta_fs_iterator* pIter);
+void taFSEnd(taFSIterator* pIter);
 
 // Goes to the next file itration.
-taBool32 ta_fs_next(ta_fs_iterator* pIter);
+taBool32 taFSNext(taFSIterator* pIter);
 
 
 
 //// HPI Helpers ////
 
 // LZ77 decompression for HPI archives.
-taBool32 ta_hpi_decompress_lz77(const unsigned char* pIn, taUInt32 compressedSize, unsigned char* pOut, taUInt32 uncompressedSize);
+taBool32 taHPIDecompressLZ77(const unsigned char* pIn, taUInt32 compressedSize, unsigned char* pOut, taUInt32 uncompressedSize);
 
 // ZLib decompression for HPI archives.
-taBool32 ta_hpi_decompress_zlib(const void* pIn, taUInt32 compressedSize, void* pOut, taUInt32 uncompressedSize);
+taBool32 taHPIDecompressZlib(const void* pIn, taUInt32 compressedSize, void* pOut, taUInt32 uncompressedSize);
 
 // Decrypts data from a HPI archive.
-void ta_hpi_decrypt(taUInt8* pData, size_t sizeInBytes, taUInt32 decryptionKey, taUInt32 firstBytePos);
+void taHPIDecrypt(taUInt8* pData, size_t sizeInBytes, taUInt32 decryptionKey, taUInt32 firstBytePos);
 
 // Reads and decrypts data from a HPI archive file.
-size_t ta_hpi_read_and_decrypt(FILE* pFile, void* pBufferOut, size_t bytesToRead, taUInt32 decryptionKey);
+size_t taHPIReadAndDecrypt(FILE* pFile, void* pBufferOut, size_t bytesToRead, taUInt32 decryptionKey);
 
 // Reads, decrypts and decompresses data from a HPI archive file.
-size_t ta_hpi_read_and_decrypt_compressed(FILE* pFile, void* pBufferOut, size_t uncompressedBytesToRead, taUInt32 decryptionKey);
+size_t taHPIReadAndDecryptCompressed(FILE* pFile, void* pBufferOut, size_t uncompressedBytesToRead, taUInt32 decryptionKey);

@@ -12,7 +12,7 @@ struct taEngineContext
     void* pUserData;
 
     ta_property_manager properties;
-    ta_fs* pFS;
+    taFS* pFS;
     ta_graphics_context* pGraphics;
     taUInt32 palette[256];     // The standard palette. PALETTE.PAL
     taUInt32 guipal[256];      // The GUI palette. GUIPAL.PAL

@@ -307,7 +307,7 @@ ta_game* ta_create_game(int argc, char** argv)
     // - Save memory by converting OTA data to a struct rather than just holding a pointer to the taConfigObj.
     //
     // Grab the maps for skirmish and multiplayer.
-    ta_fs_iterator* pIter = ta_fs_begin(pGame->engine.pFS, "maps", TA_FALSE);
+    taFSIterator* pIter = taFSBegin(pGame->engine.pFS, "maps", TA_FALSE);
     do
     {
         // From what I can tell, it looks like skirmish/mp maps are determined by the "type" property of the first
@@ -325,8 +325,8 @@ ta_game* ta_create_game(int argc, char** argv)
                 }
             }
         }
-    } while (ta_fs_next(pIter));
-    ta_fs_end(pIter);
+    } while (taFSNext(pIter));
+    taFSEnd(pIter);
 
     // Sort alphabetically.
     qsort(pGame->ppMPMaps, stb_sb_count(pGame->ppMPMaps), sizeof(*pGame->ppMPMaps), ta_qsort_cb_map);

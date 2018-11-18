@@ -10,23 +10,23 @@ taResult taFontLoadFNT(taEngineContext* pEngine, const char* filePath, taFont* p
 
     pFont->canBeColored = TA_TRUE;
 
-    ta_file* pFile = ta_open_file(pEngine->pFS, filePath, 0);
+    taFile* pFile = taOpenFile(pEngine->pFS, filePath, 0);
     if (pFile == NULL) {
         return TA_FILE_NOT_FOUND;
     }
 
     taUInt16 height;
-    ta_read_file_uint16(pFile, &height);
+    taReadFileUInt16(pFile, &height);
     if (height > TA_MAX_FONT_SIZE) {
-        ta_close_file(pFile);
+        taCloseFile(pFile);
         return TA_ERROR;
     }
 
     taUInt16 padding;
-    ta_read_file_uint16(pFile, &padding);
+    taReadFileUInt16(pFile, &padding);
 
     taUInt16 offsets[256];
-    ta_read_file(pFile, offsets, sizeof(offsets), NULL);
+    taReadFile(pFile, offsets, sizeof(offsets), NULL);
 
     pFont->height = (float)height;
 
@@ -35,8 +35,8 @@ taResult taFontLoadFNT(taEngineContext* pEngine, const char* filePath, taFont* p
     taUInt8 widths[256];
     for (int i = 0; i < 256; ++i) {
         if (offsets[i] != 0) {
-            ta_seek_file(pFile, offsets[i], ta_seek_origin_start);
-            ta_read_file_uint8(pFile, &widths[i]);
+            taSeekFile(pFile, offsets[i], taSeekOriginStart);
+            taReadFileUInt8(pFile, &widths[i]);
             totalWidth += widths[i];
         } else {
             widths[i] = 0;
@@ -56,8 +56,8 @@ taResult taFontLoadFNT(taEngineContext* pEngine, const char* filePath, taFont* p
 
     for (int i = 0; i < 256; ++i) {
         if (offsets[i] != 0) {
-            ta_seek_file(pFile, offsets[i], ta_seek_origin_start);
-            ta_seek_file(pFile, 1, ta_seek_origin_current);
+            taSeekFile(pFile, offsets[i], taSeekOriginStart);
+            taSeekFile(pFile, 1, taSeekOriginCurrent);
 
             memset(pixels, 0, sizeof(pixels));
             taUInt8* nextPixel = pixels;
@@ -73,7 +73,7 @@ taResult taFontLoadFNT(taEngineContext* pEngine, const char* filePath, taFont* p
                 assert(bits > 0);
 
                 taUInt32 data;
-                ta_read_file(pFile, &data, 1, NULL);
+                taReadFile(pFile, &data, 1, NULL);
 
                 for (taUInt8 iBit = 0; iBit < 8 && iBit < bits; ++iBit) {
                     *nextPixel++ = ((data & (1 << (7 - iBit))) >> (7 - iBit)) * 255;
@@ -94,7 +94,7 @@ taResult taFontLoadFNT(taEngineContext* pEngine, const char* filePath, taFont* p
         }
     }
 
-    ta_close_file(pFile);
+    taCloseFile(pFile);
 
     pFont->pTexture = ta_create_texture(pEngine->pGraphics, packer.width, packer.height, 1, packer.pImageData);
     if (pFont->pTexture == NULL) {
