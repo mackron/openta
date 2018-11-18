@@ -5,7 +5,7 @@ typedef struct
     taEngineContext* pEngine;
     mal_context contextMAL;
     mal_device playbackDevice;
-} ta_audio_context;
+} taAudioContext;
 
-ta_audio_context* ta_create_audio_context(taEngineContext* pEngine);
-void ta_delete_audio_context(ta_audio_context* pContext);
+taAudioContext* taCreateAudioContext(taEngineContext* pEngine);
+void taDeleteAudioContext(taAudioContext* pContext);

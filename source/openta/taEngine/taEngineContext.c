@@ -87,7 +87,7 @@ ta_result taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoad
 
 
     //// Audio ////
-    pEngine->pAudio = ta_create_audio_context(pEngine);
+    pEngine->pAudio = taCreateAudioContext(pEngine);
     if (pEngine->pAudio == NULL) {
         result = TA_ERROR;
         goto on_error3;
@@ -172,7 +172,7 @@ on_error8:  ta_common_gui_unload(&pEngine->commonGUI);
 on_error7:  ta_font_unload(&pEngine->fontSmall);
 on_error6:  ta_font_unload(&pEngine->font);
 on_error5:  ta_input_state_uninit(&pEngine->input);
-on_error4:  ta_delete_audio_context(pEngine->pAudio);
+on_error4:  taDeleteAudioContext(pEngine->pAudio);
 on_error3:  ta_delete_graphics_context(pEngine->pGraphics);
 on_error2:  ta_delete_file_system(pEngine->pFS);
 on_error1:  ta_property_manager_uninit(&pEngine->properties);
@@ -191,7 +191,7 @@ ta_result taEngineContextUninit(taEngineContext* pEngine)
     ta_font_unload(&pEngine->fontSmall);
     ta_font_unload(&pEngine->font);
     ta_input_state_uninit(&pEngine->input);
-    ta_delete_audio_context(pEngine->pAudio);
+    taDeleteAudioContext(pEngine->pAudio);
     ta_delete_graphics_context(pEngine->pGraphics);
     ta_delete_file_system(pEngine->pFS);
     ta_property_manager_uninit(&pEngine->properties);
