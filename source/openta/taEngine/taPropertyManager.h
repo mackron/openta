@@ -21,13 +21,13 @@ typedef struct
     ta_property* pProperties;
 } ta_property_manager;
 
-ta_result ta_property_manager_init(ta_property_manager* pProperties);
-ta_result ta_property_manager_uninit(ta_property_manager* pProperties);
+taResult ta_property_manager_init(ta_property_manager* pProperties);
+taResult ta_property_manager_uninit(ta_property_manager* pProperties);
 
-ta_result ta_property_manager_set(ta_property_manager* pProperties, const char* key, const char* val);
-ta_result ta_property_manager_set_int(ta_property_manager* pProperties, const char* key, int val);
-ta_result ta_property_manager_set_bool(ta_property_manager* pProperties, const char* key, taBool32 val);
-ta_result ta_property_manager_unset(ta_property_manager* pProperties, const char* key);
+taResult ta_property_manager_set(ta_property_manager* pProperties, const char* key, const char* val);
+taResult ta_property_manager_set_int(ta_property_manager* pProperties, const char* key, int val);
+taResult ta_property_manager_set_bool(ta_property_manager* pProperties, const char* key, taBool32 val);
+taResult ta_property_manager_unset(ta_property_manager* pProperties, const char* key);
 
 const char* ta_property_manager_get(ta_property_manager* pProperties, const char* key);
 const char* ta_property_manager_getv(ta_property_manager* pProperties, const char* key, va_list args);

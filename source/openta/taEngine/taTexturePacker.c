@@ -171,7 +171,7 @@ void ta_texture_packer_reset(ta_texture_packer* pPacker)
 
 taBool32 ta_texture_packer_pack_subtexture(ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, const void* pSubTextureData, ta_texture_packer_slot* pSlotOut)
 {
-    if (pSlotOut) ta_zero_object(pSlotOut);
+    if (pSlotOut) taZeroObject(pSlotOut);
     if (pPacker == NULL) {
         return TA_FALSE;
     }

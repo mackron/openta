@@ -328,7 +328,7 @@ taBool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, taUInt32 index, taUInt32*
     return TA_TRUE;
 }
 
-ta_result ta_gaf_get_frame(ta_gaf* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut, taUInt32* pHeightOut, taInt32* pPosXOut, taInt32* pPosYOut, taUInt8** ppImageData)
+taResult ta_gaf_get_frame(ta_gaf* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut, taUInt32* pHeightOut, taInt32* pPosXOut, taInt32* pPosYOut, taUInt8** ppImageData)
 {
     if (ppImageData) *ppImageData = NULL;
     if (pGAF == NULL || frameIndex >= pGAF->_sequenceFrameCount || pWidthOut == NULL || pHeightOut == NULL || pPosXOut == NULL || pPosYOut == NULL) {
@@ -449,7 +449,7 @@ TA_INLINE char* ta_gaf_texture_group__copy_sequence_name(char** ppNextStr, const
     return pNextStr;
 }
 
-ta_result ta_gaf_texture_group__create_texture_atlas(taEngineContext* pEngine, ta_gaf_texture_group* pGroup, ta_texture_packer* pPacker, ta_color_mode colorMode, ta_texture** ppTexture)
+taResult ta_gaf_texture_group__create_texture_atlas(taEngineContext* pEngine, ta_gaf_texture_group* pGroup, ta_texture_packer* pPacker, ta_color_mode colorMode, taTexture** ppTexture)
 {
     assert(pEngine != NULL);
     assert(pGroup != NULL);
@@ -485,10 +485,10 @@ ta_result ta_gaf_texture_group__create_texture_atlas(taEngineContext* pEngine, t
     return TA_SUCCESS;
 }
 
-ta_result ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePath, ta_color_mode colorMode, ta_gaf_texture_group* pGroup)
+taResult ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePath, ta_color_mode colorMode, ta_gaf_texture_group* pGroup)
 {
     if (pGroup == NULL) return TA_INVALID_ARGS;
-    ta_zero_object(pGroup);
+    taZeroObject(pGroup);
     
     pGroup->pEngine = pEngine;
 
@@ -544,11 +544,11 @@ ta_result ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePa
         totalAtlasCount += 1;
     }
 
-    payloadSize += sizeof(ta_texture*) * totalAtlasCount;
+    payloadSize += sizeof(taTexture*) * totalAtlasCount;
 
 
     size_t atlasesPayloadOffset       = 0;
-    size_t sequencesPayloadOffset     = atlasesPayloadOffset   + (sizeof(ta_texture*)                   * totalAtlasCount);
+    size_t sequencesPayloadOffset     = atlasesPayloadOffset   + (sizeof(taTexture*)                   * totalAtlasCount);
     size_t framesPayloadOffset        = sequencesPayloadOffset + (sizeof(ta_gaf_texture_group_sequence) * totalSequenceCount);
     size_t sequenceNamesPayloadOffset = framesPayloadOffset    + (sizeof(ta_gaf_texture_group_frame)    * totalFrameCount);
 
@@ -558,7 +558,7 @@ ta_result ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePa
         return TA_OUT_OF_MEMORY;
     }
 
-    pGroup->ppAtlases  = (ta_texture**                  )(pGroup->_pPayload + atlasesPayloadOffset);
+    pGroup->ppAtlases  = (taTexture**                  )(pGroup->_pPayload + atlasesPayloadOffset);
     pGroup->pSequences = (ta_gaf_texture_group_sequence*)(pGroup->_pPayload + sequencesPayloadOffset);
     pGroup->pFrames    = (ta_gaf_texture_group_frame*   )(pGroup->_pPayload + framesPayloadOffset);
 
@@ -627,7 +627,7 @@ ta_result ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePa
     return TA_SUCCESS;
 }
 
-ta_result ta_gaf_texture_group_uninit(ta_gaf_texture_group* pGroup)
+taResult ta_gaf_texture_group_uninit(ta_gaf_texture_group* pGroup)
 {
     if (pGroup == NULL) return TA_INVALID_ARGS;
 

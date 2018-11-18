@@ -1,14 +1,14 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-ta_result ta_input_state_init(ta_input_state* pState)
+taResult ta_input_state_init(ta_input_state* pState)
 {
     if (pState == NULL) return TA_INVALID_ARGS;
-    ta_zero_object(pState);
+    taZeroObject(pState);
 
     return TA_SUCCESS;
 }
 
-ta_result ta_input_state_uninit(ta_input_state* pState)
+taResult ta_input_state_uninit(ta_input_state* pState)
 {
     if (pState == NULL) return TA_INVALID_ARGS;
     return TA_SUCCESS;
@@ -23,7 +23,7 @@ void ta_input_state_reset_transient_state(ta_input_state* pState)
 
     // Mouse
     // =====
-    for (taUInt32 i = 0; i < ta_countof(pState->mouseButtonState); ++i) {
+    for (taUInt32 i = 0; i < taCountOf(pState->mouseButtonState); ++i) {
         pState->mouseButtonState[i] &= ~(TA_MOUSE_BUTTON_STATE_PRESSED | TA_MOUSE_BUTTON_STATE_RELEASED);
     }
 
@@ -33,7 +33,7 @@ void ta_input_state_reset_transient_state(ta_input_state* pState)
 
     // Keyboard
     // ========
-    for (taUInt32 i = 0; i < ta_countof(pState->keyState); ++i) {
+    for (taUInt32 i = 0; i < taCountOf(pState->keyState); ++i) {
         pState->keyState[i] &= ~(TA_KEY_STATE_PRESSED | TA_KEY_STATE_RELEASED);
     }
 }
@@ -84,7 +84,7 @@ taBool32 ta_input_state_is_any_mouse_button_down(ta_input_state* pState)
 {
     if (pState == NULL) return TA_FALSE;
 
-    for (taUInt32 i = 0; i < ta_countof(pState->mouseButtonState); ++i) {
+    for (taUInt32 i = 0; i < taCountOf(pState->mouseButtonState); ++i) {
         if (ta_input_state_is_mouse_button_down(pState, i)) {
             return TA_TRUE;
         }

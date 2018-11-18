@@ -159,7 +159,7 @@ struct ta_gui
     taEngineContext* pEngine;
     ta_gaf_texture_group textureGroupGAF;
     taBool32 hasGAF;
-    ta_texture* pBackgroundTexture;
+    taTexture* pBackgroundTexture;
 
     taUInt32 gadgetCount;
     ta_gui_gadget* pGadgets;    // This is an offset of _pPayload.
@@ -171,28 +171,28 @@ struct ta_gui
     taUInt8* _pPayload;
 };
 
-ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pGUI);
-ta_result ta_gui_unload(ta_gui* pGUI);
+taResult ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pGUI);
+taResult ta_gui_unload(ta_gui* pGUI);
 
 // Retrieves information about how the GUI is mapped to the screen of a specific resolution.
 //
 // Most GUIs are built based on a 640x480 resolution. When a GUI is drawn on the screen that is of a different resolution to this,
 // it needs to be scaled. This function is used to retrieve the necessary information needed to draw the GUI at a given screen
 // resolution.
-ta_result ta_gui_get_screen_mapping(ta_gui* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, float* pScale, float* pOffsetX, float* pOffsetY);
+taResult ta_gui_get_screen_mapping(ta_gui* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, float* pScale, float* pOffsetX, float* pOffsetY);
 
 // Converts a position in screen coordinates to GUI coordinates.
-ta_result ta_gui_map_screen_position(ta_gui* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, taInt32 screenPosX, taInt32 screenPosY, taInt32* pGUIPosX, taInt32* pGUIPosY);
+taResult ta_gui_map_screen_position(ta_gui* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, taInt32 screenPosX, taInt32 screenPosY, taInt32* pGUIPosX, taInt32* pGUIPosY);
 
 // Finds the gadget under the given point, in GUI coordinates. Returns false if the mouse is not under any gadget. This will
 // include the root gadget.
 taBool32 ta_gui_get_gadget_under_point(ta_gui* pGUI, taInt32 posX, taInt32 posY, taUInt32* pGadgetIndex);
 
 // Marks the given gadget as held.
-ta_result ta_gui_hold_gadget(ta_gui* pGUI, taUInt32 gadgetIndex, taUInt32 mouseButton);
+taResult ta_gui_hold_gadget(ta_gui* pGUI, taUInt32 gadgetIndex, taUInt32 mouseButton);
 
 // Releases the hold on the given gadget.
-ta_result ta_gui_release_hold(ta_gui* pGUI, taUInt32 gadgetIndex);
+taResult ta_gui_release_hold(ta_gui* pGUI, taUInt32 gadgetIndex);
 
 // Retrieves the index of the gadget that's currently being held. Returns false if no gadget is held; true otherwise.
 taBool32 ta_gui_get_held_gadget(ta_gui* pGUI, taUInt32* pGadgetIndex);
@@ -215,7 +215,7 @@ const char* ta_gui_get_button_text(ta_gui_gadget* pGadget, taUInt32 stage);
 // Sets the items in a listbox gadget.
 //
 // This will make it's own local copy of each item.
-ta_result ta_gui_set_listbox_items(ta_gui_gadget* pGadget, const char** pItems, taUInt32 count);
+taResult ta_gui_set_listbox_items(ta_gui_gadget* pGadget, const char** pItems, taUInt32 count);
 
 // Retrieves the text of the listbox item at the given index.
 const char* ta_gui_get_listbox_item(ta_gui_gadget* pGadget, taUInt32 index);
@@ -257,7 +257,7 @@ typedef struct
     } scrollbar;
 } ta_common_gui;
 
-ta_result ta_common_gui_load(taEngineContext* pEngine, ta_common_gui* pCommonGUI);
-ta_result ta_common_gui_unload(ta_common_gui* pCommonGUI);
-ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, taUInt32 width, taUInt32 height, taUInt32* pFrameIndex);
-ta_result ta_common_gui_get_multistage_button_frame(ta_common_gui* pCommonGUI, taUInt32 stages, taUInt32* pFrameIndex);
+taResult ta_common_gui_load(taEngineContext* pEngine, ta_common_gui* pCommonGUI);
+taResult ta_common_gui_unload(ta_common_gui* pCommonGUI);
+taResult ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, taUInt32 width, taUInt32 height, taUInt32* pFrameIndex);
+taResult ta_common_gui_get_multistage_button_frame(ta_common_gui* pCommonGUI, taUInt32 stages, taUInt32* pFrameIndex);

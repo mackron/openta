@@ -1,6 +1,6 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-typedef int ta_result;
+typedef int taResult;
 #define TA_SUCCESS                       0
 #define TA_ERROR                        -1
 #define TA_INVALID_ARGS                 -2

@@ -61,8 +61,8 @@ typedef struct
 
 } ta_input_state;
 
-ta_result ta_input_state_init(ta_input_state* pState);
-ta_result ta_input_state_uninit(ta_input_state* pState);
+taResult ta_input_state_init(ta_input_state* pState);
+taResult ta_input_state_uninit(ta_input_state* pState);
 
 // Resets per-frame state.
 void ta_input_state_reset_transient_state(ta_input_state* pState);

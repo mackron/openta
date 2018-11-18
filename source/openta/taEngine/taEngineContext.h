@@ -30,53 +30,53 @@ struct taEngineContext
     ta_gaf** ppTextureGAFs;     // The list of GAF files containing textures. This is initialized when the engine context is created.
 };
 
-ta_result taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadProperties, taStepProc onStep, void* pUserData, taEngineContext* pEngine);
-ta_result taEngineContextUninit(taEngineContext* pEngine);
+taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadProperties, taStepProc onStep, void* pUserData, taEngineContext* pEngine);
+taResult taEngineContextUninit(taEngineContext* pEngine);
 
 
 // Creates a texture from a file.
-ta_texture* ta_load_image(taEngineContext* pEngine, const char* filePath);
+taTexture* taLoadImage(taEngineContext* pEngine, const char* filePath);
 
 
 // Captures the mouse so that all mouse events get directed to the game window.
-void ta_capture_mouse(ta_window* pWindow);
+void taCaptureMouse(ta_window* pWindow);
 
-// Releases the mouse. The opposite of ta_capture_mouse().
-void ta_release_mouse(taEngineContext* pEngine);
+// Releases the mouse. The opposite of taCaptureMouse().
+void taReleaseMouse(taEngineContext* pEngine);
 
 
 
 //// Events from Window ////
 
 // Called from the window system when the game window is resized.
-void ta_on_window_size(taEngineContext* pEngine, unsigned int newWidth, unsigned int newHeight);
+void taOnWindowSize(taEngineContext* pEngine, unsigned int newWidth, unsigned int newHeight);
 
 // Called when a mouse button is pressed.
-void ta_on_mouse_button_down(taEngineContext* pEngine, int button, int posX, int posY, unsigned int stateFlags);
+void taOnMouseButtonDown(taEngineContext* pEngine, int button, int posX, int posY, unsigned int stateFlags);
 
 // Called when a mouse button is released.
-void ta_on_mouse_button_up(taEngineContext* pEngine, int button, int posX, int posY, unsigned int stateFlags);
+void taOnMouseButtonUp(taEngineContext* pEngine, int button, int posX, int posY, unsigned int stateFlags);
 
 // Called when a mouse button is double clicked.
-void ta_on_mouse_button_dblclick(taEngineContext* pEngine, int button, int posX, int posY, unsigned int stateFlags);
+void taOnMouseButtonDblClick(taEngineContext* pEngine, int button, int posX, int posY, unsigned int stateFlags);
 
 // Called when the mouse wheel is turned.
-void ta_on_mouse_wheel(taEngineContext* pEngine, int delta, int posX, int posY, unsigned int stateFlags);
+void taOnMouseWheel(taEngineContext* pEngine, int delta, int posX, int posY, unsigned int stateFlags);
 
 // Called when the mouse moves.
-void ta_on_mouse_move(taEngineContext* pEngine, int posX, int posY, unsigned int stateFlags);
+void taOnMouseMove(taEngineContext* pEngine, int posX, int posY, unsigned int stateFlags);
 
 // Called when the mouse enters the window.
-void ta_on_mouse_enter(taEngineContext* pEngine);
+void taOnMouseEnter(taEngineContext* pEngine);
 
 // Called when the mouse leaves the window.
-void ta_on_mouse_leave(taEngineContext* pEngine);
+void taOnMouseLeave(taEngineContext* pEngine);
 
 // Called when a key is pressed.
-void ta_on_key_down(taEngineContext* pEngine, ta_key key, unsigned int stateFlags);
+void taOnKeyDown(taEngineContext* pEngine, ta_key key, unsigned int stateFlags);
 
 // Called when a key is released.
-void ta_on_key_up(taEngineContext* pEngine, ta_key key, unsigned int stateFlags);
+void taOnKeyUp(taEngineContext* pEngine, ta_key key, unsigned int stateFlags);
 
 // Called when a printable key is pressed or auto-repeated. Use this for text boxes.
-void ta_on_printable_key_down(taEngineContext* pEngine, taUInt32 utf32, unsigned int stateFlags);
+void taOnPrintableKeyDown(taEngineContext* pEngine, taUInt32 utf32, unsigned int stateFlags);

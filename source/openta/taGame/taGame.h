@@ -59,7 +59,7 @@ typedef struct
     taUInt32 iSelectedMPMap;
 
 
-    ta_texture* pTexture;
+    taTexture* pTexture;
 } ta_game;
 
 // Creates a game instance.
@@ -70,10 +70,10 @@ void ta_delete_game(ta_game* pGame);
 
 
 // Sets a global property.
-ta_result ta_set_property(ta_game* pGame, const char* key, const char* value);
-ta_result ta_set_property_int(ta_game* pGame, const char* key, taInt32 value);
-ta_result ta_set_property_float(ta_game* pGame, const char* key, float value);
-ta_result ta_set_property_bool(ta_game* pGame, const char* key, taBool32 value);
+taResult ta_set_property(ta_game* pGame, const char* key, const char* value);
+taResult ta_set_property_int(ta_game* pGame, const char* key, taInt32 value);
+taResult ta_set_property_float(ta_game* pGame, const char* key, float value);
+taResult ta_set_property_bool(ta_game* pGame, const char* key, taBool32 value);
 
 // Retrieves a global property. Be careful with the returned pointer because it can become invalid whenever ta_set_property()
 // is called. If you need to store the value, make a copy.

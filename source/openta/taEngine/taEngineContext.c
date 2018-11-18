@@ -1,6 +1,6 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-taBool32 ta_load_palette(ta_fs* pFS, const char* filePath, taUInt32* paletteOut)
+TA_PRIVATE taBool32 taLoadPalette(ta_fs* pFS, const char* filePath, taUInt32* paletteOut)
 {
     ta_file* pPaletteFile = ta_open_file(pFS, filePath, 0);
     if (pPaletteFile == NULL) {
@@ -25,17 +25,17 @@ taBool32 ta_load_palette(ta_fs* pFS, const char* filePath, taUInt32* paletteOut)
 }
 
 
-ta_result taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadProperties, taStepProc onStep, void* pUserData, taEngineContext* pEngine)
+taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadProperties, taStepProc onStep, void* pUserData, taEngineContext* pEngine)
 {
     if (pEngine == NULL) return TA_INVALID_ARGS;
-    ta_zero_object(pEngine);
+    taZeroObject(pEngine);
     pEngine->argc = argc;
     pEngine->argv = argv;
     pEngine->onLoadProperties = onLoadProperties;
     pEngine->onStep = onStep;
     pEngine->pUserData = pUserData;
 
-    ta_result result = TA_SUCCESS;
+    taResult result = TA_SUCCESS;
 
 
     //// Property Manager ////
@@ -63,12 +63,12 @@ ta_result taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoad
     //// Graphics ////
 
     // The palettes. The graphics system depends on these so they need to be loaded first.
-    if (!ta_load_palette(pEngine->pFS, "palettes/PALETTE.PAL", pEngine->palette)) {
+    if (!taLoadPalette(pEngine->pFS, "palettes/PALETTE.PAL", pEngine->palette)) {
         result = TA_ERROR;
         goto on_error2;
     }
 
-    if (!ta_load_palette(pEngine->pFS, "palettes/GUIPAL.PAL", pEngine->guipal)) {
+    if (!taLoadPalette(pEngine->pFS, "palettes/GUIPAL.PAL", pEngine->guipal)) {
         result = TA_ERROR;
         goto on_error2;
     }
@@ -180,9 +180,11 @@ on_error0:
     return result;
 }
 
-ta_result taEngineContextUninit(taEngineContext* pEngine)
+taResult taEngineContextUninit(taEngineContext* pEngine)
 {
-    if (pEngine == NULL) return TA_INVALID_ARGS;
+    if (pEngine == NULL) {
+        return TA_INVALID_ARGS;
+    }
 
     for (taUInt32 i = 0; i < pEngine->textureGAFCount; ++i) { ta_close_gaf(pEngine->ppTextureGAFs[i]); }
     free(pEngine->ppTextureGAFs);
@@ -200,9 +202,11 @@ ta_result taEngineContextUninit(taEngineContext* pEngine)
 
 
 
-ta_texture* ta_load_image(taEngineContext* pEngine, const char* filePath)
+taTexture* taLoadImage(taEngineContext* pEngine, const char* filePath)
 {
-    if (pEngine == NULL || filePath == NULL) return NULL;
+    if (pEngine == NULL || filePath == NULL) {
+        return NULL;
+    }
     
     if (drpath_extension_equal(filePath, "pcx")) {
         ta_file* pFile = ta_open_file(pEngine->pFS, filePath, 0);
@@ -217,7 +221,7 @@ ta_texture* ta_load_image(taEngineContext* pEngine, const char* filePath)
             return NULL;    // Not a valid PCX file.
         }
 
-        ta_texture* pTexture = ta_create_texture(pEngine->pGraphics, (unsigned int)width, (unsigned int)height, 4, pImageData);
+        taTexture* pTexture = ta_create_texture(pEngine->pGraphics, (unsigned int)width, (unsigned int)height, 4, pImageData);
         if (pTexture == NULL) {
             drpcx_free(pImageData);
             return NULL;    // Failed to create texture.
@@ -233,12 +237,12 @@ ta_texture* ta_load_image(taEngineContext* pEngine, const char* filePath)
 
 
 
-void ta_capture_mouse(ta_window* pWindow)
+void taCaptureMouse(ta_window* pWindow)
 {
     ta_window_capture_mouse(pWindow);
 }
 
-void ta_release_mouse(taEngineContext* pEngine)
+void taReleaseMouse(taEngineContext* pEngine)
 {
     (void)pEngine;
     ta_window_release_mouse();
@@ -247,13 +251,13 @@ void ta_release_mouse(taEngineContext* pEngine)
 
 //// Events from Window
 
-void ta_on_window_size(taEngineContext* pEngine, unsigned int newWidth, unsigned int newHeight)
+void taOnWindowSize(taEngineContext* pEngine, unsigned int newWidth, unsigned int newHeight)
 {
     assert(pEngine != NULL);
     ta_set_resolution(pEngine->pGraphics, newWidth, newHeight);
 }
 
-void ta_on_mouse_button_down(taEngineContext* pEngine, int button, int posX, int posY, unsigned int stateFlags)
+void taOnMouseButtonDown(taEngineContext* pEngine, int button, int posX, int posY, unsigned int stateFlags)
 {
     assert(pEngine != NULL);
     (void)posX;
@@ -261,10 +265,10 @@ void ta_on_mouse_button_down(taEngineContext* pEngine, int button, int posX, int
     (void)stateFlags;
 
     ta_input_state_on_mouse_button_down(&pEngine->input, button);
-    //ta_capture_mouse(pEngine);
+    //taCaptureMouse(pEngine);
 }
 
-void ta_on_mouse_button_up(taEngineContext* pEngine, int button, int posX, int posY, unsigned int stateFlags)
+void taOnMouseButtonUp(taEngineContext* pEngine, int button, int posX, int posY, unsigned int stateFlags)
 {
     assert(pEngine != NULL);
     (void)posX;
@@ -274,11 +278,11 @@ void ta_on_mouse_button_up(taEngineContext* pEngine, int button, int posX, int p
     ta_input_state_on_mouse_button_up(&pEngine->input, button);
 
     //if (!ta_input_state_is_any_mouse_button_down(&pEngine->input)) {
-    //    ta_release_mouse(pEngine);
+    //    taReleaseMouse(pEngine);
     //}
 }
 
-void ta_on_mouse_button_dblclick(taEngineContext* pEngine, int button, int posX, int posY, unsigned int stateFlags)
+void taOnMouseButtonDblClick(taEngineContext* pEngine, int button, int posX, int posY, unsigned int stateFlags)
 {
     assert(pEngine != NULL);
     (void)pEngine;
@@ -288,7 +292,7 @@ void ta_on_mouse_button_dblclick(taEngineContext* pEngine, int button, int posX,
     (void)stateFlags;
 }
 
-void ta_on_mouse_wheel(taEngineContext* pEngine, int delta, int posX, int posY, unsigned int stateFlags)
+void taOnMouseWheel(taEngineContext* pEngine, int delta, int posX, int posY, unsigned int stateFlags)
 {
     assert(pEngine != NULL);
     (void)pEngine;
@@ -298,7 +302,7 @@ void ta_on_mouse_wheel(taEngineContext* pEngine, int delta, int posX, int posY, 
     (void)stateFlags;
 }
 
-void ta_on_mouse_move(taEngineContext* pEngine, int posX, int posY, unsigned int stateFlags)
+void taOnMouseMove(taEngineContext* pEngine, int posX, int posY, unsigned int stateFlags)
 {
     assert(pEngine != NULL);
     (void)stateFlags;
@@ -306,39 +310,39 @@ void ta_on_mouse_move(taEngineContext* pEngine, int posX, int posY, unsigned int
     ta_input_state_on_mouse_move(&pEngine->input, (float)posX, (float)posY);
 }
 
-void ta_on_mouse_enter(taEngineContext* pEngine)
+void taOnMouseEnter(taEngineContext* pEngine)
 {
     assert(pEngine != NULL);
     (void)pEngine;
 }
 
-void ta_on_mouse_leave(taEngineContext* pEngine)
+void taOnMouseLeave(taEngineContext* pEngine)
 {
     assert(pEngine != NULL);
     (void)pEngine;
 }
 
-void ta_on_key_down(taEngineContext* pEngine, ta_key key, unsigned int stateFlags)
+void taOnKeyDown(taEngineContext* pEngine, ta_key key, unsigned int stateFlags)
 {
     assert(pEngine != NULL);
 
-    if (key < ta_countof(pEngine->input.keyState)) {
+    if (key < taCountOf(pEngine->input.keyState)) {
         if ((stateFlags & TA_KEY_STATE_AUTO_REPEATED) == 0) {
             ta_input_state_on_key_down(&pEngine->input, key);
         }
     }
 }
 
-void ta_on_key_up(taEngineContext* pEngine, ta_key key, unsigned int stateFlags)
+void taOnKeyUp(taEngineContext* pEngine, ta_key key, unsigned int stateFlags)
 {
     assert(pEngine != NULL);
 
-    if (key < ta_countof(pEngine->input.keyState)) {
+    if (key < taCountOf(pEngine->input.keyState)) {
         ta_input_state_on_key_up(&pEngine->input, key);
     }
 }
 
-void ta_on_printable_key_down(taEngineContext* pEngine, taUInt32 utf32, unsigned int stateFlags)
+void taOnPrintableKeyDown(taEngineContext* pEngine, taUInt32 utf32, unsigned int stateFlags)
 {
     assert(pEngine != NULL);
     (void)pEngine;

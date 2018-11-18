@@ -1,6 +1,6 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-typedef struct ta_texture ta_texture;
+typedef struct taTexture taTexture;
 typedef struct ta_mesh ta_mesh;
 
 typedef struct
@@ -97,10 +97,10 @@ void ta_graphics_present(ta_graphics_context* pGraphics, ta_window* pWindow);
 
 
 // Creates a texture.
-ta_texture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width, unsigned int height, unsigned int components, const void* pImageData);
+taTexture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width, unsigned int height, unsigned int components, const void* pImageData);
 
 // Deletes the given texture.
-void ta_delete_texture(ta_texture* pTexture);
+void ta_delete_texture(taTexture* pTexture);
 
 
 // Creates an immutable mesh.
@@ -149,7 +149,7 @@ void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, taUInt8 colorI
 void ta_draw_textf(ta_graphics_context* pGraphics, ta_font* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...);
 
 // Draws a textured rectangle.
-void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float width, float height, taBool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY);
+void ta_draw_subtexture(taTexture* pTexture, float posX, float posY, float width, float height, taBool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY);
 
 
 //// Settings ////
@@ -163,4 +163,4 @@ taBool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics);
 
 
 // TESTING
-void ta_draw_texture(ta_texture* pTexture, taBool32 transparent, float scale);
+void ta_draw_texture(taTexture* pTexture, taBool32 transparent, float scale);

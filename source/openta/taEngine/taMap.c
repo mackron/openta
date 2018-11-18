@@ -51,12 +51,12 @@ typedef struct
 
 taBool32 ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_packer* pPacker)
 {
-    ta_texture* pNewTexture = ta_create_texture(pMap->pEngine->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
+    taTexture* pNewTexture = ta_create_texture(pMap->pEngine->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
     if (pNewTexture == NULL) {
         return TA_FALSE;
     }
 
-    ta_texture** ppNewTextures = realloc(pMap->ppTextures, (pMap->textureCount + 1) * sizeof(*pMap->ppTextures));
+    taTexture** ppNewTextures = realloc(pMap->ppTextures, (pMap->textureCount + 1) * sizeof(*pMap->ppTextures));
     if (ppNewTextures == NULL) {
         ta_delete_texture(pNewTexture);
         return TA_FALSE;

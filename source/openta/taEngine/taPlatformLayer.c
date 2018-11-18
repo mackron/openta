@@ -136,7 +136,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
             case WM_SIZE:
             {
-                ta_on_window_size(pWindow->pEngine, LOWORD(lParam), HIWORD(lParam));
+                taOnWindowSize(pWindow->pEngine, LOWORD(lParam), HIWORD(lParam));
                 break;
             }
 
@@ -144,54 +144,54 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
             case WM_LBUTTONDOWN:
             {
-                ta_on_mouse_button_down(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
+                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
                 break;
             }
             case WM_LBUTTONUP:
             {
-                ta_on_mouse_button_up(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                taOnMouseButtonUp(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
             case WM_LBUTTONDBLCLK:
             {
-                ta_on_mouse_button_down(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
-                ta_on_mouse_button_dblclick(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
+                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
+                taOnMouseButtonDblClick(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
                 break;
             }
 
 
             case WM_RBUTTONDOWN:
             {
-                ta_on_mouse_button_down(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
+                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
                 break;
             }
             case WM_RBUTTONUP:
             {
-                ta_on_mouse_button_up(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                taOnMouseButtonUp(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
             case WM_RBUTTONDBLCLK:
             {
-                ta_on_mouse_button_down(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
-                ta_on_mouse_button_dblclick(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
+                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
+                taOnMouseButtonDblClick(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
                 break;
             }
 
 
             case WM_MBUTTONDOWN:
             {
-                ta_on_mouse_button_down(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
+                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
                 break;
             }
             case WM_MBUTTONUP:
             {
-                ta_on_mouse_button_up(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                taOnMouseButtonUp(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
             case WM_MBUTTONDBLCLK:
             {
-                ta_on_mouse_button_down(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
-                ta_on_mouse_button_dblclick(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
+                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
+                taOnMouseButtonDblClick(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
                 break;
             }
 
@@ -205,7 +205,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 p.y = GET_Y_LPARAM(lParam);
                 ScreenToClient(hWnd, &p);
 
-                ta_on_mouse_wheel(pWindow->pEngine, delta, p.x, p.y, ta_win32_get_mouse_event_state_flags(wParam));
+                taOnMouseWheel(pWindow->pEngine, delta, p.x, p.y, ta_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
 
@@ -214,7 +214,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
             {
                 pWindow->isCursorOver = TA_FALSE;
 
-                ta_on_mouse_leave(pWindow->pEngine);
+                taOnMouseLeave(pWindow->pEngine);
                 break;
             }
 
@@ -227,10 +227,10 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                     ta_win32_track_mouse_leave_event(hWnd);
                     pWindow->isCursorOver = TA_TRUE;
 
-                    ta_on_mouse_enter(pWindow->pEngine);
+                    taOnMouseEnter(pWindow->pEngine);
                 }
 
-                ta_on_mouse_move(pWindow->pEngine, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                taOnMouseMove(pWindow->pEngine, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
                 break;
             }
 
@@ -244,7 +244,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                         stateFlags |= TA_KEY_STATE_AUTO_REPEATED;
                     }
 
-                    ta_on_key_down(pWindow->pEngine, ta_win32_to_ta_key(wParam), stateFlags);
+                    taOnKeyDown(pWindow->pEngine, ta_win32_to_ta_key(wParam), stateFlags);
                 }
 
                 break;
@@ -255,7 +255,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 if (!ta_is_win32_mouse_button_key_code(wParam))
                 {
                     unsigned int stateFlags = ta_win32_get_modifier_key_state_flags();
-                    ta_on_key_up(pWindow->pEngine, ta_win32_to_ta_key(wParam), stateFlags);
+                    taOnKeyUp(pWindow->pEngine, ta_win32_to_ta_key(wParam), stateFlags);
                 }
 
                 break;
@@ -304,7 +304,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                                 stateFlags |= TA_KEY_STATE_AUTO_REPEATED;
                             }
 
-                            ta_on_printable_key_down(pWindow->pEngine, character, stateFlags);
+                            taOnPrintableKeyDown(pWindow->pEngine, character, stateFlags);
                         }
                     }
                 }

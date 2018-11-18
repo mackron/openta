@@ -206,7 +206,7 @@ struct ta_map_instance
     // The list of textures containing every 2D graphic used in this map instance. Each texture is
     // an atlas containing many sub-textures. Whenever a graphic is loaded it is placed into one of
     // these textures.
-    ta_texture** ppTextures;
+    taTexture** ppTextures;
 
 
     // The number of feature types as specified by the TNT file.

@@ -69,8 +69,8 @@ typedef taUInt32         taBool32;
 #define TA_TRUE          1
 #define TA_FALSE         0
 
-#define ta_zero_object(p) memset((p), 0, sizeof(*(p)))
-#define ta_countof(p) (sizeof((p)) / sizeof((p)[0]))
+#define taZeroObject(p) memset((p), 0, sizeof(*(p)))
+#define taCountOf(p) (sizeof((p)) / sizeof((p)[0]))
 
 #define TA_PRIVATE static
 

@@ -18,7 +18,7 @@ TA_PRIVATE int ta_qsort_cb_map(const void* a, const void* b)
 }
 
 
-TA_PRIVATE ta_result ta_load_default_totala_settings(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_load_default_totala_settings(ta_property_manager* pProperties)
 {
     assert(pProperties != NULL);
 
@@ -26,7 +26,7 @@ TA_PRIVATE ta_result ta_load_default_totala_settings(ta_property_manager* pPrope
     return TA_SUCCESS;
 }
 
-TA_PRIVATE ta_result ta_load_totala_settings__config(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_load_totala_settings__config(ta_property_manager* pProperties)
 {
     assert(pProperties != NULL);
 
@@ -57,7 +57,7 @@ TA_PRIVATE char* ta_registry_read_string(HKEY hKey, const char* name, char* valu
     return value;
 }
 
-TA_PRIVATE ta_result ta_load_totala_settings__registry(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_load_totala_settings__registry(ta_property_manager* pProperties)
 {
     assert(pProperties != NULL);
 
@@ -164,12 +164,12 @@ TA_PRIVATE ta_result ta_load_totala_settings__registry(ta_property_manager* pPro
 }
 #endif
 
-TA_PRIVATE ta_result ta_load_totala_settings(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_load_totala_settings(ta_property_manager* pProperties)
 {
     assert(pProperties != NULL);
 
     // Load defaults first, and then overwrite them with the actual settings from the config file or registry.
-    ta_result result = ta_load_default_totala_settings(pProperties);
+    taResult result = ta_load_default_totala_settings(pProperties);
     if (result != TA_SUCCESS) {
         return result;
     }
@@ -188,12 +188,12 @@ TA_PRIVATE ta_result ta_load_totala_settings(ta_property_manager* pProperties)
     return TA_SUCCESS;
 }
 
-TA_PRIVATE ta_result ta_load_settings(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_load_settings(ta_property_manager* pProperties)
 {
     if (pProperties == NULL) return TA_INVALID_ARGS;
 
     // Original Total Annihilation settings from the registry.
-    ta_result result = ta_load_totala_settings(pProperties);
+    taResult result = ta_load_totala_settings(pProperties);
     if (result != TA_SUCCESS) {
         return result;
     }
@@ -204,7 +204,7 @@ TA_PRIVATE ta_result ta_load_settings(ta_property_manager* pProperties)
 }
 
 
-TA_PRIVATE ta_result ta_save_totala_settings(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_save_totala_settings(ta_property_manager* pProperties)
 {
     assert(pProperties != NULL);
 
@@ -215,7 +215,7 @@ TA_PRIVATE ta_result ta_save_totala_settings(ta_property_manager* pProperties)
     return TA_SUCCESS;
 }
 
-TA_PRIVATE ta_result ta_save_settings(ta_property_manager* pProperties)
+TA_PRIVATE taResult ta_save_settings(ta_property_manager* pProperties)
 {
     if (pProperties != NULL) return TA_INVALID_ARGS;
 
@@ -242,7 +242,7 @@ ta_game* ta_create_game(int argc, char** argv)
         return NULL;
     }
 
-    ta_result result = taEngineContextInit(argc, argv, ta_game_on_load_properties, ta_game_on_step, pGame, &pGame->engine);
+    taResult result = taEngineContextInit(argc, argv, ta_game_on_load_properties, ta_game_on_step, pGame, &pGame->engine);
     if (result != TA_SUCCESS) {
         free(pGame);
         return NULL;
@@ -381,26 +381,26 @@ void ta_delete_game(ta_game* pGame)
 }
 
 
-ta_result ta_set_property(ta_game* pGame, const char* key, const char* value)
+taResult ta_set_property(ta_game* pGame, const char* key, const char* value)
 {
     return ta_property_manager_set(&pGame->engine.properties, key, value);
 }
 
-ta_result ta_set_property_int(ta_game* pGame, const char* key, taInt32 value)
+taResult ta_set_property_int(ta_game* pGame, const char* key, taInt32 value)
 {
     char valueStr[256];
     snprintf(valueStr, sizeof(valueStr), "%d", value);
     return ta_set_property(pGame, key, valueStr);
 }
 
-ta_result ta_set_property_float(ta_game* pGame, const char* key, float value)
+taResult ta_set_property_float(ta_game* pGame, const char* key, float value)
 {
     char valueStr[256];
     snprintf(valueStr, sizeof(valueStr), "%f", value);
     return ta_set_property(pGame, key, valueStr);
 }
 
-ta_result ta_set_property_bool(ta_game* pGame, const char* key, taBool32 value)
+taResult ta_set_property_bool(ta_game* pGame, const char* key, taBool32 value)
 {
     return ta_set_property(pGame, key, value ? "1" : "0");
 }
@@ -497,7 +497,7 @@ typedef struct
 taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* pEvent)
 {
     if (pGame == NULL || pGUI == NULL || pEvent == NULL) return TA_FALSE;
-    ta_zero_object(pEvent);
+    taZeroObject(pEvent);
 
     // Sanity check.
     if (pGUI->gadgetCount == 0) return TA_FALSE;

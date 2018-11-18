@@ -36,7 +36,7 @@ taBool32 ta_gaf_select_sequence_by_index(ta_gaf* pGAF, taUInt32 index, taUInt32*
 
 // Retrieves the image data of the frame at the given index of the currently selected sequence. Free the returned
 // pointer with ta_gaf_free().
-ta_result ta_gaf_get_frame(ta_gaf* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut, taUInt32* pHeightOut, taInt32* pPosXOut, taInt32* pPosYOut, taUInt8** ppImageData);
+taResult ta_gaf_get_frame(ta_gaf* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut, taUInt32* pHeightOut, taInt32* pPosXOut, taInt32* pPosYOut, taUInt8** ppImageData);
 
 // Retrieves the name of the currently selected sequence.
 const char* ta_gaf_get_current_sequence_name(ta_gaf* pGAF);
@@ -71,7 +71,7 @@ typedef struct
 typedef struct
 {
 	taEngineContext* pEngine;
-    ta_texture** ppAtlases;
+    taTexture** ppAtlases;
     taUInt32 atlasCount;
 	ta_gaf_texture_group_sequence* pSequences;
     taUInt32 sequenceCount;
@@ -80,6 +80,6 @@ typedef struct
 	taUInt8* _pPayload;
 } ta_gaf_texture_group;
 
-ta_result ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePath, ta_color_mode colorMode, ta_gaf_texture_group* pGroup);
-ta_result ta_gaf_texture_group_uninit(ta_gaf_texture_group* pGroup);
+taResult ta_gaf_texture_group_init(taEngineContext* pEngine, const char* filePath, ta_color_mode colorMode, ta_gaf_texture_group* pGroup);
+taResult ta_gaf_texture_group_uninit(ta_gaf_texture_group* pGroup);
 taBool32 ta_gaf_texture_group_find_sequence_by_name(ta_gaf_texture_group* pGroup, const char* sequenceName, taUInt32* pSequenceIndex);

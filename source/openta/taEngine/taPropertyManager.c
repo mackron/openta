@@ -1,14 +1,14 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-ta_result ta_property_manager_init(ta_property_manager* pProperties)
+taResult ta_property_manager_init(ta_property_manager* pProperties)
 {
     if (pProperties == NULL) return TA_INVALID_ARGS;
-    ta_zero_object(pProperties);
+    taZeroObject(pProperties);
 
     return TA_SUCCESS;
 }
 
-ta_result ta_property_manager_uninit(ta_property_manager* pProperties)
+taResult ta_property_manager_uninit(ta_property_manager* pProperties)
 {
     if (pProperties == NULL) return TA_INVALID_ARGS;
 
@@ -22,7 +22,7 @@ ta_result ta_property_manager_uninit(ta_property_manager* pProperties)
 }
 
 
-ta_result ta_property_manager_set(ta_property_manager* pProperties, const char* key, const char* val)
+taResult ta_property_manager_set(ta_property_manager* pProperties, const char* key, const char* val)
 {
     if (pProperties == NULL || key == NULL) return TA_INVALID_ARGS;
 
@@ -70,7 +70,7 @@ ta_result ta_property_manager_set(ta_property_manager* pProperties, const char* 
     }
 }
 
-ta_result ta_property_manager_set_int(ta_property_manager* pProperties, const char* key, int val)
+taResult ta_property_manager_set_int(ta_property_manager* pProperties, const char* key, int val)
 {
     char valStr[16];
     if (_itoa_s(val, valStr, sizeof(valStr), 10) != 0) {
@@ -80,12 +80,12 @@ ta_result ta_property_manager_set_int(ta_property_manager* pProperties, const ch
     return ta_property_manager_set(pProperties, key, valStr);
 }
 
-ta_result ta_property_manager_set_bool(ta_property_manager* pProperties, const char* key, taBool32 val)
+taResult ta_property_manager_set_bool(ta_property_manager* pProperties, const char* key, taBool32 val)
 {
     return ta_property_manager_set(pProperties, key, (val) ? "true" : "false");
 }
 
-ta_result ta_property_manager_unset(ta_property_manager* pProperties, const char* key)
+taResult ta_property_manager_unset(ta_property_manager* pProperties, const char* key)
 {
     return ta_property_manager_set(pProperties, key, NULL);
 }

@@ -14,10 +14,10 @@ TA_INLINE char* ta_gui__copy_string_prop(char** ppNextStr, const char* src)
     return pNextStr;
 }
 
-ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pGUI)
+taResult ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pGUI)
 {
     if (pGUI == NULL) return TA_INVALID_ARGS;
-    ta_zero_object(pGUI);
+    taZeroObject(pGUI);
 
     if (pEngine == NULL || filePath == NULL) return TA_INVALID_ARGS;
     pGUI->pEngine = pEngine;
@@ -242,7 +242,7 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
     // I haven't yet found a way to determine the background image to use for GUIs, so for the moment we will hard code these.
     const char* propVal = ta_property_manager_getf(&pEngine->properties, "%s.BACKGROUND", fileName);
     if (propVal != NULL) {
-        pGUI->pBackgroundTexture = ta_load_image(pEngine, propVal);
+        pGUI->pBackgroundTexture = taLoadImage(pEngine, propVal);
     }
 
 
@@ -308,7 +308,7 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
                     "Testing 1",
                     "Blah Blah"
                 };
-                ta_gui_set_listbox_items(pGadget, pTestItems, ta_countof(pTestItems));
+                ta_gui_set_listbox_items(pGadget, pTestItems, taCountOf(pTestItems));
             } break;
 
             default: break;
@@ -318,7 +318,7 @@ ta_result ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pG
     return TA_SUCCESS;
 }
 
-ta_result ta_gui_unload(ta_gui* pGUI)
+taResult ta_gui_unload(ta_gui* pGUI)
 {
     if (pGUI == NULL) return TA_INVALID_ARGS;
 
@@ -330,7 +330,7 @@ ta_result ta_gui_unload(ta_gui* pGUI)
 }
 
 
-ta_result ta_gui_get_screen_mapping(ta_gui* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, float* pScale, float* pOffsetX, float* pOffsetY)
+taResult ta_gui_get_screen_mapping(ta_gui* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, float* pScale, float* pOffsetX, float* pOffsetY)
 {
     if (pScale) *pScale = 1;
     if (pOffsetX) *pOffsetX = 0;
@@ -358,7 +358,7 @@ ta_result ta_gui_get_screen_mapping(ta_gui* pGUI, taUInt32 screenSizeX, taUInt32
     return TA_SUCCESS;
 }
 
-ta_result ta_gui_map_screen_position(ta_gui* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, taInt32 screenPosX, taInt32 screenPosY, taInt32* pGUIPosX, taInt32* pGUIPosY)
+taResult ta_gui_map_screen_position(ta_gui* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, taInt32 screenPosX, taInt32 screenPosY, taInt32* pGUIPosX, taInt32* pGUIPosY)
 {
     if (pGUIPosX) *pGUIPosX = screenPosX;
     if (pGUIPosY) *pGUIPosY = screenPosY;
@@ -394,7 +394,7 @@ taBool32 ta_gui_get_gadget_under_point(ta_gui* pGUI, taInt32 posX, taInt32 posY,
 }
 
 
-ta_result ta_gui_hold_gadget(ta_gui* pGUI, taUInt32 gadgetIndex, taUInt32 mouseButton)
+taResult ta_gui_hold_gadget(ta_gui* pGUI, taUInt32 gadgetIndex, taUInt32 mouseButton)
 {
     if (pGUI == NULL || gadgetIndex >= pGUI->gadgetCount) return TA_INVALID_ARGS;
     if (pGUI->heldGadgetIndex != (taUInt32)-1) {
@@ -408,7 +408,7 @@ ta_result ta_gui_hold_gadget(ta_gui* pGUI, taUInt32 gadgetIndex, taUInt32 mouseB
     return TA_SUCCESS;
 }
 
-ta_result ta_gui_release_hold(ta_gui* pGUI, taUInt32 gadgetIndex)
+taResult ta_gui_release_hold(ta_gui* pGUI, taUInt32 gadgetIndex)
 {
     if (pGUI == NULL || gadgetIndex >= pGUI->gadgetCount) return TA_INVALID_ARGS;
     pGUI->pGadgets[gadgetIndex].isHeld = TA_FALSE;
@@ -531,7 +531,7 @@ const char* ta_gui_get_button_text(ta_gui_gadget* pGadget, taUInt32 stage)
     return NULL;
 }
 
-ta_result ta_gui_set_listbox_items(ta_gui_gadget* pGadget, const char** pItems, taUInt32 count)
+taResult ta_gui_set_listbox_items(ta_gui_gadget* pGadget, const char** pItems, taUInt32 count)
 {
     if (pGadget == NULL || pGadget->id != TA_GUI_GADGET_TYPE_LISTBOX) return TA_INVALID_ARGS;
     
@@ -579,7 +579,7 @@ const char* ta_gui_get_listbox_item(ta_gui_gadget* pGadget, taUInt32 index)
 
 // Common GUI
 // ==========
-ta_result ta_common_gui__create_texture_atlas(taEngineContext* pEngine, ta_common_gui* pCommonGUI, ta_texture_packer* pPacker, ta_texture** ppTexture)
+taResult ta_common_gui__create_texture_atlas(taEngineContext* pEngine, ta_common_gui* pCommonGUI, ta_texture_packer* pPacker, taTexture** ppTexture)
 {
     assert(pEngine != NULL);
     assert(pCommonGUI != NULL);
@@ -594,14 +594,14 @@ ta_result ta_common_gui__create_texture_atlas(taEngineContext* pEngine, ta_commo
     return TA_SUCCESS;
 }
 
-ta_result ta_common_gui_load(taEngineContext* pEngine, ta_common_gui* pCommonGUI)
+taResult ta_common_gui_load(taEngineContext* pEngine, ta_common_gui* pCommonGUI)
 {
     if (pCommonGUI == NULL) return TA_INVALID_ARGS;
-    ta_zero_object(pCommonGUI);
+    taZeroObject(pCommonGUI);
 
     pCommonGUI->pEngine = pEngine;
 
-    ta_result result = ta_gaf_texture_group_init(pEngine, "anims/commongui.GAF", ta_color_mode_truecolor, &pCommonGUI->textureGroup);
+    taResult result = ta_gaf_texture_group_init(pEngine, "anims/commongui.GAF", ta_color_mode_truecolor, &pCommonGUI->textureGroup);
     if (result != TA_SUCCESS) {
         return result;
     }
@@ -645,7 +645,7 @@ ta_result ta_common_gui_load(taEngineContext* pEngine, ta_common_gui* pCommonGUI
     return TA_SUCCESS;
 }
 
-ta_result ta_common_gui_unload(ta_common_gui* pCommonGUI)
+taResult ta_common_gui_unload(ta_common_gui* pCommonGUI)
 {
     if (pCommonGUI == NULL) return TA_INVALID_ARGS;
 
@@ -653,7 +653,7 @@ ta_result ta_common_gui_unload(ta_common_gui* pCommonGUI)
     return TA_SUCCESS;
 }
 
-ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, taUInt32 width, taUInt32 height, taUInt32* pFrameIndex)
+taResult ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, taUInt32 width, taUInt32 height, taUInt32* pFrameIndex)
 {
     if (pCommonGUI == NULL) return TA_INVALID_ARGS;
 
@@ -661,7 +661,7 @@ ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, taUInt32 wid
     taInt32 diffXClosest = INT32_MAX;
     taInt32 diffYClosest = INT32_MAX;
     taUInt32 iClosestButton = (taUInt32)-1;
-    for (taUInt32 i = 0; i < ta_countof(pCommonGUI->buttons); ++i) {
+    for (taUInt32 i = 0; i < taCountOf(pCommonGUI->buttons); ++i) {
         taInt32 diffX = (taInt32)pCommonGUI->textureGroup.pFrames[pCommonGUI->buttons[i].frameIndex].sizeX - (taInt32)width;
         taInt32 diffY = (taInt32)pCommonGUI->textureGroup.pFrames[pCommonGUI->buttons[i].frameIndex].sizeY - (taInt32)height;
         if (diffX == 0 && diffY == 0) {
@@ -680,7 +680,7 @@ ta_result ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, taUInt32 wid
     return TA_SUCCESS;
 }
 
-ta_result ta_common_gui_get_multistage_button_frame(ta_common_gui* pCommonGUI, taUInt32 stages, taUInt32* pFrameIndex)
+taResult ta_common_gui_get_multistage_button_frame(ta_common_gui* pCommonGUI, taUInt32 stages, taUInt32* pFrameIndex)
 {
     if (pCommonGUI == NULL || stages > 4 || stages < 1) return TA_INVALID_ARGS;
 

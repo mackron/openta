@@ -2,7 +2,7 @@
 
 #define TA_MAX_FONT_SIZE    64     // <-- Don't make this too big otherwise you'll end up using too much stack space. Can probably improve this later.
 
-ta_result ta_font_load_fnt(taEngineContext* pEngine, const char* filePath, ta_font* pFont)
+taResult ta_font_load_fnt(taEngineContext* pEngine, const char* filePath, ta_font* pFont)
 {
     assert(pEngine != NULL);
     assert(filePath != NULL);
@@ -104,7 +104,7 @@ ta_result ta_font_load_fnt(taEngineContext* pEngine, const char* filePath, ta_fo
     return TA_SUCCESS;
 }
 
-ta_result ta_font_load_gaf(taEngineContext* pEngine, const char* filePath, ta_font* pFont)
+taResult ta_font_load_gaf(taEngineContext* pEngine, const char* filePath, ta_font* pFont)
 {
     assert(pEngine != NULL);
     assert(filePath != NULL);
@@ -239,10 +239,10 @@ ta_result ta_font_load_gaf(taEngineContext* pEngine, const char* filePath, ta_fo
     return TA_SUCCESS;
 }
 
-ta_result ta_font_load(taEngineContext* pEngine, const char* filePath, ta_font* pFont)
+taResult ta_font_load(taEngineContext* pEngine, const char* filePath, ta_font* pFont)
 {
     if (pFont == NULL) return TA_INVALID_ARGS;
-    ta_zero_object(pFont);
+    taZeroObject(pFont);
 
     if (pEngine == NULL || filePath == NULL) return TA_INVALID_ARGS;
     pFont->pEngine = pEngine;
@@ -255,7 +255,7 @@ ta_result ta_font_load(taEngineContext* pEngine, const char* filePath, ta_font* 
     }
 }
 
-ta_result ta_font_unload(ta_font* pFont)
+taResult ta_font_unload(ta_font* pFont)
 {
     if (pFont == NULL) return TA_INVALID_ARGS;
     ta_delete_texture(pFont->pTexture);
@@ -263,7 +263,7 @@ ta_result ta_font_unload(ta_font* pFont)
     return TA_SUCCESS;
 }
 
-ta_result ta_font_measure_text(ta_font* pFont, float scale, const char* text, float* pSizeX, float* pSizeY)
+taResult ta_font_measure_text(ta_font* pFont, float scale, const char* text, float* pSizeX, float* pSizeY)
 {
     if (pSizeX) *pSizeX = 0;
     if (pSizeY) *pSizeY = 0;
@@ -293,7 +293,7 @@ ta_result ta_font_measure_text(ta_font* pFont, float scale, const char* text, fl
     return TA_SUCCESS;
 }
 
-ta_result ta_font_find_character_metrics(ta_font* pFont, float scale, const char* text, char cIn, float* pPosX, float* pPosY, float* pSizeX, float* pSizeY)
+taResult ta_font_find_character_metrics(ta_font* pFont, float scale, const char* text, char cIn, float* pPosX, float* pPosY, float* pSizeX, float* pSizeY)
 {
     if (pPosX) *pPosX = 0;
     if (pPosY) *pPosY = 0;

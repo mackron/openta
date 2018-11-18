@@ -111,13 +111,13 @@ struct ta_graphics_context
 
     // State
     ta_vertex_format currentMeshVertexFormat;
-    ta_texture* pCurrentTexture;
+    taTexture* pCurrentTexture;
     ta_mesh* pCurrentMesh;
     GLuint currentVertexProgram;
     GLuint currentFragmentProgram;
 };
 
-struct ta_texture
+struct taTexture
 {
     // The graphics context that owns this texture.
     ta_graphics_context* pGraphics;
@@ -591,7 +591,7 @@ void ta_graphics_present(ta_graphics_context* pGraphics, ta_window* pWindow)
 }
 
 
-ta_texture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width, unsigned int height, unsigned int components, const void* pImageData)
+taTexture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width, unsigned int height, unsigned int components, const void* pImageData)
 {
     if (pGraphics == NULL || width == 0 || height == 0 || (components != 1 && components != 3 && components != 4) || pImageData == NULL) {
         return NULL;
@@ -644,7 +644,7 @@ ta_texture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width
     }
 
 
-    ta_texture* pTexture = malloc(sizeof(*pTexture));
+    taTexture* pTexture = malloc(sizeof(*pTexture));
     if (pTexture == NULL) {
         glDeleteTextures(1, &objectGL);
         return NULL;
@@ -659,7 +659,7 @@ ta_texture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width
     return pTexture;
 }
 
-void ta_delete_texture(ta_texture* pTexture)
+void ta_delete_texture(taTexture* pTexture)
 {
     glDeleteTextures(1, &pTexture->objectGL);
     free(pTexture);
@@ -884,7 +884,7 @@ void ta_translate_camera(ta_graphics_context* pGraphics, int offsetX, int offset
     //printf("Camera Pos: %d %d\n", pGraphics->cameraPosX, pGraphics->cameraPosY);
 }
 
-static TA_INLINE void ta_graphics__bind_texture(ta_graphics_context* pGraphics, ta_texture* pTexture)
+static TA_INLINE void ta_graphics__bind_texture(ta_graphics_context* pGraphics, taTexture* pTexture)
 {
     assert(pGraphics != NULL);
 
@@ -1167,7 +1167,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                         }
                     }
 
-                    ta_texture* pBackgroundTexture = pGadget->button.pBackgroundTextureGroup->ppAtlases[pFrame->atlasIndex];
+                    taTexture* pBackgroundTexture = pGadget->button.pBackgroundTextureGroup->ppAtlases[pFrame->atlasIndex];
                     ta_draw_subtexture(pBackgroundTexture, posX, posY, pFrame->sizeX*scale, pFrame->sizeY*scale, TA_FALSE, pFrame->atlasPosX, pFrame->atlasPosY, pFrame->sizeX, pFrame->sizeY);
                 }
 
@@ -1268,8 +1268,8 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
             {
                 ta_gaf_texture_group_frame* pArrow0Frame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iArrow0Frame; // UP/LEFT arrow
                 ta_gaf_texture_group_frame* pArrow1Frame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iArrow1Frame; // DOWN/RIGHT arrow
-                ta_texture* pArrow0Texture = pGadget->scrollbar.pTextureGroup->ppAtlases[pArrow0Frame->atlasIndex];
-                ta_texture* pArrow1Texture = pGadget->scrollbar.pTextureGroup->ppAtlases[pArrow1Frame->atlasIndex];
+                taTexture* pArrow0Texture = pGadget->scrollbar.pTextureGroup->ppAtlases[pArrow0Frame->atlasIndex];
+                taTexture* pArrow1Texture = pGadget->scrollbar.pTextureGroup->ppAtlases[pArrow1Frame->atlasIndex];
                 float arrow0PosX = 0;
                 float arrow0PosY = 0;
                 float arrow1PosX = 0;
@@ -1278,9 +1278,9 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                 ta_gaf_texture_group_frame* pTrackBegFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackBegFrame;
                 ta_gaf_texture_group_frame* pTrackEndFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackEndFrame;
                 ta_gaf_texture_group_frame* pTrackMidFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackMidFrame;
-                ta_texture* pTrackBegTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackBegFrame->atlasIndex];
-                ta_texture* pTrackEndTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackEndFrame->atlasIndex];
-                ta_texture* pTrackMidTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackMidFrame->atlasIndex];
+                taTexture* pTrackBegTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackBegFrame->atlasIndex];
+                taTexture* pTrackEndTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackEndFrame->atlasIndex];
+                taTexture* pTrackMidTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackMidFrame->atlasIndex];
                 float trackBegPosX = 0;
                 float trackBegPosY = 0;
                 float trackEndPosX = 0;
@@ -1289,9 +1289,9 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                 ta_gaf_texture_group_frame* pThumbFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iThumbFrame;
                 ta_gaf_texture_group_frame* pThumbCapTopFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iThumbCapTopFrame;
                 ta_gaf_texture_group_frame* pThumbCapBotFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iThumbCapBotFrame;
-                ta_texture* pThumbTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pThumbFrame->atlasIndex];
-                ta_texture* pThumbCapTopTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pThumbCapTopFrame->atlasIndex];
-                ta_texture* pThumbCapBotTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pThumbCapBotFrame->atlasIndex];
+                taTexture* pThumbTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pThumbFrame->atlasIndex];
+                taTexture* pThumbCapTopTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pThumbCapTopFrame->atlasIndex];
+                taTexture* pThumbCapBotTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pThumbCapBotFrame->atlasIndex];
                 float thumbBegPosX = 0;
                 float thumbBegPosY = 0;
                 float thumbEndPosX = 0;
@@ -1577,7 +1577,7 @@ void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instanc
         ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader);
     }
 
-    ta_texture* pTexture = pMap->ppTextures[pSequence->pFrames[pFeature->currentFrameIndex].textureIndex];
+    taTexture* pTexture = pMap->ppTextures[pSequence->pFrames[pFeature->currentFrameIndex].textureIndex];
     ta_graphics__bind_texture(pGraphics, pTexture);
 
 
@@ -1774,7 +1774,7 @@ void ta_draw_textf(ta_graphics_context* pGraphics, ta_font* pFont, taUInt8 color
     va_end(args);
 }
 
-void ta_draw_subtexture(ta_texture* pTexture, float posX, float posY, float width, float height, taBool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY)
+void ta_draw_subtexture(taTexture* pTexture, float posX, float posY, float width, float height, taBool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY)
 {
     if (pTexture == NULL) {
         return;
@@ -1852,7 +1852,7 @@ taBool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
 
 
 // TESTING
-void ta_draw_texture(ta_texture* pTexture, taBool32 transparent,float scale)
+void ta_draw_texture(taTexture* pTexture, taBool32 transparent,float scale)
 {
     ta_draw_subtexture(pTexture, 0, 0, (float)pTexture->width*scale, (float)pTexture->height*scale, transparent, 0, 0, (float)pTexture->width, (float)pTexture->height);
 }

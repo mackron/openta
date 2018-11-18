@@ -16,10 +16,10 @@ struct ta_font
     float height;
     ta_font_glyph glyphs[256];
     taBool32 canBeColored; // Set to true for FNT fonts, false for GAF fonts.
-    ta_texture* pTexture;
+    taTexture* pTexture;
 };
 
-ta_result ta_font_load(taEngineContext* pEngine, const char* filePath, ta_font* pFont);
-ta_result ta_font_unload(ta_font* pFont);
-ta_result ta_font_measure_text(ta_font* pFont, float scale, const char* text, float* pSizeX, float* pSizeY);
-ta_result ta_font_find_character_metrics(ta_font* pFont, float scale, const char* text, char c, float* pPosX, float* pPosY, float* pSizeX, float* pSizeY);
+taResult ta_font_load(taEngineContext* pEngine, const char* filePath, ta_font* pFont);
+taResult ta_font_unload(ta_font* pFont);
+taResult ta_font_measure_text(ta_font* pFont, float scale, const char* text, float* pSizeX, float* pSizeY);
+taResult ta_font_find_character_metrics(ta_font* pFont, float scale, const char* text, char c, float* pPosX, float* pPosY, float* pSizeX, float* pSizeY);
