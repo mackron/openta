@@ -1016,7 +1016,7 @@ void ta_step__main(ta_game* pGame)
         }
 
         // Reset transient input state last.
-        ta_input_state_reset_transient_state(&pGame->engine.input);
+        taInputStateResetTransientState(&pGame->engine.input);
     }
     taGraphicsPresent(pGame->engine.pGraphics, pGame->pWindow);
 }
@@ -1042,38 +1042,38 @@ void ta_goto_screen(ta_game* pGame, taUInt32 newScreenType)
 taBool32 ta_is_mouse_button_down(ta_game* pGame, taUInt32 button)
 {
     if (pGame == NULL) return TA_FALSE;
-    return ta_input_state_is_mouse_button_down(&pGame->engine.input, button);
+    return taInputStateIsMouseButtonDown(&pGame->engine.input, button);
 }
 
 taBool32 ta_was_mouse_button_pressed(ta_game* pGame, taUInt32 button)
 {
     if (pGame == NULL) return TA_FALSE;
-    return ta_input_state_was_mouse_button_pressed(&pGame->engine.input, button);
+    return taInputStateWasMouseButtonPressed(&pGame->engine.input, button);
 }
 
 taBool32 ta_was_mouse_button_released(ta_game* pGame, taUInt32 button)
 {
     if (pGame == NULL) return TA_FALSE;
-    return ta_input_state_was_mouse_button_released(&pGame->engine.input, button);
+    return taInputStateWasMouseButtonReleased(&pGame->engine.input, button);
 }
 
 
 taBool32 ta_is_key_down(ta_game* pGame, taUInt32 key)
 {
     if (pGame == NULL) return TA_FALSE;
-    return ta_input_state_is_key_down(&pGame->engine.input, key);
+    return taInputStateIsKeyDown(&pGame->engine.input, key);
 }
 
 taBool32 ta_was_key_pressed(ta_game* pGame, taUInt32 key)
 {
     if (pGame == NULL) return TA_FALSE;
-    return ta_input_state_was_key_pressed(&pGame->engine.input, key);
+    return taInputStateWasKeyPressed(&pGame->engine.input, key);
 }
 
 taBool32 ta_was_key_released(ta_game* pGame, taUInt32 key)
 {
     if (pGame == NULL) return TA_FALSE;
-    return ta_input_state_was_key_released(&pGame->engine.input, key);
+    return taInputStateWasKeyReleased(&pGame->engine.input, key);
 }
 
 

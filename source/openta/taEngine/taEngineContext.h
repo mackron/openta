@@ -16,7 +16,7 @@ struct taEngineContext
     taGraphicsContext* pGraphics;
     taUInt32 palette[256];     // The standard palette. PALETTE.PAL
     taUInt32 guipal[256];      // The GUI palette. GUIPAL.PAL
-    ta_input_state input;
+    taInputState input;
     taFont font;               // The main font to use for basically all GUI text.
     taFont fontSmall;
     taCommonGUI commonGUI;

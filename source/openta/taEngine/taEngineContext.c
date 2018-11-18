@@ -96,7 +96,7 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
 
 
     //// Input ////
-    result = ta_input_state_init(&pEngine->input);
+    result = taInputStateInit(&pEngine->input);
     if (result != TA_SUCCESS) {
         goto on_error4;
     }
@@ -171,7 +171,7 @@ on_error9:  taDeleteFeaturesLibrary(pEngine->pFeatures);
 on_error8:  taCommonGUIUnload(&pEngine->commonGUI);
 on_error7:  taFontUnload(&pEngine->fontSmall);
 on_error6:  taFontUnload(&pEngine->font);
-on_error5:  ta_input_state_uninit(&pEngine->input);
+on_error5:  taInputStateUninit(&pEngine->input);
 on_error4:  taDeleteAudioContext(pEngine->pAudio);
 on_error3:  taDeleteGraphicsContext(pEngine->pGraphics);
 on_error2:  taDeleteFileSystem(pEngine->pFS);
@@ -192,7 +192,7 @@ taResult taEngineContextUninit(taEngineContext* pEngine)
     taCommonGUIUnload(&pEngine->commonGUI);
     taFontUnload(&pEngine->fontSmall);
     taFontUnload(&pEngine->font);
-    ta_input_state_uninit(&pEngine->input);
+    taInputStateUninit(&pEngine->input);
     taDeleteAudioContext(pEngine->pAudio);
     taDeleteGraphicsContext(pEngine->pGraphics);
     taDeleteFileSystem(pEngine->pFS);
@@ -264,7 +264,7 @@ void taOnMouseButtonDown(taEngineContext* pEngine, int button, int posX, int pos
     (void)posY;
     (void)stateFlags;
 
-    ta_input_state_on_mouse_button_down(&pEngine->input, button);
+    taInputStateOnMouseButtonDown(&pEngine->input, button);
     //taCaptureMouse(pEngine);
 }
 
@@ -275,9 +275,9 @@ void taOnMouseButtonUp(taEngineContext* pEngine, int button, int posX, int posY,
     (void)posY;
     (void)stateFlags;
 
-    ta_input_state_on_mouse_button_up(&pEngine->input, button);
+    taInputStateOnMouseButtonUp(&pEngine->input, button);
 
-    //if (!ta_input_state_is_any_mouse_button_down(&pEngine->input)) {
+    //if (!taInputStateIsAnyMouseButtonDown(&pEngine->input)) {
     //    taReleaseMouse(pEngine);
     //}
 }
@@ -307,7 +307,7 @@ void taOnMouseMove(taEngineContext* pEngine, int posX, int posY, unsigned int st
     assert(pEngine != NULL);
     (void)stateFlags;
 
-    ta_input_state_on_mouse_move(&pEngine->input, (float)posX, (float)posY);
+    taInputStateOnMouseMove(&pEngine->input, (float)posX, (float)posY);
 }
 
 void taOnMouseEnter(taEngineContext* pEngine)
@@ -328,7 +328,7 @@ void taOnKeyDown(taEngineContext* pEngine, ta_key key, unsigned int stateFlags)
 
     if (key < taCountOf(pEngine->input.keyState)) {
         if ((stateFlags & TA_KEY_STATE_AUTO_REPEATED) == 0) {
-            ta_input_state_on_key_down(&pEngine->input, key);
+            taInputStateOnKeyDown(&pEngine->input, key);
         }
     }
 }
@@ -338,7 +338,7 @@ void taOnKeyUp(taEngineContext* pEngine, ta_key key, unsigned int stateFlags)
     assert(pEngine != NULL);
 
     if (key < taCountOf(pEngine->input.keyState)) {
-        ta_input_state_on_key_up(&pEngine->input, key);
+        taInputStateOnKeyUp(&pEngine->input, key);
     }
 }
 

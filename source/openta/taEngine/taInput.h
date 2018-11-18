@@ -3,7 +3,7 @@
 // A few notes on input:
 // - Transient state is reset at the end of each state. It's used for detecting when a mouse button or key was
 //   pressed for the first time.
-// - Transient state should _not_ be reset from anywhere except ta_input_state_reset_transient_state(). The
+// - Transient state should _not_ be reset from anywhere except taInputStateResetTransientState(). The
 //   reason for this is to ensure transient state changes are available for at least a single frame. A scenario
 //   where this may become relevant is when a player rapidly presses and then releases a button quickly enough
 //   that it all happens between frames and is thus never handled by the stepping routines.
@@ -58,28 +58,27 @@ typedef struct
     // Keyboard
     // ========
     taUInt8 keyState[256];
+} taInputState;
 
-} ta_input_state;
-
-taResult ta_input_state_init(ta_input_state* pState);
-taResult ta_input_state_uninit(ta_input_state* pState);
+taResult taInputStateInit(taInputState* pState);
+taResult taInputStateUninit(taInputState* pState);
 
 // Resets per-frame state.
-void ta_input_state_reset_transient_state(ta_input_state* pState);
+void taInputStateResetTransientState(taInputState* pState);
 
 
 // Called by ta_game when the mouse is moved.
-void ta_input_state_on_mouse_move(ta_input_state* pState, float newMousePosX, float newMousePosY);
-void ta_input_state_on_mouse_button_down(ta_input_state* pState, taUInt32 mouseButton);
-void ta_input_state_on_mouse_button_up(ta_input_state* pState, taUInt32 mouseButton);
-taBool32 ta_input_state_is_mouse_button_down(ta_input_state* pState, taUInt32 mouseButton);
-taBool32 ta_input_state_was_mouse_button_pressed(ta_input_state* pState, taUInt32 mouseButton);
-taBool32 ta_input_state_was_mouse_button_released(ta_input_state* pState, taUInt32 mouseButton);
-taBool32 ta_input_state_is_any_mouse_button_down(ta_input_state* pState);
+void taInputStateOnMouseMove(taInputState* pState, float newMousePosX, float newMousePosY);
+void taInputStateOnMouseButtonDown(taInputState* pState, taUInt32 mouseButton);
+void taInputStateOnMouseButtonUp(taInputState* pState, taUInt32 mouseButton);
+taBool32 taInputStateIsMouseButtonDown(taInputState* pState, taUInt32 mouseButton);
+taBool32 taInputStateWasMouseButtonPressed(taInputState* pState, taUInt32 mouseButton);
+taBool32 taInputStateWasMouseButtonReleased(taInputState* pState, taUInt32 mouseButton);
+taBool32 taInputStateIsAnyMouseButtonDown(taInputState* pState);
 
 // Called when the state of a key changes.
-void ta_input_state_on_key_down(ta_input_state* pState, taUInt32 key);
-void ta_input_state_on_key_up(ta_input_state* pState, taUInt32 key);
-taBool32 ta_input_state_is_key_down(ta_input_state* pState, taUInt32 key);
-taBool32 ta_input_state_was_key_pressed(ta_input_state* pState, taUInt32 key);
-taBool32 ta_input_state_was_key_released(ta_input_state* pState, taUInt32 key);
+void taInputStateOnKeyDown(taInputState* pState, taUInt32 key);
+void taInputStateOnKeyUp(taInputState* pState, taUInt32 key);
+taBool32 taInputStateIsKeyDown(taInputState* pState, taUInt32 key);
+taBool32 taInputStateWasKeyPressed(taInputState* pState, taUInt32 key);
+taBool32 taInputStateWasKeyReleased(taInputState* pState, taUInt32 key);
