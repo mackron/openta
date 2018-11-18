@@ -19,7 +19,7 @@ struct taEngineContext
     ta_input_state input;
     taFont font;               // The main font to use for basically all GUI text.
     taFont fontSmall;
-    ta_common_gui commonGUI;
+    taCommonGUI commonGUI;
     taAudioContext* pAudio;
 
     // The features library. This is initialized once at startup from every TDF file in the "features" directory, and it's sub-directories. The

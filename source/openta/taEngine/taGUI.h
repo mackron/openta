@@ -84,7 +84,7 @@ typedef struct
         struct   // id = 1
         {
             taInt32 status;        // The frame inside the GAF file the button starts on. Should always be 0 for multi-stage buttons.
-            char* text;             // For multi-stage buttons, the text for each stage is separated with '|'.
+            char* text;            // For multi-stage buttons, the text for each stage is separated with '|'.
             taUInt32 quickkey;     // Shortcut key. ASCII.
             taBool32 grayedout;    // Whether or not the button is disabled, but still visible.
             taInt32 stages;        // The number of stages in a multi-stage button. Set to 0 for simple buttons.
@@ -152,9 +152,9 @@ typedef struct
             int unused;
         } picture;
     };
-} ta_gui_gadget;
+} taGUIGadget;
 
-struct ta_gui
+struct taGUI
 {
     taEngineContext* pEngine;
     taGAFTextureGroup textureGroupGAF;
@@ -162,7 +162,7 @@ struct ta_gui
     taTexture* pBackgroundTexture;
 
     taUInt32 gadgetCount;
-    ta_gui_gadget* pGadgets;    // This is an offset of _pPayload.
+    taGUIGadget* pGadgets;    // This is an offset of _pPayload.
     taUInt32 heldGadgetIndex;
     taUInt32 hoveredGadgetIndex;
     taUInt32 focusedGadgetIndex;
@@ -171,60 +171,60 @@ struct ta_gui
     taUInt8* _pPayload;
 };
 
-taResult ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pGUI);
-taResult ta_gui_unload(ta_gui* pGUI);
+taResult taGUILoad(taEngineContext* pEngine, const char* filePath, taGUI* pGUI);
+taResult taGUIUnload(taGUI* pGUI);
 
 // Retrieves information about how the GUI is mapped to the screen of a specific resolution.
 //
 // Most GUIs are built based on a 640x480 resolution. When a GUI is drawn on the screen that is of a different resolution to this,
 // it needs to be scaled. This function is used to retrieve the necessary information needed to draw the GUI at a given screen
 // resolution.
-taResult ta_gui_get_screen_mapping(ta_gui* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, float* pScale, float* pOffsetX, float* pOffsetY);
+taResult taGUIGetScreenMapping(taGUI* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, float* pScale, float* pOffsetX, float* pOffsetY);
 
 // Converts a position in screen coordinates to GUI coordinates.
-taResult ta_gui_map_screen_position(ta_gui* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, taInt32 screenPosX, taInt32 screenPosY, taInt32* pGUIPosX, taInt32* pGUIPosY);
+taResult taGUIMapScreenPosition(taGUI* pGUI, taUInt32 screenSizeX, taUInt32 screenSizeY, taInt32 screenPosX, taInt32 screenPosY, taInt32* pGUIPosX, taInt32* pGUIPosY);
 
 // Finds the gadget under the given point, in GUI coordinates. Returns false if the mouse is not under any gadget. This will
 // include the root gadget.
-taBool32 ta_gui_get_gadget_under_point(ta_gui* pGUI, taInt32 posX, taInt32 posY, taUInt32* pGadgetIndex);
+taBool32 taGUIGetGadgetUnderPoint(taGUI* pGUI, taInt32 posX, taInt32 posY, taUInt32* pGadgetIndex);
 
 // Marks the given gadget as held.
-taResult ta_gui_hold_gadget(ta_gui* pGUI, taUInt32 gadgetIndex, taUInt32 mouseButton);
+taResult taGUIHoldGadget(taGUI* pGUI, taUInt32 gadgetIndex, taUInt32 mouseButton);
 
 // Releases the hold on the given gadget.
-taResult ta_gui_release_hold(ta_gui* pGUI, taUInt32 gadgetIndex);
+taResult taGUIReleaseHold(taGUI* pGUI, taUInt32 gadgetIndex);
 
 // Retrieves the index of the gadget that's currently being held. Returns false if no gadget is held; true otherwise.
-taBool32 ta_gui_get_held_gadget(ta_gui* pGUI, taUInt32* pGadgetIndex);
+taBool32 taGUIGetHeldGadget(taGUI* pGUI, taUInt32* pGadgetIndex);
 
 // Finds a gadget by it's name.
-taBool32 ta_gui_find_gadget_by_name(ta_gui* pGUI, const char* name, taUInt32* pGadgetIndex);
+taBool32 taGUIFindGadgetByName(taGUI* pGUI, const char* name, taUInt32* pGadgetIndex);
 
 // Retrieves the focused gadget, if any.
-taBool32 ta_gui_get_focused_gadget(ta_gui* pGUI, taUInt32* pGadgetIndex);
+taBool32 taGUIGetFocusedGadget(taGUI* pGUI, taUInt32* pGadgetIndex);
 
 // Gives keyboard focus to the next gadget.
-void ta_gui_focus_next_gadget(ta_gui* pGUI);
+void taGUIFocusNextGadget(taGUI* pGUI);
 
 // Gives keyboard focus to the previous gadget.
-void ta_gui_focus_prev_gadget(ta_gui* pGUI);
+void taGUIFocusPrevGadget(taGUI* pGUI);
 
 // Retrieves the text for the given button for the given stage. Returns null if an error occurs.
-const char* ta_gui_get_button_text(ta_gui_gadget* pGadget, taUInt32 stage);
+const char* taGUIGetButtonText(taGUIGadget* pGadget, taUInt32 stage);
 
 // Sets the items in a listbox gadget.
 //
 // This will make it's own local copy of each item.
-taResult ta_gui_set_listbox_items(ta_gui_gadget* pGadget, const char** pItems, taUInt32 count);
+taResult taGUISetListboxItems(taGUIGadget* pGadget, const char** pItems, taUInt32 count);
 
 // Retrieves the text of the listbox item at the given index.
-const char* ta_gui_get_listbox_item(ta_gui_gadget* pGadget, taUInt32 index);
+const char* taGUIGetListboxItem(taGUIGadget* pGadget, taUInt32 index);
 
 
 typedef struct
 {
     taUInt32 frameIndex;
-} ta_common_gui_texture_button;
+} taCommonGUITextureButton;
 
 typedef struct
 {
@@ -232,7 +232,7 @@ typedef struct
     taGAFTextureGroup textureGroup;
 
     // Button backgrounds for each size.
-    ta_common_gui_texture_button buttons[6];
+    taCommonGUITextureButton buttons[6];
 
     struct
     {
@@ -255,9 +255,9 @@ typedef struct
         taUInt32 thumbCapTopFrameIndex;
         taUInt32 thumbCapBotFrameIndex;
     } scrollbar;
-} ta_common_gui;
+} taCommonGUI;
 
-taResult ta_common_gui_load(taEngineContext* pEngine, ta_common_gui* pCommonGUI);
-taResult ta_common_gui_unload(ta_common_gui* pCommonGUI);
-taResult ta_common_gui_get_button_frame(ta_common_gui* pCommonGUI, taUInt32 width, taUInt32 height, taUInt32* pFrameIndex);
-taResult ta_common_gui_get_multistage_button_frame(ta_common_gui* pCommonGUI, taUInt32 stages, taUInt32* pFrameIndex);
+taResult taCommonGUILoad(taEngineContext* pEngine, taCommonGUI* pCommonGUI);
+taResult taCommonGUIUnload(taCommonGUI* pCommonGUI);
+taResult taCommonGUIGetButtonFrame(taCommonGUI* pCommonGUI, taUInt32 width, taUInt32 height, taUInt32* pFrameIndex);
+taResult taCommonGUIGetMultiStageButtonFrame(taCommonGUI* pCommonGUI, taUInt32 stages, taUInt32* pFrameIndex);

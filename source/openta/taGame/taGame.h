@@ -32,16 +32,16 @@ typedef struct
 
 
     // The main menu.
-    ta_gui mainMenu;
-    ta_gui spMenu;
-    ta_gui mpMenu;
-    ta_gui optionsMenu;
-    ta_gui skirmishMenu;
-    ta_gui campaignMenu;
+    taGUI mainMenu;
+    taGUI spMenu;
+    taGUI mpMenu;
+    taGUI optionsMenu;
+    taGUI skirmishMenu;
+    taGUI campaignMenu;
 
 
-    ta_gui selectMapDialog;
-    ta_gui* pCurrentDialog; // Set to non-null when a dialog is open, and will be set to a pointer to one of the dialog GUIs.
+    taGUI selectMapDialog;
+    taGUI* pCurrentDialog; // Set to non-null when a dialog is open, and will be set to a pointer to one of the dialog GUIs.
 
 
     // The current screen. This is set to one of TA_SCREEN_*

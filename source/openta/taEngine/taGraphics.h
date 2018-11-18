@@ -135,11 +135,11 @@ void taTranslateCamera(taGraphicsContext* pGraphics, int offsetX, int offsetY);
 
 // Draws a full-screen GUI. These kinds of GUIs are things like the main menu. A different function is used for
 // doing the in-game GUIs like the HUD.
-void taDrawFullscreenGUI(taGraphicsContext* pGraphics, ta_gui* pGUI);
+void taDrawFullscreenGUI(taGraphicsContext* pGraphics, taGUI* pGUI);
 
 // Draws a dialog GUI. This will not usually be fullscreen and will draw a semi-transparent shade over the background
 // rather than clearing it.
-void taDrawDialogGUI(taGraphicsContext* pGraphics, ta_gui* pGUI);
+void taDrawDialogGUI(taGraphicsContext* pGraphics, taGUI* pGUI);
 
 // Draws the given given map.
 void taDrawMap(taGraphicsContext* pGraphics, ta_map_instance* pMap);

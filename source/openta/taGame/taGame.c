@@ -259,37 +259,37 @@ ta_game* ta_create_game(int argc, char** argv)
 
     // Menus.
     ta_set_property(pGame, "MAINMENU.GUI.BACKGROUND", "bitmaps/FrontendX.pcx");
-    if (ta_gui_load(&pGame->engine, "guis/MAINMENU.GUI", &pGame->mainMenu) != TA_SUCCESS) {
+    if (taGUILoad(&pGame->engine, "guis/MAINMENU.GUI", &pGame->mainMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
     ta_set_property(pGame, "SINGLE.GUI.BACKGROUND", "bitmaps/SINGLEBG.PCX");
-    if (ta_gui_load(&pGame->engine, "guis/SINGLE.GUI", &pGame->spMenu) != TA_SUCCESS) {
+    if (taGUILoad(&pGame->engine, "guis/SINGLE.GUI", &pGame->spMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
     ta_set_property(pGame, "SELPROV.GUI.BACKGROUND", "bitmaps/selconnect2.pcx");
-    if (ta_gui_load(&pGame->engine, "guis/SELPROV.GUI", &pGame->mpMenu) != TA_SUCCESS) {
+    if (taGUILoad(&pGame->engine, "guis/SELPROV.GUI", &pGame->mpMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
     ta_set_property(pGame, "STARTOPT.GUI.BACKGROUND", "bitmaps/options4x.pcx");
-    if (ta_gui_load(&pGame->engine, "guis/STARTOPT.GUI", &pGame->optionsMenu) != TA_SUCCESS) {
+    if (taGUILoad(&pGame->engine, "guis/STARTOPT.GUI", &pGame->optionsMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
     ta_set_property(pGame, "SKIRMISH.GUI.BACKGROUND", "bitmaps/Skirmsetup4x.pcx");
-    if (ta_gui_load(&pGame->engine, "guis/SKIRMISH.GUI", &pGame->skirmishMenu) != TA_SUCCESS) {
+    if (taGUILoad(&pGame->engine, "guis/SKIRMISH.GUI", &pGame->skirmishMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
     ta_set_property(pGame, "NEWGAME.GUI.BACKGROUND", "bitmaps/playanygame4.pcx");
-    if (ta_gui_load(&pGame->engine, "guis/NEWGAME.GUI", &pGame->campaignMenu) != TA_SUCCESS) {
+    if (taGUILoad(&pGame->engine, "guis/NEWGAME.GUI", &pGame->campaignMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
     ta_set_property(pGame, "SELMAP.GUI.BACKGROUND", "bitmaps/DSelectmap2.pcx");
-    if (ta_gui_load(&pGame->engine, "guis/SELMAP.GUI", &pGame->selectMapDialog) != TA_SUCCESS) {
+    if (taGUILoad(&pGame->engine, "guis/SELMAP.GUI", &pGame->selectMapDialog) != TA_SUCCESS) {
         goto on_error;
     }
 
@@ -333,13 +333,13 @@ ta_game* ta_create_game(int argc, char** argv)
     qsort(pGame->ppSPMaps, stb_sb_count(pGame->ppSPMaps), sizeof(*pGame->ppSPMaps), ta_qsort_cb_map);
 
     taUInt32 iMapListGadget;
-    if (ta_gui_find_gadget_by_name(&pGame->selectMapDialog, "MAPNAMES", &iMapListGadget)) {
+    if (taGUIFindGadgetByName(&pGame->selectMapDialog, "MAPNAMES", &iMapListGadget)) {
         const char** ppMPMapNames = (const char**)malloc(stb_sb_count(pGame->ppMPMaps) * sizeof(*ppMPMapNames));
         for (int i = 0; i < stb_sb_count(pGame->ppMPMaps); ++i) {
             ppMPMapNames[i] = taConfigGetString(pGame->ppMPMaps[i], "GlobalHeader/missionname");
         }
 
-        ta_gui_set_listbox_items(&pGame->selectMapDialog.pGadgets[iMapListGadget], ppMPMapNames, stb_sb_count(pGame->ppMPMaps));
+        taGUISetListboxItems(&pGame->selectMapDialog.pGadgets[iMapListGadget], ppMPMapNames, stb_sb_count(pGame->ppMPMaps));
     }
 
     
@@ -491,10 +491,10 @@ void ta_step__in_game(ta_game* pGame, double dt)
 typedef struct
 {
     taUInt32 type;
-    ta_gui_gadget* pGadget;  // The gadget this event relates to.
+    taGUIGadget* pGadget;  // The gadget this event relates to.
 } ta_gui_input_event;
 
-taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* pEvent)
+taBool32 ta_handle_gui_input(ta_game* pGame, taGUI* pGUI, ta_gui_input_event* pEvent)
 {
     if (pGame == NULL || pGUI == NULL || pEvent == NULL) return TA_FALSE;
     taZeroObject(pEvent);
@@ -514,12 +514,12 @@ taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* p
     // - Enter
     // - Escape
     // - Shortcuts for buttons
-    ta_gui_gadget* pRootGadget = &pGUI->pGadgets[0];
+    taGUIGadget* pRootGadget = &pGUI->pGadgets[0];
     if (ta_was_key_pressed(pGame, TA_KEY_ENTER)) {
         // When the enter key is pressed we want to prioritize crdefault. It that is not set we fall back to the focused gadget.
         if (!ta_is_string_null_or_empty(pRootGadget->root.crdefault)) {
             taUInt32 iGadget;
-            taBool32 foundGadget = ta_gui_find_gadget_by_name(pGUI, pRootGadget->root.crdefault, &iGadget);
+            taBool32 foundGadget = taGUIFindGadgetByName(pGUI, pRootGadget->root.crdefault, &iGadget);
             if (foundGadget) {
                 pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
                 pEvent->pGadget = &pGUI->pGadgets[iGadget];
@@ -528,7 +528,7 @@ taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* p
         } else {
             // crdefault is not set, so try the focused element.
             taUInt32 iGadget;
-            taBool32 foundGadget = ta_gui_get_focused_gadget(pGUI, &iGadget);
+            taBool32 foundGadget = taGUIGetFocusedGadget(pGUI, &iGadget);
             if (foundGadget) {
                 pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
                 pEvent->pGadget = &pGUI->pGadgets[iGadget];
@@ -537,7 +537,7 @@ taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* p
         }
     } else if (ta_was_key_pressed(pGame, TA_KEY_SPACE)) {
         taUInt32 iGadget;
-        taBool32 foundGadget = ta_gui_get_focused_gadget(pGUI, &iGadget);
+        taBool32 foundGadget = taGUIGetFocusedGadget(pGUI, &iGadget);
         if (foundGadget) {
             pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
             pEvent->pGadget = &pGUI->pGadgets[iGadget];
@@ -546,7 +546,7 @@ taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* p
     } else if (ta_was_key_pressed(pGame, TA_KEY_ESCAPE)) {
         if (!ta_is_string_null_or_empty(pRootGadget->root.escdefault)) {
             taUInt32 iGadget;
-            taBool32 foundGadget = ta_gui_find_gadget_by_name(pGUI, pRootGadget->root.escdefault, &iGadget);
+            taBool32 foundGadget = taGUIFindGadgetByName(pGUI, pRootGadget->root.escdefault, &iGadget);
             if (foundGadget) {
                 pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
                 pEvent->pGadget = &pGUI->pGadgets[iGadget];
@@ -554,12 +554,12 @@ taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* p
             }
         }
     } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_LEFT)) {
-        ta_gui_focus_prev_gadget(pGUI);
+        taGUIFocusPrevGadget(pGUI);
     } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_RIGHT)) {
-        ta_gui_focus_next_gadget(pGUI);
+        taGUIFocusNextGadget(pGUI);
     } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_UP)) {
         taUInt32 iFocusedGadget;
-        if (ta_gui_get_focused_gadget(pGUI, &iFocusedGadget) && pGUI->pGadgets[iFocusedGadget].id == TA_GUI_GADGET_TYPE_LISTBOX) {
+        if (taGUIGetFocusedGadget(pGUI, &iFocusedGadget) && pGUI->pGadgets[iFocusedGadget].id == TA_GUI_GADGET_TYPE_LISTBOX) {
             taUInt32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem;
             if (iSelectedItem == (taUInt32)-1 || iSelectedItem == 0) {
                 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.itemCount - 1;
@@ -569,11 +569,11 @@ taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* p
 
             pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem = iSelectedItem;
         } else {
-            ta_gui_focus_prev_gadget(pGUI);
+            taGUIFocusPrevGadget(pGUI);
         }
     } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_DOWN)) {
         taUInt32 iFocusedGadget;
-        if (ta_gui_get_focused_gadget(pGUI, &iFocusedGadget) && pGUI->pGadgets[iFocusedGadget].id == TA_GUI_GADGET_TYPE_LISTBOX) {
+        if (taGUIGetFocusedGadget(pGUI, &iFocusedGadget) && pGUI->pGadgets[iFocusedGadget].id == TA_GUI_GADGET_TYPE_LISTBOX) {
             taUInt32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem;
             if (iSelectedItem == (taUInt32)-1 || iSelectedItem == pGUI->pGadgets[iFocusedGadget].listbox.itemCount-1) {
                 iSelectedItem = 0;
@@ -583,18 +583,18 @@ taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* p
 
             pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem = iSelectedItem;
         } else {
-            ta_gui_focus_next_gadget(pGUI);
+            taGUIFocusNextGadget(pGUI);
         }
     }  else if (ta_was_key_pressed(pGame, TA_KEY_TAB)) {
         if (ta_is_key_down(pGame, TA_KEY_SHIFT)) {
-            ta_gui_focus_prev_gadget(pGUI);
+            taGUIFocusPrevGadget(pGUI);
         } else {
-            ta_gui_focus_next_gadget(pGUI);
+            taGUIFocusNextGadget(pGUI);
         }
     } else {
         // Try shortcut keys. For this we just iterate over each button and check if it's shortcut key was pressed.
         for (taUInt32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {
-            ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadget];
+            taGUIGadget* pGadget = &pGUI->pGadgets[iGadget];
             if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
                 if (pGadget->button.quickkey != 0 && ta_was_key_pressed(pGame, toupper(pGadget->button.quickkey))) {
                     pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
@@ -611,13 +611,13 @@ taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* p
     // =====
     taInt32 mousePosXGUI;
     taInt32 mousePosYGUI;
-    ta_gui_map_screen_position(pGUI, pGame->engine.pGraphics->resolutionX, pGame->engine.pGraphics->resolutionY, (taInt32)pGame->engine.input.mousePosX, (taInt32)pGame->engine.input.mousePosY, &mousePosXGUI, &mousePosYGUI);
+    taGUIMapScreenPosition(pGUI, pGame->engine.pGraphics->resolutionX, pGame->engine.pGraphics->resolutionY, (taInt32)pGame->engine.input.mousePosX, (taInt32)pGame->engine.input.mousePosY, &mousePosXGUI, &mousePosYGUI);
 
     taUInt32 iGadgetUnderMouse;
-    taBool32 isMouseOverGadget = ta_gui_get_gadget_under_point(pGUI, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
+    taBool32 isMouseOverGadget = taGUIGetGadgetUnderPoint(pGUI, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
 
     taUInt32 iHeldGadget;
-    taBool32 isGadgetHeld = ta_gui_get_held_gadget(pGUI, &iHeldGadget);
+    taBool32 isGadgetHeld = taGUIGetHeldGadget(pGUI, &iHeldGadget);
 
     taBool32 wasLMBPressed = ta_was_mouse_button_pressed(pGame, TA_MOUSE_BUTTON_LEFT);
     taBool32 wasRMBPressed = ta_was_mouse_button_pressed(pGame, TA_MOUSE_BUTTON_RIGHT);
@@ -629,11 +629,11 @@ taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* p
 
     taUInt32 heldMB = 0;
     if (isGadgetHeld) {
-        ta_gui_gadget* pHeldGadget = &pGUI->pGadgets[iHeldGadget];
+        taGUIGadget* pHeldGadget = &pGUI->pGadgets[iHeldGadget];
         heldMB = pHeldGadget->heldMB;
         if ((wasLMBReleased && heldMB == TA_MOUSE_BUTTON_LEFT) || (wasRMBReleased && heldMB == TA_MOUSE_BUTTON_RIGHT)) {
             if (wasMBPressed || wasMBReleased) {
-                ta_gui_release_hold(pGUI, iHeldGadget);
+                taGUIReleaseHold(pGUI, iHeldGadget);
             }
         }
     }
@@ -641,11 +641,11 @@ taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* p
 
     if (isMouseOverGadget && pGUI->pGadgets[iGadgetUnderMouse].id != TA_GUI_GADGET_TYPE_ROOT) {
         pGUI->hoveredGadgetIndex = iGadgetUnderMouse;
-        ta_gui_gadget* pGadget = &pGUI->pGadgets[iGadgetUnderMouse];
+        taGUIGadget* pGadget = &pGUI->pGadgets[iGadgetUnderMouse];
         if (wasMBPressed) {
             if (!isGadgetHeld) {
                 if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
-                    ta_gui_hold_gadget(pGUI, iGadgetUnderMouse, (wasLMBPressed) ? TA_MOUSE_BUTTON_LEFT : TA_MOUSE_BUTTON_RIGHT);
+                    taGUIHoldGadget(pGUI, iGadgetUnderMouse, (wasLMBPressed) ? TA_MOUSE_BUTTON_LEFT : TA_MOUSE_BUTTON_RIGHT);
                 } else if (pGadget->id == TA_GUI_GADGET_TYPE_LISTBOX) {
                     taInt32 relativeMousePosX = mousePosXGUI - pGadget->xpos;
                     taInt32 relativeMousePosY = mousePosYGUI - pGadget->ypos;
@@ -664,7 +664,7 @@ taBool32 ta_handle_gui_input(ta_game* pGame, ta_gui* pGUI, ta_gui_input_event* p
             }
         } else if (wasMBReleased) {
             if (isGadgetHeld) {
-                ta_gui_gadget* pHeldGadget = &pGUI->pGadgets[iHeldGadget];
+                taGUIGadget* pHeldGadget = &pGUI->pGadgets[iHeldGadget];
                 if (iHeldGadget == iGadgetUnderMouse && ((wasLMBReleased && heldMB == TA_MOUSE_BUTTON_LEFT) || (wasRMBReleased && heldMB == TA_MOUSE_BUTTON_RIGHT))) {
                     // The gadget was pressed. May want to post an event here.
                     if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
@@ -698,10 +698,10 @@ void ta_step__main_menu(ta_game* pGame, double dt)
     // =====
     taInt32 mousePosXGUI;
     taInt32 mousePosYGUI;
-    ta_gui_map_screen_position(&pGame->mainMenu, pGame->engine.pGraphics->resolutionX, pGame->engine.pGraphics->resolutionY, (taInt32)pGame->engine.input.mousePosX, (taInt32)pGame->engine.input.mousePosY, &mousePosXGUI, &mousePosYGUI);
+    taGUIMapScreenPosition(&pGame->mainMenu, pGame->engine.pGraphics->resolutionX, pGame->engine.pGraphics->resolutionY, (taInt32)pGame->engine.input.mousePosX, (taInt32)pGame->engine.input.mousePosY, &mousePosXGUI, &mousePosYGUI);
 
     taUInt32 iGadgetUnderMouse;
-    taBool32 isMouseOverGadget = ta_gui_get_gadget_under_point(&pGame->mainMenu, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
+    taBool32 isMouseOverGadget = taGUIGetGadgetUnderPoint(&pGame->mainMenu, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
 
     ta_gui_input_event e;
     taBool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->mainMenu, &e);
@@ -740,7 +740,7 @@ void ta_step__main_menu(ta_game* pGame, double dt)
     float scale;
     float offsetX;
     float offsetY;
-    ta_gui_get_screen_mapping(&pGame->mainMenu, pGame->engine.pGraphics->resolutionX, pGame->engine.pGraphics->resolutionY, &scale, &offsetX, &offsetY);
+    taGUIGetScreenMapping(&pGame->mainMenu, pGame->engine.pGraphics->resolutionX, pGame->engine.pGraphics->resolutionY, &scale, &offsetX, &offsetY);
 
     const char* versionStr = "OpenTA v0.1";
     float versionSizeX;
@@ -904,7 +904,7 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
                 }
                 if (strcmp(e.pGadget->name, "LOAD") == 0) {
                     taUInt32 iMapListGadget;
-                    ta_gui_find_gadget_by_name(&pGame->selectMapDialog, "MAPNAMES", &iMapListGadget);
+                    taGUIFindGadgetByName(&pGame->selectMapDialog, "MAPNAMES", &iMapListGadget);
 
                     pGame->iSelectedMPMap = pGame->selectMapDialog.pGadgets[iMapListGadget].listbox.iSelectedItem;
 

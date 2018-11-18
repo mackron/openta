@@ -116,7 +116,7 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
         goto on_error6;
     }
 
-    result = ta_common_gui_load(pEngine, &pEngine->commonGUI);
+    result = taCommonGUILoad(pEngine, &pEngine->commonGUI);
     if (result != TA_SUCCESS) {
         goto on_error7;
     }
@@ -168,7 +168,7 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
 //on_error11: for (taUInt32 i = 0; i < pEngine->textureGAFCount; ++i) { taCloseGAF(pEngine->ppTextureGAFs[i]); }
 //on_error10: free(pEngine->ppTextureGAFs);
 on_error9:  taDeleteFeaturesLibrary(pEngine->pFeatures);
-on_error8:  ta_common_gui_unload(&pEngine->commonGUI);
+on_error8:  taCommonGUIUnload(&pEngine->commonGUI);
 on_error7:  taFontUnload(&pEngine->fontSmall);
 on_error6:  taFontUnload(&pEngine->font);
 on_error5:  ta_input_state_uninit(&pEngine->input);
@@ -189,7 +189,7 @@ taResult taEngineContextUninit(taEngineContext* pEngine)
     for (taUInt32 i = 0; i < pEngine->textureGAFCount; ++i) { taCloseGAF(pEngine->ppTextureGAFs[i]); }
     free(pEngine->ppTextureGAFs);
     taDeleteFeaturesLibrary(pEngine->pFeatures);
-    ta_common_gui_unload(&pEngine->commonGUI);
+    taCommonGUIUnload(&pEngine->commonGUI);
     taFontUnload(&pEngine->fontSmall);
     taFontUnload(&pEngine->font);
     ta_input_state_uninit(&pEngine->input);

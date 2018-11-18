@@ -1032,7 +1032,7 @@ static TA_INLINE void taGraphicsDrawMesh(taGraphicsContext* pGraphics, taMesh* p
 #define TA_GUI_CLEAR_MODE_BLACK 0
 #define TA_GUI_CLEAR_MODE_SHADE 1
 
-void taDrawGUI(taGraphicsContext* pGraphics, ta_gui* pGUI, taUInt32 clearMode)
+void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
 {
     if (pGraphics == NULL || pGUI == NULL) {
         return;
@@ -1042,7 +1042,7 @@ void taDrawGUI(taGraphicsContext* pGraphics, ta_gui* pGUI, taUInt32 clearMode)
     float scale   = 1;
     float offsetX = 0;
     float offsetY = 0;
-    ta_gui_get_screen_mapping(pGUI, pGraphics->resolutionX, pGraphics->resolutionY, &scale, &offsetX, &offsetY);
+    taGUIGetScreenMapping(pGUI, pGraphics->resolutionX, pGraphics->resolutionY, &scale, &offsetX, &offsetY);
 
     float quadLeft   = 0;
     float quadTop    = 0;
@@ -1107,7 +1107,7 @@ void taDrawGUI(taGraphicsContext* pGraphics, ta_gui* pGUI, taUInt32 clearMode)
 
     // Gadgets, not including the root.
     for (taUInt32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {   // <-- Start at 1 to skip the root gadget.
-        ta_gui_gadget* pGadget = pGUI->pGadgets + iGadget;
+        taGUIGadget* pGadget = pGUI->pGadgets + iGadget;
         if (pGadget->active == 0) {
             continue;   // Skip over inactive gadgets.
         }
@@ -1166,7 +1166,7 @@ void taDrawGUI(taGraphicsContext* pGraphics, ta_gui* pGUI, taUInt32 clearMode)
                     taDrawSubTexture(pBackgroundTexture, posX, posY, pFrame->sizeX*scale, pFrame->sizeY*scale, TA_FALSE, pFrame->atlasPosX, pFrame->atlasPosY, pFrame->sizeX, pFrame->sizeY);
                 }
 
-                const char* text = ta_gui_get_button_text(pGadget, pGadget->button.currentStage);
+                const char* text = taGUIGetButtonText(pGadget, pGadget->button.currentStage);
                 if (!ta_is_string_null_or_empty(text)) {
                     float textSizeX;
                     float textSizeY;
@@ -1387,7 +1387,7 @@ void taDrawGUI(taGraphicsContext* pGraphics, ta_gui* pGUI, taUInt32 clearMode)
 
                     // Underline the shortcut key for the associated button.
                     if (pGadget->label.iLinkedGadget != (taUInt32)-1) {
-                        ta_gui_gadget* pLinkedGadget = &pGUI->pGadgets[pGadget->label.iLinkedGadget];
+                        taGUIGadget* pLinkedGadget = &pGUI->pGadgets[pGadget->label.iLinkedGadget];
                         float charPosX;
                         float charPosY;
                         float charSizeX;
@@ -1432,12 +1432,12 @@ void taDrawGUI(taGraphicsContext* pGraphics, ta_gui* pGUI, taUInt32 clearMode)
     }
 }
 
-void taDrawFullscreenGUI(taGraphicsContext* pGraphics, ta_gui* pGUI)
+void taDrawFullscreenGUI(taGraphicsContext* pGraphics, taGUI* pGUI)
 {
     taDrawGUI(pGraphics, pGUI, TA_GUI_CLEAR_MODE_BLACK);
 }
 
-void taDrawDialogGUI(taGraphicsContext* pGraphics, ta_gui* pGUI)
+void taDrawDialogGUI(taGraphicsContext* pGraphics, taGUI* pGUI)
 {
     taDrawGUI(pGraphics, pGUI, TA_GUI_CLEAR_MODE_SHADE);
 }
