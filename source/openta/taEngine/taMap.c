@@ -245,8 +245,8 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
     assert(p3DO->objectCount > nextObjectIndex);
 
     // The file should be sitting on the first byte of the header of the object.
-    ta_3do_object_header objectHeader;
-    if (!ta_3do_read_object_header(pFile, &objectHeader)) {
+    ta3DOObjectHeader objectHeader;
+    if (!ta3DOReadObjectHeader(pFile, &objectHeader)) {
         return 0;
     }
 
@@ -278,8 +278,8 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
         // The first thing to do is load the texture. We need to do this so we can know whether or not we should add the primitive to
         // an already-in-progress mesh or to start a new one. This is based on the index of the texture atlas the texture is contained
         // in.
-        ta_3do_primitive_header primHeader;
-        if (!ta_3do_read_primitive_header(pFile, &primHeader)) {
+        ta3DOPrimitiveHeader primHeader;
+        if (!ta3DOReadPrimitiveHeader(pFile, &primHeader)) {
             return 0;
         }
 
@@ -533,7 +533,7 @@ ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadCo
         return NULL;
     }
 
-    taUInt32 objectCount = ta_3do_count_objects(pFile);
+    taUInt32 objectCount = ta3DOCountObjects(pFile);
     if (objectCount == 0) {
         ta_close_file(pFile);
         return NULL;

@@ -2,7 +2,7 @@
 //
 // Credits to http://units.tauniverse.com/tutorials/tadesign/tadesign/ta-3do-fmtV2.txt for the description of the 3DO file format.
 
-taBool32 ta_3do__init_object_from_header(ta_3do* p3DO, ta_3do_object* pObject, ta_3do_object_header* pHeader)
+TA_PRIVATE taBool32 ta3DOInitObjectFromHeader(ta3DO* p3DO, ta3DOObject* pObject, ta3DOObjectHeader* pHeader)
 {
     assert(pObject != NULL);
     memset(pObject, 0, sizeof(*pObject));
@@ -14,23 +14,23 @@ taBool32 ta_3do__init_object_from_header(ta_3do* p3DO, ta_3do_object* pObject, t
     return TA_TRUE;
 }
 
-ta_3do_object* ta_3do__load_object_recursive(ta_3do* p3DO)
+TA_PRIVATE ta3DOObject* ta3DOLoadObjectRecursive(ta3DO* p3DO)
 {
     // PRE: The file must be sitting on the first byte of the object's header.
 
     assert(p3DO != NULL);
 
-    ta_3do_object_header header;
-    if (!ta_3do_read_object_header(p3DO->pFile, &header)) {
+    ta3DOObjectHeader header;
+    if (!ta3DOReadObjectHeader(p3DO->pFile, &header)) {
         return NULL;
     }
 
-    ta_3do_object *pObject = (ta_3do_object*)malloc(sizeof(*pObject));
+    ta3DOObject *pObject = (ta3DOObject*)malloc(sizeof(*pObject));
     if (pObject == NULL) {
         return NULL;
     }
 
-    if (!ta_3do__init_object_from_header(p3DO, pObject, &header)) {
+    if (!ta3DOInitObjectFromHeader(p3DO, pObject, &header)) {
         free(pObject);
         return NULL;
     }
@@ -44,7 +44,7 @@ ta_3do_object* ta_3do__load_object_recursive(ta_3do* p3DO)
             return NULL;
         }
 
-        pObject->pNextSibling = ta_3do__load_object_recursive(p3DO);
+        pObject->pNextSibling = ta3DOLoadObjectRecursive(p3DO);
         if (pObject->pNextSibling == NULL) {
             free(pObject);
             return NULL;
@@ -58,7 +58,7 @@ ta_3do_object* ta_3do__load_object_recursive(ta_3do* p3DO)
             return NULL;
         }
 
-        pObject->pFirstChild = ta_3do__load_object_recursive(p3DO);
+        pObject->pFirstChild = ta3DOLoadObjectRecursive(p3DO);
         if (pObject->pFirstChild == NULL) {
             free(pObject);
             return NULL;
@@ -69,7 +69,7 @@ ta_3do_object* ta_3do__load_object_recursive(ta_3do* p3DO)
 }
 
 
-ta_3do* ta_open_3do(ta_fs* pFS, const char* fileName)
+ta3DO* taOpen3DO(ta_fs* pFS, const char* fileName)
 {
     if (pFS == NULL || fileName == NULL) {
         return NULL;
@@ -85,7 +85,7 @@ ta_3do* ta_open_3do(ta_fs* pFS, const char* fileName)
         }
     }
 
-    ta_3do* p3DO = calloc(1, sizeof(*p3DO));
+    ta3DO* p3DO = calloc(1, sizeof(*p3DO));
     if (p3DO == NULL) {
         goto on_error;
     }
@@ -96,7 +96,7 @@ ta_3do* ta_open_3do(ta_fs* pFS, const char* fileName)
     }
 
     
-    p3DO->pRootObject = ta_3do__load_object_recursive(p3DO);
+    p3DO->pRootObject = ta3DOLoadObjectRecursive(p3DO);
     if (p3DO->pRootObject == NULL) {
         goto on_error;
     }
@@ -105,11 +105,11 @@ ta_3do* ta_open_3do(ta_fs* pFS, const char* fileName)
     return p3DO;
 
 on_error:
-    ta_close_3do(p3DO);
+    taClose3DO(p3DO);
     return NULL;
 }
 
-void ta_close_3do(ta_3do* p3DO)
+void taClose3DO(ta3DO* p3DO)
 {
     if (p3DO == NULL) {
         return;
@@ -119,7 +119,7 @@ void ta_close_3do(ta_3do* p3DO)
     free(p3DO);
 }
 
-taBool32 ta_3do_read_object_header(ta_file* pFile, ta_3do_object_header* pHeader)
+taBool32 ta3DOReadObjectHeader(ta_file* pFile, ta3DOObjectHeader* pHeader)
 {
     // PRE: The file must be sitting on the first byte of the header.
 
@@ -145,7 +145,7 @@ taBool32 ta_3do_read_object_header(ta_file* pFile, ta_3do_object_header* pHeader
     return TA_TRUE;
 }
 
-taBool32 ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* pHeaderOut)
+taBool32 ta3DOReadPrimitiveHeader(ta_file* pFile, ta3DOPrimitiveHeader* pHeaderOut)
 {
     if (pFile == NULL || pHeaderOut == NULL) {
         return TA_FALSE;
@@ -165,10 +165,10 @@ taBool32 ta_3do_read_primitive_header(ta_file* pFile, ta_3do_primitive_header* p
     return TA_TRUE;
 }
 
-taUInt32 ta_3do_count_objects(ta_file* pFile)
+taUInt32 ta3DOCountObjects(ta_file* pFile)
 {
-    ta_3do_object_header header;
-    if (!ta_3do_read_object_header(pFile, &header)) {
+    ta3DOObjectHeader header;
+    if (!ta3DOReadObjectHeader(pFile, &header)) {
         return 0;
     }
 
@@ -180,7 +180,7 @@ taUInt32 ta_3do_count_objects(ta_file* pFile)
             return 0;
         }
 
-        count += ta_3do_count_objects(pFile);
+        count += ta3DOCountObjects(pFile);
     }
 
     // Children.
@@ -189,7 +189,7 @@ taUInt32 ta_3do_count_objects(ta_file* pFile)
             return 0;
         }
 
-        count += ta_3do_count_objects(pFile);
+        count += ta3DOCountObjects(pFile);
     }
 
 
