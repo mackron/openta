@@ -67,7 +67,7 @@ taResult taInputStateUninit(taInputState* pState);
 void taInputStateResetTransientState(taInputState* pState);
 
 
-// Called by ta_game when the mouse is moved.
+// Called by taGame when the mouse is moved.
 void taInputStateOnMouseMove(taInputState* pState, float newMousePosX, float newMousePosY);
 void taInputStateOnMouseButtonDown(taInputState* pState, taUInt32 mouseButton);
 void taInputStateOnMouseButtonUp(taInputState* pState, taUInt32 mouseButton);

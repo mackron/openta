@@ -3,10 +3,10 @@
 #include "taGame.h"
 #include "../taEngine/taEngine.c"
 
-void ta_game_on_step(taEngineContext* pEngine);
-void ta_game_on_load_properties(taEngineContext* pEngine, taPropertyManager* pProperties);
+void taGameOnStep(taEngineContext* pEngine);
+void taGameOnLoadProperties(taEngineContext* pEngine, taPropertyManager* pProperties);
 
-TA_PRIVATE int ta_qsort_cb_map(const void* a, const void* b)
+TA_PRIVATE int taQuickSortCallbackMap(const void* a, const void* b)
 {
     const taConfigObj** ppOTA_0 = (const taConfigObj**)a;
     const taConfigObj** ppOTA_1 = (const taConfigObj**)b;
@@ -18,7 +18,7 @@ TA_PRIVATE int ta_qsort_cb_map(const void* a, const void* b)
 }
 
 
-TA_PRIVATE taResult ta_load_default_totala_settings(taPropertyManager* pProperties)
+TA_PRIVATE taResult taLoadDefaultTotalASettings(taPropertyManager* pProperties)
 {
     assert(pProperties != NULL);
 
@@ -26,7 +26,7 @@ TA_PRIVATE taResult ta_load_default_totala_settings(taPropertyManager* pProperti
     return TA_SUCCESS;
 }
 
-TA_PRIVATE taResult ta_load_totala_settings__config(taPropertyManager* pProperties)
+TA_PRIVATE taResult taLoadTotalASettingsConfig(taPropertyManager* pProperties)
 {
     assert(pProperties != NULL);
 
@@ -35,7 +35,7 @@ TA_PRIVATE taResult ta_load_totala_settings__config(taPropertyManager* pProperti
 }
 
 #ifdef _WIN32
-TA_PRIVATE taUInt32 ta_registry_read_uint32(HKEY hKey, const char* name)
+TA_PRIVATE taUInt32 taRegistryReadUInt32(HKEY hKey, const char* name)
 {
     DWORD value = 0;
     DWORD valueSize = sizeof(value);
@@ -47,7 +47,7 @@ TA_PRIVATE taUInt32 ta_registry_read_uint32(HKEY hKey, const char* name)
     return value;
 }
 
-TA_PRIVATE char* ta_registry_read_string(HKEY hKey, const char* name, char* value, size_t valueBufferSize)  // Return value is <value> for convenience (null on error).
+TA_PRIVATE char* taRegistryReadString(HKEY hKey, const char* name, char* value, size_t valueBufferSize)  // Return value is <value> for convenience (null on error).
 {
     LONG result = RegQueryValueExA(hKey, name, 0, NULL, (LPBYTE)value, (LPDWORD)&valueBufferSize);
     if (result != ERROR_SUCCESS) {
@@ -57,7 +57,7 @@ TA_PRIVATE char* ta_registry_read_string(HKEY hKey, const char* name, char* valu
     return value;
 }
 
-TA_PRIVATE taResult ta_load_totala_settings__registry(taPropertyManager* pProperties)
+TA_PRIVATE taResult taLoadTotalASettingsRegistry(taPropertyManager* pProperties)
 {
     assert(pProperties != NULL);
 
@@ -69,61 +69,61 @@ TA_PRIVATE taResult ta_load_totala_settings__registry(taPropertyManager* pProper
         return TA_ERROR;
     }
 
-    taPropertyManagerSetInt(pProperties, "totala.ackfx",                    (int)ta_registry_read_uint32(hKey, "ackfx"));
-    taPropertyManagerSetInt(pProperties, "totala.anti-alias",               (int)ta_registry_read_uint32(hKey, "Anti-Alias"));
-    taPropertyManagerSetInt(pProperties, "totala.buildfx",                  (int)ta_registry_read_uint32(hKey, "buildfx"));
-    taPropertyManagerSetInt(pProperties, "totala.cdlists",                  (int)ta_registry_read_uint32(hKey, "CDLISTS"));
-    taPropertyManagerSetInt(pProperties, "totala.cdmode",                   (int)ta_registry_read_uint32(hKey, "cdmode"));
-    taPropertyManagerSetInt(pProperties, "totala.cdshell",                  (int)ta_registry_read_uint32(hKey, "cdshell"));
-    taPropertyManagerSetInt(pProperties, "totala.clock",                    (int)ta_registry_read_uint32(hKey, "clock"));
-    taPropertyManagerSetInt(pProperties, "totala.damagebars",               (int)ta_registry_read_uint32(hKey, "damagebars"));
-    taPropertyManagerSetInt(pProperties, "totala.difficulty",               (int)ta_registry_read_uint32(hKey, "Difficulty"));
-    taPropertyManagerSetInt(pProperties, "totala.display-width",            (int)ta_registry_read_uint32(hKey, "DisplaymodeWidth"));
-    taPropertyManagerSetInt(pProperties, "totala.display-height",           (int)ta_registry_read_uint32(hKey, "DisplaymodeHeight"));
-    taPropertyManagerSetInt(pProperties, "totala.dithered-fog",             (int)ta_registry_read_uint32(hKey, "DitheredFog"));
-    taPropertyManagerSetInt(pProperties, "totala.feature-shadows",          (int)ta_registry_read_uint32(hKey, "FeatureShadows"));
-    taPropertyManagerSetInt(pProperties, "totala.fixed-locations",          (int)ta_registry_read_uint32(hKey, "FixedLocations"));
-    taPropertyManagerSetInt(pProperties, "totala.fxvol",                    (int)ta_registry_read_uint32(hKey, "fxvol"));
-    taPropertyManagerSet(    pProperties, "totala.game-name",                     ta_registry_read_string(hKey, "Game Name", strBuffer, sizeof(strBuffer)));
-    taPropertyManagerSetInt(pProperties, "totala.game-speed",               (int)ta_registry_read_uint32(hKey, "gamespeed"));
-    taPropertyManagerSetInt(pProperties, "totala.gamma",                    (int)ta_registry_read_uint32(hKey, "Gamma"));
-    taPropertyManagerSetInt(pProperties, "totala.interface-type",           (int)ta_registry_read_uint32(hKey, "Interface Type"));
-    taPropertyManagerSetInt(pProperties, "totala.mixing-buffers",           (int)ta_registry_read_uint32(hKey, "MixingBuffers"));
-    taPropertyManagerSetInt(pProperties, "totala.mouse-speed",              (int)ta_registry_read_uint32(hKey, "mousespeed"));
-    taPropertyManagerSetInt(pProperties, "totala.multi-commander-death",    (int)ta_registry_read_uint32(hKey, "MultiCommanderDeath"));
-    taPropertyManagerSetInt(pProperties, "totala.multi-line-of-sight",      (int)ta_registry_read_uint32(hKey, "MultiLineOfSight"));
-    taPropertyManagerSetInt(pProperties, "totala.multi-los-type",           (int)ta_registry_read_uint32(hKey, "MultiLOSType"));
-    taPropertyManagerSetInt(pProperties, "totala.multi-mapping",            (int)ta_registry_read_uint32(hKey, "MultiMapping"));
-    taPropertyManagerSetInt(pProperties, "totala.music-mode",               (int)ta_registry_read_uint32(hKey, "musicmode"));
-    taPropertyManagerSetInt(pProperties, "totala.musicvol",                 (int)ta_registry_read_uint32(hKey, "musicvol"));
-    taPropertyManagerSet(    pProperties, "totala.nickname",                      ta_registry_read_string(hKey, "Nickname", strBuffer, sizeof(strBuffer)));
-    taPropertyManagerSet(    pProperties, "totala.password",                      ta_registry_read_string(hKey, "Password", strBuffer, sizeof(strBuffer)));
-    taPropertyManagerSetInt(pProperties, "totala.play-movie",               (int)ta_registry_read_uint32(hKey, "PlayMovie"));
-    taPropertyManagerSetInt(pProperties, "totala.restore-volume",           (int)ta_registry_read_uint32(hKey, "RestoreVolume"));
-    taPropertyManagerSetInt(pProperties, "totala.screen-chat",              (int)ta_registry_read_uint32(hKey, "screenchat"));
-    taPropertyManagerSetInt(pProperties, "totala.scroll-speed",             (int)ta_registry_read_uint32(hKey, "scrollspeed"));
-    taPropertyManagerSetInt(pProperties, "totala.shading",                  (int)ta_registry_read_uint32(hKey, "Shading"));
-    taPropertyManagerSetInt(pProperties, "totala.shadows",                  (int)ta_registry_read_uint32(hKey, "Shadows"));
-    taPropertyManagerSetInt(pProperties, "totala.side",                     (int)ta_registry_read_uint32(hKey, "side"));
-    taPropertyManagerSetInt(pProperties, "totala.single-commander-death",   (int)ta_registry_read_uint32(hKey, "SingleCommanderDeath"));
-    taPropertyManagerSetInt(pProperties, "totala.single-line-of-sight",     (int)ta_registry_read_uint32(hKey, "SingleLineOfSight"));
-    taPropertyManagerSetInt(pProperties, "totala.single-los-type",          (int)ta_registry_read_uint32(hKey, "SingleLOSType"));
-    taPropertyManagerSetInt(pProperties, "totala.single-mapping",           (int)ta_registry_read_uint32(hKey, "SingleMapping"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish-commander-death", (int)ta_registry_read_uint32(hKey, "SkirmishCommanderDeath"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish-difficulty",      (int)ta_registry_read_uint32(hKey, "SkirmishDifficulty"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish-line-of-sight",   (int)ta_registry_read_uint32(hKey, "SkirmishLineOfSight"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish-location",        (int)ta_registry_read_uint32(hKey, "SkirmishLocation"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish-los-type",        (int)ta_registry_read_uint32(hKey, "SkirmishLOSType"));
-    taPropertyManagerSet(    pProperties, "totala.skirmish-map",                  ta_registry_read_string(hKey, "SkirmishMap", strBuffer, sizeof(strBuffer)));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish-mapping",         (int)ta_registry_read_uint32(hKey, "SkirmishMapping"));
-    taPropertyManagerSetInt(pProperties, "totala.sound-mode",               (int)ta_registry_read_uint32(hKey, "Sound Mode"));
-    taPropertyManagerSetInt(pProperties, "totala.speechfx",                 (int)ta_registry_read_uint32(hKey, "speechfx"));
-    taPropertyManagerSetInt(pProperties, "totala.switch-alt",               (int)ta_registry_read_uint32(hKey, "SwitchAlt"));
-    taPropertyManagerSetInt(pProperties, "totala.text-lines",               (int)ta_registry_read_uint32(hKey, "textlines"));
-    taPropertyManagerSetInt(pProperties, "totala.text-scroll",              (int)ta_registry_read_uint32(hKey, "textscroll"));
-    taPropertyManagerSetInt(pProperties, "totala.unit-chat",                (int)ta_registry_read_uint32(hKey, "unitchat"));
-    taPropertyManagerSetInt(pProperties, "totala.unit-chat-text",           (int)ta_registry_read_uint32(hKey, "unitchattext"));
-    taPropertyManagerSetInt(pProperties, "totala.vehicle-shadows",          (int)ta_registry_read_uint32(hKey, "VehicleShadows"));
+    taPropertyManagerSetInt(pProperties, "totala.ackfx",                    (int)taRegistryReadUInt32(hKey, "ackfx"));
+    taPropertyManagerSetInt(pProperties, "totala.anti-alias",               (int)taRegistryReadUInt32(hKey, "Anti-Alias"));
+    taPropertyManagerSetInt(pProperties, "totala.buildfx",                  (int)taRegistryReadUInt32(hKey, "buildfx"));
+    taPropertyManagerSetInt(pProperties, "totala.cdlists",                  (int)taRegistryReadUInt32(hKey, "CDLISTS"));
+    taPropertyManagerSetInt(pProperties, "totala.cdmode",                   (int)taRegistryReadUInt32(hKey, "cdmode"));
+    taPropertyManagerSetInt(pProperties, "totala.cdshell",                  (int)taRegistryReadUInt32(hKey, "cdshell"));
+    taPropertyManagerSetInt(pProperties, "totala.clock",                    (int)taRegistryReadUInt32(hKey, "clock"));
+    taPropertyManagerSetInt(pProperties, "totala.damagebars",               (int)taRegistryReadUInt32(hKey, "damagebars"));
+    taPropertyManagerSetInt(pProperties, "totala.difficulty",               (int)taRegistryReadUInt32(hKey, "Difficulty"));
+    taPropertyManagerSetInt(pProperties, "totala.display-width",            (int)taRegistryReadUInt32(hKey, "DisplaymodeWidth"));
+    taPropertyManagerSetInt(pProperties, "totala.display-height",           (int)taRegistryReadUInt32(hKey, "DisplaymodeHeight"));
+    taPropertyManagerSetInt(pProperties, "totala.dithered-fog",             (int)taRegistryReadUInt32(hKey, "DitheredFog"));
+    taPropertyManagerSetInt(pProperties, "totala.feature-shadows",          (int)taRegistryReadUInt32(hKey, "FeatureShadows"));
+    taPropertyManagerSetInt(pProperties, "totala.fixed-locations",          (int)taRegistryReadUInt32(hKey, "FixedLocations"));
+    taPropertyManagerSetInt(pProperties, "totala.fxvol",                    (int)taRegistryReadUInt32(hKey, "fxvol"));
+    taPropertyManagerSet(   pProperties, "totala.game-name",                     taRegistryReadString(hKey, "Game Name", strBuffer, sizeof(strBuffer)));
+    taPropertyManagerSetInt(pProperties, "totala.game-speed",               (int)taRegistryReadUInt32(hKey, "gamespeed"));
+    taPropertyManagerSetInt(pProperties, "totala.gamma",                    (int)taRegistryReadUInt32(hKey, "Gamma"));
+    taPropertyManagerSetInt(pProperties, "totala.interface-type",           (int)taRegistryReadUInt32(hKey, "Interface Type"));
+    taPropertyManagerSetInt(pProperties, "totala.mixing-buffers",           (int)taRegistryReadUInt32(hKey, "MixingBuffers"));
+    taPropertyManagerSetInt(pProperties, "totala.mouse-speed",              (int)taRegistryReadUInt32(hKey, "mousespeed"));
+    taPropertyManagerSetInt(pProperties, "totala.multi-commander-death",    (int)taRegistryReadUInt32(hKey, "MultiCommanderDeath"));
+    taPropertyManagerSetInt(pProperties, "totala.multi-line-of-sight",      (int)taRegistryReadUInt32(hKey, "MultiLineOfSight"));
+    taPropertyManagerSetInt(pProperties, "totala.multi-los-type",           (int)taRegistryReadUInt32(hKey, "MultiLOSType"));
+    taPropertyManagerSetInt(pProperties, "totala.multi-mapping",            (int)taRegistryReadUInt32(hKey, "MultiMapping"));
+    taPropertyManagerSetInt(pProperties, "totala.music-mode",               (int)taRegistryReadUInt32(hKey, "musicmode"));
+    taPropertyManagerSetInt(pProperties, "totala.musicvol",                 (int)taRegistryReadUInt32(hKey, "musicvol"));
+    taPropertyManagerSet(   pProperties, "totala.nickname",                      taRegistryReadString(hKey, "Nickname", strBuffer, sizeof(strBuffer)));
+    taPropertyManagerSet(   pProperties, "totala.password",                      taRegistryReadString(hKey, "Password", strBuffer, sizeof(strBuffer)));
+    taPropertyManagerSetInt(pProperties, "totala.play-movie",               (int)taRegistryReadUInt32(hKey, "PlayMovie"));
+    taPropertyManagerSetInt(pProperties, "totala.restore-volume",           (int)taRegistryReadUInt32(hKey, "RestoreVolume"));
+    taPropertyManagerSetInt(pProperties, "totala.screen-chat",              (int)taRegistryReadUInt32(hKey, "screenchat"));
+    taPropertyManagerSetInt(pProperties, "totala.scroll-speed",             (int)taRegistryReadUInt32(hKey, "scrollspeed"));
+    taPropertyManagerSetInt(pProperties, "totala.shading",                  (int)taRegistryReadUInt32(hKey, "Shading"));
+    taPropertyManagerSetInt(pProperties, "totala.shadows",                  (int)taRegistryReadUInt32(hKey, "Shadows"));
+    taPropertyManagerSetInt(pProperties, "totala.side",                     (int)taRegistryReadUInt32(hKey, "side"));
+    taPropertyManagerSetInt(pProperties, "totala.single-commander-death",   (int)taRegistryReadUInt32(hKey, "SingleCommanderDeath"));
+    taPropertyManagerSetInt(pProperties, "totala.single-line-of-sight",     (int)taRegistryReadUInt32(hKey, "SingleLineOfSight"));
+    taPropertyManagerSetInt(pProperties, "totala.single-los-type",          (int)taRegistryReadUInt32(hKey, "SingleLOSType"));
+    taPropertyManagerSetInt(pProperties, "totala.single-mapping",           (int)taRegistryReadUInt32(hKey, "SingleMapping"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish-commander-death", (int)taRegistryReadUInt32(hKey, "SkirmishCommanderDeath"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish-difficulty",      (int)taRegistryReadUInt32(hKey, "SkirmishDifficulty"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish-line-of-sight",   (int)taRegistryReadUInt32(hKey, "SkirmishLineOfSight"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish-location",        (int)taRegistryReadUInt32(hKey, "SkirmishLocation"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish-los-type",        (int)taRegistryReadUInt32(hKey, "SkirmishLOSType"));
+    taPropertyManagerSet(   pProperties, "totala.skirmish-map",                  taRegistryReadString(hKey, "SkirmishMap", strBuffer, sizeof(strBuffer)));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish-mapping",         (int)taRegistryReadUInt32(hKey, "SkirmishMapping"));
+    taPropertyManagerSetInt(pProperties, "totala.sound-mode",               (int)taRegistryReadUInt32(hKey, "Sound Mode"));
+    taPropertyManagerSetInt(pProperties, "totala.speechfx",                 (int)taRegistryReadUInt32(hKey, "speechfx"));
+    taPropertyManagerSetInt(pProperties, "totala.switch-alt",               (int)taRegistryReadUInt32(hKey, "SwitchAlt"));
+    taPropertyManagerSetInt(pProperties, "totala.text-lines",               (int)taRegistryReadUInt32(hKey, "textlines"));
+    taPropertyManagerSetInt(pProperties, "totala.text-scroll",              (int)taRegistryReadUInt32(hKey, "textscroll"));
+    taPropertyManagerSetInt(pProperties, "totala.unit-chat",                (int)taRegistryReadUInt32(hKey, "unitchat"));
+    taPropertyManagerSetInt(pProperties, "totala.unit-chat-text",           (int)taRegistryReadUInt32(hKey, "unitchattext"));
+    taPropertyManagerSetInt(pProperties, "totala.vehicle-shadows",          (int)taRegistryReadUInt32(hKey, "VehicleShadows"));
 
     RegCloseKey(hKey);
 
@@ -133,30 +133,30 @@ TA_PRIVATE taResult ta_load_totala_settings__registry(taPropertyManager* pProper
         return TA_ERROR;
     }
 
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-ally-group", (int)ta_registry_read_uint32(hKey, "Player0AllyGroup"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-color",      (int)ta_registry_read_uint32(hKey, "Player0Color"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-controller", (int)ta_registry_read_uint32(hKey, "Player0Controller"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-energy",     (int)ta_registry_read_uint32(hKey, "Player0Energy"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-metal",      (int)ta_registry_read_uint32(hKey, "Player0Metal"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-side",       (int)ta_registry_read_uint32(hKey, "Player0Side"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-ally-group", (int)ta_registry_read_uint32(hKey, "Player1AllyGroup"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-color",      (int)ta_registry_read_uint32(hKey, "Player1Color"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-controller", (int)ta_registry_read_uint32(hKey, "Player1Controller"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-energy",     (int)ta_registry_read_uint32(hKey, "Player1Energy"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-metal",      (int)ta_registry_read_uint32(hKey, "Player1Metal"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-side",       (int)ta_registry_read_uint32(hKey, "Player1Side"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-ally-group", (int)ta_registry_read_uint32(hKey, "Player2AllyGroup"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-color",      (int)ta_registry_read_uint32(hKey, "Player2Color"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-controller", (int)ta_registry_read_uint32(hKey, "Player2Controller"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-energy",     (int)ta_registry_read_uint32(hKey, "Player2Energy"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-metal",      (int)ta_registry_read_uint32(hKey, "Player2Metal"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-side",       (int)ta_registry_read_uint32(hKey, "Player2Side"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-ally-group", (int)ta_registry_read_uint32(hKey, "Player3AllyGroup"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-color",      (int)ta_registry_read_uint32(hKey, "Player3Color"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-controller", (int)ta_registry_read_uint32(hKey, "Player3Controller"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-energy",     (int)ta_registry_read_uint32(hKey, "Player3Energy"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-metal",      (int)ta_registry_read_uint32(hKey, "Player3Metal"));
-    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-side",       (int)ta_registry_read_uint32(hKey, "Player3Side"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-ally-group", (int)taRegistryReadUInt32(hKey, "Player0AllyGroup"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-color",      (int)taRegistryReadUInt32(hKey, "Player0Color"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-controller", (int)taRegistryReadUInt32(hKey, "Player0Controller"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-energy",     (int)taRegistryReadUInt32(hKey, "Player0Energy"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-metal",      (int)taRegistryReadUInt32(hKey, "Player0Metal"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player0-side",       (int)taRegistryReadUInt32(hKey, "Player0Side"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-ally-group", (int)taRegistryReadUInt32(hKey, "Player1AllyGroup"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-color",      (int)taRegistryReadUInt32(hKey, "Player1Color"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-controller", (int)taRegistryReadUInt32(hKey, "Player1Controller"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-energy",     (int)taRegistryReadUInt32(hKey, "Player1Energy"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-metal",      (int)taRegistryReadUInt32(hKey, "Player1Metal"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player1-side",       (int)taRegistryReadUInt32(hKey, "Player1Side"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-ally-group", (int)taRegistryReadUInt32(hKey, "Player2AllyGroup"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-color",      (int)taRegistryReadUInt32(hKey, "Player2Color"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-controller", (int)taRegistryReadUInt32(hKey, "Player2Controller"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-energy",     (int)taRegistryReadUInt32(hKey, "Player2Energy"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-metal",      (int)taRegistryReadUInt32(hKey, "Player2Metal"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player2-side",       (int)taRegistryReadUInt32(hKey, "Player2Side"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-ally-group", (int)taRegistryReadUInt32(hKey, "Player3AllyGroup"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-color",      (int)taRegistryReadUInt32(hKey, "Player3Color"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-controller", (int)taRegistryReadUInt32(hKey, "Player3Controller"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-energy",     (int)taRegistryReadUInt32(hKey, "Player3Energy"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-metal",      (int)taRegistryReadUInt32(hKey, "Player3Metal"));
+    taPropertyManagerSetInt(pProperties, "totala.skirmish.player3-side",       (int)taRegistryReadUInt32(hKey, "Player3Side"));
 
     RegCloseKey(hKey);
 
@@ -164,22 +164,22 @@ TA_PRIVATE taResult ta_load_totala_settings__registry(taPropertyManager* pProper
 }
 #endif
 
-TA_PRIVATE taResult ta_load_totala_settings(taPropertyManager* pProperties)
+TA_PRIVATE taResult taLoadTotalASettings(taPropertyManager* pProperties)
 {
     assert(pProperties != NULL);
 
     // Load defaults first, and then overwrite them with the actual settings from the config file or registry.
-    taResult result = ta_load_default_totala_settings(pProperties);
+    taResult result = taLoadDefaultTotalASettings(pProperties);
     if (result != TA_SUCCESS) {
         return result;
     }
 
     // Try loading the original Total Annihilation settings from a config file first. If that fails and we're running on Windows,
     // try the registry.
-    result = ta_load_totala_settings__config(pProperties);
+    result = taLoadTotalASettingsConfig(pProperties);
     if (result != TA_SUCCESS) {
 #ifdef _WIN32
-        return ta_load_totala_settings__registry(pProperties);
+        return taLoadTotalASettingsRegistry(pProperties);
 #else
         return result;
 #endif
@@ -188,12 +188,12 @@ TA_PRIVATE taResult ta_load_totala_settings(taPropertyManager* pProperties)
     return TA_SUCCESS;
 }
 
-TA_PRIVATE taResult ta_load_settings(taPropertyManager* pProperties)
+TA_PRIVATE taResult taLoadSettings(taPropertyManager* pProperties)
 {
     if (pProperties == NULL) return TA_INVALID_ARGS;
 
     // Original Total Annihilation settings from the registry.
-    taResult result = ta_load_totala_settings(pProperties);
+    taResult result = taLoadTotalASettings(pProperties);
     if (result != TA_SUCCESS) {
         return result;
     }
@@ -204,7 +204,7 @@ TA_PRIVATE taResult ta_load_settings(taPropertyManager* pProperties)
 }
 
 
-TA_PRIVATE taResult ta_save_totala_settings(taPropertyManager* pProperties)
+TA_PRIVATE taResult taSaveTotalASettings(taPropertyManager* pProperties)
 {
     assert(pProperties != NULL);
 
@@ -215,34 +215,34 @@ TA_PRIVATE taResult ta_save_totala_settings(taPropertyManager* pProperties)
     return TA_SUCCESS;
 }
 
-TA_PRIVATE taResult ta_save_settings(taPropertyManager* pProperties)
+TA_PRIVATE taResult taSaveSettings(taPropertyManager* pProperties)
 {
     if (pProperties != NULL) return TA_INVALID_ARGS;
 
     // Save the original Total Annihilation settings first.
-    ta_save_totala_settings(pProperties);
+    taSaveTotalASettings(pProperties);
 
     // Here is where OpenTA-specific properties should be saved to openta.cfg.
 
     return TA_SUCCESS;
 }
 
-void ta_game_on_load_properties(taEngineContext* pEngine, taPropertyManager* pProperties)
+void taGameOnLoadProperties(taEngineContext* pEngine, taPropertyManager* pProperties)
 {
     (void)pEngine;
-    ta_load_settings(pProperties);
+    taLoadSettings(pProperties);
 }
 
 
 
-ta_game* ta_create_game(int argc, char** argv)
+taGame* taCreateGame(int argc, char** argv)
 {
-    ta_game* pGame = calloc(1, sizeof(*pGame));
+    taGame* pGame = calloc(1, sizeof(*pGame));
     if (pGame == NULL) {
         return NULL;
     }
 
-    taResult result = taEngineContextInit(argc, argv, ta_game_on_load_properties, ta_game_on_step, pGame, &pGame->engine);
+    taResult result = taEngineContextInit(argc, argv, taGameOnLoadProperties, taGameOnStep, pGame, &pGame->engine);
     if (result != TA_SUCCESS) {
         free(pGame);
         return NULL;
@@ -258,37 +258,37 @@ ta_game* ta_create_game(int argc, char** argv)
 
 
     // Menus.
-    ta_set_property(pGame, "MAINMENU.GUI.BACKGROUND", "bitmaps/FrontendX.pcx");
+    taSetProperty(pGame, "MAINMENU.GUI.BACKGROUND", "bitmaps/FrontendX.pcx");
     if (taGUILoad(&pGame->engine, "guis/MAINMENU.GUI", &pGame->mainMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
-    ta_set_property(pGame, "SINGLE.GUI.BACKGROUND", "bitmaps/SINGLEBG.PCX");
+    taSetProperty(pGame, "SINGLE.GUI.BACKGROUND", "bitmaps/SINGLEBG.PCX");
     if (taGUILoad(&pGame->engine, "guis/SINGLE.GUI", &pGame->spMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
-    ta_set_property(pGame, "SELPROV.GUI.BACKGROUND", "bitmaps/selconnect2.pcx");
+    taSetProperty(pGame, "SELPROV.GUI.BACKGROUND", "bitmaps/selconnect2.pcx");
     if (taGUILoad(&pGame->engine, "guis/SELPROV.GUI", &pGame->mpMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
-    ta_set_property(pGame, "STARTOPT.GUI.BACKGROUND", "bitmaps/options4x.pcx");
+    taSetProperty(pGame, "STARTOPT.GUI.BACKGROUND", "bitmaps/options4x.pcx");
     if (taGUILoad(&pGame->engine, "guis/STARTOPT.GUI", &pGame->optionsMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
-    ta_set_property(pGame, "SKIRMISH.GUI.BACKGROUND", "bitmaps/Skirmsetup4x.pcx");
+    taSetProperty(pGame, "SKIRMISH.GUI.BACKGROUND", "bitmaps/Skirmsetup4x.pcx");
     if (taGUILoad(&pGame->engine, "guis/SKIRMISH.GUI", &pGame->skirmishMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
-    ta_set_property(pGame, "NEWGAME.GUI.BACKGROUND", "bitmaps/playanygame4.pcx");
+    taSetProperty(pGame, "NEWGAME.GUI.BACKGROUND", "bitmaps/playanygame4.pcx");
     if (taGUILoad(&pGame->engine, "guis/NEWGAME.GUI", &pGame->campaignMenu) != TA_SUCCESS) {
         goto on_error;
     }
 
-    ta_set_property(pGame, "SELMAP.GUI.BACKGROUND", "bitmaps/DSelectmap2.pcx");
+    taSetProperty(pGame, "SELMAP.GUI.BACKGROUND", "bitmaps/DSelectmap2.pcx");
     if (taGUILoad(&pGame->engine, "guis/SELMAP.GUI", &pGame->selectMapDialog) != TA_SUCCESS) {
         goto on_error;
     }
@@ -300,7 +300,7 @@ ta_game* ta_create_game(int argc, char** argv)
 
 
     // Switch to the main menu by default.
-    ta_goto_screen(pGame, TA_SCREEN_MAIN_MENU);
+    taGoToScreen(pGame, TA_SCREEN_MAIN_MENU);
     
     // TODO:
     // - Only load these when needed, i.e. when the Select Map dialog or campaign menu is opened.
@@ -329,8 +329,8 @@ ta_game* ta_create_game(int argc, char** argv)
     taFSEnd(pIter);
 
     // Sort alphabetically.
-    qsort(pGame->ppMPMaps, stb_sb_count(pGame->ppMPMaps), sizeof(*pGame->ppMPMaps), ta_qsort_cb_map);
-    qsort(pGame->ppSPMaps, stb_sb_count(pGame->ppSPMaps), sizeof(*pGame->ppSPMaps), ta_qsort_cb_map);
+    qsort(pGame->ppMPMaps, stb_sb_count(pGame->ppMPMaps), sizeof(*pGame->ppMPMaps), taQuickSortCallbackMap);
+    qsort(pGame->ppSPMaps, stb_sb_count(pGame->ppSPMaps), sizeof(*pGame->ppSPMaps), taQuickSortCallbackMap);
 
     taUInt32 iMapListGadget;
     if (taGUIFindGadgetByName(&pGame->selectMapDialog, "MAPNAMES", &iMapListGadget)) {
@@ -369,7 +369,7 @@ on_error:
     return NULL;
 }
 
-void ta_delete_game(ta_game* pGame)
+void taDeleteGame(taGame* pGame)
 {
     if (pGame == NULL) {
         return;
@@ -381,37 +381,37 @@ void ta_delete_game(ta_game* pGame)
 }
 
 
-taResult ta_set_property(ta_game* pGame, const char* key, const char* value)
+taResult taSetProperty(taGame* pGame, const char* key, const char* value)
 {
     return taPropertyManagerSet(&pGame->engine.properties, key, value);
 }
 
-taResult ta_set_property_int(ta_game* pGame, const char* key, taInt32 value)
+taResult taSetPropertyInt(taGame* pGame, const char* key, taInt32 value)
 {
     char valueStr[256];
     snprintf(valueStr, sizeof(valueStr), "%d", value);
-    return ta_set_property(pGame, key, valueStr);
+    return taSetProperty(pGame, key, valueStr);
 }
 
-taResult ta_set_property_float(ta_game* pGame, const char* key, float value)
+taResult taSetPropertyFloat(taGame* pGame, const char* key, float value)
 {
     char valueStr[256];
     snprintf(valueStr, sizeof(valueStr), "%f", value);
-    return ta_set_property(pGame, key, valueStr);
+    return taSetProperty(pGame, key, valueStr);
 }
 
-taResult ta_set_property_bool(ta_game* pGame, const char* key, taBool32 value)
+taResult taSetPropertyBool(taGame* pGame, const char* key, taBool32 value)
 {
-    return ta_set_property(pGame, key, value ? "1" : "0");
+    return taSetProperty(pGame, key, value ? "1" : "0");
 }
 
 
-const char* ta_get_property(ta_game* pGame, const char* key)
+const char* taGetProperty(taGame* pGame, const char* key)
 {
     return taPropertyManagerGet(&pGame->engine.properties, key);
 }
 
-const char* ta_get_propertyf(ta_game* pGame, const char* key, ...)
+const char* taGetPropertyF(taGame* pGame, const char* key, ...)
 {
     va_list args;
     va_start(args, key);
@@ -422,9 +422,9 @@ const char* ta_get_propertyf(ta_game* pGame, const char* key, ...)
     return value;
 }
 
-taInt32 ta_get_property_int(ta_game* pGame, const char* key)
+taInt32 taGetPropertyInt(taGame* pGame, const char* key)
 {
-    const char* valueStr = ta_get_property(pGame, key);
+    const char* valueStr = taGetProperty(pGame, key);
     if (valueStr == NULL) {
         return 0;
     }
@@ -432,9 +432,9 @@ taInt32 ta_get_property_int(ta_game* pGame, const char* key)
     return atoi(valueStr);
 }
 
-float ta_get_property_float(ta_game* pGame, const char* key)
+float taGetPropertyFloat(taGame* pGame, const char* key)
 {
-    const char* valueStr = ta_get_property(pGame, key);
+    const char* valueStr = taGetProperty(pGame, key);
     if (valueStr == NULL) {
         return 0;
     }
@@ -442,9 +442,9 @@ float ta_get_property_float(ta_game* pGame, const char* key)
     return (float)atof(valueStr);
 }
 
-taBool32 ta_get_property_bool(ta_game* pGame, const char* key)
+taBool32 taGetPropertyBool(taGame* pGame, const char* key)
 {
-    const char* valueStr = ta_get_property(pGame, key);
+    const char* valueStr = taGetProperty(pGame, key);
     if (valueStr == NULL) {
         return TA_FALSE;
     }
@@ -457,7 +457,7 @@ taBool32 ta_get_property_bool(ta_game* pGame, const char* key)
 }
 
 
-int ta_game_run(ta_game* pGame)
+int taGameRun(taGame* pGame)
 {
     if (pGame == NULL) {
         return TA_ERROR_INVALID_ARGS;
@@ -466,19 +466,19 @@ int ta_game_run(ta_game* pGame)
     return taMainLoop(&pGame->engine);
 }
 
-void ta_close(ta_game* pGame)
+void taClose(taGame* pGame)
 {
     taPostQuitMessage(0);
 }
 
 
-void ta_step__in_game(ta_game* pGame, double dt)
+void taStep_InGame(taGame* pGame, double dt)
 {
     assert(pGame != NULL);
     assert(pGame->screen == TA_SCREEN_IN_GAME);
     (void)dt;
 
-    if (ta_is_mouse_button_down(pGame, TA_MOUSE_BUTTON_MIDDLE)) {
+    if (taIsMouseButtonDown(pGame, TA_MOUSE_BUTTON_MIDDLE)) {
         taTranslateCamera(pGame->engine.pGraphics, -(int)pGame->engine.input.mouseOffsetX, -(int)pGame->engine.input.mouseOffsetY);
     }
 
@@ -494,13 +494,18 @@ typedef struct
     taGUIGadget* pGadget;  // The gadget this event relates to.
 } ta_gui_input_event;
 
-taBool32 ta_handle_gui_input(ta_game* pGame, taGUI* pGUI, ta_gui_input_event* pEvent)
+taBool32 taHandleGUIInput(taGame* pGame, taGUI* pGUI, ta_gui_input_event* pEvent)
 {
-    if (pGame == NULL || pGUI == NULL || pEvent == NULL) return TA_FALSE;
+    if (pGame == NULL || pGUI == NULL || pEvent == NULL) {
+        return TA_FALSE;
+    }
+
     taZeroObject(pEvent);
 
     // Sanity check.
-    if (pGUI->gadgetCount == 0) return TA_FALSE;
+    if (pGUI->gadgetCount == 0) {
+        return TA_FALSE;
+    }
 
     // An so here's the good old GUI input handling code. No matter how many times I do this it never get's better :(
 
@@ -515,7 +520,7 @@ taBool32 ta_handle_gui_input(ta_game* pGame, taGUI* pGUI, ta_gui_input_event* pE
     // - Escape
     // - Shortcuts for buttons
     taGUIGadget* pRootGadget = &pGUI->pGadgets[0];
-    if (ta_was_key_pressed(pGame, TA_KEY_ENTER)) {
+    if (taWasKeyPressed(pGame, TA_KEY_ENTER)) {
         // When the enter key is pressed we want to prioritize crdefault. It that is not set we fall back to the focused gadget.
         if (!ta_is_string_null_or_empty(pRootGadget->root.crdefault)) {
             taUInt32 iGadget;
@@ -535,7 +540,7 @@ taBool32 ta_handle_gui_input(ta_game* pGame, taGUI* pGUI, ta_gui_input_event* pE
                 return TA_TRUE;
             }
         }
-    } else if (ta_was_key_pressed(pGame, TA_KEY_SPACE)) {
+    } else if (taWasKeyPressed(pGame, TA_KEY_SPACE)) {
         taUInt32 iGadget;
         taBool32 foundGadget = taGUIGetFocusedGadget(pGUI, &iGadget);
         if (foundGadget) {
@@ -543,7 +548,7 @@ taBool32 ta_handle_gui_input(ta_game* pGame, taGUI* pGUI, ta_gui_input_event* pE
             pEvent->pGadget = &pGUI->pGadgets[iGadget];
             return TA_TRUE;
         }
-    } else if (ta_was_key_pressed(pGame, TA_KEY_ESCAPE)) {
+    } else if (taWasKeyPressed(pGame, TA_KEY_ESCAPE)) {
         if (!ta_is_string_null_or_empty(pRootGadget->root.escdefault)) {
             taUInt32 iGadget;
             taBool32 foundGadget = taGUIFindGadgetByName(pGUI, pRootGadget->root.escdefault, &iGadget);
@@ -553,11 +558,11 @@ taBool32 ta_handle_gui_input(ta_game* pGame, taGUI* pGUI, ta_gui_input_event* pE
                 return TA_TRUE;
             }
         }
-    } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_LEFT)) {
+    } else if (taWasKeyPressed(pGame, TA_KEY_ARROW_LEFT)) {
         taGUIFocusPrevGadget(pGUI);
-    } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_RIGHT)) {
+    } else if (taWasKeyPressed(pGame, TA_KEY_ARROW_RIGHT)) {
         taGUIFocusNextGadget(pGUI);
-    } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_UP)) {
+    } else if (taWasKeyPressed(pGame, TA_KEY_ARROW_UP)) {
         taUInt32 iFocusedGadget;
         if (taGUIGetFocusedGadget(pGUI, &iFocusedGadget) && pGUI->pGadgets[iFocusedGadget].id == TA_GUI_GADGET_TYPE_LISTBOX) {
             taUInt32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem;
@@ -571,7 +576,7 @@ taBool32 ta_handle_gui_input(ta_game* pGame, taGUI* pGUI, ta_gui_input_event* pE
         } else {
             taGUIFocusPrevGadget(pGUI);
         }
-    } else if (ta_was_key_pressed(pGame, TA_KEY_ARROW_DOWN)) {
+    } else if (taWasKeyPressed(pGame, TA_KEY_ARROW_DOWN)) {
         taUInt32 iFocusedGadget;
         if (taGUIGetFocusedGadget(pGUI, &iFocusedGadget) && pGUI->pGadgets[iFocusedGadget].id == TA_GUI_GADGET_TYPE_LISTBOX) {
             taUInt32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem;
@@ -585,8 +590,8 @@ taBool32 ta_handle_gui_input(ta_game* pGame, taGUI* pGUI, ta_gui_input_event* pE
         } else {
             taGUIFocusNextGadget(pGUI);
         }
-    }  else if (ta_was_key_pressed(pGame, TA_KEY_TAB)) {
-        if (ta_is_key_down(pGame, TA_KEY_SHIFT)) {
+    }  else if (taWasKeyPressed(pGame, TA_KEY_TAB)) {
+        if (taIsKeyDown(pGame, TA_KEY_SHIFT)) {
             taGUIFocusPrevGadget(pGUI);
         } else {
             taGUIFocusNextGadget(pGUI);
@@ -596,7 +601,7 @@ taBool32 ta_handle_gui_input(ta_game* pGame, taGUI* pGUI, ta_gui_input_event* pE
         for (taUInt32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {
             taGUIGadget* pGadget = &pGUI->pGadgets[iGadget];
             if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
-                if (pGadget->button.quickkey != 0 && ta_was_key_pressed(pGame, toupper(pGadget->button.quickkey))) {
+                if (pGadget->button.quickkey != 0 && taWasKeyPressed(pGame, toupper(pGadget->button.quickkey))) {
                     pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
                     pEvent->pGadget = &pGUI->pGadgets[iGadget];
                     return TA_TRUE;
@@ -619,12 +624,12 @@ taBool32 ta_handle_gui_input(ta_game* pGame, taGUI* pGUI, ta_gui_input_event* pE
     taUInt32 iHeldGadget;
     taBool32 isGadgetHeld = taGUIGetHeldGadget(pGUI, &iHeldGadget);
 
-    taBool32 wasLMBPressed = ta_was_mouse_button_pressed(pGame, TA_MOUSE_BUTTON_LEFT);
-    taBool32 wasRMBPressed = ta_was_mouse_button_pressed(pGame, TA_MOUSE_BUTTON_RIGHT);
+    taBool32 wasLMBPressed = taWasMouseButtonPressed(pGame, TA_MOUSE_BUTTON_LEFT);
+    taBool32 wasRMBPressed = taWasMouseButtonPressed(pGame, TA_MOUSE_BUTTON_RIGHT);
     taBool32 wasMBPressed = wasLMBPressed || wasRMBPressed;
 
-    taBool32 wasLMBReleased = ta_was_mouse_button_released(pGame, TA_MOUSE_BUTTON_LEFT);
-    taBool32 wasRMBReleased = ta_was_mouse_button_released(pGame, TA_MOUSE_BUTTON_RIGHT);
+    taBool32 wasLMBReleased = taWasMouseButtonReleased(pGame, TA_MOUSE_BUTTON_LEFT);
+    taBool32 wasRMBReleased = taWasMouseButtonReleased(pGame, TA_MOUSE_BUTTON_RIGHT);
     taBool32 wasMBReleased = wasLMBReleased || wasRMBReleased;
 
     taUInt32 heldMB = 0;
@@ -688,7 +693,7 @@ taBool32 ta_handle_gui_input(ta_game* pGame, taGUI* pGUI, ta_gui_input_event* pE
     return TA_FALSE;
 }
 
-void ta_step__main_menu(ta_game* pGame, double dt)
+void taStep_MainMenu(taGame* pGame, double dt)
 {
     assert(pGame != NULL);
     assert(pGame->screen == TA_SCREEN_MAIN_MENU);
@@ -704,15 +709,15 @@ void ta_step__main_menu(ta_game* pGame, double dt)
     taBool32 isMouseOverGadget = taGUIGetGadgetUnderPoint(&pGame->mainMenu, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
 
     ta_gui_input_event e;
-    taBool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->mainMenu, &e);
+    taBool32 hasGUIEvent = taHandleGUIInput(pGame, &pGame->mainMenu, &e);
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
             if (strcmp(e.pGadget->name, "SINGLE") == 0) {
-                ta_goto_screen(pGame, TA_SCREEN_SP_MENU);
+                taGoToScreen(pGame, TA_SCREEN_SP_MENU);
                 return;
             }
             if (strcmp(e.pGadget->name, "MULTI") == 0) {
-                ta_goto_screen(pGame, TA_SCREEN_MP_MENU);
+                taGoToScreen(pGame, TA_SCREEN_MP_MENU);
                 return;
             }
             if (strcmp(e.pGadget->name, "INTRO") == 0) {
@@ -720,7 +725,7 @@ void ta_step__main_menu(ta_game* pGame, double dt)
                 return;
             }
             if (strcmp(e.pGadget->name, "EXIT") == 0) {
-                ta_close(pGame);
+                taClose(pGame);
                 return;
             }
         }
@@ -749,7 +754,7 @@ void ta_step__main_menu(ta_game* pGame, double dt)
     taDrawTextF(pGame->engine.pGraphics, &pGame->engine.fontSmall, 255, scale, (pGame->engine.pGraphics->resolutionX - versionSizeX)/2, 300*scale + offsetY, "%s", versionStr);
 }
 
-void ta_step__sp_menu(ta_game* pGame, double dt)
+void taStep_SPMenu(taGame* pGame, double dt)
 {
     assert(pGame != NULL);
     assert(pGame->screen == TA_SCREEN_SP_MENU);
@@ -758,11 +763,11 @@ void ta_step__sp_menu(ta_game* pGame, double dt)
     // Input
     // =====
     ta_gui_input_event e;
-    taBool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->spMenu, &e);
+    taBool32 hasGUIEvent = taHandleGUIInput(pGame, &pGame->spMenu, &e);
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
             if (strcmp(e.pGadget->name, "NewCamp") == 0) {
-                ta_goto_screen(pGame, TA_SCREEN_CAMPAIGN_MENU);
+                taGoToScreen(pGame, TA_SCREEN_CAMPAIGN_MENU);
                 return;
             }
             if (strcmp(e.pGadget->name, "LoadGame") == 0) {
@@ -770,23 +775,23 @@ void ta_step__sp_menu(ta_game* pGame, double dt)
                 return;
             }
             if (strcmp(e.pGadget->name, "Skirmish") == 0) {
-                ta_goto_screen(pGame, TA_SCREEN_SKIRMISH_MENU);
+                taGoToScreen(pGame, TA_SCREEN_SKIRMISH_MENU);
                 return;
             }
             if (strcmp(e.pGadget->name, "PrevMenu") == 0) {
-                ta_goto_screen(pGame, TA_SCREEN_MAIN_MENU);
+                taGoToScreen(pGame, TA_SCREEN_MAIN_MENU);
                 return;
             }
             if (strcmp(e.pGadget->name, "Options") == 0) {
-                ta_goto_screen(pGame, TA_SCREEN_OPTIONS_MENU);
+                taGoToScreen(pGame, TA_SCREEN_OPTIONS_MENU);
                 return;
             }
         }
     }
 
     // For some reason the SINGLE.GUI file does not define the "escdefault" which means we'll need to hard code it.
-    if (ta_was_key_pressed(pGame, TA_KEY_ESCAPE)) {
-        ta_goto_screen(pGame, TA_SCREEN_MAIN_MENU);
+    if (taWasKeyPressed(pGame, TA_KEY_ESCAPE)) {
+        taGoToScreen(pGame, TA_SCREEN_MAIN_MENU);
         return;
     }
 
@@ -796,7 +801,7 @@ void ta_step__sp_menu(ta_game* pGame, double dt)
     taDrawFullscreenGUI(pGame->engine.pGraphics, &pGame->spMenu);
 }
 
-void ta_step__mp_menu(ta_game* pGame, double dt)
+void taStep_MPMenu(taGame* pGame, double dt)
 {
     assert(pGame != NULL);
     assert(pGame->screen == TA_SCREEN_MP_MENU);
@@ -805,15 +810,15 @@ void ta_step__mp_menu(ta_game* pGame, double dt)
     // Input
     // =====
     ta_gui_input_event e;
-    taBool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->mpMenu, &e);
+    taBool32 hasGUIEvent = taHandleGUIInput(pGame, &pGame->mpMenu, &e);
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
             if (strcmp(e.pGadget->name, "PREVMENU") == 0) {
-                ta_goto_screen(pGame, TA_SCREEN_MAIN_MENU);
+                taGoToScreen(pGame, TA_SCREEN_MAIN_MENU);
                 return;
             }
             if (strcmp(e.pGadget->name, "SETTINGS") == 0) {
-                ta_goto_screen(pGame, TA_SCREEN_OPTIONS_MENU);
+                taGoToScreen(pGame, TA_SCREEN_OPTIONS_MENU);
                 return;
             }
             if (strcmp(e.pGadget->name, "SELECT") == 0) {
@@ -829,7 +834,7 @@ void ta_step__mp_menu(ta_game* pGame, double dt)
     taDrawFullscreenGUI(pGame->engine.pGraphics, &pGame->mpMenu);
 }
 
-void ta_step__options_menu(ta_game* pGame, double dt)
+void taStep_OptionsMenu(taGame* pGame, double dt)
 {
     assert(pGame != NULL);
     assert(pGame->screen == TA_SCREEN_OPTIONS_MENU);
@@ -838,23 +843,23 @@ void ta_step__options_menu(ta_game* pGame, double dt)
     // Input
     // =====
     ta_gui_input_event e;
-    taBool32 hasGUIEvent = ta_handle_gui_input(pGame, &pGame->optionsMenu, &e);
+    taBool32 hasGUIEvent = taHandleGUIInput(pGame, &pGame->optionsMenu, &e);
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
             if (strcmp(e.pGadget->name, "PREV") == 0) {     // This is the OK button
-                ta_goto_screen(pGame, pGame->prevScreen);
+                taGoToScreen(pGame, pGame->prevScreen);
                 return;
             }
             if (strcmp(e.pGadget->name, "CANCEL") == 0) {
-                ta_goto_screen(pGame, pGame->prevScreen);
+                taGoToScreen(pGame, pGame->prevScreen);
                 return;
             }
         }
     }
 
     // For some reason this GUI does not define the "escdefault" which means we'll need to hard code it.
-    if (ta_was_key_pressed(pGame, TA_KEY_ESCAPE)) {
-        ta_goto_screen(pGame, pGame->prevScreen);
+    if (taWasKeyPressed(pGame, TA_KEY_ESCAPE)) {
+        taGoToScreen(pGame, pGame->prevScreen);
         return;
     }
 
@@ -864,7 +869,7 @@ void ta_step__options_menu(ta_game* pGame, double dt)
     taDrawFullscreenGUI(pGame->engine.pGraphics, &pGame->optionsMenu);
 }
 
-void ta_step__skirmish_menu(ta_game* pGame, double dt)
+void taStep_SkirmishMenu(taGame* pGame, double dt)
 {
     assert(pGame != NULL);
     assert(pGame->screen == TA_SCREEN_SKIRMISH_MENU);
@@ -875,11 +880,11 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
     ta_gui_input_event e;
     taBool32 hasGUIEvent;
     if (pGame->pCurrentDialog == NULL) {
-        hasGUIEvent = ta_handle_gui_input(pGame, &pGame->skirmishMenu, &e);
+        hasGUIEvent = taHandleGUIInput(pGame, &pGame->skirmishMenu, &e);
         if (hasGUIEvent) {
             if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
                 if (strcmp(e.pGadget->name, "PrevMenu") == 0) {
-                    ta_goto_screen(pGame, pGame->prevScreen);
+                    taGoToScreen(pGame, pGame->prevScreen);
                     return;
                 }
                 if (strcmp(e.pGadget->name, "SelectMap") == 0) {
@@ -888,7 +893,7 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
                 }
                 if (strcmp(e.pGadget->name, "Start") == 0) {
                     pGame->pCurrentMap = taLoadMap(&pGame->engine, taConfigGetString(pGame->ppMPMaps[pGame->iSelectedMPMap], "GlobalHeader/missionname"));    // TODO: Free this when the user leaves the game!
-                    ta_goto_screen(pGame, TA_SCREEN_IN_GAME);
+                    taGoToScreen(pGame, TA_SCREEN_IN_GAME);
                     return;
                 }
             }
@@ -896,7 +901,7 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
     } else {
         // A dialog is open, so handle the input of that. The skirmish menu only cares about the Select Map dialog.
         assert(pGame->pCurrentDialog == &pGame->selectMapDialog);
-        hasGUIEvent = ta_handle_gui_input(pGame, pGame->pCurrentDialog, &e);
+        hasGUIEvent = taHandleGUIInput(pGame, pGame->pCurrentDialog, &e);
         if (hasGUIEvent) {
             if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
                 if (strcmp(e.pGadget->name, "PREVMENU") == 0) {
@@ -927,7 +932,7 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
     }
 }
 
-void ta_step__campaign_menu(ta_game* pGame, double dt)
+void taStep_CampaignMenu(taGame* pGame, double dt)
 {
     assert(pGame != NULL);
     assert(pGame->screen == TA_SCREEN_CAMPAIGN_MENU);
@@ -938,11 +943,11 @@ void ta_step__campaign_menu(ta_game* pGame, double dt)
     ta_gui_input_event e;
     taBool32 hasGUIEvent;
     if (pGame->pCurrentDialog == NULL) {
-        hasGUIEvent = ta_handle_gui_input(pGame, &pGame->campaignMenu, &e);
+        hasGUIEvent = taHandleGUIInput(pGame, &pGame->campaignMenu, &e);
         if (hasGUIEvent) {
             if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
                 if (strcmp(e.pGadget->name, "PrevMenu") == 0) {
-                    ta_goto_screen(pGame, TA_SCREEN_SP_MENU);
+                    taGoToScreen(pGame, TA_SCREEN_SP_MENU);
                     return;
                 }
                 if (strcmp(e.pGadget->name, "Start") == 0) {
@@ -958,7 +963,7 @@ void ta_step__campaign_menu(ta_game* pGame, double dt)
     taDrawFullscreenGUI(pGame->engine.pGraphics, &pGame->campaignMenu);
 }
 
-void ta_step__main(ta_game* pGame)
+void taStep_Main(taGame* pGame)
 {
     assert(pGame != NULL);
 
@@ -971,37 +976,37 @@ void ta_step__main(ta_game* pGame)
         {
             case TA_SCREEN_IN_GAME:
             {
-                ta_step__in_game(pGame, dt);
+                taStep_InGame(pGame, dt);
             } break;
 
             case TA_SCREEN_MAIN_MENU:
             {
-                ta_step__main_menu(pGame, dt);
+                taStep_MainMenu(pGame, dt);
             } break;
 
             case TA_SCREEN_SP_MENU:
             {
-                ta_step__sp_menu(pGame, dt);
+                taStep_SPMenu(pGame, dt);
             } break;
 
             case TA_SCREEN_MP_MENU:
             {
-                ta_step__mp_menu(pGame, dt);
+                taStep_MPMenu(pGame, dt);
             } break;
 
             case TA_SCREEN_OPTIONS_MENU:
             {
-                ta_step__options_menu(pGame, dt);
+                taStep_OptionsMenu(pGame, dt);
             } break;
 
             case TA_SCREEN_SKIRMISH_MENU:
             {
-                ta_step__skirmish_menu(pGame, dt);
+                taStep_SkirmishMenu(pGame, dt);
             } break;
 
             case TA_SCREEN_CAMPAIGN_MENU:
             {
-                ta_step__campaign_menu(pGame, dt);
+                taStep_CampaignMenu(pGame, dt);
             } break;
 
             case TA_SCREEN_INTRO:
@@ -1021,13 +1026,13 @@ void ta_step__main(ta_game* pGame)
     taGraphicsPresent(pGame->engine.pGraphics, pGame->pWindow);
 }
 
-void ta_game_on_step(taEngineContext* pEngine)
+void taGameOnStep(taEngineContext* pEngine)
 {
-    ta_step__main((ta_game*)pEngine->pUserData);
+    taStep_Main((taGame*)pEngine->pUserData);
 }
 
 
-void ta_goto_screen(ta_game* pGame, taUInt32 newScreenType)
+void taGoToScreen(taGame* pGame, taUInt32 newScreenType)
 {
     if (pGame == NULL) return;
     pGame->prevScreen = pGame->screen;
@@ -1039,38 +1044,38 @@ void ta_goto_screen(ta_game* pGame, taUInt32 newScreenType)
 }
 
 
-taBool32 ta_is_mouse_button_down(ta_game* pGame, taUInt32 button)
+taBool32 taIsMouseButtonDown(taGame* pGame, taUInt32 button)
 {
     if (pGame == NULL) return TA_FALSE;
     return taInputStateIsMouseButtonDown(&pGame->engine.input, button);
 }
 
-taBool32 ta_was_mouse_button_pressed(ta_game* pGame, taUInt32 button)
+taBool32 taWasMouseButtonPressed(taGame* pGame, taUInt32 button)
 {
     if (pGame == NULL) return TA_FALSE;
     return taInputStateWasMouseButtonPressed(&pGame->engine.input, button);
 }
 
-taBool32 ta_was_mouse_button_released(ta_game* pGame, taUInt32 button)
+taBool32 taWasMouseButtonReleased(taGame* pGame, taUInt32 button)
 {
     if (pGame == NULL) return TA_FALSE;
     return taInputStateWasMouseButtonReleased(&pGame->engine.input, button);
 }
 
 
-taBool32 ta_is_key_down(ta_game* pGame, taUInt32 key)
+taBool32 taIsKeyDown(taGame* pGame, taUInt32 key)
 {
     if (pGame == NULL) return TA_FALSE;
     return taInputStateIsKeyDown(&pGame->engine.input, key);
 }
 
-taBool32 ta_was_key_pressed(ta_game* pGame, taUInt32 key)
+taBool32 taWasKeyPressed(taGame* pGame, taUInt32 key)
 {
     if (pGame == NULL) return TA_FALSE;
     return taInputStateWasKeyPressed(&pGame->engine.input, key);
 }
 
-taBool32 ta_was_key_released(ta_game* pGame, taUInt32 key)
+taBool32 taWasKeyReleased(taGame* pGame, taUInt32 key)
 {
     if (pGame == NULL) return TA_FALSE;
     return taInputStateWasKeyReleased(&pGame->engine.input, key);

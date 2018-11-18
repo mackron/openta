@@ -60,59 +60,59 @@ typedef struct
 
 
     taTexture* pTexture;
-} ta_game;
+} taGame;
 
 // Creates a game instance.
-ta_game* ta_create_game(int argc, char** argv);
+taGame* taCreateGame(int argc, char** argv);
 
 // Deletes a game instance.
-void ta_delete_game(ta_game* pGame);
+void taDeleteGame(taGame* pGame);
 
 
 // Sets a global property.
-taResult ta_set_property(ta_game* pGame, const char* key, const char* value);
-taResult ta_set_property_int(ta_game* pGame, const char* key, taInt32 value);
-taResult ta_set_property_float(ta_game* pGame, const char* key, float value);
-taResult ta_set_property_bool(ta_game* pGame, const char* key, taBool32 value);
+taResult taSetProperty(taGame* pGame, const char* key, const char* value);
+taResult taSetPropertyInt(taGame* pGame, const char* key, taInt32 value);
+taResult taSetPropertyFloat(taGame* pGame, const char* key, float value);
+taResult taSetPropertyBool(taGame* pGame, const char* key, taBool32 value);
 
-// Retrieves a global property. Be careful with the returned pointer because it can become invalid whenever ta_set_property()
+// Retrieves a global property. Be careful with the returned pointer because it can become invalid whenever taSetProperty()
 // is called. If you need to store the value, make a copy.
-const char* ta_get_property(ta_game* pGame, const char* key);
-const char* ta_get_propertyf(ta_game* pGame, const char* key, ...);
-taInt32 ta_get_property_int(ta_game* pGame, const char* key);
-float ta_get_property_float(ta_game* pGame, const char* key);
-taBool32 ta_get_property_bool(ta_game* pGame, const char* key);
+const char* taGetProperty(taGame* pGame, const char* key);
+const char* taGetPropertyF(taGame* pGame, const char* key, ...);
+taInt32 taGetPropertyInt(taGame* pGame, const char* key);
+float taGetPropertyFloat(taGame* pGame, const char* key);
+taBool32 taGetPropertyBool(taGame* pGame, const char* key);
 
 
 // Runs the given game.
-int ta_game_run(ta_game* pGame);
+int taGameRun(taGame* pGame);
 
 // Posts a message to quit the game.
-void ta_close(ta_game* pGame);
+void taClose(taGame* pGame);
 
 
 // Changes the screen.
-void ta_goto_screen(ta_game* pGame, taUInt32 newScreenType);
+void taGoToScreen(taGame* pGame, taUInt32 newScreenType);
 
 
 // Determines whether or not a mouse button is currently down.
-taBool32 ta_is_mouse_button_down(ta_game* pGame, taUInt32 button);
+taBool32 taIsMouseButtonDown(taGame* pGame, taUInt32 button);
 
 // Determines whether or not a mouse button was just pressed.
-taBool32 ta_was_mouse_button_pressed(ta_game* pGame, taUInt32 button);
+taBool32 taWasMouseButtonPressed(taGame* pGame, taUInt32 button);
 
 // Determines whether or not a mouse button was just released.
-taBool32 ta_was_mouse_button_released(ta_game* pGame, taUInt32 button);
+taBool32 taWasMouseButtonReleased(taGame* pGame, taUInt32 button);
 
 
 // Determines whether or not a key is currently down.
-taBool32 ta_is_key_down(ta_game* pGame, taUInt32 key);
+taBool32 taIsKeyDown(taGame* pGame, taUInt32 key);
 
 // Determines whether or not a key was just pressed.
-taBool32 ta_was_key_pressed(ta_game* pGame, taUInt32 key);
+taBool32 taWasKeyPressed(taGame* pGame, taUInt32 key);
 
 // Determines whether or not a key was just released.
-taBool32 ta_was_key_released(ta_game* pGame, taUInt32 key);
+taBool32 taWasKeyReleased(taGame* pGame, taUInt32 key);
 
 
 
