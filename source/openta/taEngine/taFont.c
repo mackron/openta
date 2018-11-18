@@ -2,7 +2,7 @@
 
 #define TA_MAX_FONT_SIZE    64     // <-- Don't make this too big otherwise you'll end up using too much stack space. Can probably improve this later.
 
-taResult ta_font_load_fnt(taEngineContext* pEngine, const char* filePath, ta_font* pFont)
+taResult taFontLoadFNT(taEngineContext* pEngine, const char* filePath, taFont* pFont)
 {
     assert(pEngine != NULL);
     assert(filePath != NULL);
@@ -104,7 +104,7 @@ taResult ta_font_load_fnt(taEngineContext* pEngine, const char* filePath, ta_fon
     return TA_SUCCESS;
 }
 
-taResult ta_font_load_gaf(taEngineContext* pEngine, const char* filePath, ta_font* pFont)
+taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* pFont)
 {
     assert(pEngine != NULL);
     assert(filePath != NULL);
@@ -239,7 +239,7 @@ taResult ta_font_load_gaf(taEngineContext* pEngine, const char* filePath, ta_fon
     return TA_SUCCESS;
 }
 
-taResult ta_font_load(taEngineContext* pEngine, const char* filePath, ta_font* pFont)
+taResult taFontLoad(taEngineContext* pEngine, const char* filePath, taFont* pFont)
 {
     if (pFont == NULL) return TA_INVALID_ARGS;
     taZeroObject(pFont);
@@ -249,13 +249,13 @@ taResult ta_font_load(taEngineContext* pEngine, const char* filePath, ta_font* p
 
     // The font is loaded differently depending on whether or not it's being loaded from a .FNT file or a .GAF file.
     if (drpath_extension_equal(filePath, "FNT")) {
-        return ta_font_load_fnt(pEngine, filePath, pFont);
+        return taFontLoadFNT(pEngine, filePath, pFont);
     } else {
-        return ta_font_load_gaf(pEngine, filePath, pFont);
+        return taFontLoadGAF(pEngine, filePath, pFont);
     }
 }
 
-taResult ta_font_unload(ta_font* pFont)
+taResult taFontUnload(taFont* pFont)
 {
     if (pFont == NULL) return TA_INVALID_ARGS;
     ta_delete_texture(pFont->pTexture);
@@ -263,7 +263,7 @@ taResult ta_font_unload(ta_font* pFont)
     return TA_SUCCESS;
 }
 
-taResult ta_font_measure_text(ta_font* pFont, float scale, const char* text, float* pSizeX, float* pSizeY)
+taResult taFontMeasureText(taFont* pFont, float scale, const char* text, float* pSizeX, float* pSizeY)
 {
     if (pSizeX) *pSizeX = 0;
     if (pSizeY) *pSizeY = 0;
@@ -280,20 +280,28 @@ taResult ta_font_measure_text(ta_font* pFont, float scale, const char* text, flo
         }
 
         if (c == '\n') {
-            if (pSizeY) *pSizeY += pFont->height*scale;
-            if (pSizeX && *pSizeX < currentLineSizeX) *pSizeX = currentLineSizeX;
+            if (pSizeY) {
+                *pSizeY += pFont->height*scale;
+            }
+            if (pSizeX && *pSizeX < currentLineSizeX) {
+                *pSizeX = currentLineSizeX;
+            }
             currentLineSizeX = 0;
         } else {
             currentLineSizeX += pFont->glyphs[c].sizeX*scale;
-            if (pSizeY && *pSizeY < pFont->glyphs[c].sizeY*scale) *pSizeY = pFont->glyphs[c].sizeY*scale;
+            if (pSizeY && *pSizeY < pFont->glyphs[c].sizeY*scale) {
+                *pSizeY = pFont->glyphs[c].sizeY*scale;
+            }
         }
     }
 
-    if (pSizeX && *pSizeX < currentLineSizeX) *pSizeX = currentLineSizeX;
+    if (pSizeX && *pSizeX < currentLineSizeX) {
+        *pSizeX = currentLineSizeX;
+    }
     return TA_SUCCESS;
 }
 
-taResult ta_font_find_character_metrics(ta_font* pFont, float scale, const char* text, char cIn, float* pPosX, float* pPosY, float* pSizeX, float* pSizeY)
+taResult taFontFindCharacterMetrics(taFont* pFont, float scale, const char* text, char cIn, float* pPosX, float* pPosY, float* pSizeX, float* pSizeY)
 {
     if (pPosX) *pPosX = 0;
     if (pPosY) *pPosY = 0;

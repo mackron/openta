@@ -745,7 +745,7 @@ void ta_step__main_menu(ta_game* pGame, double dt)
     const char* versionStr = "OpenTA v0.1";
     float versionSizeX;
     float versionSizeY;
-    ta_font_measure_text(&pGame->engine.fontSmall, scale, versionStr, &versionSizeX, &versionSizeY);
+    taFontMeasureText(&pGame->engine.fontSmall, scale, versionStr, &versionSizeX, &versionSizeY);
     ta_draw_textf(pGame->engine.pGraphics, &pGame->engine.fontSmall, 255, scale, (pGame->engine.pGraphics->resolutionX - versionSizeX)/2, 300*scale + offsetY, "%s", versionStr);
 }
 

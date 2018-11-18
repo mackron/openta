@@ -106,12 +106,12 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
     //// GUI ////
 
     // There are a few required resources that are hard coded from what I can tell.
-    result = ta_font_load(pEngine, "anims/hattfont12.GAF/Haettenschweiler (120)", &pEngine->font);
+    result = taFontLoad(pEngine, "anims/hattfont12.GAF/Haettenschweiler (120)", &pEngine->font);
     if (result != TA_SUCCESS) {
         goto on_error5;
     }
 
-    result = ta_font_load(pEngine, "anims/hattfont11.GAF/Haettenschweiler (120)", &pEngine->fontSmall);
+    result = taFontLoad(pEngine, "anims/hattfont11.GAF/Haettenschweiler (120)", &pEngine->fontSmall);
     if (result != TA_SUCCESS) {
         goto on_error6;
     }
@@ -169,8 +169,8 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
 //on_error10: free(pEngine->ppTextureGAFs);
 on_error9:  taDeleteFeaturesLibrary(pEngine->pFeatures);
 on_error8:  ta_common_gui_unload(&pEngine->commonGUI);
-on_error7:  ta_font_unload(&pEngine->fontSmall);
-on_error6:  ta_font_unload(&pEngine->font);
+on_error7:  taFontUnload(&pEngine->fontSmall);
+on_error6:  taFontUnload(&pEngine->font);
 on_error5:  ta_input_state_uninit(&pEngine->input);
 on_error4:  taDeleteAudioContext(pEngine->pAudio);
 on_error3:  ta_delete_graphics_context(pEngine->pGraphics);
@@ -190,8 +190,8 @@ taResult taEngineContextUninit(taEngineContext* pEngine)
     free(pEngine->ppTextureGAFs);
     taDeleteFeaturesLibrary(pEngine->pFeatures);
     ta_common_gui_unload(&pEngine->commonGUI);
-    ta_font_unload(&pEngine->fontSmall);
-    ta_font_unload(&pEngine->font);
+    taFontUnload(&pEngine->fontSmall);
+    taFontUnload(&pEngine->font);
     ta_input_state_uninit(&pEngine->input);
     taDeleteAudioContext(pEngine->pAudio);
     ta_delete_graphics_context(pEngine->pGraphics);

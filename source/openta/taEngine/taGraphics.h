@@ -145,8 +145,8 @@ void ta_draw_dialog_gui(ta_graphics_context* pGraphics, ta_gui* pGUI);
 void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap);
 
 // Draws a string of text.
-void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text);
-void ta_draw_textf(ta_graphics_context* pGraphics, ta_font* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...);
+void ta_draw_text(ta_graphics_context* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text);
+void ta_draw_textf(ta_graphics_context* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...);
 
 // Draws a textured rectangle.
 void ta_draw_subtexture(taTexture* pTexture, float posX, float posY, float width, float height, taBool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY);

@@ -1175,7 +1175,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                 if (!ta_is_string_null_or_empty(text)) {
                     float textSizeX;
                     float textSizeY;
-                    ta_font_measure_text(&pGraphics->pEngine->font, scale, text, &textSizeX, &textSizeY);
+                    taFontMeasureText(&pGraphics->pEngine->font, scale, text, &textSizeX, &textSizeY);
 
                     float textPosX = posX + (sizeX - textSizeX)/2;
                     float textPosY = posY + (sizeY - textSizeY)/2 - (4*scale);
@@ -1198,7 +1198,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                         float charPosY;
                         float charSizeX;
                         float charSizeY;
-                        if (ta_font_find_character_metrics(&pGraphics->pEngine->font, scale, text, pGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
+                        if (taFontFindCharacterMetrics(&pGraphics->pEngine->font, scale, text, pGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
                             float underlineHeight = roundf(1*scale);
                             float underlineOffsetY = roundf(0*scale);
                             charPosX += textPosX;
@@ -1384,7 +1384,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                 if (!ta_is_string_null_or_empty(pGadget->label.text)) {
                     float textSizeX;
                     float textSizeY;
-                    ta_font_measure_text(&pGraphics->pEngine->fontSmall, scale, pGadget->label.text, &textSizeX, &textSizeY);
+                    taFontMeasureText(&pGraphics->pEngine->fontSmall, scale, pGadget->label.text, &textSizeX, &textSizeY);
 
                     float textPosX = posX + (1*scale);
                     float textPosY = posY - (4*scale);
@@ -1397,7 +1397,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                         float charPosY;
                         float charSizeX;
                         float charSizeY;
-                        if (ta_font_find_character_metrics(&pGraphics->pEngine->fontSmall, scale, pGadget->label.text, pLinkedGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
+                        if (taFontFindCharacterMetrics(&pGraphics->pEngine->fontSmall, scale, pGadget->label.text, pLinkedGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
                             float underlineHeight = roundf(1*scale);
                             float underlineOffsetY = roundf(0*scale);
                             charPosX += textPosX;
@@ -1698,7 +1698,7 @@ void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     }
 }
 
-void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text)
+void ta_draw_text(ta_graphics_context* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text)
 {
     if (pGraphics == NULL || pFont == NULL || text == NULL) {
         return;
@@ -1735,7 +1735,7 @@ void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, taUInt8 colorI
             break;
         }
 
-        ta_font_glyph glyph = pFont->glyphs[c];
+        taFontGlyph glyph = pFont->glyphs[c];
         float glyphSizeX = glyph.sizeX;
         float glyphSizeY = glyph.sizeY;
         float glyphPosX  = penPosX + glyph.originX*scale;
@@ -1760,7 +1760,7 @@ void ta_draw_text(ta_graphics_context* pGraphics, ta_font* pFont, taUInt8 colorI
     glEnd();
 }
 
-void ta_draw_textf(ta_graphics_context* pGraphics, ta_font* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...)
+void ta_draw_textf(ta_graphics_context* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...)
 {
     va_list args;
     va_start(args, text);

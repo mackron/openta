@@ -82,7 +82,7 @@ typedef taUInt32         taBool32;
 
 typedef struct taEngineContext taEngineContext;
 typedef struct ta_graphics_context ta_graphics_context;
-typedef struct ta_font ta_font;
+typedef struct taFont taFont;
 typedef enum ta_seek_origin ta_seek_origin;
 
 // Total Annihilation headers.
