@@ -29,6 +29,11 @@
 #define DR_WAV_NO_STDIO
 #include "../../external/dr_libs/dr_wav.h"
 
+// dr_mp3
+#define DR_MP3_IMPLEMENTATION
+#define DR_WAV_NO_STDIO
+#include "../../external/dr_libs/dr_mp3.h"
+
 // mini_al
 #define MAL_IMPLEMENTATION
 #include "../../external/mini_al/mini_al.h"
