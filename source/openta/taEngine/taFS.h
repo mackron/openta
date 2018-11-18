@@ -111,6 +111,9 @@ taBool32 taReadFileInt32(taFile* pFile, taInt32* pBufferOut);
 // High level helper for reading an unsigned 16-bit integer.
 taBool32 taReadFileUInt16(taFile* pFile, taUInt16* pBufferOut);
 
+// High level helper for reading an signed 16-bit integer.
+taBool32 taReadFileInt16(taFile* pFile, taInt16* pBufferOut);
+
 // High level helper for reading an unsigned 8-bit integer.
 taBool32 taReadFileUInt8(taFile* pFile, taUInt8* pBufferOut);
 

@@ -1,14 +1,14 @@
 // Copyright (C) 2018 David Reid. See included LICENSE file.
 
-TA_PRIVATE taBool32 taTexturePackerFindSlot(taTexturePacker* pPacker, taUInt32 width, taUInt32 height, taUInt32* pPosXOut, taUInt32* pPosYOut)
+TA_PRIVATE taBool32 taTexturePackerFindSlot(taTexturePacker* pPacker, taUInt16 width, taUInt16 height, taUInt16* pPosXOut, taUInt16* pPosYOut)
 {
     assert(pPacker != NULL);
     assert(pPosXOut != NULL);
     assert(pPosYOut != NULL);
 
-    taUInt32 edge = (pPacker->flags & (TA_TEXTURE_PACKER_FLAG_HARD_EDGE | TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE)) ? 1 : 0;
-    taUInt32 outerWidth  = width  + (edge*2);
-    taUInt32 outerHeight = height + (edge*2);
+    taUInt16 edge = (pPacker->flags & (TA_TEXTURE_PACKER_FLAG_HARD_EDGE | TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE)) ? 1 : 0;
+    taUInt16 outerWidth  = width  + (edge*2);
+    taUInt16 outerHeight = height + (edge*2);
 
     if (outerWidth > pPacker->width || outerHeight > pPacker->height) {
         return TA_FALSE;
@@ -101,7 +101,7 @@ TA_PRIVATE taBool32 taTexturePackerCopyImageData(taTexturePacker* pPacker, const
         memcpy(pDstRow1 + pSlot->posX*pPacker->bpp, pSrcRow1, srcStride);
 
         // Side edges.
-        for (taUInt32 y = pSlot->posY-1; y < pSlot->posY+pSlot->height+1; ++y) {
+        for (taInt32 y = pSlot->posY-1; y < pSlot->posY+pSlot->height+1; ++y) {
             taUInt8* pDstRow = pPacker->pImageData + (y * dstStride) + ((pSlot->posX-1) * pPacker->bpp);
             taUInt8* pDstOuter0 = pDstRow;
             taUInt8* pDstInner0 = pDstRow + pPacker->bpp;
@@ -117,7 +117,7 @@ TA_PRIVATE taBool32 taTexturePackerCopyImageData(taTexturePacker* pPacker, const
 }
 
 
-taBool32 taTexturePackerInit(taTexturePacker* pPacker, taUInt32 width, taUInt32 height, taUInt32 bytesPerPixel, taUInt32 flags)
+taBool32 taTexturePackerInit(taTexturePacker* pPacker, taUInt16 width, taUInt16 height, taUInt32 bytesPerPixel, taUInt32 flags)
 {
     if (pPacker == NULL || width == 0 || height == 0) {
         return TA_FALSE;
@@ -169,7 +169,7 @@ void taTexturePackerReset(taTexturePacker* pPacker)
     }
 }
 
-taBool32 taTexturePackerPackSubTexture(taTexturePacker* pPacker, taUInt32 width, taUInt32 height, const void* pSubTextureData, taTexturePackerSlot* pSlotOut)
+taBool32 taTexturePackerPackSubTexture(taTexturePacker* pPacker, taUInt16 width, taUInt16 height, const void* pSubTextureData, taTexturePackerSlot* pSlotOut)
 {
     if (pSlotOut) taZeroObject(pSlotOut);
     if (pPacker == NULL) {

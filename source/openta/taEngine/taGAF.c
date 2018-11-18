@@ -27,10 +27,10 @@ TA_PRIVATE taBool32 taGAFReadFrameHeader(taGAF* pGAF, taGAFFrameHeader* pHeader)
     if (!taReadFileUInt16(pGAF->pFile, &pHeader->height)) {
         return TA_FALSE;
     }
-    if (!taReadFileUInt16(pGAF->pFile, &pHeader->offsetX)) {
+    if (!taReadFileInt16(pGAF->pFile, &pHeader->offsetX)) {
         return TA_FALSE;
     }
-    if (!taReadFileUInt16(pGAF->pFile, &pHeader->offsetY)) {
+    if (!taReadFileInt16(pGAF->pFile, &pHeader->offsetY)) {
         return TA_FALSE;
     }
     if (!taSeekFile(pGAF->pFile, 1, taSeekOriginCurrent)) {
@@ -60,6 +60,8 @@ TA_PRIVATE taBool32 taGAFReadFramePixels(taGAF* pGAF, taGAFFrameHeader* pFrameHe
     assert(pGAF != NULL);
     assert(pFrameHeader != NULL);
     assert(pDstImageData != NULL);
+
+    (void)dstHeight;
 
     if (!taSeekFile(pGAF->pFile, pFrameHeader->dataPtr, taSeekOriginStart)) {
         return TA_FALSE;
@@ -316,7 +318,7 @@ taBool32 taGAFSelectSequenceByIndex(taGAF* pGAF, taUInt32 index, taUInt32* pFram
     return TA_TRUE;
 }
 
-taResult taGAFGetFrame(taGAF* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut, taUInt32* pHeightOut, taInt32* pPosXOut, taInt32* pPosYOut, taUInt8** ppImageData)
+taResult taGAFGetFrame(taGAF* pGAF, taUInt32 frameIndex, taUInt16* pWidthOut, taUInt16* pHeightOut, taInt16* pPosXOut, taInt16* pPosYOut, taUInt8** ppImageData)
 {
     if (ppImageData) {
         *ppImageData = NULL;
@@ -518,10 +520,10 @@ taResult taGAFTextureGroupInit(taEngineContext* pEngine, const char* filePath, t
                 payloadSize += sizeof(taGAFTextureGroupFrame);
                 totalFrameCount += 1;
 
-                taUInt32 sizeX;
-                taUInt32 sizeY;
-                taUInt32 posX;
-                taUInt32 posY;
+                taUInt16 sizeX;
+                taUInt16 sizeY;
+                taInt16 posX;
+                taInt16 posY;
                 if (taGAFGetFrame(pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, NULL) == TA_SUCCESS) {
                     if (!taTexturePackerPackSubTexture(&packer, sizeX, sizeY, NULL, NULL)) {
                         // We failed to pack the subtexture which probably means there's not enough room. We just need to reset this packer and try again.
@@ -580,10 +582,10 @@ taResult taGAFTextureGroupInit(taEngineContext* pEngine, const char* filePath, t
 
             totalSequenceCount += 1;
             for (taUInt32 iFrame = 0; iFrame < frameCount; ++iFrame) {
-                taUInt32 sizeX;
-                taUInt32 sizeY;
-                taUInt32 posX;
-                taUInt32 posY;
+                taUInt16 sizeX;
+                taUInt16 sizeY;
+                taInt16 posX;
+                taInt16 posY;
                 taUInt8* pImageData;
                 if (taGAFGetFrame(pGAF, iFrame, &sizeX, &sizeY, &posX, &posY, &pImageData) == TA_SUCCESS) {
                     taTexturePackerSlot slot;

@@ -36,7 +36,7 @@ taBool32 taGAFSelectSequenceByIndex(taGAF* pGAF, taUInt32 index, taUInt32* pFram
 
 // Retrieves the image data of the frame at the given index of the currently selected sequence. Free the returned
 // pointer with taGAFFree().
-taResult taGAFGetFrame(taGAF* pGAF, taUInt32 frameIndex, taUInt32* pWidthOut, taUInt32* pHeightOut, taInt32* pPosXOut, taInt32* pPosYOut, taUInt8** ppImageData);
+taResult taGAFGetFrame(taGAF* pGAF, taUInt32 frameIndex, taUInt16* pWidthOut, taUInt16* pHeightOut, taInt16* pPosXOut, taInt16* pPosYOut, taUInt8** ppImageData);
 
 // Retrieves the name of the currently selected sequence.
 const char* taGAFGetCurrentSequenceName(taGAF* pGAF);

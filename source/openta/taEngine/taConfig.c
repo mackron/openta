@@ -167,8 +167,7 @@ char* taParseConfigObject(char* configString, taConfigObj* pObj)
     // This is the where the real meat of the parsing is done. It assumes the config string is sitting on the byte just
     // after the opening curly bracket of the object.
 
-    while (configString = taConfigNextToken(configString))
-    {
+    while ((configString = taConfigNextToken(configString)) != NULL) {
         if (*configString == '\0') {
             return NULL;            // Reached the end of the string. Technically an error because we were expecting a closing curly bracket.
         }

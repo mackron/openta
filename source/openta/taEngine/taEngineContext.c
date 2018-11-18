@@ -336,6 +336,7 @@ void taOnKeyDown(taEngineContext* pEngine, taKey key, unsigned int stateFlags)
 void taOnKeyUp(taEngineContext* pEngine, taKey key, unsigned int stateFlags)
 {
     assert(pEngine != NULL);
+    (void)stateFlags;   /* <-- TODO: Make use of this! Need this for accelerator keys. */
 
     if (key < taCountOf(pEngine->input.keyState)) {
         taInputStateOnKeyUp(&pEngine->input, key);

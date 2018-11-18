@@ -2,10 +2,12 @@
 
 #define TA_FEATURE_CHUNK_SIZE   1024
 
+#if 0
 TA_PRIVATE taUInt32 taFeaturesLibraryHashString(const char* str)
 {
     return hashlittle(str, strlen(str), 0);
 }
+#endif
 
 #if 0
 TA_PRIVATE taFeatureCategory taParseFeatureCategory(const char* featureStr)

@@ -176,10 +176,10 @@ static LRESULT DummyWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
 #endif
 
 
-void* taGetGLProcAddress(const char* name)
+taProc taGetGLProcAddress(const char* name)
 {
 #ifdef _WIN32
-    return wglGetProcAddress(name);
+    return (taProc)wglGetProcAddress(name);
 #endif
 }
 
@@ -298,27 +298,27 @@ taGraphicsContext* taCreateGraphicsContext(taEngineContext* pEngine, taUInt32 pa
 
     // Function pointers.
     // Multitexture
-    pGraphics->glActiveTexture = taGetGLProcAddress("glActiveTexture");
+    pGraphics->glActiveTexture              = (PFNGLACTIVETEXTUREPROC)taGetGLProcAddress("glActiveTexture");
 
     // ARB_vertex_program / ARG_fragment_program
-    pGraphics->glGenProgramsARB = taGetGLProcAddress("glGenProgramsARB");
-    pGraphics->glDeleteProgramsARB = taGetGLProcAddress("glDeleteProgramsARB");
-    pGraphics->glBindProgramARB = taGetGLProcAddress("glBindProgramARB");
-    pGraphics->glProgramStringARB = taGetGLProcAddress("glProgramStringARB");
-    pGraphics->glProgramLocalParameter4fARB = taGetGLProcAddress("glProgramLocalParameter4fARB");
+    pGraphics->glGenProgramsARB             = (PFNGLGENPROGRAMSARBPROC)taGetGLProcAddress("glGenProgramsARB");
+    pGraphics->glDeleteProgramsARB          = (PFNGLDELETEPROGRAMSARBPROC)taGetGLProcAddress("glDeleteProgramsARB");
+    pGraphics->glBindProgramARB             = (PFNGLBINDPROGRAMARBPROC)taGetGLProcAddress("glBindProgramARB");
+    pGraphics->glProgramStringARB           = (PFNGLPROGRAMSTRINGARBPROC)taGetGLProcAddress("glProgramStringARB");
+    pGraphics->glProgramLocalParameter4fARB = (PFNGLPROGRAMLOCALPARAMETER4FARBPROC)taGetGLProcAddress("glProgramLocalParameter4fARB");
 
     // VBO
-    pGraphics->glGenBuffers = taGetGLProcAddress("glGenBuffers");
-    pGraphics->glDeleteBuffers = taGetGLProcAddress("glDeleteBuffers");
-    pGraphics->glBindBuffer = taGetGLProcAddress("glBindBuffer");
-    pGraphics->glBufferData = taGetGLProcAddress("glBufferData");
+    pGraphics->glGenBuffers                 = (PFNGLGENBUFFERSPROC)taGetGLProcAddress("glGenBuffers");
+    pGraphics->glDeleteBuffers              = (PFNGLDELETEBUFFERSPROC)taGetGLProcAddress("glDeleteBuffers");
+    pGraphics->glBindBuffer                 = (PFNGLBINDBUFFERPROC)taGetGLProcAddress("glBindBuffer");
+    pGraphics->glBufferData                 = (PFNGLBUFFERDATAPROC)taGetGLProcAddress("glBufferData");
     if (pGraphics->glGenBuffers == NULL)
     {
         // VBO's aren't supported in core, so try the extension APIs.
-        pGraphics->glGenBuffers = taGetGLProcAddress("glGenBuffersARB");
-        pGraphics->glDeleteBuffers = taGetGLProcAddress("glDeleteBuffersARB");
-        pGraphics->glBindBuffer = taGetGLProcAddress("glBindBufferARB");
-        pGraphics->glBufferData = taGetGLProcAddress("glBufferDataARB");
+        pGraphics->glGenBuffers             = (PFNGLGENBUFFERSPROC)taGetGLProcAddress("glGenBuffersARB");
+        pGraphics->glDeleteBuffers          = (PFNGLDELETEBUFFERSPROC)taGetGLProcAddress("glDeleteBuffersARB");
+        pGraphics->glBindBuffer             = (PFNGLBINDBUFFERPROC)taGetGLProcAddress("glBindBufferARB");
+        pGraphics->glBufferData             = (PFNGLBUFFERDATAPROC)taGetGLProcAddress("glBufferDataARB");
     }
 
     pGraphics->supportsVBO = pGraphics->glGenBuffers != NULL;
@@ -522,9 +522,9 @@ taWindow* taGraphicsCreateWindow(taGraphicsContext* pGraphics, const char* pTitl
     SetPixelFormat(taGetWindowHDC(pWindow), pGraphics->pixelFormat, &pGraphics->pfd);
 
     return pWindow;
-#endif
-
+#else
     return NULL;
+#endif
 }
 
 void taGraphicsDeleteWindow(taGraphicsContext* pGraphics, taWindow* pWindow)
@@ -838,13 +838,13 @@ void taDeleteMesh(taMesh* pMesh)
 
 //// Limits ////
 
-unsigned int taGetMaxTextureSize(taGraphicsContext* pGraphics)
+taUInt16 taGetMaxTextureSize(taGraphicsContext* pGraphics)
 {
     if (pGraphics == NULL) {
         return 0;
     }
 
-    return (unsigned int)pGraphics->maxTextureSize;
+    return (taUInt16)pGraphics->maxTextureSize;
 }
 
 
@@ -1017,8 +1017,10 @@ static TA_INLINE void taGraphicsDrawMesh(taGraphicsContext* pGraphics, taMesh* p
 {
     // Pre: The mesh is assumed to be bound.
     assert(pGraphics != NULL);
-    assert(pGraphics->pCurrentMesh = pMesh);
+    assert(pGraphics->pCurrentMesh == pMesh);
     assert(pMesh != NULL);
+
+    (void)pGraphics;
 
     taUInt32 byteOffset = indexOffset * ((taUInt32)pMesh->indexFormat);
 
@@ -1193,7 +1195,7 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
                         float charPosY;
                         float charSizeX;
                         float charSizeY;
-                        if (taFontFindCharacterMetrics(&pGraphics->pEngine->font, scale, text, pGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
+                        if (taFontFindCharacterMetrics(&pGraphics->pEngine->font, scale, text, (char)pGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
                             float underlineHeight = roundf(1*scale);
                             float underlineOffsetY = roundf(0*scale);
                             charPosX += textPosX;
@@ -1275,7 +1277,7 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
                 taGAFTextureGroupFrame* pTrackMidFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackMidFrame;
                 taTexture* pTrackBegTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackBegFrame->atlasIndex];
                 taTexture* pTrackEndTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackEndFrame->atlasIndex];
-                taTexture* pTrackMidTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackMidFrame->atlasIndex];
+                taTexture* pTrackMidTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackMidFrame->atlasIndex]; (void)pTrackMidTexture; /* <-- TODO: Do something with this graphic. */
                 float trackBegPosX = 0;
                 float trackBegPosY = 0;
                 float trackEndPosX = 0;
@@ -1324,7 +1326,7 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
 
                 // Arrows.
                 taDrawSubTexture(pArrow0Texture, arrow0PosX, arrow0PosY, pArrow0Frame->sizeX*scale, pArrow0Frame->sizeY*scale, TA_TRUE, pArrow0Frame->atlasPosX, pArrow0Frame->atlasPosY, pArrow0Frame->sizeX, pArrow0Frame->sizeY);
-                taDrawSubTexture(pArrow0Texture, arrow1PosX, arrow1PosY, pArrow1Frame->sizeX*scale, pArrow1Frame->sizeY*scale, TA_TRUE, pArrow1Frame->atlasPosX, pArrow1Frame->atlasPosY, pArrow1Frame->sizeX, pArrow1Frame->sizeY);
+                taDrawSubTexture(pArrow1Texture, arrow1PosX, arrow1PosY, pArrow1Frame->sizeX*scale, pArrow1Frame->sizeY*scale, TA_TRUE, pArrow1Frame->atlasPosX, pArrow1Frame->atlasPosY, pArrow1Frame->sizeX, pArrow1Frame->sizeY);
 
                 // Track.
                 if ((pGadget->attribs & TA_GUI_SCROLLBAR_TYPE_VERTICAL) != 0) {
@@ -1392,7 +1394,7 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
                         float charPosY;
                         float charSizeX;
                         float charSizeY;
-                        if (taFontFindCharacterMetrics(&pGraphics->pEngine->fontSmall, scale, pGadget->label.text, pLinkedGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
+                        if (taFontFindCharacterMetrics(&pGraphics->pEngine->fontSmall, scale, pGadget->label.text, (char)pLinkedGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
                             float underlineHeight = roundf(1*scale);
                             float underlineOffsetY = roundf(0*scale);
                             charPosX += textPosX;

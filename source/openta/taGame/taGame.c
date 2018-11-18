@@ -21,6 +21,7 @@ TA_PRIVATE int taQuickSortCallbackMap(const void* a, const void* b)
 TA_PRIVATE taResult taLoadDefaultTotalASettings(taPropertyManager* pProperties)
 {
     assert(pProperties != NULL);
+    (void)pProperties;
 
     // TODO: Implement me.
     return TA_SUCCESS;
@@ -29,6 +30,7 @@ TA_PRIVATE taResult taLoadDefaultTotalASettings(taPropertyManager* pProperties)
 TA_PRIVATE taResult taLoadTotalASettingsConfig(taPropertyManager* pProperties)
 {
     assert(pProperties != NULL);
+    (void)pProperties;
 
     // TODO: Implement me.
     return TA_ERROR;
@@ -207,6 +209,7 @@ TA_PRIVATE taResult taLoadSettings(taPropertyManager* pProperties)
 TA_PRIVATE taResult taSaveTotalASettings(taPropertyManager* pProperties)
 {
     assert(pProperties != NULL);
+    (void)pProperties;
 
     // Just save these to totala.cfg for now, but may want to consider writing to the registry
     // for compatibility with totala.exe later on.
@@ -468,6 +471,7 @@ int taGameRun(taGame* pGame)
 
 void taClose(taGame* pGame)
 {
+    (void)pGame;
     taPostQuitMessage(0);
 }
 
@@ -652,7 +656,7 @@ taBool32 taHandleGUIInput(taGame* pGame, taGUI* pGUI, ta_gui_input_event* pEvent
                 if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
                     taGUIHoldGadget(pGUI, iGadgetUnderMouse, (wasLMBPressed) ? TA_MOUSE_BUTTON_LEFT : TA_MOUSE_BUTTON_RIGHT);
                 } else if (pGadget->id == TA_GUI_GADGET_TYPE_LISTBOX) {
-                    taInt32 relativeMousePosX = mousePosXGUI - pGadget->xpos;
+                    taInt32 relativeMousePosX = mousePosXGUI - pGadget->xpos; (void)relativeMousePosX;
                     taInt32 relativeMousePosY = mousePosYGUI - pGadget->ypos;
 
                     // The selected item is based on the position of the mouse.
@@ -669,7 +673,7 @@ taBool32 taHandleGUIInput(taGame* pGame, taGUI* pGUI, ta_gui_input_event* pEvent
             }
         } else if (wasMBReleased) {
             if (isGadgetHeld) {
-                taGUIGadget* pHeldGadget = &pGUI->pGadgets[iHeldGadget];
+                taGUIGadget* pHeldGadget = &pGUI->pGadgets[iHeldGadget]; (void)pHeldGadget;
                 if (iHeldGadget == iGadgetUnderMouse && ((wasLMBReleased && heldMB == TA_MOUSE_BUTTON_LEFT) || (wasRMBReleased && heldMB == TA_MOUSE_BUTTON_RIGHT))) {
                     // The gadget was pressed. May want to post an event here.
                     if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {

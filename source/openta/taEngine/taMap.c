@@ -28,11 +28,11 @@ typedef struct
 typedef struct
 {
     char name[256];
-    taUInt32 posX;
-    taUInt32 posY;
-    taUInt32 sizeX;
-    taUInt32 sizeY;
-    taUInt32 textureIndex;
+    taUInt16 posX;
+    taUInt16 posY;
+    taUInt16 sizeX;
+    taUInt16 sizeY;
+    taUInt16 textureIndex;
 } taMapLoadedTexture;
 
 typedef struct
@@ -69,7 +69,7 @@ TA_PRIVATE taBool32 taMapCreateAndPushTexture(taMapInstance* pMap, taTexturePack
     return TA_TRUE;
 }
 
-TA_PRIVATE taBool32 taMapPackSubTexture(taMapInstance* pMap, taTexturePacker* pPacker, taUInt32 width, taUInt32 height, const void* pImageData, taTexturePackerSlot* pSlotOut)
+TA_PRIVATE taBool32 taMapPackSubTexture(taMapInstance* pMap, taTexturePacker* pPacker, taUInt16 width, taUInt16 height, const void* pImageData, taTexturePackerSlot* pSlotOut)
 {
     // If we can't pack the image we just create a new texture on the graphics system and then reset the packer and try again.
     if (taTexturePackerPackSubTexture(pPacker, width, height, pImageData, pSlotOut)) {
@@ -133,12 +133,11 @@ TA_PRIVATE taMapFeatureSequence* taMapLoadGAFSequence(taMapInstance* pMap, taTex
 
     pSeq->frameCount = frameCount;
 
-    for (taUInt32 iFrame = 0; iFrame < frameCount; ++iFrame)
-    {
-        taUInt32 frameWidth;
-        taUInt32 frameHeight;
-        taInt32 offsetX;
-        taInt32 offsetY;
+    for (taUInt32 iFrame = 0; iFrame < frameCount; ++iFrame) {
+        taUInt16 frameWidth;
+        taUInt16 frameHeight;
+        taInt16 offsetX;
+        taInt16 offsetY;
         taUInt8* pFrameImageData;
         if (taGAFGetFrame(pGAF, iFrame, &frameWidth, &frameHeight, &offsetX, &offsetY, &pFrameImageData) != TA_SUCCESS) {
             free(pSeq);
@@ -202,10 +201,10 @@ TA_PRIVATE taBool32 taMapLoadTexture(taMapInstance* pMap, taMapLoadContext* pLoa
         taUInt32 frameCount;
         if (taGAFSelectSequence(pMap->pEngine->ppTextureGAFs[iGAF], textureName, &frameCount))
         {
-            taUInt32 width;
-            taUInt32 height;
-            taUInt32 posX;
-            taUInt32 posY;
+            taUInt16 width;
+            taUInt16 height;
+            taInt16 posX;
+            taInt16 posY;
             taUInt8* pTextureData;
             if (taGAFGetFrame(pMap->pEngine->ppTextureGAFs[iGAF], 0, &width, &height, &posX, &posY, &pTextureData) != TA_SUCCESS) {
                 return TA_FALSE;
@@ -758,7 +757,7 @@ TA_PRIVATE taBool32 taMapLoadTNT(taMapInstance* pMap, const char* mapName, taMap
 
 
             // We want to group each mesh in the chunk by texture...
-            for (taUInt32 iTexture = 0; iTexture < pMap->textureCount+1; ++iTexture)    // <-- +1 because there is a texture sitting in the packer that hasn't yet been added to the list.
+            for (taUInt32 iTexture = 0; iTexture < (taUInt32)(pMap->textureCount+1); ++iTexture)    // <-- +1 because there is a texture sitting in the packer that hasn't yet been added to the list.
             {
                 taBool32 isMeshAllocatedForThisTextures = TA_FALSE;
                 
@@ -1062,7 +1061,7 @@ TA_PRIVATE taBool32 taMapLoadContextInit(taMapLoadContext* pLoadContext, taEngin
 
     // Clamp the texture size to avoid excessive wastage. Modern GPUs support 16K textures which is way more than we need, and
     // I'd rather avoid wasting the player's system resources.
-    taUInt32 maxTextureSize = taGetMaxTextureSize(pEngine->pGraphics);
+    taUInt16 maxTextureSize = taGetMaxTextureSize(pEngine->pGraphics);
     if (maxTextureSize > TA_MAX_TEXTURE_ATLAS_SIZE) {
         maxTextureSize = TA_MAX_TEXTURE_ATLAS_SIZE;
     }

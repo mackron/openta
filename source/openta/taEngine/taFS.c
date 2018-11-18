@@ -54,6 +54,8 @@ TA_PRIVATE taBool32 taFSFindFileInArchive(taFS* pFS, taFSArchive* pArchive, cons
     assert(fileRelativePath != NULL);
     assert(pDataPosOut != NULL);
 
+    (void)pFS;
+
     taMemoryStream stream = taCreateMemoryStream(pArchive->pCentralDirectory, pArchive->centralDirectorySize);
 
     // Finding the file within the archive is simple - we just search by each path segment in order and keep going until we
@@ -472,7 +474,7 @@ TA_PRIVATE taBool32 taFSRegisterArchive(taFS* pFS, const char* archiveRelativePa
 
 
     // The central directory needs to be decrypted.
-    taHPIDecrypt(pArchive->pCentralDirectory, pArchive->centralDirectorySize, pArchive->decryptionKey, header.startPos);
+    taHPIDecrypt((taUInt8*)pArchive->pCentralDirectory, pArchive->centralDirectorySize, pArchive->decryptionKey, header.startPos);
 
     // Now we need to recursively traverse the central directory and adjust the pointers to the file names so that they're
     // relative to the central directory. To do this we just offset it by -header.startPos. By doing this now we can simplify
@@ -819,6 +821,12 @@ taBool32 taReadFileUInt16(taFile* pFile, taUInt16* pBufferOut)
     return taReadFile(pFile, pBufferOut, sizeof(taUInt16), &bytesRead) && bytesRead == sizeof(taUInt16);
 }
 
+taBool32 taReadFileInt16(taFile* pFile, taInt16* pBufferOut)
+{
+    size_t bytesRead;
+    return taReadFile(pFile, pBufferOut, sizeof(taInt16), &bytesRead) && bytesRead == sizeof(taInt16);
+}
+
 taBool32 taReadFileUInt8(taFile* pFile, taUInt8* pBufferOut)
 {
     size_t bytesRead;
@@ -902,6 +910,7 @@ taBool32 taHPIDecompressLZ77(const unsigned char* pIn, taUInt32 compressedSize, 
 {
     const unsigned char* pInEnd = pIn + compressedSize;
     const unsigned char* pOutEnd = pOut + uncompressedSize;
+    (void)pOutEnd;
 
     unsigned char block[4096];
     unsigned int iblock = 1;
@@ -924,8 +933,7 @@ taBool32 taHPIDecompressLZ77(const unsigned char* pIn, taUInt32 compressedSize, 
                 break;    // Done.
             }
 
-            for (unsigned int i = 0; i < length; ++i)
-            {
+            for (unsigned int i = 0; i < length; ++i) {
                 *pOut++       = block[offset];
                 block[iblock] = block[offset];
 
@@ -949,7 +957,8 @@ taBool32 taHPIDecompressLZ77(const unsigned char* pIn, taUInt32 compressedSize, 
 
 taBool32 taHPIDecompressZlib(const void* pIn, taUInt32 compressedSize, void* pOut, taUInt32 uncompressedSize)
 {
-    return mz_uncompress(pOut, &uncompressedSize, pIn, compressedSize) == MZ_OK;
+    mz_ulong outSize = (mz_ulong)uncompressedSize;
+    return mz_uncompress(pOut, &outSize, pIn, compressedSize) == MZ_OK;
 }
 
 void taHPIDecrypt(taUInt8* pData, size_t sizeInBytes, taUInt32 decryptionKey, taUInt32 firstBytePos)
@@ -1062,7 +1071,7 @@ size_t taHPIReadAndDecryptCompressed(FILE* pFile, void* pBufferOut, size_t uncom
         if (encrypted) {
             for (taUInt32 i = 0; i < compressedSize; ++i) {
                 checksum2 += pCompressedData[i];
-                pCompressedData[i] = (pCompressedData[i] - i) ^ i;
+                pCompressedData[i] = (unsigned char)((pCompressedData[i] - i) ^ i);
             }
         } else {
             for (taUInt32 i = 0; i < compressedSize; ++i) {
@@ -1082,7 +1091,7 @@ size_t taHPIReadAndDecryptCompressed(FILE* pFile, void* pBufferOut, size_t uncom
         {
             case 1: // LZ77
             {
-                if (!taHPIDecompressLZ77(pCompressedData, compressedSize, (char*)pBufferOut + (iChunk * 65536), uncompressedSize)) {
+                if (!taHPIDecompressLZ77(pCompressedData, compressedSize, (unsigned char*)pBufferOut + (iChunk * 65536), uncompressedSize)) {
                     free(pCompressedData);
                     result = TA_FALSE;
                     goto finished;
@@ -1091,7 +1100,7 @@ size_t taHPIReadAndDecryptCompressed(FILE* pFile, void* pBufferOut, size_t uncom
 
             case 2: // Zlib
             {
-                if (!taHPIDecompressZlib(pCompressedData, compressedSize, (char*)pBufferOut + (iChunk * 65536), uncompressedSize)) {
+                if (!taHPIDecompressZlib(pCompressedData, compressedSize, (unsigned char*)pBufferOut + (iChunk * 65536), uncompressedSize)) {
                     free(pCompressedData);
                     result = TA_FALSE;
                     goto finished;

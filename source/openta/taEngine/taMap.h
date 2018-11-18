@@ -190,7 +190,7 @@ struct taMapInstance
 
 
     // The number of textures containing every 2D graphic used in this map instance.
-    taUInt32 textureCount;
+    taUInt16 textureCount;
 
     // The list of textures containing every 2D graphic used in this map instance. Each texture is
     // an atlas containing many sub-textures. Whenever a graphic is loaded it is placed into one of

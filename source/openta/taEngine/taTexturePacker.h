@@ -28,10 +28,10 @@
 typedef struct
 {
     // The current width of the texture atlas. This is constant.
-    taUInt32 width;
+    taUInt16 width;
 
     // The current height of the texture atlas. This is constant.
-    taUInt32 height;
+    taUInt16 height;
 
     // The number of bytes per pixel.
     taUInt32 bpp;
@@ -41,11 +41,11 @@ typedef struct
 
 
     // The cursor position on the x axis. This is where the next image will try to be placed.
-    taUInt32 cursorPosX;
-    taUInt32 cursorPosY;
+    taUInt16 cursorPosX;
+    taUInt16 cursorPosY;
 
     // The height of the current row.
-    taUInt32 currentRowHeight;
+    taUInt16 currentRowHeight;
 
 
     // The buffer containing the packed image data.
@@ -54,15 +54,15 @@ typedef struct
 
 typedef struct
 {
-    taUInt32 posX;
-    taUInt32 posY;
-    taUInt32 width;
-    taUInt32 height;
+    taUInt16 posX;
+    taUInt16 posY;
+    taUInt16 width;
+    taUInt16 height;
 } taTexturePackerSlot;
 
 
 // Initializes the given texture packer. The minimum and maximum size should be a power of 2.
-taBool32 taTexturePackerInit(taTexturePacker* pPacker, taUInt32 width, taUInt32 height, taUInt32 bytesPerPixel, taUInt32 flags);
+taBool32 taTexturePackerInit(taTexturePacker* pPacker, taUInt16 width, taUInt16 height, taUInt32 bytesPerPixel, taUInt32 flags);
 
 // Uninitializes the given texture packer.
 void taTexturePackerUninit(taTexturePacker* pPacker);
@@ -72,7 +72,7 @@ void taTexturePackerUninit(taTexturePacker* pPacker);
 void taTexturePackerReset(taTexturePacker* pPacker);
 
 // Packs a sub-texture into the packer. If there is no room this will simply return TA_FALSE.
-taBool32 taTexturePackerPackSubTexture(taTexturePacker* pPacker, taUInt32 width, taUInt32 height, const void* pSubTextureData, taTexturePackerSlot* pSlotOut);
+taBool32 taTexturePackerPackSubTexture(taTexturePacker* pPacker, taUInt16 width, taUInt16 height, const void* pSubTextureData, taTexturePackerSlot* pSlotOut);
 
 // Determines if the texture packer is empty or not.
 taBool32 taTexturePackerIsEmpty(const taTexturePacker* pPacker);

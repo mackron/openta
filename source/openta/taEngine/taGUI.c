@@ -101,7 +101,7 @@ taResult taGUILoad(taEngineContext* pEngine, const char* filePath, taGUI* pGUI)
     pGUI->pGadgets = (taGUIGadget*)pGUI->_pPayload;
     
     // PASS #2
-    char* pNextStr = pGUI->_pPayload + (sizeof(*pGUI->pGadgets) * pGUI->gadgetCount);
+    char* pNextStr = (char*)(pGUI->_pPayload + (sizeof(*pGUI->pGadgets) * pGUI->gadgetCount));
     for (unsigned int i = 0; i < pConfig->varCount; ++i) {
         if (taConfigIsSubObjByIndex(pConfig, i)) {
             taConfigObj* pGadgetObj = pConfig->pVars[i].pObject;
@@ -561,7 +561,7 @@ const char* taGUIGetButtonText(taGUIGadget* pGadget, taUInt32 stage)
         return NULL;
     }
 
-    int i = 0;
+    taUInt32 i = 0;
     const char* text = pGadget->button.text;
     for (;;) {
         char c = *text++;
@@ -572,8 +572,6 @@ const char* taGUIGetButtonText(taGUIGadget* pGadget, taUInt32 stage)
             }
         }
     }
-
-    return NULL;
 }
 
 taResult taGUISetListboxItems(taGUIGadget* pGadget, const char** pItems, taUInt32 count)

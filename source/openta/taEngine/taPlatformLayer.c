@@ -466,8 +466,6 @@ int taMainLoop(taEngineContext* pEngine)
             pEngine->onStep(pEngine);
         }
     }
-
-    return 0;
 }
 
 HDC taGetWindowHDC(taWindow* pWindow)

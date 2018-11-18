@@ -17,6 +17,8 @@
 #define TA_INLINE inline
 #endif
 
+typedef void (* taProc)(void);
+
 //// Endian Management ////
 static TA_INLINE taBool32 taIsLittleEndian()
 {

@@ -7,8 +7,10 @@
 #define MINIZ_NO_STDIO
 #include "../../external/miniz.c"
 
+#if 0
 // Bob Jenkins' lookup3 hash
 #include "../../external/lookup3.c"
+#endif
 
 // stb_stretchy_buffer
 #include "../../external/stretchy_buffer.h"

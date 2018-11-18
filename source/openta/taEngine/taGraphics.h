@@ -117,7 +117,7 @@ void taDeleteMesh(taMesh* pMesh);
 //// Limits ////
 
 // Retrievs the maximum dimensions of a texture.
-unsigned int taGetMaxTextureSize(taGraphicsContext* pGraphics);
+taUInt16 taGetMaxTextureSize(taGraphicsContext* pGraphics);
 
 
 

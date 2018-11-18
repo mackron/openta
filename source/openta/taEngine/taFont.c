@@ -43,11 +43,15 @@ taResult taFontLoadFNT(taEngineContext* pEngine, const char* filePath, taFont* p
         }
     }
 
+    if (totalWidth > 65535) {
+        return TA_ERROR;    /* Too wide. TODO: Make the font atlas square instead of one wide row. */
+    }
+
     
     // The texture atlas does not need to be square, but it should be a power of 2 for maximum
     // compatibility with older hardware. This can be optimized later.
-    taUInt32 atlasSizeX = taNextPowerOf2(totalWidth);
-    taUInt32 atlasSizeY = taNextPowerOf2(height);
+    taUInt16 atlasSizeX = (taUInt16)taNextPowerOf2(totalWidth);
+    taUInt16 atlasSizeY = (taUInt16)taNextPowerOf2(height);
 
     taTexturePacker packer;
     taTexturePackerInit(&packer, atlasSizeX, atlasSizeY, 1, TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE);
@@ -143,10 +147,10 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
     taUInt32 totalWidth = 0;
     taUInt32 totalHeight = 0;
     for (int i = 0; i < 256; ++i) {
-        taUInt32 sizeX;
-        taUInt32 sizeY;
-        taInt32 posX;
-        taInt32 posY;
+        taUInt16 sizeX;
+        taUInt16 sizeY;
+        taInt16 posX;
+        taInt16 posY;
         if (taGAFGetFrame(pGAF, i, &sizeX, &sizeY, &posX, &posY, NULL) == TA_SUCCESS) {
             totalWidth += sizeX;
             if (totalHeight < sizeY) {
@@ -161,8 +165,8 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
 
     // The texture atlas does not need to be square, but it should be a power of 2 for maximum
     // compatibility with older hardware. This can be optimized later.
-    taUInt32 atlasSizeX = taNextPowerOf2(totalWidth);
-    taUInt32 atlasSizeY = taNextPowerOf2(totalHeight+1);   // Add 1 to ensure we have at least row of padding for interpolation.
+    taUInt16 atlasSizeX = (taUInt16)taNextPowerOf2(totalWidth);
+    taUInt16 atlasSizeY = (taUInt16)taNextPowerOf2(totalHeight+1);   // Add 1 to ensure we have at least row of padding for interpolation.
 
     taTexturePacker packer;
     taTexturePackerInit(&packer, atlasSizeX, atlasSizeY, 1, TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE);
@@ -172,10 +176,10 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
     memset(paddingPixels, TA_TRANSPARENT_COLOR, sizeof(paddingPixels));
 
     for (int i = 0; i < 256; ++i) {
-        taUInt32 sizeX;
-        taUInt32 sizeY;
-        taInt32 posX;
-        taInt32 posY;
+        taUInt16 sizeX;
+        taUInt16 sizeY;
+        taInt16 posX;
+        taInt16 posY;
         taUInt8* pixels;
         if (taGAFGetFrame(pGAF, i, &sizeX, &sizeY, &posX, &posY, &pixels) == TA_SUCCESS) {
             totalWidth += sizeX;
@@ -193,6 +197,8 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
                     memset(spacePixels, TA_TRANSPARENT_COLOR, sizeX * sizeY);
                     taTexturePackerPackSubTexture(&packer, sizeX, sizeY, spacePixels, &slot);
                     free(spacePixels);
+                } else {
+                    mal_zero_object(&slot);
                 }
             } else {
                 taTexturePackerPackSubTexture(&packer, sizeX, sizeY, pixels, &slot);
@@ -206,7 +212,7 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
             pFont->glyphs[i].sizeY = (float)sizeY;
 
             // We need to add a padding row in between each character.
-            taTexturePackerPackSubTexture(&packer, 1, totalHeight, paddingPixels, NULL);
+            taTexturePackerPackSubTexture(&packer, 1, (taUInt16)totalHeight, paddingPixels, NULL);
 
             taGAFFree(pixels);
         }
@@ -332,6 +338,4 @@ taResult taFontFindCharacterMetrics(taFont* pFont, float scale, const char* text
             }
         }
     }
-
-    return TA_ERROR;
 }
