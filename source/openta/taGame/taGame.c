@@ -496,9 +496,9 @@ typedef struct
 {
     taUInt32 type;
     taGUIGadget* pGadget;  // The gadget this event relates to.
-} ta_gui_input_event;
+} taGUIInputEvent;
 
-taBool32 taHandleGUIInput(taGame* pGame, taGUI* pGUI, ta_gui_input_event* pEvent)
+taBool32 taHandleGUIInput(taGame* pGame, taGUI* pGUI, taGUIInputEvent* pEvent)
 {
     if (pGame == NULL || pGUI == NULL || pEvent == NULL) {
         return TA_FALSE;
@@ -712,7 +712,7 @@ void taStep_MainMenu(taGame* pGame, double dt)
     taUInt32 iGadgetUnderMouse;
     taBool32 isMouseOverGadget = taGUIGetGadgetUnderPoint(&pGame->mainMenu, mousePosXGUI, mousePosYGUI, &iGadgetUnderMouse);
 
-    ta_gui_input_event e;
+    taGUIInputEvent e;
     taBool32 hasGUIEvent = taHandleGUIInput(pGame, &pGame->mainMenu, &e);
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
@@ -766,7 +766,7 @@ void taStep_SPMenu(taGame* pGame, double dt)
 
     // Input
     // =====
-    ta_gui_input_event e;
+    taGUIInputEvent e;
     taBool32 hasGUIEvent = taHandleGUIInput(pGame, &pGame->spMenu, &e);
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
@@ -813,7 +813,7 @@ void taStep_MPMenu(taGame* pGame, double dt)
 
     // Input
     // =====
-    ta_gui_input_event e;
+    taGUIInputEvent e;
     taBool32 hasGUIEvent = taHandleGUIInput(pGame, &pGame->mpMenu, &e);
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
@@ -846,7 +846,7 @@ void taStep_OptionsMenu(taGame* pGame, double dt)
 
     // Input
     // =====
-    ta_gui_input_event e;
+    taGUIInputEvent e;
     taBool32 hasGUIEvent = taHandleGUIInput(pGame, &pGame->optionsMenu, &e);
     if (hasGUIEvent) {
         if (e.type == TA_GUI_EVENT_TYPE_BUTTON_PRESSED) {
@@ -881,7 +881,7 @@ void taStep_SkirmishMenu(taGame* pGame, double dt)
 
     // Input
     // =====
-    ta_gui_input_event e;
+    taGUIInputEvent e;
     taBool32 hasGUIEvent;
     if (pGame->pCurrentDialog == NULL) {
         hasGUIEvent = taHandleGUIInput(pGame, &pGame->skirmishMenu, &e);
@@ -944,7 +944,7 @@ void taStep_CampaignMenu(taGame* pGame, double dt)
 
     // Input
     // =====
-    ta_gui_input_event e;
+    taGUIInputEvent e;
     taBool32 hasGUIEvent;
     if (pGame->pCurrentDialog == NULL) {
         hasGUIEvent = taHandleGUIInput(pGame, &pGame->campaignMenu, &e);

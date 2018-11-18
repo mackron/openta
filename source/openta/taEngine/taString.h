@@ -18,5 +18,5 @@ TA_INLINE size_t taStrlenOrZero(const char* str)
 char* taMakeStringV(const char* format, va_list args);
 char* taMakeStringF(const char* format, ...);
 
-// Frees a string created by ta_make_string*()
+// Frees a string created by taMakeString*()
 void taFreeString(char* str);
