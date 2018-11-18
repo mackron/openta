@@ -1443,7 +1443,7 @@ void taDrawDialogGUI(taGraphicsContext* pGraphics, taGUI* pGUI)
 }
 
 
-void taDrawMapTerrain(taGraphicsContext* pGraphics, ta_map_instance* pMap)
+void taDrawMapTerrain(taGraphicsContext* pGraphics, taMapInstance* pMap)
 {
     // Pre: The paletted fragment program should be bound.
     // Pre: Fragment program should be enabled.
@@ -1522,9 +1522,9 @@ void taDrawMapTerrain(taGraphicsContext* pGraphics, ta_map_instance* pMap)
 
     for (taInt32 chunkY = 0; chunkY < visibleChunkCountY; ++chunkY) {
         for (taInt32 chunkX = 0; chunkX < visibleChunkCountX; ++chunkX) {
-            ta_map_terrain_chunk* pChunk =  &pMap->terrain.pChunks[((chunkY+firstChunkPosY) * pMap->terrain.chunkCountX) + (chunkX+firstChunkPosX)];
+            taMapTerrainChunk* pChunk =  &pMap->terrain.pChunks[((chunkY+firstChunkPosY) * pMap->terrain.chunkCountX) + (chunkX+firstChunkPosX)];
             for (taUInt32 iMesh = 0; iMesh < pChunk->meshCount; ++iMesh) {
-                ta_map_terrain_submesh* pSubmesh = &pChunk->pMeshes[iMesh];
+                taMapTerrainSubMesh* pSubmesh = &pChunk->pMeshes[iMesh];
                 taGraphicsBindTexture(pGraphics, pMap->ppTextures[pSubmesh->textureIndex]);
                 taGraphicsDrawMesh(pGraphics, pMap->terrain.pMesh, pSubmesh->indexCount, pSubmesh->indexOffset);
             }
@@ -1532,13 +1532,13 @@ void taDrawMapTerrain(taGraphicsContext* pGraphics, ta_map_instance* pMap)
     }
 }
 
-void taDrawMapFeatureSequance(taGraphicsContext* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_feature_sequence* pSequence, taUInt32 frameIndex, taBool32 transparent)
+void taDrawMapFeatureSequance(taGraphicsContext* pGraphics, taMapInstance* pMap, taMapFeature* pFeature, taMapFeatureSequence* pSequence, taUInt32 frameIndex, taBool32 transparent)
 {
     if (pSequence == NULL) {
         return;
     }
 
-    ta_map_feature_frame* pFrame = pSequence->pFrames + frameIndex;
+    taMapFeatureFrame* pFrame = pSequence->pFrames + frameIndex;
 
     // The position to draw the feature's graphic depends on it's position in the world and it's offset. Also, the y position
     // needs to be adjusted based on the object's altitude to simulate perspective.
@@ -1586,9 +1586,9 @@ void taDrawMapFeatureSequance(taGraphicsContext* pGraphics, ta_map_instance* pMa
     taGraphicsDrawMesh(pGraphics, pGraphics->pFeaturesMesh, 4, 0);
 }
 
-void taDrawMapFeature3DOObjectRecursive(taGraphicsContext* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_3do* p3DO, taUInt32 objectIndex)
+void taDrawMapFeature3DOObjectRecursive(taGraphicsContext* pGraphics, taMapInstance* pMap, taMapFeature* pFeature, taMap3DO* p3DO, taUInt32 objectIndex)
 {
-    ta_map_3do_object* pObject = &p3DO->pObjects[objectIndex];
+    taMap3DOObject* pObject = &p3DO->pObjects[objectIndex];
     assert(pObject != NULL);
 
     glPushMatrix();
@@ -1597,7 +1597,7 @@ void taDrawMapFeature3DOObjectRecursive(taGraphicsContext* pGraphics, ta_map_ins
         taGraphicsBindShader(pGraphics, &pGraphics->palettedShader3D);
 
         for (size_t iMesh = 0; iMesh < pObject->meshCount; ++iMesh) {
-            ta_map_3do_mesh* p3DOMesh = &p3DO->pMeshes[pObject->firstMeshIndex + iMesh];
+            taMap3DOMesh* p3DOMesh = &p3DO->pMeshes[pObject->firstMeshIndex + iMesh];
 
             taGraphicsBindTexture(pGraphics, pMap->ppTextures[p3DOMesh->textureIndex]);
             taGraphicsBindMesh(pGraphics, p3DOMesh->pMesh);
@@ -1619,7 +1619,7 @@ void taDrawMapFeature3DOObjectRecursive(taGraphicsContext* pGraphics, ta_map_ins
     }
 }
 
-void taDrawMapFeature3DO(taGraphicsContext* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_3do* p3DO)
+void taDrawMapFeature3DO(taGraphicsContext* pGraphics, taMapInstance* pMap, taMapFeature* pFeature, taMap3DO* p3DO)
 {
     assert(pGraphics != NULL);
     assert(pMap != NULL);
@@ -1648,7 +1648,7 @@ void taDrawMapFeature3DO(taGraphicsContext* pGraphics, ta_map_instance* pMap, ta
     glPopMatrix();
 }
 
-void taDrawMap(taGraphicsContext* pGraphics, ta_map_instance* pMap)
+void taDrawMap(taGraphicsContext* pGraphics, taMapInstance* pMap)
 {
     if (pGraphics == NULL || pMap == NULL) {
         return;
@@ -1666,7 +1666,7 @@ void taDrawMap(taGraphicsContext* pGraphics, ta_map_instance* pMap)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     for (taUInt32 iFeature = 0; iFeature < pMap->featureCount; ++iFeature) {
-        ta_map_feature* pFeature = pMap->pFeatures + iFeature;
+        taMapFeature* pFeature = pMap->pFeatures + iFeature;
         if (pFeature->pType->pSequenceDefault) {
             // Draw the shadow if we have one.
             if (pFeature->pType->pSequenceShadow != NULL && pGraphics->isShadowsEnabled) {

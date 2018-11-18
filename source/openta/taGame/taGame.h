@@ -28,7 +28,7 @@ typedef struct
 
 
     // The current map instance. Set to null when there is no map running.
-    ta_map_instance* pCurrentMap;
+    taMapInstance* pCurrentMap;
 
 
     // The main menu.

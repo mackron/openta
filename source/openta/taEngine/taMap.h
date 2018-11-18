@@ -22,8 +22,7 @@ typedef struct
 
     // The index of the texture atlas that the frame's graphic is contained in.
     taUInt16 textureIndex;
-
-} ta_map_feature_frame;
+} taMapFeatureFrame;
 
 typedef struct
 {
@@ -31,9 +30,8 @@ typedef struct
     taUInt32 frameCount;
 
     // The frames making up the sequence.
-    ta_map_feature_frame pFrames[1];
-
-} ta_map_feature_sequence;
+    taMapFeatureFrame pFrames[1];
+} taMapFeatureSequence;
 
 typedef struct
 {
@@ -49,8 +47,7 @@ typedef struct
     // The index offset. A mesh can be contained within a larger monolithic mesh. This property keeps track of the position
     // within that mesh where this submesh begins.
     taUInt32 indexOffset;
-
-} ta_map_3do_mesh;
+} taMap3DOMesh;
 
 typedef struct
 {
@@ -67,10 +64,9 @@ typedef struct
     // The number of meshes making up the object. Meshes are split based on the texture index. 
     size_t meshCount;
 
-    // The index of the first mesh within the main array of the ta_map_3do object that owns this.
+    // The index of the first mesh within the main array of the taMap3DO object that owns this.
     size_t firstMeshIndex;
-
-} ta_map_3do_object;
+} taMap3DOObject;
 
 typedef struct
 {
@@ -78,16 +74,15 @@ typedef struct
     taUInt32 objectCount;
     
     // The list of objects making up the 3DO. The root object is always at index 0.
-    ta_map_3do_object* pObjects;
+    taMap3DOObject* pObjects;
 
     // The number of meshes making up the geometric data of every object. There is usually one mesh per object,
     // but there may be more if an object's mesh data is split over multiple texture atlases.
     taUInt32 meshCount;
 
     // The list of meshes making up the geometric data of every object. These are grouped per-object.
-    ta_map_3do_mesh* pMeshes;
-
-} ta_map_3do;
+    taMap3DOMesh* pMeshes;
+} taMap3DO;
 
 typedef struct
 {
@@ -99,32 +94,31 @@ typedef struct
 
     
     // The default sequence.
-    ta_map_feature_sequence* pSequenceDefault;
+    taMapFeatureSequence* pSequenceDefault;
 
     // the sequence to play when the unit burns.
-    ta_map_feature_sequence* pSequenceBurn;
+    taMapFeatureSequence* pSequenceBurn;
 
     // the sequence to play when the unit is destroyed.
-    ta_map_feature_sequence* pSequenceDie;
+    taMapFeatureSequence* pSequenceDie;
 
     // The sequence to play when the feature is reclamated.
-    ta_map_feature_sequence* pSequenceReclamate;
+    taMapFeatureSequence* pSequenceReclamate;
 
     // The sequence to use when drawing the shadow.
-    ta_map_feature_sequence* pSequenceShadow;
+    taMapFeatureSequence* pSequenceShadow;
 
     // The 3DO object, if it has one. This can be null.
-    ta_map_3do* p3DO;
+    taMap3DO* p3DO;
 
     // The original index of the feature. Internal use only.
     taUInt32 _index;
-
-} ta_map_feature_type;
+} taMapFeatureType;
 
 typedef struct
 {
     // A pointer to the descriptor of the map feature.
-    ta_map_feature_type* pType;
+    taMapFeatureType* pType;
 
     // The position of the feature in the world. The exact position the object is drawn on the 
     // vertical axis is determined by the y and z positions.
@@ -133,12 +127,11 @@ typedef struct
     float posZ;
 
     // The current sequence to show when drawing the feature. This will be null if the object is 3D.
-    ta_map_feature_sequence* pCurrentSequence;
+    taMapFeatureSequence* pCurrentSequence;
 
     // The index of the current frame in the sequence. This is used for for determining which frame to draw at render time.
     taUInt32 currentFrameIndex;
-
-} ta_map_feature;
+} taMapFeature;
 
 
 typedef struct
@@ -151,8 +144,7 @@ typedef struct
 
     // The offset of the first index in the main index buffer.
     taUInt32 indexOffset;
-
-} ta_map_terrain_submesh;
+} taMapTerrainSubMesh;
 
 // Structure containing information about a single chunk of terrain. A chunk is a square grouping of
 // tiles which make up the graphics of the terrain. Each individual tile is 32x32 pixels. A chunk is
@@ -164,9 +156,8 @@ typedef struct
 
     // The meshes making up this chunk. When the chunk is rendered, it will iterate over each of these
     // and draw them one-by-one.
-    ta_map_terrain_submesh* pMeshes;
-
-} ta_map_terrain_chunk;
+    taMapTerrainSubMesh* pMeshes;
+} taMapTerrainChunk;
 
 // Structure containing information about the terrain of a map. The terrain is static and is sub-divided
 // into chunks. Each chunk is then sub-divided further into per-texture pieces for rendering purposes.
@@ -181,23 +172,21 @@ typedef struct
     taUInt32 chunkCountY;
 
     // The chunks making up the map. These are stored in linear order, row-by-row.
-    ta_map_terrain_chunk* pChunks;
+    taMapTerrainChunk* pChunks;
 
     // The mesh containing all of the terrains geometric detail. 
     taMesh* pMesh;
-
-} ta_map_terrain;
+} taMapTerrain;
 
 // Structure representing a running map instance. This will include information about the terrain,
 // features, units and anything else making up the game at any given time.
-struct ta_map_instance
+struct taMapInstance
 {
     // The engine context that owns this map instance.
     taEngineContext* pEngine;
 
-
     // The map's terrain.
-    ta_map_terrain terrain;
+    taMapTerrain terrain;
 
 
     // The number of textures containing every 2D graphic used in this map instance.
@@ -213,20 +202,20 @@ struct ta_map_instance
     taUInt32 featureTypesCount;
 
     // The list of feature types as specified by the TNT file.
-    ta_map_feature_type* pFeatureTypes;
+    taMapFeatureType* pFeatureTypes;
 
 
     // The number of features sitting on the map.
     taUInt32 featureCount;
 
     // The list of features sitting on the map.
-    ta_map_feature* pFeatures;
+    taMapFeature* pFeatures;
 };
 
 // Loads a map by it's name.
 //
 // This will search for "maps/<mapName>.ota" and "maps/<mapName>.tnt" files. If one of these are not present, loading will fail.
-ta_map_instance* ta_load_map(taEngineContext* pEngine, const char* mapName);
+taMapInstance* taLoadMap(taEngineContext* pEngine, const char* mapName);
 
 // Deletes the given map.
-void ta_unload_map(ta_map_instance* pMap);
+void taUnloadMap(taMapInstance* pMap);

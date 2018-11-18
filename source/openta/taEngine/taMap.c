@@ -16,14 +16,14 @@ typedef struct
     taUInt32 featureTypesPtr;
     taUInt32 seaLevel;
     taUInt32 minimapPtr;
-} ta_tnt_header;
+} taTNTHeader;
 
 typedef struct
 {
     taUInt32 posX;
     taUInt32 posY;
     taUInt32 textureIndex;
-} ta_tnt_tile_subimage;
+} taTNTTileSubImage;
 
 typedef struct
 {
@@ -33,7 +33,7 @@ typedef struct
     taUInt32 sizeX;
     taUInt32 sizeY;
     taUInt32 textureIndex;
-} ta_map_loaded_texture;
+} taMapLoadedTexture;
 
 typedef struct
 {
@@ -42,14 +42,14 @@ typedef struct
 
     size_t loadedTexturesBufferSize;
     size_t loadedTexturesCount;
-    ta_map_loaded_texture* pLoadedTextures;
+    taMapLoadedTexture* pLoadedTextures;
 
     size_t meshBuildersBufferSize;
     size_t meshBuildersCount;
     ta_mesh_builder* pMeshBuilders;
-} ta_map_load_context;
+} taMapLoadContext;
 
-taBool32 ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_packer* pPacker)
+TA_PRIVATE taBool32 taMapCreateAndPushTexture(taMapInstance* pMap, ta_texture_packer* pPacker)
 {
     taTexture* pNewTexture = taCreateTexture(pMap->pEngine->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
     if (pNewTexture == NULL) {
@@ -69,24 +69,24 @@ taBool32 ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_packe
     return TA_TRUE;
 }
 
-taBool32 ta_map__pack_subtexture(ta_map_instance* pMap, ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, const void* pImageData, ta_texture_packer_slot* pSlotOut)
+TA_PRIVATE taBool32 taMapPackSubTexture(taMapInstance* pMap, ta_texture_packer* pPacker, taUInt32 width, taUInt32 height, const void* pImageData, ta_texture_packer_slot* pSlotOut)
 {
     // If we can't pack the image we just create a new texture on the graphics system and then reset the packer and try again.
     if (ta_texture_packer_pack_subtexture(pPacker, width, height, pImageData, pSlotOut)) {
         return TA_TRUE;
     }
 
-    if (!ta_map__create_and_push_texture(pMap, pPacker)) {  // <-- This will reset the texture packer.
+    if (!taMapCreateAndPushTexture(pMap, pPacker)) {  // <-- This will reset the texture packer.
         return TA_FALSE;
     }
 
     return ta_texture_packer_pack_subtexture(pPacker, width, height, pImageData, pSlotOut);
 }
 
-int ta_map__sort_feature_types_by_filename(const void* a, const void* b)
+TA_PRIVATE int taMapSortFeatureTypesByFileName(const void* a, const void* b)
 {
-    const ta_map_feature_type* pFeatureTypeA = a;
-    const ta_map_feature_type* pFeatureTypeB = b;
+    const taMapFeatureType* pFeatureTypeA = a;
+    const taMapFeatureType* pFeatureTypeB = b;
 
     if (pFeatureTypeA->pDesc == NULL || pFeatureTypeB->pDesc == NULL) {
         return -1;
@@ -95,10 +95,10 @@ int ta_map__sort_feature_types_by_filename(const void* a, const void* b)
     return strcmp(pFeatureTypeA->pDesc->filename, pFeatureTypeB->pDesc->filename);
 }
 
-int ta_map__sort_feature_types_by_index(const void* a, const void* b)
+TA_PRIVATE int taMapSortFeatureTypesByIndex(const void* a, const void* b)
 {
-    const ta_map_feature_type* pFeatureTypeA = a;
-    const ta_map_feature_type* pFeatureTypeB = b;
+    const taMapFeatureType* pFeatureTypeA = a;
+    const taMapFeatureType* pFeatureTypeB = b;
 
     if (pFeatureTypeA->_index <  pFeatureTypeB->_index) return -1;
     if (pFeatureTypeA->_index >  pFeatureTypeB->_index) return +1;
@@ -106,7 +106,7 @@ int ta_map__sort_feature_types_by_index(const void* a, const void* b)
     return 0;
 }
 
-void ta_map__reset_mesh_builders(ta_map_load_context* pLoadContext)
+TA_PRIVATE void taMapResetMeshBuilders(taMapLoadContext* pLoadContext)
 {
     for (size_t i = 0; i < pLoadContext->meshBuildersCount; ++i) {
         ta_mesh_builder_reset(&pLoadContext->pMeshBuilders[i]);
@@ -115,7 +115,7 @@ void ta_map__reset_mesh_builders(ta_map_load_context* pLoadContext)
     pLoadContext->meshBuildersCount = 0;
 }
 
-ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_texture_packer* pPacker, taGAF* pGAF, const char* sequenceName)
+TA_PRIVATE taMapFeatureSequence* taMapLoadGAFSequence(taMapInstance* pMap, ta_texture_packer* pPacker, taGAF* pGAF, const char* sequenceName)
 {
     taUInt32 frameCount;
     if (!taGAFSelectSequence(pGAF, sequenceName, &frameCount)) {
@@ -126,7 +126,7 @@ ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_tex
         return NULL;
     }
 
-    ta_map_feature_sequence* pSeq = malloc(sizeof(*pSeq) + (frameCount * sizeof(ta_map_feature_frame)));
+    taMapFeatureSequence* pSeq = malloc(sizeof(*pSeq) + (frameCount * sizeof(taMapFeatureFrame)));
     if (pSeq == NULL) {
         return NULL;
     }
@@ -146,7 +146,7 @@ ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_tex
         }
 
         ta_texture_packer_slot slot;
-        if (!ta_map__pack_subtexture(pMap, pPacker, frameWidth, frameHeight, pFrameImageData, &slot)) {
+        if (!taMapPackSubTexture(pMap, pPacker, frameWidth, frameHeight, pFrameImageData, &slot)) {
             free(pSeq);
             return NULL;
         }
@@ -164,7 +164,7 @@ ta_map_feature_sequence* ta_map__load_gaf_sequence(ta_map_instance* pMap, ta_tex
 }
 
 
-taBool32 ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadContext, const char* textureName, ta_map_loaded_texture* pTextureOut)
+TA_PRIVATE taBool32 taMapLoadTexture(taMapInstance* pMap, taMapLoadContext* pLoadContext, const char* textureName, taMapLoadedTexture* pTextureOut)
 {
     assert(pMap != NULL);
     assert(pLoadContext != NULL);
@@ -182,7 +182,7 @@ taBool32 ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadC
     if (pLoadContext->loadedTexturesCount == pLoadContext->loadedTexturesBufferSize)
     {
         size_t newBufferSize = (pLoadContext->loadedTexturesBufferSize == 0) ? 16 : pLoadContext->loadedTexturesBufferSize*2;
-        ta_map_loaded_texture* pNewTextures = (ta_map_loaded_texture*)realloc(pLoadContext->pLoadedTextures, newBufferSize * sizeof(*pNewTextures));
+        taMapLoadedTexture* pNewTextures = (taMapLoadedTexture*)realloc(pLoadContext->pLoadedTextures, newBufferSize * sizeof(*pNewTextures));
         if (pNewTextures == NULL) {
             return TA_FALSE;
         }
@@ -213,7 +213,7 @@ taBool32 ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadC
 
             // The texture was successfully loaded, so now it needs to be packed into an atlas.
             ta_texture_packer_slot subtextureSlot;
-            if (!ta_map__pack_subtexture(pMap, &pLoadContext->texturePacker, width, height, pTextureData, &subtextureSlot)) {
+            if (!taMapPackSubTexture(pMap, &pLoadContext->texturePacker, width, height, pTextureData, &subtextureSlot)) {
                 taGAFFree(pTextureData);
                 return TA_FALSE;
             }
@@ -237,7 +237,7 @@ taBool32 ta_map__load_texture(ta_map_instance* pMap, ta_map_load_context* pLoadC
     return TA_FALSE;
 }
 
-taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_context* pLoadContext, taFile* pFile, ta_map_3do* p3DO, taUInt32 nextObjectIndex)
+TA_PRIVATE taUInt32 taMapLoad3DOObjectsRecursive(taMapInstance* pMap, taMapLoadContext* pLoadContext, taFile* pFile, taMap3DO* p3DO, taUInt32 nextObjectIndex)
 {
     assert(pMap != NULL);
     assert(pFile != NULL);
@@ -266,7 +266,7 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
     //
     // When loading a new texture it may need to be placed in a different atlas to the others. In this case the object needs to be
     // split into multiple meshes.
-    ta_map__reset_mesh_builders(pLoadContext);
+    taMapResetMeshBuilders(pLoadContext);
 
     // Primitives.
     if (!taSeekFile(pFile, objectHeader.primitivePtr, taSeekOriginStart)) {
@@ -286,11 +286,11 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
         taBool32 isClear = TA_FALSE;
         taBool32 isColor = TA_FALSE;
 
-        ta_map_loaded_texture texture;
+        taMapLoadedTexture texture;
         if (primHeader.textureNamePtr != 0)
         {
             const char* textureName = pFile->pFileData + primHeader.textureNamePtr;
-            if (!ta_map__load_texture(pMap, pLoadContext, textureName, &texture)) {
+            if (!taMapLoadTexture(pMap, pLoadContext, textureName, &texture)) {
                 return 0;   // Failed to load the texture.
             }
         }
@@ -457,7 +457,7 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
     p3DO->pObjects[thisIndex].meshCount = objectMeshCount;
     p3DO->pObjects[thisIndex].firstMeshIndex = p3DO->meshCount;
 
-    p3DO->pMeshes = (ta_map_3do_mesh*)realloc(p3DO->pMeshes, (p3DO->meshCount + objectMeshCount) * sizeof(*p3DO->pMeshes));
+    p3DO->pMeshes = (taMap3DOMesh*)realloc(p3DO->pMeshes, (p3DO->meshCount + objectMeshCount) * sizeof(*p3DO->pMeshes));
     if (p3DO->pMeshes == NULL) {
         return 0;
     }
@@ -488,7 +488,7 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
         }
 
         p3DO->pObjects[thisIndex].firstChildIndex = firstChildIndex;
-        childCount = ta_map__load_3do_objects_recursive(pMap, pLoadContext, pFile, p3DO, firstChildIndex);
+        childCount = taMapLoad3DOObjectsRecursive(pMap, pLoadContext, pFile, p3DO, firstChildIndex);
         if (childCount == 0) {
             return 0;   // An error occured.
         }
@@ -504,7 +504,7 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
         }
 
         p3DO->pObjects[thisIndex].nextSiblingIndex = nextSiblingIndex;
-        siblingCount = ta_map__load_3do_objects_recursive(pMap, pLoadContext, pFile, p3DO, nextSiblingIndex);
+        siblingCount = taMapLoad3DOObjectsRecursive(pMap, pLoadContext, pFile, p3DO, nextSiblingIndex);
         if (siblingCount == 0) {
             return 0;   // An error occured.
         }
@@ -515,7 +515,7 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
     return 1 + childCount + siblingCount;
 }
 
-ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadContext, const char* objectName)
+TA_PRIVATE taMap3DO* taMapLoad3DO(taMapInstance* pMap, taMapLoadContext* pLoadContext, const char* objectName)
 {
     // 3DO files are in the "objects3d" folder.
     char fullFileName[TA_MAX_PATH];
@@ -539,7 +539,7 @@ ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadCo
         return NULL;
     }
 
-    ta_map_3do* p3DO = (ta_map_3do*)malloc(sizeof(*p3DO));
+    taMap3DO* p3DO = (taMap3DO*)malloc(sizeof(*p3DO));
     if (p3DO == NULL) {
         taCloseFile(pFile);
         return NULL;
@@ -549,7 +549,7 @@ ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadCo
     p3DO->pMeshes = NULL;
 
     p3DO->objectCount = objectCount;
-    p3DO->pObjects = (ta_map_3do_object*)malloc(objectCount * sizeof(*p3DO->pObjects));
+    p3DO->pObjects = (taMap3DOObject*)malloc(objectCount * sizeof(*p3DO->pObjects));
     if (p3DO->pObjects == NULL) {
         taCloseFile(pFile);
         free(p3DO);
@@ -558,7 +558,7 @@ ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadCo
 
     taSeekFile(pFile, 0, taSeekOriginStart);
 
-    taUInt32 objectsLoaded = ta_map__load_3do_objects_recursive(pMap, pLoadContext, pFile, p3DO, 0);
+    taUInt32 objectsLoaded = taMapLoad3DOObjectsRecursive(pMap, pLoadContext, pFile, p3DO, 0);
     if (objectsLoaded != p3DO->objectCount) {
         taCloseFile(pFile);
         free(p3DO->pMeshes);
@@ -572,7 +572,7 @@ ta_map_3do* ta_map__load_3do(ta_map_instance* pMap, ta_map_load_context* pLoadCo
 }
 
 
-void ta_map__calculate_object_position_xy(taUInt32 tileX, taUInt32 tileY, taUInt16 objectFootprintX, taUInt16 objectFootprintY, float* pPosXOut, float* pPosYOut)
+TA_PRIVATE void taMapCalculateObjectPositionXY(taUInt32 tileX, taUInt32 tileY, taUInt16 objectFootprintX, taUInt16 objectFootprintY, float* pPosXOut, float* pPosYOut)
 {
     assert(pPosXOut != NULL);
     assert(pPosYOut != NULL);
@@ -585,7 +585,7 @@ void ta_map__calculate_object_position_xy(taUInt32 tileX, taUInt32 tileY, taUInt
 }
 
 
-taFile* ta_map__open_tnt_file(taFS* pFS, const char* mapName)
+TA_PRIVATE taFile* taMapOpenTNTFile(taFS* pFS, const char* mapName)
 {
     char filename[TA_MAX_PATH];
     if (!drpath_copy_and_append(filename, sizeof(filename), "maps", mapName)) {
@@ -598,12 +598,12 @@ taFile* ta_map__open_tnt_file(taFS* pFS, const char* mapName)
     return taOpenFile(pFS, filename, 0);
 }
 
-void ta_map__close_tnt_file(taFile* pTNT)
+TA_PRIVATE void taMapCloseTNTFile(taFile* pTNT)
 {
     taCloseFile(pTNT);
 }
 
-taBool32 ta_map__read_tnt_header(taFile* pTNT, ta_tnt_header* pHeader)
+TA_PRIVATE taBool32 taMapReadTNTHeader(taFile* pTNT, taTNTHeader* pHeader)
 {
     assert(pTNT != NULL);
     assert(pHeader != NULL);
@@ -635,20 +635,20 @@ taBool32 ta_map__read_tnt_header(taFile* pTNT, ta_tnt_header* pHeader)
     return TA_TRUE;
 }
 
-taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_load_context* pLoadContext)
+TA_PRIVATE taBool32 taMapLoadTNT(taMapInstance* pMap, const char* mapName, taMapLoadContext* pLoadContext)
 {
     assert(pMap != NULL);
     assert(mapName != NULL);
     assert(pLoadContext != NULL);
 
-    taFile* pTNT = ta_map__open_tnt_file(pMap->pEngine->pFS, mapName);
+    taFile* pTNT = taMapOpenTNTFile(pMap->pEngine->pFS, mapName);
     if (pTNT == NULL) {
         return TA_FALSE;
     }
 
     // Header.
-    ta_tnt_header header;
-    if (!ta_map__read_tnt_header(pTNT, &header)) {
+    taTNTHeader header;
+    if (!taMapReadTNTHeader(pTNT, &header)) {
         return TA_FALSE;
     }
 
@@ -692,7 +692,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     // We need to pack the tile graphics into textures before we can generate the terrain meshes. We
     // use the packer to do this. For each tile we pack we need to track a little bit of information
     // so we can split the meshes properly.
-    ta_tnt_tile_subimage* pTileSubImages = malloc(header.tileCount * sizeof(*pTileSubImages));
+    taTNTTileSubImage* pTileSubImages = malloc(header.tileCount * sizeof(*pTileSubImages));
     if (pTileSubImages == NULL) {
         free(pIndexData);
         free(pVertexData);
@@ -724,7 +724,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
         {
             // We failed to pack the tile into the atlas. Likely we just ran out of room. Just commit that
             // texture and start a fresh one and try this tile again.
-            if (!ta_map__create_and_push_texture(pMap, &pLoadContext->texturePacker)) {  // <-- This will reset the texture packer.
+            if (!taMapCreateAndPushTexture(pMap, &pLoadContext->texturePacker)) {  // <-- This will reset the texture packer.
                 free(pIndexData);
                 free(pVertexData);
                 free(pTileSubImages);
@@ -751,7 +751,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
             }
 
 
-            ta_map_terrain_chunk* pChunk = pMap->terrain.pChunks + ((chunkY*pMap->terrain.chunkCountX) + chunkX);
+            taMapTerrainChunk* pChunk = pMap->terrain.pChunks + ((chunkY*pMap->terrain.chunkCountX) + chunkX);
 
             taUInt32 chunkVertexOffset = ((chunkY*pMap->terrain.chunkCountX) + chunkX) * (tilesPerChunk*4);
             taUInt32 chunkIndexOffset  = ((chunkY*pMap->terrain.chunkCountX) + chunkX) * (tilesPerChunk*4);
@@ -790,7 +790,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
                             if (!isMeshAllocatedForThisTextures)
                             {
                                 // This is the first vertex for this texture so we'll need to allocate a mesh.
-                                ta_map_terrain_submesh* pNewMeshes = realloc(pChunk->pMeshes, (pChunk->meshCount+1) * sizeof(*pChunk->pMeshes));
+                                taMapTerrainSubMesh* pNewMeshes = realloc(pChunk->pMeshes, (pChunk->meshCount+1) * sizeof(*pChunk->pMeshes));
                                 if (pNewMeshes == NULL) {
                                     free(pIndexData);
                                     free(pVertexData);
@@ -809,7 +809,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
                             }
                             
                             // We always add the vertex to the most recent mesh.
-                            ta_map_terrain_submesh* pMesh = pChunk->pMeshes + (pChunk->meshCount - 1);
+                            taMapTerrainSubMesh* pMesh = pChunk->pMeshes + (pChunk->meshCount - 1);
                             
                             taVertexP2T2* pQuad = pVertexData + chunkVertexOffset;
 
@@ -902,13 +902,13 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     }
 
     // The feature types need to be sorted by their file name so we can load them efficiently.
-    qsort(pMap->pFeatureTypes, pMap->featureTypesCount, sizeof(*pMap->pFeatureTypes), ta_map__sort_feature_types_by_filename);
+    qsort(pMap->pFeatureTypes, pMap->featureTypesCount, sizeof(*pMap->pFeatureTypes), taMapSortFeatureTypesByFileName);
 
 
     taGAF* pCurrentGAF = NULL;
     for (taUInt32 iFeatureType = 0; iFeatureType < pMap->featureTypesCount; ++iFeatureType)
     {
-        ta_map_feature_type* pFeatureType = &pMap->pFeatureTypes[iFeatureType];
+        taMapFeatureType* pFeatureType = &pMap->pFeatureTypes[iFeatureType];
         if (pFeatureType->pDesc->filename[0] != '\0')
         {
             if (pCurrentGAF == NULL || _stricmp(pCurrentGAF->filename, pFeatureType->pDesc->filename) != 0)
@@ -928,16 +928,16 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
 
             // At this point the GAF file containing the feature should be loaded and we just need to read it's frame data for
             // every required sequence.
-            pFeatureType->pSequenceDefault = ta_map__load_gaf_sequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqname);
-            pFeatureType->pSequenceBurn = ta_map__load_gaf_sequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqnameburn);
-            pFeatureType->pSequenceDie = ta_map__load_gaf_sequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqnamedie);
-            pFeatureType->pSequenceReclamate = ta_map__load_gaf_sequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqnamereclamate);
-            pFeatureType->pSequenceShadow = ta_map__load_gaf_sequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqnameshadow);
+            pFeatureType->pSequenceDefault = taMapLoadGAFSequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqname);
+            pFeatureType->pSequenceBurn = taMapLoadGAFSequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqnameburn);
+            pFeatureType->pSequenceDie = taMapLoadGAFSequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqnamedie);
+            pFeatureType->pSequenceReclamate = taMapLoadGAFSequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqnamereclamate);
+            pFeatureType->pSequenceShadow = taMapLoadGAFSequence(pMap, &pLoadContext->texturePacker, pCurrentGAF, pFeatureType->pDesc->seqnameshadow);
         }
         else
         {
             // It's not a 2D feature so assume it's a 3D one.
-            pFeatureType->p3DO = ta_map__load_3do(pMap, pLoadContext, pFeatureType->pDesc->object);
+            pFeatureType->p3DO = taMapLoad3DO(pMap, pLoadContext, pFeatureType->pDesc->object);
             if (pFeatureType->p3DO == NULL) {
                 goto on_error;
             }
@@ -951,7 +951,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     // Features are loaded by iterating over each 16x16 tile. The type of each feature is determine based on an index, however
     // remember from earlier that we sorted the features which means those indexes are no longer valid. To address this we just
     // sort it back to it's original order.
-    qsort(pMap->pFeatureTypes, pMap->featureTypesCount, sizeof(*pMap->pFeatureTypes), ta_map__sort_feature_types_by_index);
+    qsort(pMap->pFeatureTypes, pMap->featureTypesCount, sizeof(*pMap->pFeatureTypes), taMapSortFeatureTypesByIndex);
 
     if (!taSeekFile(pTNT, header.mapattrPtr, taSeekOriginStart)) {
         goto on_error;
@@ -995,12 +995,12 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
             taUInt16 featureTypeIndex = (taUInt16)((tile & 0x00FFFF00) >> 8);
             if (featureTypeIndex != 0xFFFF && featureTypeIndex != 0xFFFC && featureTypeIndex != 0xFFFE)
             {
-                ta_map_feature feature;
+                taMapFeature feature;
                 feature.pType = &pMap->pFeatureTypes[featureTypeIndex];
                 feature.pCurrentSequence = feature.pType->pSequenceDefault;
                 feature.currentFrameIndex = 0;
 
-                ta_map__calculate_object_position_xy(x, y, feature.pType->pDesc->footprintX, feature.pType->pDesc->footprintY, &feature.posX, &feature.posY);
+                taMapCalculateObjectPositionXY(x, y, feature.pType->pDesc->footprintX, feature.pType->pDesc->footprintY, &feature.posX, &feature.posY);
                 feature.posZ = tileHeight;  // <-- FIXME: This is not exactly correct. Need to calculate the height of the center point of the tile based on the surrounding tiles.
 
                 // Add the feature to the list.
@@ -1010,17 +1010,17 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     }
     
     
-    ta_map__close_tnt_file(pTNT);
+    taMapCloseTNTFile(pTNT);
     return TA_TRUE;
 
 
 on_error:
-    ta_map__close_tnt_file(pTNT);
+    taMapCloseTNTFile(pTNT);
     return TA_FALSE;
 }
 
 
-taConfigObj* ta_map__open_ota_file(taFS* pFS, const char* mapName)
+TA_PRIVATE taConfigObj* taMapOpenOTAFile(taFS* pFS, const char* mapName)
 {
     char filename[TA_MAX_PATH];
     if (!drpath_copy_and_append(filename, sizeof(filename), "maps", mapName)) {
@@ -1033,26 +1033,26 @@ taConfigObj* ta_map__open_ota_file(taFS* pFS, const char* mapName)
     return taParseConfigFromFile(pFS, filename);
 }
 
-void ta_map__close_ota_file(taConfigObj* pOTA)
+TA_PRIVATE void taMapCloseOTAFile(taConfigObj* pOTA)
 {
     taDeleteConfig(pOTA);
 }
 
-taBool32 ta_map__load_ota(ta_map_instance* pMap, const char* mapName)
+TA_PRIVATE taBool32 taMapLoadOTA(taMapInstance* pMap, const char* mapName)
 {
-    taConfigObj* pOTA = ta_map__open_ota_file(pMap->pEngine->pFS, mapName);
+    taConfigObj* pOTA = taMapOpenOTAFile(pMap->pEngine->pFS, mapName);
     if (pOTA == NULL) {
         return TA_FALSE;
     }
 
     // TODO: Do something.
 
-    ta_map__close_ota_file(pOTA);
+    taMapCloseOTAFile(pOTA);
     return TA_TRUE;
 }
 
 
-taBool32 ta_map_load_context_init(ta_map_load_context* pLoadContext, taEngineContext* pEngine)
+TA_PRIVATE taBool32 taMapLoadContextInit(taMapLoadContext* pLoadContext, taEngineContext* pEngine)
 {
     if (pLoadContext == NULL || pEngine == NULL) {
         return TA_FALSE;
@@ -1075,7 +1075,7 @@ taBool32 ta_map_load_context_init(ta_map_load_context* pLoadContext, taEngineCon
     return TA_TRUE;
 }
 
-void ta_map_load_context_uninit(ta_map_load_context* pLoadContext)
+TA_PRIVATE void taMapLoadContextUninit(taMapLoadContext* pLoadContext)
 {
     if (pLoadContext == NULL) {
         return;
@@ -1085,20 +1085,20 @@ void ta_map_load_context_uninit(ta_map_load_context* pLoadContext)
 }
 
 
-ta_map_instance* ta_load_map(taEngineContext* pEngine, const char* mapName)
+taMapInstance* taLoadMap(taEngineContext* pEngine, const char* mapName)
 {
     if (pEngine == NULL || mapName == NULL) {
         return NULL;
     }
 
-    ta_map_load_context loadContext;
-    if (!ta_map_load_context_init(&loadContext, pEngine)) {
+    taMapLoadContext loadContext;
+    if (!taMapLoadContextInit(&loadContext, pEngine)) {
         return NULL;
     }
 
-    ta_map_instance* pMap = calloc(1, sizeof(*pMap));
+    taMapInstance* pMap = calloc(1, sizeof(*pMap));
     if (pMap == NULL) {
-        ta_map_load_context_uninit(&loadContext);
+        taMapLoadContextUninit(&loadContext);
         return NULL;
     }
 
@@ -1110,36 +1110,36 @@ ta_map_instance* ta_load_map(taEngineContext* pEngine, const char* mapName)
         paletteIndices[i] = (taUInt8)i;
     }
 
-    ta_map__pack_subtexture(pMap, &loadContext.texturePacker, 16, 16, paletteIndices, &loadContext.paletteTextureSlot);
+    taMapPackSubTexture(pMap, &loadContext.texturePacker, 16, 16, paletteIndices, &loadContext.paletteTextureSlot);
 
-    if (!ta_map__load_tnt(pMap, mapName, &loadContext)) {
+    if (!taMapLoadTNT(pMap, mapName, &loadContext)) {
         goto on_error;
     }
 
-    if (!ta_map__load_ota(pMap, mapName)) {
+    if (!taMapLoadOTA(pMap, mapName)) {
         goto on_error;
     }
 
     
     // At the end of loading everything there could be a texture still sitting in the packer which needs to be created.
     if (loadContext.texturePacker.cursorPosX != 0 || loadContext.texturePacker.cursorPosY != 0) {
-        if (!ta_map__create_and_push_texture(pMap, &loadContext.texturePacker)) {  // <-- This will reset the texture packer.
+        if (!taMapCreateAndPushTexture(pMap, &loadContext.texturePacker)) {  // <-- This will reset the texture packer.
             goto on_error;
         }
     }
     
 
-    ta_map_load_context_uninit(&loadContext);
+    taMapLoadContextUninit(&loadContext);
     return pMap;
 
 
 on_error:
-    ta_map_load_context_uninit(&loadContext);
-    ta_unload_map(pMap);
+    taMapLoadContextUninit(&loadContext);
+    taUnloadMap(pMap);
     return NULL;
 }
 
-void ta_unload_map(ta_map_instance* pMap)
+void taUnloadMap(taMapInstance* pMap)
 {
     if (pMap == NULL) {
         return;

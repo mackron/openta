@@ -142,7 +142,7 @@ void taDrawFullscreenGUI(taGraphicsContext* pGraphics, taGUI* pGUI);
 void taDrawDialogGUI(taGraphicsContext* pGraphics, taGUI* pGUI);
 
 // Draws the given given map.
-void taDrawMap(taGraphicsContext* pGraphics, ta_map_instance* pMap);
+void taDrawMap(taGraphicsContext* pGraphics, taMapInstance* pMap);
 
 // Draws a string of text.
 void taDrawText(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text);

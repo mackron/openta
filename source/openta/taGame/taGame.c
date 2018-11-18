@@ -347,13 +347,13 @@ ta_game* ta_create_game(int argc, char** argv)
 
     // TESTING
 #if 1
-    //pGame->pCurrentMap = ta_load_map(pGame, "The Pass");
-    //pGame->pCurrentMap = ta_load_map(pGame, "Red Hot Lava");
-    //pGame->pCurrentMap = ta_load_map(pGame, "Test0");
-    //pGame->pCurrentMap = ta_load_map(pGame, "AC01");    // <-- Includes 3DO features.
-    //pGame->pCurrentMap = ta_load_map(pGame, "AC06");    // <-- Good profiling test.
-    //pGame->pCurrentMap = ta_load_map(pGame, "AC20");
-    //pGame->pCurrentMap = ta_load_map(pGame, "CC25");
+    //pGame->pCurrentMap = taLoadMap(pGame, "The Pass");
+    //pGame->pCurrentMap = taLoadMap(pGame, "Red Hot Lava");
+    //pGame->pCurrentMap = taLoadMap(pGame, "Test0");
+    //pGame->pCurrentMap = taLoadMap(pGame, "AC01");    // <-- Includes 3DO features.
+    //pGame->pCurrentMap = taLoadMap(pGame, "AC06");    // <-- Good profiling test.
+    //pGame->pCurrentMap = taLoadMap(pGame, "AC20");
+    //pGame->pCurrentMap = taLoadMap(pGame, "CC25");
 #endif
 
 
@@ -361,7 +361,7 @@ ta_game* ta_create_game(int argc, char** argv)
 
 on_error:
     if (pGame != NULL) {
-        if (pGame->pCurrentMap != NULL) ta_unload_map(pGame->pCurrentMap);
+        if (pGame->pCurrentMap != NULL) taUnloadMap(pGame->pCurrentMap);
         if (pGame->pWindow != NULL) ta_delete_window(pGame->pWindow);
         taEngineContextUninit(&pGame->engine);
     }
@@ -887,7 +887,7 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
                     return;
                 }
                 if (strcmp(e.pGadget->name, "Start") == 0) {
-                    pGame->pCurrentMap = ta_load_map(&pGame->engine, taConfigGetString(pGame->ppMPMaps[pGame->iSelectedMPMap], "GlobalHeader/missionname"));    // TODO: Free this when the user leaves the game!
+                    pGame->pCurrentMap = taLoadMap(&pGame->engine, taConfigGetString(pGame->ppMPMaps[pGame->iSelectedMPMap], "GlobalHeader/missionname"));    // TODO: Free this when the user leaves the game!
                     ta_goto_screen(pGame, TA_SCREEN_IN_GAME);
                     return;
                 }
