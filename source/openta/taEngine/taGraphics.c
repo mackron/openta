@@ -24,9 +24,9 @@ typedef struct
 {
     GLuint vertexProgram;
     GLuint fragmentProgram;
-} ta_graphics_shader;
+} taGraphicsShader;
 
-struct ta_graphics_context
+struct taGraphicsContext
 {
     // A pointer to the engine context that owns this renderer.
     taEngineContext* pEngine;
@@ -39,20 +39,20 @@ struct ta_graphics_context
     GLuint paletteTextureGL;
 
     // The shader to use when drawing an object with a paletted texture.
-    ta_graphics_shader palettedShader;
+    taGraphicsShader palettedShader;
 
     // The shader to use when drawing alpha transparent objects.
-    ta_graphics_shader palettedShaderTransparent;
+    taGraphicsShader palettedShaderTransparent;
 
     // The shader to use when drawing an object with a paletted texture.
-    ta_graphics_shader palettedShader3D;
+    taGraphicsShader palettedShader3D;
 
     // The shader to use when drawing text.
-    ta_graphics_shader textShader;
+    taGraphicsShader textShader;
 
 
     // A mesh for drawing features.
-    ta_mesh* pFeaturesMesh;
+    taMesh* pFeaturesMesh;
 
 
     // Platform Specific.
@@ -110,9 +110,9 @@ struct ta_graphics_context
 
 
     // State
-    ta_vertex_format currentMeshVertexFormat;
+    taVertexFormat currentMeshVertexFormat;
     taTexture* pCurrentTexture;
-    ta_mesh* pCurrentMesh;
+    taMesh* pCurrentMesh;
     GLuint currentVertexProgram;
     GLuint currentFragmentProgram;
 };
@@ -120,7 +120,7 @@ struct ta_graphics_context
 struct taTexture
 {
     // The graphics context that owns this texture.
-    ta_graphics_context* pGraphics;
+    taGraphicsContext* pGraphics;
 
     // The OpenGL texture object.
     GLuint objectGL;
@@ -135,19 +135,19 @@ struct taTexture
     taUInt32 components;
 };
 
-struct ta_mesh
+struct taMesh
 {
     // The graphics context that owns this mesh.
-    ta_graphics_context* pGraphics;
+    taGraphicsContext* pGraphics;
 
     // The type of primitive making up the mesh.
     GLenum primitiveTypeGL;
 
     // The format of the meshes vertex data.
-    ta_vertex_format vertexFormat;
+    taVertexFormat vertexFormat;
 
     // The format of the index data.
-    ta_index_format indexFormat;
+    taIndexFormat indexFormat;
 
     // The format of the index data for use by OpenGL.
     GLenum indexFormatGL;
@@ -176,7 +176,7 @@ static LRESULT DummyWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM l
 #endif
 
 
-void* ta_get_gl_proc_address(const char* name)
+void* taGetGLProcAddress(const char* name)
 {
 #ifdef _WIN32
     return wglGetProcAddress(name);
@@ -185,7 +185,7 @@ void* ta_get_gl_proc_address(const char* name)
 
 
 // Creates a shader from both a vertex and fragment shader string.
-taBool32 ta_graphics__compile_shader(ta_graphics_context* pGraphics, ta_graphics_shader* pShader, const char* vertexStr, const char* fragmentStr, char* pOutputLog, size_t outputLogSize)
+TA_PRIVATE taBool32 taGraphicsCompileShader(taGraphicsContext* pGraphics, taGraphicsShader* pShader, const char* vertexStr, const char* fragmentStr, char* pOutputLog, size_t outputLogSize)
 {
     if (pGraphics == NULL || pShader == NULL) {
         return TA_FALSE;
@@ -228,13 +228,13 @@ taBool32 ta_graphics__compile_shader(ta_graphics_context* pGraphics, ta_graphics
 }
 
 
-ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, taUInt32 palette[256])
+taGraphicsContext* taCreateGraphicsContext(taEngineContext* pEngine, taUInt32 palette[256])
 {
     if (pEngine == NULL) {
         return NULL;
     }
 
-    ta_graphics_context* pGraphics = calloc(1, sizeof(*pGraphics));
+    taGraphicsContext* pGraphics = calloc(1, sizeof(*pGraphics));
     if (pGraphics == NULL) {
         return NULL;
     }
@@ -298,27 +298,27 @@ ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, taUInt
 
     // Function pointers.
     // Multitexture
-    pGraphics->glActiveTexture = ta_get_gl_proc_address("glActiveTexture");
+    pGraphics->glActiveTexture = taGetGLProcAddress("glActiveTexture");
 
     // ARB_vertex_program / ARG_fragment_program
-    pGraphics->glGenProgramsARB = ta_get_gl_proc_address("glGenProgramsARB");
-    pGraphics->glDeleteProgramsARB = ta_get_gl_proc_address("glDeleteProgramsARB");
-    pGraphics->glBindProgramARB = ta_get_gl_proc_address("glBindProgramARB");
-    pGraphics->glProgramStringARB = ta_get_gl_proc_address("glProgramStringARB");
-    pGraphics->glProgramLocalParameter4fARB = ta_get_gl_proc_address("glProgramLocalParameter4fARB");
+    pGraphics->glGenProgramsARB = taGetGLProcAddress("glGenProgramsARB");
+    pGraphics->glDeleteProgramsARB = taGetGLProcAddress("glDeleteProgramsARB");
+    pGraphics->glBindProgramARB = taGetGLProcAddress("glBindProgramARB");
+    pGraphics->glProgramStringARB = taGetGLProcAddress("glProgramStringARB");
+    pGraphics->glProgramLocalParameter4fARB = taGetGLProcAddress("glProgramLocalParameter4fARB");
 
     // VBO
-    pGraphics->glGenBuffers = ta_get_gl_proc_address("glGenBuffers");
-    pGraphics->glDeleteBuffers = ta_get_gl_proc_address("glDeleteBuffers");
-    pGraphics->glBindBuffer = ta_get_gl_proc_address("glBindBuffer");
-    pGraphics->glBufferData = ta_get_gl_proc_address("glBufferData");
+    pGraphics->glGenBuffers = taGetGLProcAddress("glGenBuffers");
+    pGraphics->glDeleteBuffers = taGetGLProcAddress("glDeleteBuffers");
+    pGraphics->glBindBuffer = taGetGLProcAddress("glBindBuffer");
+    pGraphics->glBufferData = taGetGLProcAddress("glBufferData");
     if (pGraphics->glGenBuffers == NULL)
     {
         // VBO's aren't supported in core, so try the extension APIs.
-        pGraphics->glGenBuffers = ta_get_gl_proc_address("glGenBuffersARB");
-        pGraphics->glDeleteBuffers = ta_get_gl_proc_address("glDeleteBuffersARB");
-        pGraphics->glBindBuffer = ta_get_gl_proc_address("glBindBufferARB");
-        pGraphics->glBufferData = ta_get_gl_proc_address("glBufferDataARB");
+        pGraphics->glGenBuffers = taGetGLProcAddress("glGenBuffersARB");
+        pGraphics->glDeleteBuffers = taGetGLProcAddress("glDeleteBuffersARB");
+        pGraphics->glBindBuffer = taGetGLProcAddress("glBindBufferARB");
+        pGraphics->glBufferData = taGetGLProcAddress("glBufferDataARB");
     }
 
     pGraphics->supportsVBO = pGraphics->glGenBuffers != NULL;
@@ -357,7 +357,7 @@ ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, taUInt
         "TEX paletteIndex, fragment.texcoord[0], texture[0], 2D;\n"
         "TEX result.color, paletteIndex, texture[1], 2D;\n"
         "END";
-    if (!ta_graphics__compile_shader(pGraphics, &pGraphics->palettedShader, NULL, palettedFragmentProgramStr, shaderOutputLog, sizeof(shaderOutputLog))) {
+    if (!taGraphicsCompileShader(pGraphics, &pGraphics->palettedShader, NULL, palettedFragmentProgramStr, shaderOutputLog, sizeof(shaderOutputLog))) {
         printf(shaderOutputLog);
     }
     
@@ -370,7 +370,7 @@ ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, taUInt
         "TEX color, paletteIndex, texture[1], 2D;\n"
         "MUL result.color, color, {1.0, 1.0, 1.0, 0.5};\n"
         "END";
-    if (!ta_graphics__compile_shader(pGraphics, &pGraphics->palettedShaderTransparent, NULL, palettedFragmentProgramTransparentStr, shaderOutputLog, sizeof(shaderOutputLog))) {
+    if (!taGraphicsCompileShader(pGraphics, &pGraphics->palettedShaderTransparent, NULL, palettedFragmentProgramTransparentStr, shaderOutputLog, sizeof(shaderOutputLog))) {
         printf(shaderOutputLog);
     }
 
@@ -424,7 +424,7 @@ ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, taUInt
         "MUL color, color, NdotL;\n"
         "ADD result.color, color, {0.1, 0.1, 0.1, 0};\n"
         "END";
-    if (!ta_graphics__compile_shader(pGraphics, &pGraphics->palettedShader3D, palettedVertexProgram3DStr, palettedFragmentProgram3DStr, shaderOutputLog, sizeof(shaderOutputLog))) {
+    if (!taGraphicsCompileShader(pGraphics, &pGraphics->palettedShader3D, palettedVertexProgram3DStr, palettedFragmentProgram3DStr, shaderOutputLog, sizeof(shaderOutputLog))) {
         printf(shaderOutputLog);
     }
 
@@ -446,7 +446,7 @@ ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, taUInt
         "CMP paletteIndex, paletteIndex, transparentColor, textColor;\n"
         "TEX result.color, paletteIndex, texture[1], 2D;\n"
         "END";
-    if (!ta_graphics__compile_shader(pGraphics, &pGraphics->textShader, NULL, textFragmentProgramStr, shaderOutputLog, sizeof(shaderOutputLog))) {
+    if (!taGraphicsCompileShader(pGraphics, &pGraphics->textShader, NULL, textFragmentProgramStr, shaderOutputLog, sizeof(shaderOutputLog))) {
         printf(shaderOutputLog);
     }
 
@@ -477,7 +477,7 @@ ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, taUInt
 
     // Built-in resources.
     taUInt16 pFeaturesMeshIndices[4] = {0, 1, 2, 3};
-    pGraphics->pFeaturesMesh = ta_create_mutable_mesh(pGraphics, ta_primitive_type_quad, ta_vertex_format_p2t2, 4, NULL, ta_index_format_uint16, 4, pFeaturesMeshIndices);
+    pGraphics->pFeaturesMesh = taCreateMutableMesh(pGraphics, taPrimitiveTypeQuad, taVertexFormatP2T2, 4, NULL, taIndexFormatUInt16, 4, pFeaturesMeshIndices);
     if (pGraphics->pFeaturesMesh == NULL) {
         goto on_error;
     }
@@ -486,11 +486,11 @@ ta_graphics_context* ta_create_graphics_context(taEngineContext* pEngine, taUInt
     return pGraphics;
 
 on_error:
-    ta_delete_graphics_context(pGraphics);
+    taDeleteGraphicsContext(pGraphics);
     return NULL;
 }
 
-void ta_delete_graphics_context(ta_graphics_context* pGraphics)
+void taDeleteGraphicsContext(taGraphicsContext* pGraphics)
 {
     if (pGraphics == NULL) {
         return;
@@ -511,7 +511,7 @@ void ta_delete_graphics_context(ta_graphics_context* pGraphics)
 }
 
 
-ta_window* ta_graphics_create_window(ta_graphics_context* pGraphics, const char* pTitle, unsigned int resolutionX, unsigned int resolutionY, unsigned int options)
+ta_window* taGraphicsCreateWindow(taGraphicsContext* pGraphics, const char* pTitle, unsigned int resolutionX, unsigned int resolutionY, unsigned int options)
 {
 #ifdef _WIN32
     ta_window* pWindow = ta_create_window(pGraphics->pEngine, pTitle, resolutionX, resolutionY, options);
@@ -527,13 +527,13 @@ ta_window* ta_graphics_create_window(ta_graphics_context* pGraphics, const char*
     return NULL;
 }
 
-void ta_graphics_delete_window(ta_graphics_context* pGraphics, ta_window* pWindow)
+void taGraphicsDeleteWindow(taGraphicsContext* pGraphics, ta_window* pWindow)
 {
     (void)pGraphics;
     ta_delete_window(pWindow);
 }
 
-void ta_graphics_set_current_window(ta_graphics_context* pGraphics, ta_window* pWindow)
+void taGraphicsSetCurrentWindow(taGraphicsContext* pGraphics, ta_window* pWindow)
 {
     if (pGraphics == NULL || pGraphics->pCurrentWindow == pWindow) {
         return;
@@ -547,7 +547,7 @@ void ta_graphics_set_current_window(ta_graphics_context* pGraphics, ta_window* p
 }
 
 
-void ta_graphics_enable_vsync(ta_graphics_context* pGraphics, ta_window* pWindow)
+void taGraphicsEnableVSync(taGraphicsContext* pGraphics, ta_window* pWindow)
 {
     if (pGraphics == NULL) {
         return;
@@ -555,15 +555,15 @@ void ta_graphics_enable_vsync(ta_graphics_context* pGraphics, ta_window* pWindow
 
     if (pGraphics->SwapIntervalEXT) {
         ta_window* pPrevWindow = pGraphics->pCurrentWindow;
-        ta_graphics_set_current_window(pGraphics, pWindow);
+        taGraphicsSetCurrentWindow(pGraphics, pWindow);
 
         pGraphics->SwapIntervalEXT(1);
 
-        ta_graphics_set_current_window(pGraphics, pPrevWindow);
+        taGraphicsSetCurrentWindow(pGraphics, pPrevWindow);
     }
 }
 
-void ta_graphics_disable_vsync(ta_graphics_context* pGraphics, ta_window* pWindow)
+void taGraphicsDisableVSync(taGraphicsContext* pGraphics, ta_window* pWindow)
 {
     if (pGraphics == NULL) {
         return;
@@ -571,15 +571,15 @@ void ta_graphics_disable_vsync(ta_graphics_context* pGraphics, ta_window* pWindo
 
     if (pGraphics->SwapIntervalEXT) {
         ta_window* pPrevWindow = pGraphics->pCurrentWindow;
-        ta_graphics_set_current_window(pGraphics, pWindow);
+        taGraphicsSetCurrentWindow(pGraphics, pWindow);
 
         pGraphics->SwapIntervalEXT(0);
 
-        ta_graphics_set_current_window(pGraphics, pPrevWindow);
+        taGraphicsSetCurrentWindow(pGraphics, pPrevWindow);
     }
 }
 
-void ta_graphics_present(ta_graphics_context* pGraphics, ta_window* pWindow)
+void taGraphicsPresent(taGraphicsContext* pGraphics, ta_window* pWindow)
 {
     if (pGraphics == NULL || pWindow == NULL) {
         return;
@@ -591,7 +591,7 @@ void ta_graphics_present(ta_graphics_context* pGraphics, ta_window* pWindow)
 }
 
 
-taTexture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width, unsigned int height, unsigned int components, const void* pImageData)
+taTexture* taCreateTexture(taGraphicsContext* pGraphics, unsigned int width, unsigned int height, unsigned int components, const void* pImageData)
 {
     if (pGraphics == NULL || width == 0 || height == 0 || (components != 1 && components != 3 && components != 4) || pImageData == NULL) {
         return NULL;
@@ -659,20 +659,20 @@ taTexture* ta_create_texture(ta_graphics_context* pGraphics, unsigned int width,
     return pTexture;
 }
 
-void ta_delete_texture(taTexture* pTexture)
+void taDeleteTexture(taTexture* pTexture)
 {
     glDeleteTextures(1, &pTexture->objectGL);
     free(pTexture);
 }
 
 
-ta_mesh* ta_create_empty_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, ta_index_format indexFormat)
+taMesh* taCreateEmptyMesh(taGraphicsContext* pGraphics, taPrimitiveType primitiveType, taVertexFormat vertexFormat, taIndexFormat indexFormat)
 {
     if (pGraphics == NULL) {
         return NULL;
     }
 
-    ta_mesh* pMesh = calloc(1, sizeof(*pMesh));
+    taMesh* pMesh = calloc(1, sizeof(*pMesh));
     if (pMesh == NULL) {
         return NULL;
     }
@@ -681,17 +681,17 @@ ta_mesh* ta_create_empty_mesh(ta_graphics_context* pGraphics, ta_primitive_type 
     pMesh->vertexFormat = vertexFormat;
     pMesh->indexFormat = indexFormat;
 
-    if (primitiveType == ta_primitive_type_point) {
+    if (primitiveType == taPrimitiveTypePoint) {
         pMesh->primitiveTypeGL = GL_POINTS;
-    } else if (primitiveType == ta_primitive_type_line) {
+    } else if (primitiveType == taPrimitiveTypeLine) {
         pMesh->primitiveTypeGL = GL_LINES;
-    } else if (primitiveType == ta_primitive_type_triangle) {
+    } else if (primitiveType == taPrimitiveTypeTriangle) {
         pMesh->primitiveTypeGL = GL_TRIANGLES;
     } else {
         pMesh->primitiveTypeGL = GL_QUADS;
     }
 
-    if (indexFormat == ta_index_format_uint16) {
+    if (indexFormat == taIndexFormatUInt16) {
         pMesh->indexFormatGL = GL_UNSIGNED_SHORT;
     } else {
         pMesh->indexFormatGL = GL_UNSIGNED_INT;
@@ -700,21 +700,21 @@ ta_mesh* ta_create_empty_mesh(ta_graphics_context* pGraphics, ta_primitive_type 
     return pMesh;
 }
 
-ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, taUInt32 vertexCount, const void* pVertexData, ta_index_format indexFormat, taUInt32 indexCount, const void* pIndexData)
+taMesh* taCreateMesh(taGraphicsContext* pGraphics, taPrimitiveType primitiveType, taVertexFormat vertexFormat, taUInt32 vertexCount, const void* pVertexData, taIndexFormat indexFormat, taUInt32 indexCount, const void* pIndexData)
 {
-    ta_mesh* pMesh = ta_create_empty_mesh(pGraphics, primitiveType, vertexFormat, indexFormat);
+    taMesh* pMesh = taCreateEmptyMesh(pGraphics, primitiveType, vertexFormat, indexFormat);
     if (pMesh == NULL) {
         return NULL;
     }
 
 
     taUInt32 vertexBufferSize = vertexCount;
-    if (vertexFormat == ta_vertex_format_p2t2) {
-        vertexBufferSize *= sizeof(ta_vertex_p2t2);
-    } else if (vertexFormat == ta_vertex_format_p3t2) {
-        vertexBufferSize *= sizeof(ta_vertex_p3t2);
+    if (vertexFormat == taVertexFormatP2T2) {
+        vertexBufferSize *= sizeof(taVertexP2T2);
+    } else if (vertexFormat == taVertexFormatP3T2) {
+        vertexBufferSize *= sizeof(taVertexP3T2);
     } else {
-        vertexBufferSize *= sizeof(ta_vertex_p3t2n3);
+        vertexBufferSize *= sizeof(taVertexP3T2N3);
     }
 
     taUInt32 indexBufferSize = indexCount * ((taUInt32)indexFormat);
@@ -768,20 +768,20 @@ ta_mesh* ta_create_mesh(ta_graphics_context* pGraphics, ta_primitive_type primit
     return pMesh;
 }
 
-ta_mesh* ta_create_mutable_mesh(ta_graphics_context* pGraphics, ta_primitive_type primitiveType, ta_vertex_format vertexFormat, taUInt32 vertexCount, const void* pVertexData, ta_index_format indexFormat, taUInt32 indexCount, const void* pIndexData)
+taMesh* taCreateMutableMesh(taGraphicsContext* pGraphics, taPrimitiveType primitiveType, taVertexFormat vertexFormat, taUInt32 vertexCount, const void* pVertexData, taIndexFormat indexFormat, taUInt32 indexCount, const void* pIndexData)
 {
-    ta_mesh* pMesh = ta_create_empty_mesh(pGraphics, primitiveType, vertexFormat, indexFormat);
+    taMesh* pMesh = taCreateEmptyMesh(pGraphics, primitiveType, vertexFormat, indexFormat);
     if (pMesh == NULL) {
         return NULL;
     }
 
     taUInt32 vertexBufferSize = vertexCount;
-    if (vertexFormat == ta_vertex_format_p2t2) {
-        vertexBufferSize *= sizeof(ta_vertex_p2t2);
-    } else if (vertexFormat == ta_vertex_format_p3t2) {
-        vertexBufferSize *= sizeof(ta_vertex_p3t2);
+    if (vertexFormat == taVertexFormatP2T2) {
+        vertexBufferSize *= sizeof(taVertexP2T2);
+    } else if (vertexFormat == taVertexFormatP3T2) {
+        vertexBufferSize *= sizeof(taVertexP3T2);
     } else {
-        vertexBufferSize *= sizeof(ta_vertex_p3t2n3);
+        vertexBufferSize *= sizeof(taVertexP3T2N3);
     }
 
     pMesh->pVertexData = malloc(vertexBufferSize);
@@ -811,7 +811,7 @@ ta_mesh* ta_create_mutable_mesh(ta_graphics_context* pGraphics, ta_primitive_typ
     return pMesh;
 }
 
-void ta_delete_mesh(ta_mesh* pMesh)
+void taDeleteMesh(taMesh* pMesh)
 {
     if (pMesh == NULL) {
         return;
@@ -838,7 +838,7 @@ void ta_delete_mesh(ta_mesh* pMesh)
 
 //// Limits ////
 
-unsigned int ta_get_max_texture_size(ta_graphics_context* pGraphics)
+unsigned int taGetMaxTextureSize(taGraphicsContext* pGraphics)
 {
     if (pGraphics == NULL) {
         return 0;
@@ -851,7 +851,7 @@ unsigned int ta_get_max_texture_size(ta_graphics_context* pGraphics)
 
 //// Drawing ////
 
-void ta_set_resolution(ta_graphics_context* pGraphics, unsigned int resolutionX, unsigned int resolutionY)
+void taSetResolution(taGraphicsContext* pGraphics, unsigned int resolutionX, unsigned int resolutionY)
 {
     if (pGraphics == NULL) {
         return;
@@ -862,7 +862,7 @@ void ta_set_resolution(ta_graphics_context* pGraphics, unsigned int resolutionX,
     glViewport(0, 0, pGraphics->resolutionX, pGraphics->resolutionY);
 }
 
-void ta_set_camera_position(ta_graphics_context* pGraphics, int posX, int posY)
+void taSetCameraPosition(taGraphicsContext* pGraphics, int posX, int posY)
 {
     if (pGraphics == NULL) {
         return;
@@ -872,7 +872,7 @@ void ta_set_camera_position(ta_graphics_context* pGraphics, int posX, int posY)
     pGraphics->cameraPosY = posY;
 }
 
-void ta_translate_camera(ta_graphics_context* pGraphics, int offsetX, int offsetY)
+void taTranslateCamera(taGraphicsContext* pGraphics, int offsetX, int offsetY)
 {
     if (pGraphics == NULL) {
         return;
@@ -884,14 +884,13 @@ void ta_translate_camera(ta_graphics_context* pGraphics, int offsetX, int offset
     //printf("Camera Pos: %d %d\n", pGraphics->cameraPosX, pGraphics->cameraPosY);
 }
 
-static TA_INLINE void ta_graphics__bind_texture(ta_graphics_context* pGraphics, taTexture* pTexture)
+static TA_INLINE void taGraphicsBindTexture(taGraphicsContext* pGraphics, taTexture* pTexture)
 {
     assert(pGraphics != NULL);
 
     if (pGraphics->pCurrentTexture == pTexture) {
         return;
     }
-
 
     if (pTexture != NULL) {
         glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
@@ -902,7 +901,7 @@ static TA_INLINE void ta_graphics__bind_texture(ta_graphics_context* pGraphics, 
     pGraphics->pCurrentTexture = pTexture;
 }
 
-static TA_INLINE void ta_graphics__bind_vertex_program(ta_graphics_context* pGraphics, GLuint vertexProgram)
+static TA_INLINE void taGraphicsBindVertexProgram(taGraphicsContext* pGraphics, GLuint vertexProgram)
 {
     assert(pGraphics != NULL);
 
@@ -920,7 +919,7 @@ static TA_INLINE void ta_graphics__bind_vertex_program(ta_graphics_context* pGra
     pGraphics->currentVertexProgram = vertexProgram;
 }
 
-static TA_INLINE void ta_graphics__bind_fragment_program(ta_graphics_context* pGraphics, GLuint fragmentProgram)
+static TA_INLINE void taGraphicsBindFragmentProgram(taGraphicsContext* pGraphics, GLuint fragmentProgram)
 {
     assert(pGraphics != NULL);
 
@@ -938,22 +937,22 @@ static TA_INLINE void ta_graphics__bind_fragment_program(ta_graphics_context* pG
     pGraphics->currentFragmentProgram = fragmentProgram;
 }
 
-static TA_INLINE void ta_graphics__bind_shader(ta_graphics_context* pGraphics, ta_graphics_shader* pShader)
+static TA_INLINE void taGraphicsBindShader(taGraphicsContext* pGraphics, taGraphicsShader* pShader)
 {
     assert(pGraphics != NULL);
 
     if (pShader != NULL) {
-        ta_graphics__bind_vertex_program(pGraphics, pShader->vertexProgram);
-        ta_graphics__bind_fragment_program(pGraphics, pShader->fragmentProgram);
+        taGraphicsBindVertexProgram(pGraphics, pShader->vertexProgram);
+        taGraphicsBindFragmentProgram(pGraphics, pShader->fragmentProgram);
     } else {
-        ta_graphics__bind_vertex_program(pGraphics, 0);
-        ta_graphics__bind_fragment_program(pGraphics, 0);
+        taGraphicsBindVertexProgram(pGraphics, 0);
+        taGraphicsBindFragmentProgram(pGraphics, 0);
     }
 }
 
 
 
-static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_mesh* pMesh)
+static TA_INLINE void taGraphicsBindMesh(taGraphicsContext* pGraphics, taMesh* pMesh)
 {
     assert(pGraphics != NULL);
     
@@ -963,50 +962,44 @@ static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_
 
     glDisableClientState(GL_NORMAL_ARRAY);
 
-    if (pMesh != NULL)
-    {
-        if (pMesh->pVertexData != NULL)
-        {
+    if (pMesh != NULL) {
+        if (pMesh->pVertexData != NULL) {
             // Using vertex arrays.
             if (pGraphics->supportsVBO) {
                 pGraphics->glBindBuffer(GL_ARRAY_BUFFER, 0);
                 pGraphics->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
             }
 
-            if (pMesh->vertexFormat == ta_vertex_format_p2t2) {
-                glVertexPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), pMesh->pVertexData);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), ((taUInt8*)pMesh->pVertexData) + (2*sizeof(float)));
-            } else if (pMesh->vertexFormat == ta_vertex_format_p3t2) {
-                glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2), pMesh->pVertexData);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2), ((taUInt8*)pMesh->pVertexData) + (3*sizeof(float)));
+            if (pMesh->vertexFormat == taVertexFormatP2T2) {
+                glVertexPointer(2, GL_FLOAT, sizeof(taVertexP2T2), pMesh->pVertexData);
+                glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP2T2), ((taUInt8*)pMesh->pVertexData) + (2*sizeof(float)));
+            } else if (pMesh->vertexFormat == taVertexFormatP3T2) {
+                glVertexPointer(3, GL_FLOAT, sizeof(taVertexP3T2), pMesh->pVertexData);
+                glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP3T2), ((taUInt8*)pMesh->pVertexData) + (3*sizeof(float)));
             } else {
                 glEnableClientState(GL_NORMAL_ARRAY);
-                glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2n3), pMesh->pVertexData);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2n3), ((taUInt8*)pMesh->pVertexData) + (3*sizeof(float)));
-                glNormalPointer(GL_FLOAT, sizeof(ta_vertex_p3t2n3), ((taUInt8*)pMesh->pVertexData) + (5*sizeof(float)));
+                glVertexPointer(3, GL_FLOAT, sizeof(taVertexP3T2N3), pMesh->pVertexData);
+                glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP3T2N3), ((taUInt8*)pMesh->pVertexData) + (3*sizeof(float)));
+                glNormalPointer(GL_FLOAT, sizeof(taVertexP3T2N3), ((taUInt8*)pMesh->pVertexData) + (5*sizeof(float)));
             }
-        }
-        else if (pMesh->vertexObjectGL)
-        {
+        } else if (pMesh->vertexObjectGL) {
             pGraphics->glBindBuffer(GL_ARRAY_BUFFER, pMesh->vertexObjectGL);
             pGraphics->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pMesh->indexObjectGL);
 
-            if (pMesh->vertexFormat == ta_vertex_format_p2t2) {
-                glVertexPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), 0);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p2t2), (const GLvoid*)(2*sizeof(float)));
-            } else if (pMesh->vertexFormat == ta_vertex_format_p3t2) {
-                glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2), 0);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2), (const GLvoid*)(3*sizeof(float)));
+            if (pMesh->vertexFormat == taVertexFormatP2T2) {
+                glVertexPointer(2, GL_FLOAT, sizeof(taVertexP2T2), 0);
+                glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP2T2), (const GLvoid*)(2*sizeof(float)));
+            } else if (pMesh->vertexFormat == taVertexFormatP3T2) {
+                glVertexPointer(3, GL_FLOAT, sizeof(taVertexP3T2), 0);
+                glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP3T2), (const GLvoid*)(3*sizeof(float)));
             } else {
                 glEnableClientState(GL_NORMAL_ARRAY);
-                glVertexPointer(3, GL_FLOAT, sizeof(ta_vertex_p3t2n3), 0);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(ta_vertex_p3t2n3), (const GLvoid*)(3*sizeof(float)));
-                glNormalPointer(GL_FLOAT, sizeof(ta_vertex_p3t2n3), (const GLvoid*)(5*sizeof(float)));
+                glVertexPointer(3, GL_FLOAT, sizeof(taVertexP3T2N3), 0);
+                glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP3T2N3), (const GLvoid*)(3*sizeof(float)));
+                glNormalPointer(GL_FLOAT, sizeof(taVertexP3T2N3), (const GLvoid*)(5*sizeof(float)));
             }
         }
-    }
-    else
-    {
+    } else {
         glVertexPointer(4, GL_FLOAT, 0, NULL);
         glTexCoordPointer(4, GL_FLOAT, 0, NULL);
         glNormalPointer(GL_FLOAT, 0, NULL);
@@ -1020,7 +1013,7 @@ static TA_INLINE void ta_graphics__bind_mesh(ta_graphics_context* pGraphics, ta_
     pGraphics->pCurrentMesh = pMesh;
 }
 
-static TA_INLINE void ta_graphics__draw_mesh(ta_graphics_context* pGraphics, ta_mesh* pMesh, taUInt32 indexCount, taUInt32 indexOffset)
+static TA_INLINE void taGraphicsDrawMesh(taGraphicsContext* pGraphics, taMesh* pMesh, taUInt32 indexCount, taUInt32 indexOffset)
 {
     // Pre: The mesh is assumed to be bound.
     assert(pGraphics != NULL);
@@ -1039,9 +1032,11 @@ static TA_INLINE void ta_graphics__draw_mesh(ta_graphics_context* pGraphics, ta_
 #define TA_GUI_CLEAR_MODE_BLACK 0
 #define TA_GUI_CLEAR_MODE_SHADE 1
 
-void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMode)
+void taDrawGUI(taGraphicsContext* pGraphics, ta_gui* pGUI, taUInt32 clearMode)
 {
-    if (pGraphics == NULL || pGUI == NULL) return;
+    if (pGraphics == NULL || pGUI == NULL) {
+        return;
+    }
 
     // Fullscreen GUIs are drawn based on a 640x480 resolution. We want to stretch the GUI, but maintain it's aspect ratio.
     float scale   = 1;
@@ -1077,8 +1072,8 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     } else {
         glEnable(GL_BLEND); // <-- This is disabled below.
-        ta_graphics__bind_shader(pGraphics, NULL);
-        ta_graphics__bind_texture(pGraphics, NULL);
+        taGraphicsBindShader(pGraphics, NULL);
+        taGraphicsBindTexture(pGraphics, NULL);
         glBegin(GL_QUADS);
         {
             glColor4f(0, 0, 0, 0.5f); glVertex3f(0,                             (float)pGraphics->resolutionY, 0.0f);
@@ -1093,8 +1088,8 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
     glDisable(GL_BLEND);
 
     if (pGUI->pBackgroundTexture != NULL) {
-        ta_graphics__bind_shader(pGraphics, NULL);
-        ta_graphics__bind_texture(pGraphics, pGUI->pBackgroundTexture);
+        taGraphicsBindShader(pGraphics, NULL);
+        taGraphicsBindTexture(pGraphics, pGUI->pBackgroundTexture);
         glBegin(GL_QUADS);
         {
             float uvleft   = 0;
@@ -1136,8 +1131,8 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                     float highlightSizeY = sizeY + (6*scale)*2;
 
                     glEnable(GL_BLEND);
-                    ta_graphics__bind_shader(pGraphics, NULL);
-                    ta_graphics__bind_texture(pGraphics, NULL);
+                    taGraphicsBindShader(pGraphics, NULL);
+                    taGraphicsBindTexture(pGraphics, NULL);
                     glBegin(GL_QUADS);
                     {
                         glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX,                highlightPosY+highlightSizeY, 0.0f);
@@ -1168,7 +1163,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                     }
 
                     taTexture* pBackgroundTexture = pGadget->button.pBackgroundTextureGroup->ppAtlases[pFrame->atlasIndex];
-                    ta_draw_subtexture(pBackgroundTexture, posX, posY, pFrame->sizeX*scale, pFrame->sizeY*scale, TA_FALSE, pFrame->atlasPosX, pFrame->atlasPosY, pFrame->sizeX, pFrame->sizeY);
+                    taDrawSubTexture(pBackgroundTexture, posX, posY, pFrame->sizeX*scale, pFrame->sizeY*scale, TA_FALSE, pFrame->atlasPosX, pFrame->atlasPosY, pFrame->sizeX, pFrame->sizeY);
                 }
 
                 const char* text = ta_gui_get_button_text(pGadget, pGadget->button.currentStage);
@@ -1191,7 +1186,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                         textPosY += 1*scale;
                     }
 
-                    ta_draw_text(pGraphics, &pGraphics->pEngine->font, 255, scale, textPosX, textPosY, text);
+                    taDrawText(pGraphics, &pGraphics->pEngine->font, 255, scale, textPosX, textPosY, text);
 
                     if (pGadget->button.quickkey != 0 && pGadget->button.stages == 0) {
                         float charPosX;
@@ -1209,8 +1204,8 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                             float underlineG = ((underlineRGBA & 0x0000FF00) >>  8) / 255.0f;
                             float underlineB = ((underlineRGBA & 0x000000FF) >>  0) / 255.0f;
 
-                            ta_graphics__bind_shader(pGraphics, NULL);
-                            ta_graphics__bind_texture(pGraphics, NULL);
+                            taGraphicsBindShader(pGraphics, NULL);
+                            taGraphicsBindTexture(pGraphics, NULL);
                             glBegin(GL_QUADS);
                             {
                                 glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
@@ -1231,7 +1226,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                 float itemPosX = 0;
                 float itemPosY = -4*scale;
                 for (taUInt32 iItem = pGadget->listbox.scrollPos; iItem < pGadget->listbox.scrollPos + pGadget->listbox.pageSize && iItem < pGadget->listbox.itemCount; ++iItem) {
-                    ta_draw_text(pGraphics, &pGraphics->pEngine->font, 255, scale, posX + itemPosX, posY + itemPosY, pGadget->listbox.pItems[iItem]);
+                    taDrawText(pGraphics, &pGraphics->pEngine->font, 255, scale, posX + itemPosX, posY + itemPosY, pGadget->listbox.pItems[iItem]);
                     if (iItem == pGadget->listbox.iSelectedItem) {
                         float highlightPosX  = posX + itemPosX - (0*scale);
                         float highlightPosY  = posY + itemPosY + (4*scale);
@@ -1239,8 +1234,8 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                         float highlightSizeY = pGraphics->pEngine->font.height*scale + (0*scale)*2;
 
                         glEnable(GL_BLEND);
-                        ta_graphics__bind_shader(pGraphics, NULL);
-                        ta_graphics__bind_texture(pGraphics, NULL);
+                        taGraphicsBindShader(pGraphics, NULL);
+                        taGraphicsBindTexture(pGraphics, NULL);
                         glBegin(GL_QUADS);
                         {
                             glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX,                highlightPosY+highlightSizeY, 0.0f);
@@ -1328,8 +1323,8 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                 }
 
                 // Arrows.
-                ta_draw_subtexture(pArrow0Texture, arrow0PosX, arrow0PosY, pArrow0Frame->sizeX*scale, pArrow0Frame->sizeY*scale, TA_TRUE, pArrow0Frame->atlasPosX, pArrow0Frame->atlasPosY, pArrow0Frame->sizeX, pArrow0Frame->sizeY);
-                ta_draw_subtexture(pArrow0Texture, arrow1PosX, arrow1PosY, pArrow1Frame->sizeX*scale, pArrow1Frame->sizeY*scale, TA_TRUE, pArrow1Frame->atlasPosX, pArrow1Frame->atlasPosY, pArrow1Frame->sizeX, pArrow1Frame->sizeY);
+                taDrawSubTexture(pArrow0Texture, arrow0PosX, arrow0PosY, pArrow0Frame->sizeX*scale, pArrow0Frame->sizeY*scale, TA_TRUE, pArrow0Frame->atlasPosX, pArrow0Frame->atlasPosY, pArrow0Frame->sizeX, pArrow0Frame->sizeY);
+                taDrawSubTexture(pArrow0Texture, arrow1PosX, arrow1PosY, pArrow1Frame->sizeX*scale, pArrow1Frame->sizeY*scale, TA_TRUE, pArrow1Frame->atlasPosX, pArrow1Frame->atlasPosY, pArrow1Frame->sizeX, pArrow1Frame->sizeY);
 
                 // Track.
                 if ((pGadget->attribs & TA_GUI_SCROLLBAR_TYPE_VERTICAL) != 0) {
@@ -1339,7 +1334,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                             break;
                         }
 
-                        ta_draw_subtexture(pTrackBegTexture, trackBegPosX, runningPosY, pTrackMidFrame->sizeX*scale, pTrackMidFrame->sizeY*scale, TA_TRUE, pTrackMidFrame->atlasPosX, pTrackMidFrame->atlasPosY, pTrackMidFrame->sizeX, pTrackMidFrame->sizeY);
+                        taDrawSubTexture(pTrackBegTexture, trackBegPosX, runningPosY, pTrackMidFrame->sizeX*scale, pTrackMidFrame->sizeY*scale, TA_TRUE, pTrackMidFrame->atlasPosX, pTrackMidFrame->atlasPosY, pTrackMidFrame->sizeX, pTrackMidFrame->sizeY);
                         runningPosY += pTrackMidFrame->sizeY*scale;
                     }
                 } else {
@@ -1349,13 +1344,13 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                             break;
                         }
 
-                        ta_draw_subtexture(pTrackBegTexture, runningPosX, trackBegPosY, pTrackMidFrame->sizeX*scale, pTrackMidFrame->sizeY*scale, TA_TRUE, pTrackMidFrame->atlasPosX, pTrackMidFrame->atlasPosY, pTrackMidFrame->sizeX, pTrackMidFrame->sizeY);
+                        taDrawSubTexture(pTrackBegTexture, runningPosX, trackBegPosY, pTrackMidFrame->sizeX*scale, pTrackMidFrame->sizeY*scale, TA_TRUE, pTrackMidFrame->atlasPosX, pTrackMidFrame->atlasPosY, pTrackMidFrame->sizeX, pTrackMidFrame->sizeY);
                         runningPosX += pTrackMidFrame->sizeX*scale;
                     }
                 }
 
-                ta_draw_subtexture(pTrackBegTexture, trackBegPosX, trackBegPosY, pTrackBegFrame->sizeX*scale, pTrackBegFrame->sizeY*scale, TA_TRUE, pTrackBegFrame->atlasPosX, pTrackBegFrame->atlasPosY, pTrackBegFrame->sizeX, pTrackBegFrame->sizeY);
-                ta_draw_subtexture(pTrackEndTexture, trackEndPosX, trackEndPosY, pTrackEndFrame->sizeX*scale, pTrackEndFrame->sizeY*scale, TA_TRUE, pTrackEndFrame->atlasPosX, pTrackEndFrame->atlasPosY, pTrackEndFrame->sizeX, pTrackEndFrame->sizeY);
+                taDrawSubTexture(pTrackBegTexture, trackBegPosX, trackBegPosY, pTrackBegFrame->sizeX*scale, pTrackBegFrame->sizeY*scale, TA_TRUE, pTrackBegFrame->atlasPosX, pTrackBegFrame->atlasPosY, pTrackBegFrame->sizeX, pTrackBegFrame->sizeY);
+                taDrawSubTexture(pTrackEndTexture, trackEndPosX, trackEndPosY, pTrackEndFrame->sizeX*scale, pTrackEndFrame->sizeY*scale, TA_TRUE, pTrackEndFrame->atlasPosX, pTrackEndFrame->atlasPosY, pTrackEndFrame->sizeX, pTrackEndFrame->sizeY);
 
                 // Thumb.
                 if ((pGadget->attribs & TA_GUI_SCROLLBAR_TYPE_VERTICAL) != 0) {
@@ -1365,17 +1360,17 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                             break;
                         }
 
-                        ta_draw_subtexture(pThumbTexture, thumbBegPosX, runningPosY, pThumbFrame->sizeX*scale, pThumbFrame->sizeY*scale, TA_TRUE, pThumbFrame->atlasPosX, pThumbFrame->atlasPosY, pThumbFrame->sizeX, pThumbFrame->sizeY);
+                        taDrawSubTexture(pThumbTexture, thumbBegPosX, runningPosY, pThumbFrame->sizeX*scale, pThumbFrame->sizeY*scale, TA_TRUE, pThumbFrame->atlasPosX, pThumbFrame->atlasPosY, pThumbFrame->sizeX, pThumbFrame->sizeY);
                         runningPosY += pThumbFrame->sizeY*scale;
                     }
 
                     // Caps.
-                    ta_draw_subtexture(pThumbCapTopTexture, thumbBegPosX, thumbBegPosY,                                 pThumbCapTopFrame->sizeX*scale, pThumbCapTopFrame->sizeY*scale, TA_TRUE, pThumbCapTopFrame->atlasPosX, pThumbCapTopFrame->atlasPosY, pThumbCapTopFrame->sizeX, pThumbCapTopFrame->sizeY);
-                    ta_draw_subtexture(pThumbCapBotTexture, thumbBegPosX, runningPosY - pThumbCapBotFrame->sizeY*scale, pThumbCapBotFrame->sizeX*scale, pThumbCapBotFrame->sizeY*scale, TA_TRUE, pThumbCapBotFrame->atlasPosX, pThumbCapBotFrame->atlasPosY, pThumbCapBotFrame->sizeX, pThumbCapBotFrame->sizeY);
+                    taDrawSubTexture(pThumbCapTopTexture, thumbBegPosX, thumbBegPosY,                                 pThumbCapTopFrame->sizeX*scale, pThumbCapTopFrame->sizeY*scale, TA_TRUE, pThumbCapTopFrame->atlasPosX, pThumbCapTopFrame->atlasPosY, pThumbCapTopFrame->sizeX, pThumbCapTopFrame->sizeY);
+                    taDrawSubTexture(pThumbCapBotTexture, thumbBegPosX, runningPosY - pThumbCapBotFrame->sizeY*scale, pThumbCapBotFrame->sizeX*scale, pThumbCapBotFrame->sizeY*scale, TA_TRUE, pThumbCapBotFrame->atlasPosX, pThumbCapBotFrame->atlasPosY, pThumbCapBotFrame->sizeX, pThumbCapBotFrame->sizeY);
                 } else {
                     // Horizontal scrollbars are a bit different to vertical in that they appear to always be a fixed size (10x10) and use
                     // a different graphic.
-                    ta_draw_subtexture(pThumbTexture, thumbBegPosX, thumbBegPosY, pThumbFrame->sizeX*scale, pThumbFrame->sizeY*scale, TA_TRUE, pThumbFrame->atlasPosX, pThumbFrame->atlasPosY, pThumbFrame->sizeX, pThumbFrame->sizeY);
+                    taDrawSubTexture(pThumbTexture, thumbBegPosX, thumbBegPosY, pThumbFrame->sizeX*scale, pThumbFrame->sizeY*scale, TA_TRUE, pThumbFrame->atlasPosX, pThumbFrame->atlasPosY, pThumbFrame->sizeX, pThumbFrame->sizeY);
                 }
             } break;
 
@@ -1388,7 +1383,7 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
 
                     float textPosX = posX + (1*scale);
                     float textPosY = posY - (4*scale);
-                    ta_draw_text(pGraphics, &pGraphics->pEngine->fontSmall, 255, scale, textPosX, textPosY, pGadget->label.text);
+                    taDrawText(pGraphics, &pGraphics->pEngine->fontSmall, 255, scale, textPosX, textPosY, pGadget->label.text);
 
                     // Underline the shortcut key for the associated button.
                     if (pGadget->label.iLinkedGadget != (taUInt32)-1) {
@@ -1408,8 +1403,8 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
                             float underlineG = ((underlineRGBA & 0x0000FF00) >>  8) / 255.0f;
                             float underlineB = ((underlineRGBA & 0x000000FF) >>  0) / 255.0f;
 
-                            ta_graphics__bind_shader(pGraphics, NULL);
-                            ta_graphics__bind_texture(pGraphics, NULL);
+                            taGraphicsBindShader(pGraphics, NULL);
+                            taGraphicsBindTexture(pGraphics, NULL);
                             glBegin(GL_QUADS);
                             {
                                 glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
@@ -1437,19 +1432,18 @@ void ta_draw_gui(ta_graphics_context* pGraphics, ta_gui* pGUI, taUInt32 clearMod
     }
 }
 
-void ta_draw_fullscreen_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
+void taDrawFullscreenGUI(taGraphicsContext* pGraphics, ta_gui* pGUI)
 {
-    ta_draw_gui(pGraphics, pGUI, TA_GUI_CLEAR_MODE_BLACK);
+    taDrawGUI(pGraphics, pGUI, TA_GUI_CLEAR_MODE_BLACK);
 }
 
-void ta_draw_dialog_gui(ta_graphics_context* pGraphics, ta_gui* pGUI)
+void taDrawDialogGUI(taGraphicsContext* pGraphics, ta_gui* pGUI)
 {
-    ta_draw_gui(pGraphics, pGUI, TA_GUI_CLEAR_MODE_SHADE);
+    taDrawGUI(pGraphics, pGUI, TA_GUI_CLEAR_MODE_SHADE);
 }
 
 
-
-void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
+void taDrawMapTerrain(taGraphicsContext* pGraphics, ta_map_instance* pMap)
 {
     // Pre: The paletted fragment program should be bound.
     // Pre: Fragment program should be enabled.
@@ -1478,7 +1472,7 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
 
 
     // The mesh must be bound before we can draw it.
-    ta_graphics__bind_mesh(pGraphics, pMap->terrain.pMesh);
+    taGraphicsBindMesh(pGraphics, pMap->terrain.pMesh);
 
 
     // Only draw visible chunks.
@@ -1526,22 +1520,19 @@ void ta_draw_map_terrain(ta_graphics_context* pGraphics, ta_map_instance* pMap)
     }
 
 
-    for (taInt32 chunkY = 0; chunkY < visibleChunkCountY; ++chunkY)
-    {
-        for (taInt32 chunkX = 0; chunkX < visibleChunkCountX; ++chunkX)
-        {
+    for (taInt32 chunkY = 0; chunkY < visibleChunkCountY; ++chunkY) {
+        for (taInt32 chunkX = 0; chunkX < visibleChunkCountX; ++chunkX) {
             ta_map_terrain_chunk* pChunk =  &pMap->terrain.pChunks[((chunkY+firstChunkPosY) * pMap->terrain.chunkCountX) + (chunkX+firstChunkPosX)];
-            for (taUInt32 iMesh = 0; iMesh < pChunk->meshCount; ++iMesh)
-            {
+            for (taUInt32 iMesh = 0; iMesh < pChunk->meshCount; ++iMesh) {
                 ta_map_terrain_submesh* pSubmesh = &pChunk->pMeshes[iMesh];
-                ta_graphics__bind_texture(pGraphics, pMap->ppTextures[pSubmesh->textureIndex]);
-                ta_graphics__draw_mesh(pGraphics, pMap->terrain.pMesh, pSubmesh->indexCount, pSubmesh->indexOffset);
+                taGraphicsBindTexture(pGraphics, pMap->ppTextures[pSubmesh->textureIndex]);
+                taGraphicsDrawMesh(pGraphics, pMap->terrain.pMesh, pSubmesh->indexCount, pSubmesh->indexOffset);
             }
         }
     }
 }
 
-void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_feature_sequence* pSequence, taUInt32 frameIndex, taBool32 transparent)
+void taDrawMapFeatureSequance(taGraphicsContext* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_feature_sequence* pSequence, taUInt32 frameIndex, taBool32 transparent)
 {
     if (pSequence == NULL) {
         return;
@@ -1572,13 +1563,13 @@ void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instanc
 
 
     if (transparent) {
-        ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShaderTransparent);
+        taGraphicsBindShader(pGraphics, &pGraphics->palettedShaderTransparent);
     } else {
-        ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader);
+        taGraphicsBindShader(pGraphics, &pGraphics->palettedShader);
     }
 
     taTexture* pTexture = pMap->ppTextures[pSequence->pFrames[pFeature->currentFrameIndex].textureIndex];
-    ta_graphics__bind_texture(pGraphics, pTexture);
+    taGraphicsBindTexture(pGraphics, pTexture);
 
 
     float uvleft   = (float)pFrame->texturePosX / pTexture->width;
@@ -1586,16 +1577,16 @@ void ta_draw_map_feature_sequance(ta_graphics_context* pGraphics, ta_map_instanc
     float uvright  = (float)(pFrame->texturePosX + pFrame->width)  / pTexture->width;
     float uvbottom = (float)(pFrame->texturePosY + pFrame->height) / pTexture->height;
 
-    ta_vertex_p2t2* pVertexData = pGraphics->pFeaturesMesh->pVertexData;
+    taVertexP2T2* pVertexData = pGraphics->pFeaturesMesh->pVertexData;
     pVertexData[0].x = posX;                 pVertexData[0].y = posY;                  pVertexData[0].u = uvleft;  pVertexData[0].v = uvtop;
     pVertexData[1].x = posX;                 pVertexData[1].y = posY + pFrame->height; pVertexData[1].u = uvleft;  pVertexData[1].v = uvbottom;
     pVertexData[2].x = posX + pFrame->width; pVertexData[2].y = posY + pFrame->height; pVertexData[2].u = uvright; pVertexData[2].v = uvbottom;
     pVertexData[3].x = posX + pFrame->width; pVertexData[3].y = posY;                  pVertexData[3].u = uvright; pVertexData[3].v = uvtop;
-    ta_graphics__bind_mesh(pGraphics, pGraphics->pFeaturesMesh);
-    ta_graphics__draw_mesh(pGraphics, pGraphics->pFeaturesMesh, 4, 0);
+    taGraphicsBindMesh(pGraphics, pGraphics->pFeaturesMesh);
+    taGraphicsDrawMesh(pGraphics, pGraphics->pFeaturesMesh, 4, 0);
 }
 
-void ta_draw_map_feature_3do_object_recursive(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_3do* p3DO, taUInt32 objectIndex)
+void taDrawMapFeature3DOObjectRecursive(taGraphicsContext* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_3do* p3DO, taUInt32 objectIndex)
 {
     ta_map_3do_object* pObject = &p3DO->pObjects[objectIndex];
     assert(pObject != NULL);
@@ -1603,32 +1594,32 @@ void ta_draw_map_feature_3do_object_recursive(ta_graphics_context* pGraphics, ta
     glPushMatrix();
     glTranslatef((float)pObject->relativePosX, (float)pObject->relativePosY, (float)pObject->relativePosZ);
     {
-        ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader3D);
+        taGraphicsBindShader(pGraphics, &pGraphics->palettedShader3D);
 
         for (size_t iMesh = 0; iMesh < pObject->meshCount; ++iMesh) {
             ta_map_3do_mesh* p3DOMesh = &p3DO->pMeshes[pObject->firstMeshIndex + iMesh];
 
-            ta_graphics__bind_texture(pGraphics, pMap->ppTextures[p3DOMesh->textureIndex]);
-            ta_graphics__bind_mesh(pGraphics, p3DOMesh->pMesh);
+            taGraphicsBindTexture(pGraphics, pMap->ppTextures[p3DOMesh->textureIndex]);
+            taGraphicsBindMesh(pGraphics, p3DOMesh->pMesh);
 
-            ta_graphics__draw_mesh(pGraphics, p3DOMesh->pMesh, p3DOMesh->indexCount, p3DOMesh->indexOffset);
+            taGraphicsDrawMesh(pGraphics, p3DOMesh->pMesh, p3DOMesh->indexCount, p3DOMesh->indexOffset);
         }
 
 
         // Children.
         if (pObject->firstChildIndex != 0) {
-            ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, pObject->firstChildIndex);
+            taDrawMapFeature3DOObjectRecursive(pGraphics, pMap, pFeature, p3DO, pObject->firstChildIndex);
         }
     }
     glPopMatrix();
 
     // Siblings.
     if (pObject->nextSiblingIndex) {
-        ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, pObject->nextSiblingIndex);
+        taDrawMapFeature3DOObjectRecursive(pGraphics, pMap, pFeature, p3DO, pObject->nextSiblingIndex);
     }
 }
 
-void ta_draw_map_feature_3do(ta_graphics_context* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_3do* p3DO)
+void taDrawMapFeature3DO(taGraphicsContext* pGraphics, ta_map_instance* pMap, ta_map_feature* pFeature, ta_map_3do* p3DO)
 {
     assert(pGraphics != NULL);
     assert(pMap != NULL);
@@ -1650,55 +1641,51 @@ void ta_draw_map_feature_3do(ta_graphics_context* pGraphics, ta_map_instance* pM
         // This disable/enable pair can be made more efficient. Consider splitting 2D and 3D objects and render in separate loops.
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
-        ta_draw_map_feature_3do_object_recursive(pGraphics, pMap, pFeature, p3DO, 0);
+        taDrawMapFeature3DOObjectRecursive(pGraphics, pMap, pFeature, p3DO, 0);
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
     }
     glPopMatrix();
 }
 
-void ta_draw_map(ta_graphics_context* pGraphics, ta_map_instance* pMap)
+void taDrawMap(taGraphicsContext* pGraphics, ta_map_instance* pMap)
 {
     if (pGraphics == NULL || pMap == NULL) {
         return;
     }
 
-    ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader);
+    taGraphicsBindShader(pGraphics, &pGraphics->palettedShader);
 
 
     // Terrain is always laid down first.
-    ta_draw_map_terrain(pGraphics, pMap);
+    taDrawMapTerrain(pGraphics, pMap);
 
 
     // Features can be assumed to be transparent.
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    for (taUInt32 iFeature = 0; iFeature < pMap->featureCount; ++iFeature)
-    {
+    for (taUInt32 iFeature = 0; iFeature < pMap->featureCount; ++iFeature) {
         ta_map_feature* pFeature = pMap->pFeatures + iFeature;
-        if (pFeature->pType->pSequenceDefault)
-        {
+        if (pFeature->pType->pSequenceDefault) {
             // Draw the shadow if we have one.
             if (pFeature->pType->pSequenceShadow != NULL && pGraphics->isShadowsEnabled) {
-                ta_draw_map_feature_sequance(pGraphics, pMap, pFeature, pFeature->pType->pSequenceShadow, 0, (pFeature->pType->pDesc->flags & TA_FEATURE_SHADOWTRANSPARENT) != 0);
+                taDrawMapFeatureSequance(pGraphics, pMap, pFeature, pFeature->pType->pSequenceShadow, 0, (pFeature->pType->pDesc->flags & TA_FEATURE_SHADOWTRANSPARENT) != 0);
             }
 
             if (pFeature->pCurrentSequence != NULL) {
-                ta_draw_map_feature_sequance(pGraphics, pMap, pFeature, pFeature->pCurrentSequence, pFeature->currentFrameIndex, TA_FALSE);    // "TA_FALSE" means don't use transparency.
+                taDrawMapFeatureSequance(pGraphics, pMap, pFeature, pFeature->pCurrentSequence, pFeature->currentFrameIndex, TA_FALSE);    // "TA_FALSE" means don't use transparency.
             }
-        }
-        else
-        {
+        } else {
             // The feature has no default sequence which means it's probably a 3D object.
             if (pFeature->pType->p3DO != NULL) {
-                ta_draw_map_feature_3do(pGraphics, pMap, pFeature, pFeature->pType->p3DO);
+                taDrawMapFeature3DO(pGraphics, pMap, pFeature, pFeature->pType->p3DO);
             }
         }
     }
 }
 
-void ta_draw_text(ta_graphics_context* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text)
+void taDrawText(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text)
 {
     if (pGraphics == NULL || pFont == NULL || text == NULL) {
         return;
@@ -1715,14 +1702,14 @@ void ta_draw_text(ta_graphics_context* pGraphics, taFont* pFont, taUInt8 colorIn
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if (pFont->canBeColored) {
-        ta_graphics__bind_shader(pGraphics, &pGraphics->textShader);
+        taGraphicsBindShader(pGraphics, &pGraphics->textShader);
         pGraphics->glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f);
         pGraphics->glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 1, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f);
     } else {
-        ta_graphics__bind_shader(pGraphics, NULL);
+        taGraphicsBindShader(pGraphics, NULL);
     }
 
-    ta_graphics__bind_texture(pGraphics, pFont->pTexture);
+    taGraphicsBindTexture(pGraphics, pFont->pTexture);
 
     // Immediate mode will do for now, but might want to use vertex arrays later.
     float penPosX = posX;
@@ -1760,27 +1747,27 @@ void ta_draw_text(ta_graphics_context* pGraphics, taFont* pFont, taUInt8 colorIn
     glEnd();
 }
 
-void ta_draw_textf(ta_graphics_context* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...)
+void taDrawTextf(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...)
 {
     va_list args;
     va_start(args, text);
     {
         char* formattedText = ta_make_stringv(text, args);
         if (formattedText) {
-            ta_draw_text(pGraphics, pFont, colorIndex, scale, posX, posY, formattedText);
+            taDrawText(pGraphics, pFont, colorIndex, scale, posX, posY, formattedText);
             ta_free_string(formattedText);
         }
     }
     va_end(args);
 }
 
-void ta_draw_subtexture(taTexture* pTexture, float posX, float posY, float width, float height, taBool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY)
+void taDrawSubTexture(taTexture* pTexture, float posX, float posY, float width, float height, taBool32 transparent, float subtexturePosX, float subtexturePosY, float subtextureSizeX, float subtextureSizeY)
 {
     if (pTexture == NULL) {
         return;
     }
 
-    ta_graphics_context* pGraphics = pTexture->pGraphics;
+    taGraphicsContext* pGraphics = pTexture->pGraphics;
 
     glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -1800,13 +1787,13 @@ void ta_draw_subtexture(taTexture* pTexture, float posX, float posY, float width
     // We need to use a different fragment program depending on whether or not we're using a paletted texture.
     taBool32 isPaletted = pTexture->components == 1;
     if (isPaletted) {
-        ta_graphics__bind_shader(pGraphics, &pGraphics->palettedShader);
+        taGraphicsBindShader(pGraphics, &pGraphics->palettedShader);
     } else {
-        ta_graphics__bind_shader(pGraphics, NULL);
+        taGraphicsBindShader(pGraphics, NULL);
     }
     
 
-    ta_graphics__bind_texture(pGraphics, pTexture);
+    taGraphicsBindTexture(pGraphics, pTexture);
     glBegin(GL_QUADS);
     {
         float uvleft   = subtexturePosX / pTexture->width;
@@ -1831,7 +1818,7 @@ void ta_draw_subtexture(taTexture* pTexture, float posX, float posY, float width
 
 //// Settings ////
 
-void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, taBool32 isShadowsEnabled)
+void taGraphicsSetEnableShadows(taGraphicsContext* pGraphics, taBool32 isShadowsEnabled)
 {
     if (pGraphics == NULL) {
         return;
@@ -1840,7 +1827,7 @@ void ta_graphics_set_enable_shadows(ta_graphics_context* pGraphics, taBool32 isS
     pGraphics->isShadowsEnabled = isShadowsEnabled;
 }
 
-taBool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
+taBool32 taGraphicsGetEnableShadows(taGraphicsContext* pGraphics)
 {
     if (pGraphics == NULL) {
         return TA_FALSE;
@@ -1852,7 +1839,7 @@ taBool32 ta_graphics_get_enable_shadows(ta_graphics_context* pGraphics)
 
 
 // TESTING
-void ta_draw_texture(taTexture* pTexture, taBool32 transparent,float scale)
+void taDrawTexture(taTexture* pTexture, taBool32 transparent,float scale)
 {
-    ta_draw_subtexture(pTexture, 0, 0, (float)pTexture->width*scale, (float)pTexture->height*scale, transparent, 0, 0, (float)pTexture->width, (float)pTexture->height);
+    taDrawSubTexture(pTexture, 0, 0, (float)pTexture->width*scale, (float)pTexture->height*scale, transparent, 0, 0, (float)pTexture->width, (float)pTexture->height);
 }

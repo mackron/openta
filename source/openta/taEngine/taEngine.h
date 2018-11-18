@@ -81,7 +81,7 @@ typedef taUInt32         taBool32;
 #define TA_MAX_TEXTURE_ATLAS_SIZE   512 /*4096*/
 
 typedef struct taEngineContext taEngineContext;
-typedef struct ta_graphics_context ta_graphics_context;
+typedef struct taGraphicsContext taGraphicsContext;
 typedef struct taFont taFont;
 typedef enum taSeekOrigin taSeekOrigin;
 

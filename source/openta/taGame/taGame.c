@@ -251,7 +251,7 @@ ta_game* ta_create_game(int argc, char** argv)
 
 
     // Create and show the window as soon as we can to make loading feel faster.
-    pGame->pWindow = ta_graphics_create_window(pGame->engine.pGraphics, "Total Annihilation", 1280, 720, TA_WINDOW_FULLSCREEN | TA_WINDOW_CENTERED);
+    pGame->pWindow = taGraphicsCreateWindow(pGame->engine.pGraphics, "Total Annihilation", 1280, 720, TA_WINDOW_FULLSCREEN | TA_WINDOW_CENTERED);
     if (pGame->pWindow == NULL) {
         goto on_error;
     }
@@ -479,11 +479,11 @@ void ta_step__in_game(ta_game* pGame, double dt)
     (void)dt;
 
     if (ta_is_mouse_button_down(pGame, TA_MOUSE_BUTTON_MIDDLE)) {
-        ta_translate_camera(pGame->engine.pGraphics, -(int)pGame->engine.input.mouseOffsetX, -(int)pGame->engine.input.mouseOffsetY);
+        taTranslateCamera(pGame->engine.pGraphics, -(int)pGame->engine.input.mouseOffsetX, -(int)pGame->engine.input.mouseOffsetY);
     }
 
     if (pGame->pCurrentMap) {
-        ta_draw_map(pGame->engine.pGraphics, pGame->pCurrentMap);
+        taDrawMap(pGame->engine.pGraphics, pGame->pCurrentMap);
     }
 }
 
@@ -729,12 +729,12 @@ void ta_step__main_menu(ta_game* pGame, double dt)
 
     // Rendering
     // =========
-    ta_draw_fullscreen_gui(pGame->engine.pGraphics, &pGame->mainMenu);
-    ta_draw_textf(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16,                           "Mouse Position: %d %d", (int)pGame->engine.input.mousePosX, (int)pGame->engine.input.mousePosY);
-    ta_draw_textf(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16+pGame->engine.font.height, "Mouse Position (GUI): %d %d", mousePosXGUI, mousePosYGUI);
+    taDrawFullscreenGUI(pGame->engine.pGraphics, &pGame->mainMenu);
+    taDrawTextf(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16,                           "Mouse Position: %d %d", (int)pGame->engine.input.mousePosX, (int)pGame->engine.input.mousePosY);
+    taDrawTextf(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16+pGame->engine.font.height, "Mouse Position (GUI): %d %d", mousePosXGUI, mousePosYGUI);
 
     if (isMouseOverGadget) {
-        ta_draw_textf(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16+(2*pGame->engine.font.height), "Gadget Under Mouse: %s", pGame->mainMenu.pGadgets[iGadgetUnderMouse].name);
+        taDrawTextf(pGame->engine.pGraphics, &pGame->engine.font, 255, 1, 16, 16+(2*pGame->engine.font.height), "Gadget Under Mouse: %s", pGame->mainMenu.pGadgets[iGadgetUnderMouse].name);
     }
 
     float scale;
@@ -746,7 +746,7 @@ void ta_step__main_menu(ta_game* pGame, double dt)
     float versionSizeX;
     float versionSizeY;
     taFontMeasureText(&pGame->engine.fontSmall, scale, versionStr, &versionSizeX, &versionSizeY);
-    ta_draw_textf(pGame->engine.pGraphics, &pGame->engine.fontSmall, 255, scale, (pGame->engine.pGraphics->resolutionX - versionSizeX)/2, 300*scale + offsetY, "%s", versionStr);
+    taDrawTextf(pGame->engine.pGraphics, &pGame->engine.fontSmall, 255, scale, (pGame->engine.pGraphics->resolutionX - versionSizeX)/2, 300*scale + offsetY, "%s", versionStr);
 }
 
 void ta_step__sp_menu(ta_game* pGame, double dt)
@@ -793,7 +793,7 @@ void ta_step__sp_menu(ta_game* pGame, double dt)
 
     // Rendering
     // =========
-    ta_draw_fullscreen_gui(pGame->engine.pGraphics, &pGame->spMenu);
+    taDrawFullscreenGUI(pGame->engine.pGraphics, &pGame->spMenu);
 }
 
 void ta_step__mp_menu(ta_game* pGame, double dt)
@@ -826,7 +826,7 @@ void ta_step__mp_menu(ta_game* pGame, double dt)
 
     // Rendering
     // =========
-    ta_draw_fullscreen_gui(pGame->engine.pGraphics, &pGame->mpMenu);
+    taDrawFullscreenGUI(pGame->engine.pGraphics, &pGame->mpMenu);
 }
 
 void ta_step__options_menu(ta_game* pGame, double dt)
@@ -861,7 +861,7 @@ void ta_step__options_menu(ta_game* pGame, double dt)
 
     // Rendering
     // =========
-    ta_draw_fullscreen_gui(pGame->engine.pGraphics, &pGame->optionsMenu);
+    taDrawFullscreenGUI(pGame->engine.pGraphics, &pGame->optionsMenu);
 }
 
 void ta_step__skirmish_menu(ta_game* pGame, double dt)
@@ -919,11 +919,11 @@ void ta_step__skirmish_menu(ta_game* pGame, double dt)
 
     // Rendering
     // =========
-    ta_draw_fullscreen_gui(pGame->engine.pGraphics, &pGame->skirmishMenu);
+    taDrawFullscreenGUI(pGame->engine.pGraphics, &pGame->skirmishMenu);
 
     if (pGame->pCurrentDialog != NULL) {
         assert(pGame->pCurrentDialog == &pGame->selectMapDialog);
-        ta_draw_dialog_gui(pGame->engine.pGraphics, &pGame->selectMapDialog);
+        taDrawDialogGUI(pGame->engine.pGraphics, &pGame->selectMapDialog);
     }
 }
 
@@ -955,7 +955,7 @@ void ta_step__campaign_menu(ta_game* pGame, double dt)
 
     // Rendering
     // =========
-    ta_draw_fullscreen_gui(pGame->engine.pGraphics, &pGame->campaignMenu);
+    taDrawFullscreenGUI(pGame->engine.pGraphics, &pGame->campaignMenu);
 }
 
 void ta_step__main(ta_game* pGame)
@@ -963,7 +963,7 @@ void ta_step__main(ta_game* pGame)
     assert(pGame != NULL);
 
     const double dt = dr_timer_tick(&pGame->timer);
-    ta_graphics_set_current_window(pGame->engine.pGraphics, pGame->pWindow);
+    taGraphicsSetCurrentWindow(pGame->engine.pGraphics, pGame->pWindow);
     {
         // The first thing we need to do is figure out the delta time. We use high-resolution timing for this so we can have good accuracy
         // at high frame rates.
@@ -1018,7 +1018,7 @@ void ta_step__main(ta_game* pGame)
         // Reset transient input state last.
         ta_input_state_reset_transient_state(&pGame->engine.input);
     }
-    ta_graphics_present(pGame->engine.pGraphics, pGame->pWindow);
+    taGraphicsPresent(pGame->engine.pGraphics, pGame->pWindow);
 }
 
 void ta_game_on_step(taEngineContext* pEngine)

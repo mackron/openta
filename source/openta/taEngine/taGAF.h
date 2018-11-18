@@ -80,6 +80,6 @@ typedef struct
 	taUInt8* _pPayload;
 } taGAFTextureGroup;
 
-taResult taGAFTextureGroupInit(taEngineContext* pEngine, const char* filePath, ta_color_mode colorMode, taGAFTextureGroup* pGroup);
+taResult taGAFTextureGroupInit(taEngineContext* pEngine, const char* filePath, taColorMode colorMode, taGAFTextureGroup* pGroup);
 taResult taGAFTextureGroupUninit(taGAFTextureGroup* pGroup);
 taBool32 taGAFTextureGroupFindSequenceByName(taGAFTextureGroup* pGroup, const char* sequenceName, taUInt32* pSequenceIndex);

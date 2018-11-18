@@ -441,15 +441,15 @@ TA_INLINE char* taGAFTextureGroupCopySequenceName(char** ppNextStr, const char* 
     return pNextStr;
 }
 
-TA_PRIVATE taResult taGAFTextureGroupCreateTextureAtlas(taEngineContext* pEngine, taGAFTextureGroup* pGroup, ta_texture_packer* pPacker, ta_color_mode colorMode, taTexture** ppTexture)
+TA_PRIVATE taResult taGAFTextureGroupCreateTextureAtlas(taEngineContext* pEngine, taGAFTextureGroup* pGroup, ta_texture_packer* pPacker, taColorMode colorMode, taTexture** ppTexture)
 {
     assert(pEngine != NULL);
     assert(pGroup != NULL);
     assert(pPacker != NULL);
     assert(ppTexture != NULL);
 
-    if (colorMode == ta_color_mode_palette) {
-        *ppTexture = ta_create_texture(pEngine->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
+    if (colorMode == taColorModePalette) {
+        *ppTexture = taCreateTexture(pEngine->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
         if (*ppTexture == NULL) {
             return TA_FAILED_TO_CREATE_RESOURCE;
         }
@@ -465,7 +465,7 @@ TA_PRIVATE taResult taGAFTextureGroupCreateTextureAtlas(taEngineContext* pEngine
             }
         }
 
-        *ppTexture = ta_create_texture(pEngine->pGraphics, pPacker->width, pPacker->height, 4, pImageData);
+        *ppTexture = taCreateTexture(pEngine->pGraphics, pPacker->width, pPacker->height, 4, pImageData);
         if (*ppTexture == NULL) {
             free(pImageData);
             return TA_FAILED_TO_CREATE_RESOURCE;
@@ -477,7 +477,7 @@ TA_PRIVATE taResult taGAFTextureGroupCreateTextureAtlas(taEngineContext* pEngine
     return TA_SUCCESS;
 }
 
-taResult taGAFTextureGroupInit(taEngineContext* pEngine, const char* filePath, ta_color_mode colorMode, taGAFTextureGroup* pGroup)
+taResult taGAFTextureGroupInit(taEngineContext* pEngine, const char* filePath, taColorMode colorMode, taGAFTextureGroup* pGroup)
 {
     if (pGroup == NULL) {
         return TA_INVALID_ARGS;

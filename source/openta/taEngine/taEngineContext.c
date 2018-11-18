@@ -78,7 +78,7 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
     // be changed to use color 0. From what I can tell there should be no difference in visual appearance by doing this.
     pEngine->palette[TA_TRANSPARENT_COLOR] &= 0x00FFFFFF; // <-- Make the alpha component fully transparent.
 
-    pEngine->pGraphics = ta_create_graphics_context(pEngine, pEngine->palette);
+    pEngine->pGraphics = taCreateGraphicsContext(pEngine, pEngine->palette);
     if (pEngine->pGraphics == NULL) {
         result = TA_ERROR;
         goto on_error2;
@@ -173,7 +173,7 @@ on_error7:  taFontUnload(&pEngine->fontSmall);
 on_error6:  taFontUnload(&pEngine->font);
 on_error5:  ta_input_state_uninit(&pEngine->input);
 on_error4:  taDeleteAudioContext(pEngine->pAudio);
-on_error3:  ta_delete_graphics_context(pEngine->pGraphics);
+on_error3:  taDeleteGraphicsContext(pEngine->pGraphics);
 on_error2:  taDeleteFileSystem(pEngine->pFS);
 on_error1:  ta_property_manager_uninit(&pEngine->properties);
 on_error0:
@@ -194,7 +194,7 @@ taResult taEngineContextUninit(taEngineContext* pEngine)
     taFontUnload(&pEngine->font);
     ta_input_state_uninit(&pEngine->input);
     taDeleteAudioContext(pEngine->pAudio);
-    ta_delete_graphics_context(pEngine->pGraphics);
+    taDeleteGraphicsContext(pEngine->pGraphics);
     taDeleteFileSystem(pEngine->pFS);
     ta_property_manager_uninit(&pEngine->properties);
     return TA_SUCCESS;
@@ -221,7 +221,7 @@ taTexture* taLoadImage(taEngineContext* pEngine, const char* filePath)
             return NULL;    // Not a valid PCX file.
         }
 
-        taTexture* pTexture = ta_create_texture(pEngine->pGraphics, (unsigned int)width, (unsigned int)height, 4, pImageData);
+        taTexture* pTexture = taCreateTexture(pEngine->pGraphics, (unsigned int)width, (unsigned int)height, 4, pImageData);
         if (pTexture == NULL) {
             drpcx_free(pImageData);
             return NULL;    // Failed to create texture.
@@ -254,7 +254,7 @@ void taReleaseMouse(taEngineContext* pEngine)
 void taOnWindowSize(taEngineContext* pEngine, unsigned int newWidth, unsigned int newHeight)
 {
     assert(pEngine != NULL);
-    ta_set_resolution(pEngine->pGraphics, newWidth, newHeight);
+    taSetResolution(pEngine->pGraphics, newWidth, newHeight);
 }
 
 void taOnMouseButtonDown(taEngineContext* pEngine, int button, int posX, int posY, unsigned int stateFlags)

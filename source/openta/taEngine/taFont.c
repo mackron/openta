@@ -96,7 +96,7 @@ taResult taFontLoadFNT(taEngineContext* pEngine, const char* filePath, taFont* p
 
     taCloseFile(pFile);
 
-    pFont->pTexture = ta_create_texture(pEngine->pGraphics, packer.width, packer.height, 1, packer.pImageData);
+    pFont->pTexture = taCreateTexture(pEngine->pGraphics, packer.width, packer.height, 1, packer.pImageData);
     if (pFont->pTexture == NULL) {
         return TA_ERROR;
     }
@@ -227,7 +227,7 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
         }
     }
 
-    pFont->pTexture = ta_create_texture(pEngine->pGraphics, packer.width, packer.height, 4, pImageDataRGBA);
+    pFont->pTexture = taCreateTexture(pEngine->pGraphics, packer.width, packer.height, 4, pImageDataRGBA);
     if (pFont->pTexture == NULL) {
         free(pImageDataRGBA);
         ta_texture_packer_uninit(&packer);
@@ -258,7 +258,7 @@ taResult taFontLoad(taEngineContext* pEngine, const char* filePath, taFont* pFon
 taResult taFontUnload(taFont* pFont)
 {
     if (pFont == NULL) return TA_INVALID_ARGS;
-    ta_delete_texture(pFont->pTexture);
+    taDeleteTexture(pFont->pTexture);
 
     return TA_SUCCESS;
 }

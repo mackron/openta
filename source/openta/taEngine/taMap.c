@@ -51,14 +51,14 @@ typedef struct
 
 taBool32 ta_map__create_and_push_texture(ta_map_instance* pMap, ta_texture_packer* pPacker)
 {
-    taTexture* pNewTexture = ta_create_texture(pMap->pEngine->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
+    taTexture* pNewTexture = taCreateTexture(pMap->pEngine->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
     if (pNewTexture == NULL) {
         return TA_FALSE;
     }
 
     taTexture** ppNewTextures = realloc(pMap->ppTextures, (pMap->textureCount + 1) * sizeof(*pMap->ppTextures));
     if (ppNewTextures == NULL) {
-        ta_delete_texture(pNewTexture);
+        taDeleteTexture(pNewTexture);
         return TA_FALSE;
     }
 
@@ -337,7 +337,7 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                     pLoadContext->meshBuildersBufferSize = newMeshBuildersBufferSize;
                     pLoadContext->pMeshBuilders = pNewMeshBuilders;
 
-                    ta_mesh_builder_init(&pLoadContext->pMeshBuilders[pLoadContext->meshBuildersCount], sizeof(ta_vertex_p3t2n3));
+                    ta_mesh_builder_init(&pLoadContext->pMeshBuilders[pLoadContext->meshBuildersCount], sizeof(taVertexP3T2N3));
                 }
 
                 size_t iMeshBuilder = pLoadContext->meshBuildersCount;
@@ -373,7 +373,7 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                 // Special case for quads because of how they are UV mapped. Not sure how UV mapping works for other polygons.
                 if (primHeader.indexCount == 4)
                 {
-                    ta_vertex_p3t2n3 vertices[4];
+                    taVertexP3T2N3 vertices[4];
                     for (int i = 0; i < 4; ++i) {
                         taInt32 position[3];
                         memcpy(position, pFile->pFileData + objectHeader.vertexPtr + (indices[i]*sizeof(taInt32)*3), sizeof(taInt32)*3);
@@ -410,7 +410,7 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
                 }
                 else
                 {
-                    ta_vertex_p3t2n3 vertices[3];
+                    taVertexP3T2N3 vertices[3];
                     memset(vertices, 0, sizeof(vertices));
 
                     for (taUInt32 iVertex = 0; iVertex < primHeader.indexCount-2; ++iVertex) {
@@ -466,9 +466,9 @@ taUInt32 ta_map__load_3do_objects_recursive(ta_map_instance* pMap, ta_map_load_c
         ta_mesh_builder* pMeshBuilder = &pLoadContext->pMeshBuilders[iMesh];
 
         p3DO->pMeshes[p3DO->meshCount + iMesh].textureIndex = pMeshBuilder->textureIndex;
-        p3DO->pMeshes[p3DO->meshCount + iMesh].pMesh = ta_create_mesh(pMap->pEngine->pGraphics, ta_primitive_type_triangle,
-            ta_vertex_format_p3t2n3,  pMeshBuilder->vertexCount, pMeshBuilder->pVertexData,
-            ta_index_format_uint32, pMeshBuilder->indexCount,  pMeshBuilder->pIndexData);
+        p3DO->pMeshes[p3DO->meshCount + iMesh].pMesh = taCreateMesh(pMap->pEngine->pGraphics, taPrimitiveTypeTriangle,
+            taVertexFormatP3T2N3,  pMeshBuilder->vertexCount, pMeshBuilder->pVertexData,
+            taIndexFormatUInt32, pMeshBuilder->indexCount,  pMeshBuilder->pIndexData);
         if (p3DO->pMeshes[p3DO->meshCount + iMesh].pMesh == NULL) {
             return 0;
         }
@@ -677,7 +677,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
         goto on_error;
     }
 
-    ta_vertex_p2t2* pVertexData = malloc(totalTileCount*4 * sizeof(ta_vertex_p2t2));
+    taVertexP2T2* pVertexData = malloc(totalTileCount*4 * sizeof(taVertexP2T2));
     if (pVertexData == NULL) {
         goto on_error;
     }
@@ -811,7 +811,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
                             // We always add the vertex to the most recent mesh.
                             ta_map_terrain_submesh* pMesh = pChunk->pMeshes + (pChunk->meshCount - 1);
                             
-                            ta_vertex_p2t2* pQuad = pVertexData + chunkVertexOffset;
+                            taVertexP2T2* pQuad = pVertexData + chunkVertexOffset;
 
                             float tileU = pTileSubImages[tileIndex].posX / (float)pLoadContext->texturePacker.width;
                             float tileV = pTileSubImages[tileIndex].posY / (float)pLoadContext->texturePacker.height;
@@ -862,7 +862,7 @@ taBool32 ta_map__load_tnt(ta_map_instance* pMap, const char* mapName, ta_map_loa
     free(pTileSubImages);
 
     // Finally we can create the terrains mesh.
-    pMap->terrain.pMesh = ta_create_mesh(pMap->pEngine->pGraphics, ta_primitive_type_quad, ta_vertex_format_p2t2, totalTileCount*4, pVertexData, ta_index_format_uint32, totalTileCount*4, pIndexData);
+    pMap->terrain.pMesh = taCreateMesh(pMap->pEngine->pGraphics, taPrimitiveTypeQuad, taVertexFormatP2T2, totalTileCount*4, pVertexData, taIndexFormatUInt32, totalTileCount*4, pIndexData);
     if (pMap->terrain.pMesh == NULL) {
         free(pIndexData);
         free(pVertexData);
@@ -1062,7 +1062,7 @@ taBool32 ta_map_load_context_init(ta_map_load_context* pLoadContext, taEngineCon
 
     // Clamp the texture size to avoid excessive wastage. Modern GPUs support 16K textures which is way more than we need, and
     // I'd rather avoid wasting the player's system resources.
-    taUInt32 maxTextureSize = ta_get_max_texture_size(pEngine->pGraphics);
+    taUInt32 maxTextureSize = taGetMaxTextureSize(pEngine->pGraphics);
     if (maxTextureSize > TA_MAX_TEXTURE_ATLAS_SIZE) {
         maxTextureSize = TA_MAX_TEXTURE_ATLAS_SIZE;
     }
@@ -1147,7 +1147,7 @@ void ta_unload_map(ta_map_instance* pMap)
 
     free(pMap->pFeatures);
     free(pMap->pFeatureTypes);
-    ta_delete_mesh(pMap->terrain.pMesh);
+    taDeleteMesh(pMap->terrain.pMesh);
     free(pMap->terrain.pChunks);
     free(pMap);
 }

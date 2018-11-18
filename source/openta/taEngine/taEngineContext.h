@@ -13,7 +13,7 @@ struct taEngineContext
 
     ta_property_manager properties;
     taFS* pFS;
-    ta_graphics_context* pGraphics;
+    taGraphicsContext* pGraphics;
     taUInt32 palette[256];     // The standard palette. PALETTE.PAL
     taUInt32 guipal[256];      // The GUI palette. GUIPAL.PAL
     ta_input_state input;

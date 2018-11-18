@@ -41,7 +41,7 @@ typedef struct
     taUInt16 textureIndex;
 
     // The mesh data.
-    ta_mesh* pMesh;
+    taMesh* pMesh;
 
     // The index count.
     taUInt32 indexCount;
@@ -184,7 +184,7 @@ typedef struct
     ta_map_terrain_chunk* pChunks;
 
     // The mesh containing all of the terrains geometric detail. 
-    ta_mesh* pMesh;
+    taMesh* pMesh;
 
 } ta_map_terrain;
 

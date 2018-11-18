@@ -236,7 +236,7 @@ taResult ta_gui_load(taEngineContext* pEngine, const char* filePath, ta_gui* pGU
 
     char filePathGAF[TA_MAX_PATH];
     drpath_copy_and_append(filePathGAF, sizeof(filePathGAF), "anims", fileNameGAF);
-    pGUI->hasGAF = taGAFTextureGroupInit(pEngine, filePathGAF, ta_color_mode_truecolor, &pGUI->textureGroupGAF) == TA_SUCCESS;
+    pGUI->hasGAF = taGAFTextureGroupInit(pEngine, filePathGAF, taColorModeTrueColor, &pGUI->textureGroupGAF) == TA_SUCCESS;
 
 
     // I haven't yet found a way to determine the background image to use for GUIs, so for the moment we will hard code these.
@@ -322,7 +322,7 @@ taResult ta_gui_unload(ta_gui* pGUI)
 {
     if (pGUI == NULL) return TA_INVALID_ARGS;
 
-    if (pGUI->pBackgroundTexture) ta_delete_texture(pGUI->pBackgroundTexture);
+    if (pGUI->pBackgroundTexture) taDeleteTexture(pGUI->pBackgroundTexture);
     if (pGUI->hasGAF) taGAFTextureGroupUninit(&pGUI->textureGroupGAF);
     free(pGUI->_pPayload);
 
@@ -586,7 +586,7 @@ taResult ta_common_gui__create_texture_atlas(taEngineContext* pEngine, ta_common
     assert(pPacker != NULL);
     assert(ppTexture != NULL);
     
-    *ppTexture = ta_create_texture(pEngine->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
+    *ppTexture = taCreateTexture(pEngine->pGraphics, pPacker->width, pPacker->height, 1, pPacker->pImageData);
     if (*ppTexture == NULL) {
         return TA_FAILED_TO_CREATE_RESOURCE;
     }
@@ -601,7 +601,7 @@ taResult ta_common_gui_load(taEngineContext* pEngine, ta_common_gui* pCommonGUI)
 
     pCommonGUI->pEngine = pEngine;
 
-    taResult result = taGAFTextureGroupInit(pEngine, "anims/commongui.GAF", ta_color_mode_truecolor, &pCommonGUI->textureGroup);
+    taResult result = taGAFTextureGroupInit(pEngine, "anims/commongui.GAF", taColorModeTrueColor, &pCommonGUI->textureGroup);
     if (result != TA_SUCCESS) {
         return result;
     }
