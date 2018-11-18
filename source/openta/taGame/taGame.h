@@ -21,7 +21,7 @@ typedef struct
     taEngineContext engine;
 
     // The game window.
-    ta_window* pWindow;
+    taWindow* pWindow;
 
     // The game timer for stepping the game.
     dr_timer timer;

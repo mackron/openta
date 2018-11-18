@@ -726,7 +726,7 @@ taResult taCommonGUIGetButtonFrame(taCommonGUI* pCommonGUI, taUInt32 width, taUI
             return TA_SUCCESS;
         }
 
-        if (ta_abs((taInt64)diffXClosest+(taInt64)diffYClosest) > ta_abs((taInt64)diffX+(taInt64)diffY)) {
+        if (taAbs((taInt64)diffXClosest+(taInt64)diffYClosest) > taAbs((taInt64)diffX+(taInt64)diffY)) {
             diffXClosest = diffX;
             diffYClosest = diffY;
             iClosestButton = i;

@@ -39,7 +39,7 @@ taTexture* taLoadImage(taEngineContext* pEngine, const char* filePath);
 
 
 // Captures the mouse so that all mouse events get directed to the game window.
-void taCaptureMouse(ta_window* pWindow);
+void taCaptureMouse(taWindow* pWindow);
 
 // Releases the mouse. The opposite of taCaptureMouse().
 void taReleaseMouse(taEngineContext* pEngine);
@@ -73,10 +73,10 @@ void taOnMouseEnter(taEngineContext* pEngine);
 void taOnMouseLeave(taEngineContext* pEngine);
 
 // Called when a key is pressed.
-void taOnKeyDown(taEngineContext* pEngine, ta_key key, unsigned int stateFlags);
+void taOnKeyDown(taEngineContext* pEngine, taKey key, unsigned int stateFlags);
 
 // Called when a key is released.
-void taOnKeyUp(taEngineContext* pEngine, ta_key key, unsigned int stateFlags);
+void taOnKeyUp(taEngineContext* pEngine, taKey key, unsigned int stateFlags);
 
 // Called when a printable key is pressed or auto-repeated. Use this for text boxes.
 void taOnPrintableKeyDown(taEngineContext* pEngine, taUInt32 utf32, unsigned int stateFlags);

@@ -6,7 +6,7 @@ static const char* g_TAWndClassName = "TAMainWindow";
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
 
-static void ta_win32_track_mouse_leave_event(HWND hWnd)
+static void taWin32TrackMouseLeaveEvent(HWND hWnd)
 {
     TRACKMOUSEEVENT tme;
     ZeroMemory(&tme, sizeof(tme));
@@ -16,12 +16,12 @@ static void ta_win32_track_mouse_leave_event(HWND hWnd)
     TrackMouseEvent(&tme);
 }
 
-taBool32 ta_is_win32_mouse_button_key_code(WPARAM wParam)
+taBool32 taIsWin32MouseButtonKeyCode(WPARAM wParam)
 {
     return wParam == VK_LBUTTON || wParam == VK_RBUTTON || wParam == VK_MBUTTON || wParam == VK_XBUTTON1 || wParam == VK_XBUTTON2;
 }
 
-ta_key ta_win32_to_ta_key(WPARAM wParam)
+taKey taFromWin32Key(WPARAM wParam)
 {
     switch (wParam)
     {
@@ -41,10 +41,10 @@ ta_key ta_win32_to_ta_key(WPARAM wParam)
     default: break;
     }
 
-    return (ta_key)wParam;
+    return (taKey)wParam;
 }
 
-unsigned int ta_win32_get_modifier_key_state_flags()
+unsigned int taWin32GetModifierKeyStateFlags()
 {
     unsigned int stateFlags = 0;
 
@@ -66,7 +66,7 @@ unsigned int ta_win32_get_modifier_key_state_flags()
     return stateFlags;
 }
 
-unsigned int ta_win32_get_mouse_event_state_flags(WPARAM wParam)
+unsigned int taWin32GetMouseEventStateFlags(WPARAM wParam)
 {
     unsigned int stateFlags = 0;
 
@@ -114,7 +114,7 @@ unsigned int ta_win32_get_mouse_event_state_flags(WPARAM wParam)
 // through this function, such as when the mouse is moved over a window, a key is pressed, etc.
 static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    ta_window* pWindow = (ta_window*)GetWindowLongPtrA(hWnd, 0);
+    taWindow* pWindow = (taWindow*)GetWindowLongPtrA(hWnd, 0);
     if (pWindow != NULL)
     {
         switch (msg)
@@ -122,13 +122,13 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
             case WM_CREATE:
             {
                 // This allows us to track mouse enter and leave events for the window.
-                ta_win32_track_mouse_leave_event(hWnd);
+                taWin32TrackMouseLeaveEvent(hWnd);
                 return 0;
             }
 
             case WM_CLOSE:
             {
-                ta_post_quit_message(0);
+                taPostQuitMessage(0);
                 return 0;
             }
 
@@ -144,54 +144,54 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
             case WM_LBUTTONDOWN:
             {
-                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
+                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), taWin32GetMouseEventStateFlags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
                 break;
             }
             case WM_LBUTTONUP:
             {
-                taOnMouseButtonUp(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                taOnMouseButtonUp(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), taWin32GetMouseEventStateFlags(wParam));
                 break;
             }
             case WM_LBUTTONDBLCLK:
             {
-                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
-                taOnMouseButtonDblClick(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
+                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), taWin32GetMouseEventStateFlags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
+                taOnMouseButtonDblClick(pWindow->pEngine, TA_MOUSE_BUTTON_LEFT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), taWin32GetMouseEventStateFlags(wParam) | TA_MOUSE_BUTTON_LEFT_DOWN);
                 break;
             }
 
 
             case WM_RBUTTONDOWN:
             {
-                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
+                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), taWin32GetMouseEventStateFlags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
                 break;
             }
             case WM_RBUTTONUP:
             {
-                taOnMouseButtonUp(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                taOnMouseButtonUp(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), taWin32GetMouseEventStateFlags(wParam));
                 break;
             }
             case WM_RBUTTONDBLCLK:
             {
-                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
-                taOnMouseButtonDblClick(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
+                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), taWin32GetMouseEventStateFlags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
+                taOnMouseButtonDblClick(pWindow->pEngine, TA_MOUSE_BUTTON_RIGHT, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), taWin32GetMouseEventStateFlags(wParam) | TA_MOUSE_BUTTON_RIGHT_DOWN);
                 break;
             }
 
 
             case WM_MBUTTONDOWN:
             {
-                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
+                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), taWin32GetMouseEventStateFlags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
                 break;
             }
             case WM_MBUTTONUP:
             {
-                taOnMouseButtonUp(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                taOnMouseButtonUp(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), taWin32GetMouseEventStateFlags(wParam));
                 break;
             }
             case WM_MBUTTONDBLCLK:
             {
-                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
-                taOnMouseButtonDblClick(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
+                taOnMouseButtonDown(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), taWin32GetMouseEventStateFlags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
+                taOnMouseButtonDblClick(pWindow->pEngine, TA_MOUSE_BUTTON_MIDDLE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), taWin32GetMouseEventStateFlags(wParam) | TA_MOUSE_BUTTON_MIDDLE_DOWN);
                 break;
             }
 
@@ -205,7 +205,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 p.y = GET_Y_LPARAM(lParam);
                 ScreenToClient(hWnd, &p);
 
-                taOnMouseWheel(pWindow->pEngine, delta, p.x, p.y, ta_win32_get_mouse_event_state_flags(wParam));
+                taOnMouseWheel(pWindow->pEngine, delta, p.x, p.y, taWin32GetMouseEventStateFlags(wParam));
                 break;
             }
 
@@ -224,27 +224,27 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 // mouse re-enters the window. The easiest way to do this is to just call it in response to every WM_MOUSEMOVE event.
                 if (!pWindow->isCursorOver)
                 {
-                    ta_win32_track_mouse_leave_event(hWnd);
+                    taWin32TrackMouseLeaveEvent(hWnd);
                     pWindow->isCursorOver = TA_TRUE;
 
                     taOnMouseEnter(pWindow->pEngine);
                 }
 
-                taOnMouseMove(pWindow->pEngine, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), ta_win32_get_mouse_event_state_flags(wParam));
+                taOnMouseMove(pWindow->pEngine, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), taWin32GetMouseEventStateFlags(wParam));
                 break;
             }
 
 
             case WM_KEYDOWN:
             {
-                if (!ta_is_win32_mouse_button_key_code(wParam))
+                if (!taIsWin32MouseButtonKeyCode(wParam))
                 {
-                    unsigned int stateFlags = ta_win32_get_modifier_key_state_flags();
+                    unsigned int stateFlags = taWin32GetModifierKeyStateFlags();
                     if ((lParam & (1 << 30)) != 0) {
                         stateFlags |= TA_KEY_STATE_AUTO_REPEATED;
                     }
 
-                    taOnKeyDown(pWindow->pEngine, ta_win32_to_ta_key(wParam), stateFlags);
+                    taOnKeyDown(pWindow->pEngine, taFromWin32Key(wParam), stateFlags);
                 }
 
                 break;
@@ -252,10 +252,10 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
             case WM_KEYUP:
             {
-                if (!ta_is_win32_mouse_button_key_code(wParam))
+                if (!taIsWin32MouseButtonKeyCode(wParam))
                 {
-                    unsigned int stateFlags = ta_win32_get_modifier_key_state_flags();
-                    taOnKeyUp(pWindow->pEngine, ta_win32_to_ta_key(wParam), stateFlags);
+                    unsigned int stateFlags = taWin32GetModifierKeyStateFlags();
+                    taOnKeyUp(pWindow->pEngine, taFromWin32Key(wParam), stateFlags);
                 }
 
                 break;
@@ -299,7 +299,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                         int repeatCount = lParam & 0x0000FFFF;
                         for (int i = 0; i < repeatCount; ++i)
                         {
-                            unsigned int stateFlags = ta_win32_get_modifier_key_state_flags();
+                            unsigned int stateFlags = taWin32GetModifierKeyStateFlags();
                             if ((lParam & (1 << 30)) != 0) {
                                 stateFlags |= TA_KEY_STATE_AUTO_REPEATED;
                             }
@@ -320,7 +320,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     return DefWindowProcA(hWnd, msg, wParam, lParam);
 }
 
-taBool32 ta_init_window_system()
+taBool32 taInitWindowSystem()
 {
     // The Windows operating system likes to automatically change the size of the game window when DPI scaling is
     // used. For example, if the user has their DPI set to 200%, the operating system will try to be helpful and
@@ -346,18 +346,18 @@ taBool32 ta_init_window_system()
     return TA_TRUE;
 }
 
-void ta_uninit_window_system()
+void taUninitWindowSystem()
 {
     UnregisterClassA(g_TAWndClassName, GetModuleHandleA(NULL));
 }
 
-void ta_post_quit_message(int exitCode)
+void taPostQuitMessage(int exitCode)
 {
     PostQuitMessage(exitCode);
 }
 
 
-ta_window* ta_create_window(taEngineContext* pEngine, const char* pTitle, unsigned int resolutionX, unsigned int resolutionY, unsigned int options)
+taWindow* taCreateWindow(taEngineContext* pEngine, const char* pTitle, unsigned int resolutionX, unsigned int resolutionY, unsigned int options)
 {
     DWORD dwExStyle = 0;
     DWORD dwStyle = WS_OVERLAPPEDWINDOW;
@@ -387,8 +387,7 @@ ta_window* ta_create_window(taEngineContext* pEngine, const char* pTitle, unsign
 
     int windowPosX = 0;
     int windowPosY = 0;
-    if ((options & TA_WINDOW_CENTERED) != 0)
-    {
+    if ((options & TA_WINDOW_CENTERED) != 0) {
         // We need to center the window. To do this properly, we want to reposition based on the monitor it started on.
         MONITORINFO mi;
         ZeroMemory(&mi, sizeof(mi));
@@ -405,8 +404,7 @@ ta_window* ta_create_window(taEngineContext* pEngine, const char* pTitle, unsign
     SetWindowPos(hWnd, NULL, windowPosX, windowPosY, windowWidth, windowHeight, swpflags);
 
 
-
-    ta_window* pWindow = calloc(1, sizeof(*pWindow));
+    taWindow* pWindow = calloc(1, sizeof(*pWindow));
     if (pWindow == NULL) {
         return NULL;
     }
@@ -424,7 +422,7 @@ ta_window* ta_create_window(taEngineContext* pEngine, const char* pTitle, unsign
     return pWindow;
 }
 
-void ta_delete_window(ta_window* pWindow)
+void taDeleteWindow(taWindow* pWindow)
 {
     if (pWindow == NULL) {
         return;
@@ -434,7 +432,7 @@ void ta_delete_window(ta_window* pWindow)
     free(pWindow);
 }
 
-void ta_window_capture_mouse(ta_window* pWindow)
+void taWindowCaptureMouse(taWindow* pWindow)
 {
     if (pWindow == NULL) {
         return;
@@ -443,20 +441,18 @@ void ta_window_capture_mouse(ta_window* pWindow)
     SetCapture(pWindow->hWnd);
 }
 
-void ta_window_release_mouse()
+void taWindowReleaseMouse()
 {
     ReleaseCapture();
 }
 
 
-int ta_main_loop(taEngineContext* pEngine)
+int taMainLoop(taEngineContext* pEngine)
 {
-    for (;;)
-    {
+    for (;;) {
         // Handle window events.
         MSG msg;
-        if (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
-        {
+        if (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
             if (msg.message == WM_QUIT) {
                 return (int)msg.wParam;  // Received a quit message.
             }
@@ -474,7 +470,7 @@ int ta_main_loop(taEngineContext* pEngine)
     return 0;
 }
 
-HDC ta_get_window_hdc(ta_window* pWindow)
+HDC taGetWindowHDC(taWindow* pWindow)
 {
     if (pWindow == NULL) {
         return NULL;
@@ -485,24 +481,24 @@ HDC ta_get_window_hdc(ta_window* pWindow)
 #endif
 
 #ifdef __linux__
-taBool32 ta_init_window_system()
+taBool32 taInitWindowSystem()
 {
     // TODO: Implement Me.
     return TA_FALSE;
 }
 
-void ta_uninit_window_system()
+void taUninitWindowSystem()
 {
     // TODO: Implement Me.
 }
 
-ta_window* ta_create_window(const char* title, unsigned int width, unsigned int height, unsigned int options)
+taWindow* taCreateWindow(const char* title, unsigned int width, unsigned int height, unsigned int options)
 {
     // TODO: Implement Me.
     return NULL;
 }
 
-void ta_delete_window(ta_window* pWindow)
+void taDeleteWindow(taWindow* pWindow)
 {
     if (pWindow == NULL) {
         return;
@@ -513,7 +509,7 @@ void ta_delete_window(ta_window* pWindow)
     free(pWindow);
 }
 
-int ta_main_loop(taEngineContext* pEngine)
+int taMainLoop(taEngineContext* pEngine)
 {
     // TODO: Implement Me.
 

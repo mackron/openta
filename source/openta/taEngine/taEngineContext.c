@@ -237,15 +237,15 @@ taTexture* taLoadImage(taEngineContext* pEngine, const char* filePath)
 
 
 
-void taCaptureMouse(ta_window* pWindow)
+void taCaptureMouse(taWindow* pWindow)
 {
-    ta_window_capture_mouse(pWindow);
+    taWindowCaptureMouse(pWindow);
 }
 
 void taReleaseMouse(taEngineContext* pEngine)
 {
     (void)pEngine;
-    ta_window_release_mouse();
+    taWindowReleaseMouse();
 }
 
 
@@ -322,7 +322,7 @@ void taOnMouseLeave(taEngineContext* pEngine)
     (void)pEngine;
 }
 
-void taOnKeyDown(taEngineContext* pEngine, ta_key key, unsigned int stateFlags)
+void taOnKeyDown(taEngineContext* pEngine, taKey key, unsigned int stateFlags)
 {
     assert(pEngine != NULL);
 
@@ -333,7 +333,7 @@ void taOnKeyDown(taEngineContext* pEngine, ta_key key, unsigned int stateFlags)
     }
 }
 
-void taOnKeyUp(taEngineContext* pEngine, ta_key key, unsigned int stateFlags)
+void taOnKeyUp(taEngineContext* pEngine, taKey key, unsigned int stateFlags)
 {
     assert(pEngine != NULL);
 

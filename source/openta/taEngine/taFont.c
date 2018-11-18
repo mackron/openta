@@ -46,8 +46,8 @@ taResult taFontLoadFNT(taEngineContext* pEngine, const char* filePath, taFont* p
     
     // The texture atlas does not need to be square, but it should be a power of 2 for maximum
     // compatibility with older hardware. This can be optimized later.
-    taUInt32 atlasSizeX = ta_next_power_of_2(totalWidth);
-    taUInt32 atlasSizeY = ta_next_power_of_2(height);
+    taUInt32 atlasSizeX = taNextPowerOf2(totalWidth);
+    taUInt32 atlasSizeY = taNextPowerOf2(height);
 
     ta_texture_packer packer;
     ta_texture_packer_init(&packer, atlasSizeX, atlasSizeY, 1, TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE);
@@ -161,8 +161,8 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
 
     // The texture atlas does not need to be square, but it should be a power of 2 for maximum
     // compatibility with older hardware. This can be optimized later.
-    taUInt32 atlasSizeX = ta_next_power_of_2(totalWidth);
-    taUInt32 atlasSizeY = ta_next_power_of_2(totalHeight+1);   // Add 1 to ensure we have at least row of padding for interpolation.
+    taUInt32 atlasSizeX = taNextPowerOf2(totalWidth);
+    taUInt32 atlasSizeY = taNextPowerOf2(totalHeight+1);   // Add 1 to ensure we have at least row of padding for interpolation.
 
     ta_texture_packer packer;
     ta_texture_packer_init(&packer, atlasSizeX, atlasSizeY, 1, TA_TEXTURE_PACKER_FLAG_TRANSPARENT_EDGE);

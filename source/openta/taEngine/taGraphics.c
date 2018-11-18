@@ -32,7 +32,7 @@ struct taGraphicsContext
     taEngineContext* pEngine;
 
     // The current window.
-    ta_window* pCurrentWindow;
+    taWindow* pCurrentWindow;
 
 
     // The texture containing the palette.
@@ -511,15 +511,15 @@ void taDeleteGraphicsContext(taGraphicsContext* pGraphics)
 }
 
 
-ta_window* taGraphicsCreateWindow(taGraphicsContext* pGraphics, const char* pTitle, unsigned int resolutionX, unsigned int resolutionY, unsigned int options)
+taWindow* taGraphicsCreateWindow(taGraphicsContext* pGraphics, const char* pTitle, unsigned int resolutionX, unsigned int resolutionY, unsigned int options)
 {
 #ifdef _WIN32
-    ta_window* pWindow = ta_create_window(pGraphics->pEngine, pTitle, resolutionX, resolutionY, options);
+    taWindow* pWindow = taCreateWindow(pGraphics->pEngine, pTitle, resolutionX, resolutionY, options);
     if (pWindow == NULL) {
         return NULL;
     }
 
-    SetPixelFormat(ta_get_window_hdc(pWindow), pGraphics->pixelFormat, &pGraphics->pfd);
+    SetPixelFormat(taGetWindowHDC(pWindow), pGraphics->pixelFormat, &pGraphics->pfd);
 
     return pWindow;
 #endif
@@ -527,34 +527,34 @@ ta_window* taGraphicsCreateWindow(taGraphicsContext* pGraphics, const char* pTit
     return NULL;
 }
 
-void taGraphicsDeleteWindow(taGraphicsContext* pGraphics, ta_window* pWindow)
+void taGraphicsDeleteWindow(taGraphicsContext* pGraphics, taWindow* pWindow)
 {
     (void)pGraphics;
-    ta_delete_window(pWindow);
+    taDeleteWindow(pWindow);
 }
 
-void taGraphicsSetCurrentWindow(taGraphicsContext* pGraphics, ta_window* pWindow)
+void taGraphicsSetCurrentWindow(taGraphicsContext* pGraphics, taWindow* pWindow)
 {
     if (pGraphics == NULL || pGraphics->pCurrentWindow == pWindow) {
         return;
     }
 
 #ifdef _WIN32
-    wglMakeCurrent(ta_get_window_hdc(pWindow), pGraphics->hRC);
+    wglMakeCurrent(taGetWindowHDC(pWindow), pGraphics->hRC);
 #endif
 
     pGraphics->pCurrentWindow = pWindow;
 }
 
 
-void taGraphicsEnableVSync(taGraphicsContext* pGraphics, ta_window* pWindow)
+void taGraphicsEnableVSync(taGraphicsContext* pGraphics, taWindow* pWindow)
 {
     if (pGraphics == NULL) {
         return;
     }
 
     if (pGraphics->SwapIntervalEXT) {
-        ta_window* pPrevWindow = pGraphics->pCurrentWindow;
+        taWindow* pPrevWindow = pGraphics->pCurrentWindow;
         taGraphicsSetCurrentWindow(pGraphics, pWindow);
 
         pGraphics->SwapIntervalEXT(1);
@@ -563,14 +563,14 @@ void taGraphicsEnableVSync(taGraphicsContext* pGraphics, ta_window* pWindow)
     }
 }
 
-void taGraphicsDisableVSync(taGraphicsContext* pGraphics, ta_window* pWindow)
+void taGraphicsDisableVSync(taGraphicsContext* pGraphics, taWindow* pWindow)
 {
     if (pGraphics == NULL) {
         return;
     }
 
     if (pGraphics->SwapIntervalEXT) {
-        ta_window* pPrevWindow = pGraphics->pCurrentWindow;
+        taWindow* pPrevWindow = pGraphics->pCurrentWindow;
         taGraphicsSetCurrentWindow(pGraphics, pWindow);
 
         pGraphics->SwapIntervalEXT(0);
@@ -579,14 +579,14 @@ void taGraphicsDisableVSync(taGraphicsContext* pGraphics, ta_window* pWindow)
     }
 }
 
-void taGraphicsPresent(taGraphicsContext* pGraphics, ta_window* pWindow)
+void taGraphicsPresent(taGraphicsContext* pGraphics, taWindow* pWindow)
 {
     if (pGraphics == NULL || pWindow == NULL) {
         return;
     }
 
 #ifdef _WIN32
-    SwapBuffers(ta_get_window_hdc(pWindow));
+    SwapBuffers(taGetWindowHDC(pWindow));
 #endif
 }
 

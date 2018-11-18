@@ -7,7 +7,7 @@
 int main(int argc, char** argv)
 {
     // The window system needs to be initialized once, before creating the game context.
-    ta_init_window_system();
+    taInitWindowSystem();
 
     ta_game* pGame = ta_create_game(argc, argv);
     if (pGame == NULL) {
@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 
 
     ta_delete_game(pGame);
-    ta_uninit_window_system();
+    taUninitWindowSystem();
 
     return result;
 }

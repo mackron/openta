@@ -77,23 +77,23 @@ void taDeleteGraphicsContext(taGraphicsContext* pGraphics);
 
 
 // Creates a window to render to.
-ta_window* taGraphicsCreateWindow(taGraphicsContext* pGraphics, const char* pTitle, unsigned int resolutionX, unsigned int resolutionY, unsigned int options);
+taWindow* taGraphicsCreateWindow(taGraphicsContext* pGraphics, const char* pTitle, unsigned int resolutionX, unsigned int resolutionY, unsigned int options);
 
 // Deletes the given window.
-void taGraphicsDeleteWindow(taGraphicsContext* pGraphics, ta_window* pWindow);
+void taGraphicsDeleteWindow(taGraphicsContext* pGraphics, taWindow* pWindow);
 
 // Sets the window to render to.
-void taGraphicsSetCurrentWindow(taGraphicsContext* pGraphics, ta_window* pWindow);
+void taGraphicsSetCurrentWindow(taGraphicsContext* pGraphics, taWindow* pWindow);
 
 
 // Enables v-sync for the given window.
-void taGraphicsEnableVSync(taGraphicsContext* pGraphics, ta_window* pWindow);
+void taGraphicsEnableVSync(taGraphicsContext* pGraphics, taWindow* pWindow);
 
 // Disables v-sync for the given window.
-void taGraphicsDisableVSync(taGraphicsContext* pGraphics, ta_window* pWindow);
+void taGraphicsDisableVSync(taGraphicsContext* pGraphics, taWindow* pWindow);
 
 // Presents the back buffer of the given window.
-void taGraphicsPresent(taGraphicsContext* pGraphics, ta_window* pWindow);
+void taGraphicsPresent(taGraphicsContext* pGraphics, taWindow* pWindow);
 
 
 // Creates a texture.

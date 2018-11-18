@@ -362,7 +362,7 @@ ta_game* ta_create_game(int argc, char** argv)
 on_error:
     if (pGame != NULL) {
         if (pGame->pCurrentMap != NULL) taUnloadMap(pGame->pCurrentMap);
-        if (pGame->pWindow != NULL) ta_delete_window(pGame->pWindow);
+        if (pGame->pWindow != NULL) taDeleteWindow(pGame->pWindow);
         taEngineContextUninit(&pGame->engine);
     }
 
@@ -375,7 +375,7 @@ void ta_delete_game(ta_game* pGame)
         return;
     }
 
-    ta_delete_window(pGame->pWindow);
+    taDeleteWindow(pGame->pWindow);
     taEngineContextUninit(&pGame->engine);
     free(pGame);
 }
@@ -463,12 +463,12 @@ int ta_game_run(ta_game* pGame)
         return TA_ERROR_INVALID_ARGS;
     }
 
-    return ta_main_loop(&pGame->engine);
+    return taMainLoop(&pGame->engine);
 }
 
 void ta_close(ta_game* pGame)
 {
-    ta_post_quit_message(0);
+    taPostQuitMessage(0);
 }
 
 

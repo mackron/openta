@@ -14,7 +14,7 @@
 #define TA_KEY_STATE_ALT_DOWN       (1 << 7)        // Whether or not an alt key is down at the time the input event is handled.
 #define TA_KEY_STATE_AUTO_REPEATED  (1 << 31)       // Whether or not the key press is generated due to auto-repeating. Only used with key down events.
 
-typedef taUInt32 ta_key;
+typedef taUInt32 taKey;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,38 +45,38 @@ typedef struct
     Window x11Window;
 #endif
 
-} ta_window;
+} taWindow;
 
 
 // Initializes the window system. Only call this once per application.
-taBool32 ta_init_window_system();
+taBool32 taInitWindowSystem();
 
 // Uninitializes the window system.
-void ta_uninit_window_system();
+void taUninitWindowSystem();
 
 
 // Posts a quit message.
-void ta_post_quit_message(int exitCode);
+void taPostQuitMessage(int exitCode);
 
 
 // Creates a game window.
 #ifdef _WIN32
-ta_window* ta_create_window(taEngineContext* pEngine, const char* pTitle, unsigned int width, unsigned int height, unsigned int options);
+taWindow* taCreateWindow(taEngineContext* pEngine, const char* pTitle, unsigned int width, unsigned int height, unsigned int options);
 
 // Retrieves a handle to the device context of the given window.
-HDC ta_get_window_hdc(ta_window* pWindow);
+HDC taGetWindowHDC(taWindow* pWindow);
 #endif
 
 // Deletes the given window.
-void ta_delete_window(ta_window* pWindow);
+void taDeleteWindow(taWindow* pWindow);
 
 
 // Gives the given window the mouse capture.
-void ta_window_capture_mouse(ta_window* pWindow);
+void taWindowCaptureMouse(taWindow* pWindow);
 
 // Releases the mouse.
-void ta_window_release_mouse();
+void taWindowReleaseMouse();
 
 
 // Runs the main application loop.
-int ta_main_loop(taEngineContext* pEngine);
+int taMainLoop(taEngineContext* pEngine);
