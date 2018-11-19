@@ -487,6 +487,7 @@ void taStep_InGame(taGame* pGame, double dt)
     }
 
     if (pGame->pCurrentMap) {
+        taMapStep(pGame->pCurrentMap, dt);
         taDrawMap(pGame->engine.pGraphics, pGame->pCurrentMap);
     }
 }

@@ -1672,7 +1672,7 @@ void taDrawMap(taGraphicsContext* pGraphics, taMapInstance* pMap)
         if (pFeature->pType->pSequenceDefault) {
             // Draw the shadow if we have one.
             if (pFeature->pType->pSequenceShadow != NULL && pGraphics->isShadowsEnabled) {
-                taDrawMapFeatureSequance(pGraphics, pMap, pFeature, pFeature->pType->pSequenceShadow, 0, (pFeature->pType->pDesc->flags & TA_FEATURE_SHADOWTRANSPARENT) != 0);
+                taDrawMapFeatureSequance(pGraphics, pMap, pFeature, pFeature->pType->pSequenceShadow, pFeature->currentFrameIndex, (pFeature->pType->pDesc->flags & TA_FEATURE_SHADOWTRANSPARENT) != 0);
             }
 
             if (pFeature->pCurrentSequence != NULL) {

@@ -210,6 +210,9 @@ struct taMapInstance
 
     // The list of features sitting on the map.
     taMapFeature* pFeatures;
+
+    // The global timer for tracking feature animations.
+    double featureAnimTimer;
 };
 
 // Loads a map by it's name.
@@ -219,3 +222,6 @@ taMapInstance* taLoadMap(taEngineContext* pEngine, const char* mapName);
 
 // Deletes the given map.
 void taUnloadMap(taMapInstance* pMap);
+
+// Performs a simulation step of the given map.
+void taMapStep(taMapInstance* pMap, double dt);

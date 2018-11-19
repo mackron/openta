@@ -1150,3 +1150,27 @@ void taUnloadMap(taMapInstance* pMap)
     free(pMap->terrain.pChunks);
     free(pMap);
 }
+
+void taMapStep(taMapInstance* pMap, double dt)
+{
+    if (pMap == NULL) {
+        return;
+    }
+
+    // Don't do anything if the delta time is 0.
+    if (dt <= 0) {
+        return;
+    }
+
+    static const double animationFrameRate = 1/15.0;
+
+    pMap->featureAnimTimer += dt;
+
+    // Step feature animations.
+    for (taUInt32 iFeature = 0; iFeature < pMap->featureCount; ++iFeature) {
+        taMapFeature* pFeature = &pMap->pFeatures[iFeature];
+        if (pFeature->pCurrentSequence != NULL) {
+            pFeature->currentFrameIndex = (pFeature->pType->_index+((taUInt32)(pMap->featureAnimTimer/animationFrameRate))) % pFeature->pCurrentSequence->frameCount;
+        }
+    }
+}
