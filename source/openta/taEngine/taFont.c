@@ -198,7 +198,7 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
                     taTexturePackerPackSubTexture(&packer, sizeX, sizeY, spacePixels, &slot);
                     free(spacePixels);
                 } else {
-                    mal_zero_object(&slot);
+                    taZeroObject(&slot);
                 }
             } else {
                 taTexturePackerPackSubTexture(&packer, sizeX, sizeY, pixels, &slot);

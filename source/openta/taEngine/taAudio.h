@@ -3,9 +3,9 @@
 typedef struct
 {
     taEngineContext* pEngine;
-    mal_context contextMAL;
-    mal_device playbackDevice;
+    ma_context contextMAL;
+    ma_device playbackDevice;
 } taAudioContext;
 
 taAudioContext* taCreateAudioContext(taEngineContext* pEngine);
-void taDeleteAudioContext(taAudioContext* pContext);
+void taDeleteAudioContext(taAudioContext* pAudioContext);

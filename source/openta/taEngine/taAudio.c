@@ -3,14 +3,13 @@
 // TODO:
 // - Add support for the user to choose which device to use for output.
 
-TA_PRIVATE mal_uint32 taMALSendProc(mal_device* pDevice, mal_uint32 frameCount, void* pSamples)
+TA_PRIVATE void taMALSendProc(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
     // TODO: Implement me. This is where all of the mixing takes place.
     (void)pDevice;
+    (void)pOutput;
+    (void)pInput;
     (void)frameCount;
-    (void)pSamples;
-
-    return 0;
 }
 
 taAudioContext* taCreateAudioContext(taEngineContext* pEngine)
@@ -19,44 +18,51 @@ taAudioContext* taCreateAudioContext(taEngineContext* pEngine)
         return NULL;
     }
 
-    taAudioContext* pContext = (taAudioContext*)calloc(1, sizeof(*pContext));
-    if (pContext == NULL) {
+    taAudioContext* pAudioContext = (taAudioContext*)calloc(1, sizeof(*pAudioContext));
+    if (pAudioContext == NULL) {
         return NULL;
     }
 
-    mal_result resultMAL = mal_context_init(NULL, 0, NULL, &pContext->contextMAL);
-    if (resultMAL != MAL_SUCCESS) {
-        free(pContext);
+    ma_result resultMAL = ma_context_init(NULL, 0, NULL, &pAudioContext->contextMAL);
+    if (resultMAL != MA_SUCCESS) {
+        free(pAudioContext);
         return NULL;
     }
 
-    mal_device_config playbackDeviceConfig = mal_device_config_init_playback(mal_format_f32, 2, 22050, taMALSendProc);
+    ma_device_config playbackDeviceConfig = ma_device_config_init(ma_device_type_playback);
+    playbackDeviceConfig.playback.format   = ma_format_f32;
+    playbackDeviceConfig.playback.channels = 2;
+    playbackDeviceConfig.sampleRate        = 22050;
+    playbackDeviceConfig.dataCallback      = taMALSendProc;
+    playbackDeviceConfig.pUserData         = pAudioContext;
 
-    resultMAL = mal_device_init(&pContext->contextMAL, mal_device_type_playback, NULL, &playbackDeviceConfig, pContext, &pContext->playbackDevice);
-    if (resultMAL != MAL_SUCCESS) {
-        mal_context_uninit(&pContext->contextMAL);
-        free(pContext);
+    resultMAL = ma_device_init(&pAudioContext->contextMAL, &playbackDeviceConfig, &pAudioContext->playbackDevice);
+    if (resultMAL != MA_SUCCESS) {
+        ma_context_uninit(&pAudioContext->contextMAL);
+        free(pAudioContext);
         return NULL;
     }
 
     // Start playback here.
-    resultMAL = mal_device_start(&pContext->playbackDevice);
-    if (resultMAL != MAL_SUCCESS) {
-        mal_device_uninit(&pContext->playbackDevice);
-        mal_context_uninit(&pContext->contextMAL);
-        free(pContext);
+    resultMAL = ma_device_start(&pAudioContext->playbackDevice);
+    if (resultMAL != MA_SUCCESS) {
+        ma_device_uninit(&pAudioContext->playbackDevice);
+        ma_context_uninit(&pAudioContext->contextMAL);
+        free(pAudioContext);
         return NULL;
     }
     
 
-    return pContext;
+    return pAudioContext;
 }
 
-void taDeleteAudioContext(taAudioContext* pContext)
+void taDeleteAudioContext(taAudioContext* pAudioContext)
 {
-    if (pContext == NULL) return;
+    if (pAudioContext == NULL) {
+        return;
+    }
 
-    mal_device_uninit(&pContext->playbackDevice);
-    mal_context_uninit(&pContext->contextMAL);
-    free(pContext);
+    ma_device_uninit(&pAudioContext->playbackDevice);
+    ma_context_uninit(&pAudioContext->contextMAL);
+    free(pAudioContext);
 }

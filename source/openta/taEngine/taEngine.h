@@ -25,7 +25,7 @@
 #include "../../external/dr_libs/dr_math.h"
 #include "../../external/dr_libs/dr_pcx.h"
 #include "../../external/dr_libs/dr_wav.h"
-#include "../../external/mini_al/mini_al.h"
+#include "../../external/miniaudio/miniaudio.h"
 
 // TODO: Remove this dependency.
 #include "../../external/dr_libs/old/dr.h"
