@@ -527,9 +527,9 @@ taBool32 taHandleGUIInput(taGame* pGame, taGUI* pGUI, taGUIInputEvent* pEvent)
     taGUIGadget* pRootGadget = &pGUI->pGadgets[0];
     if (taWasKeyPressed(pGame, TA_KEY_ENTER)) {
         // When the enter key is pressed we want to prioritize crdefault. It that is not set we fall back to the focused gadget.
-        if (!taIsStringNullOrEmpty(pRootGadget->root.crdefault)) {
+        if (!taIsStringNullOrEmpty(pRootGadget->state.root.crdefault)) {
             taUInt32 iGadget;
-            taBool32 foundGadget = taGUIFindGadgetByName(pGUI, pRootGadget->root.crdefault, &iGadget);
+            taBool32 foundGadget = taGUIFindGadgetByName(pGUI, pRootGadget->state.root.crdefault, &iGadget);
             if (foundGadget) {
                 pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
                 pEvent->pGadget = &pGUI->pGadgets[iGadget];
@@ -554,9 +554,9 @@ taBool32 taHandleGUIInput(taGame* pGame, taGUI* pGUI, taGUIInputEvent* pEvent)
             return TA_TRUE;
         }
     } else if (taWasKeyPressed(pGame, TA_KEY_ESCAPE)) {
-        if (!taIsStringNullOrEmpty(pRootGadget->root.escdefault)) {
+        if (!taIsStringNullOrEmpty(pRootGadget->state.root.escdefault)) {
             taUInt32 iGadget;
-            taBool32 foundGadget = taGUIFindGadgetByName(pGUI, pRootGadget->root.escdefault, &iGadget);
+            taBool32 foundGadget = taGUIFindGadgetByName(pGUI, pRootGadget->state.root.escdefault, &iGadget);
             if (foundGadget) {
                 pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
                 pEvent->pGadget = &pGUI->pGadgets[iGadget];
@@ -570,28 +570,28 @@ taBool32 taHandleGUIInput(taGame* pGame, taGUI* pGUI, taGUIInputEvent* pEvent)
     } else if (taWasKeyPressed(pGame, TA_KEY_ARROW_UP)) {
         taUInt32 iFocusedGadget;
         if (taGUIGetFocusedGadget(pGUI, &iFocusedGadget) && pGUI->pGadgets[iFocusedGadget].id == TA_GUI_GADGET_TYPE_LISTBOX) {
-            taUInt32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem;
+            taUInt32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].state.listbox.iSelectedItem;
             if (iSelectedItem == (taUInt32)-1 || iSelectedItem == 0) {
-                iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.itemCount - 1;
+                iSelectedItem = pGUI->pGadgets[iFocusedGadget].state.listbox.itemCount - 1;
             } else {
                 iSelectedItem -= 1;
             }
 
-            pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem = iSelectedItem;
+            pGUI->pGadgets[iFocusedGadget].state.listbox.iSelectedItem = iSelectedItem;
         } else {
             taGUIFocusPrevGadget(pGUI);
         }
     } else if (taWasKeyPressed(pGame, TA_KEY_ARROW_DOWN)) {
         taUInt32 iFocusedGadget;
         if (taGUIGetFocusedGadget(pGUI, &iFocusedGadget) && pGUI->pGadgets[iFocusedGadget].id == TA_GUI_GADGET_TYPE_LISTBOX) {
-            taUInt32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem;
-            if (iSelectedItem == (taUInt32)-1 || iSelectedItem == pGUI->pGadgets[iFocusedGadget].listbox.itemCount-1) {
+            taUInt32 iSelectedItem = pGUI->pGadgets[iFocusedGadget].state.listbox.iSelectedItem;
+            if (iSelectedItem == (taUInt32)-1 || iSelectedItem == pGUI->pGadgets[iFocusedGadget].state.listbox.itemCount-1) {
                 iSelectedItem = 0;
             } else {
                 iSelectedItem += 1;
             }
 
-            pGUI->pGadgets[iFocusedGadget].listbox.iSelectedItem = iSelectedItem;
+            pGUI->pGadgets[iFocusedGadget].state.listbox.iSelectedItem = iSelectedItem;
         } else {
             taGUIFocusNextGadget(pGUI);
         }
@@ -606,7 +606,7 @@ taBool32 taHandleGUIInput(taGame* pGame, taGUI* pGUI, taGUIInputEvent* pEvent)
         for (taUInt32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {
             taGUIGadget* pGadget = &pGUI->pGadgets[iGadget];
             if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
-                if (pGadget->button.quickkey != 0 && taWasKeyPressed(pGame, toupper(pGadget->button.quickkey))) {
+                if (pGadget->state.button.quickkey != 0 && taWasKeyPressed(pGame, toupper(pGadget->state.button.quickkey))) {
                     pEvent->type    = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
                     pEvent->pGadget = &pGUI->pGadgets[iGadget];
                     return TA_TRUE;
@@ -661,11 +661,11 @@ taBool32 taHandleGUIInput(taGame* pGame, taGUI* pGUI, taGUIInputEvent* pEvent)
                     taInt32 relativeMousePosY = mousePosYGUI - pGadget->ypos;
 
                     // The selected item is based on the position of the mouse.
-                    taInt32 iSelectedItem = (taInt32)(relativeMousePosY / pGame->engine.font.height) + pGadget->listbox.scrollPos;
-                    if (iSelectedItem >= (taInt32)pGadget->listbox.itemCount) {
-                        pGadget->listbox.iSelectedItem = (taUInt32)-1;
+                    taInt32 iSelectedItem = (taInt32)(relativeMousePosY / pGame->engine.font.height) + pGadget->state.listbox.scrollPos;
+                    if (iSelectedItem >= (taInt32)pGadget->state.listbox.itemCount) {
+                        pGadget->state.listbox.iSelectedItem = (taUInt32)-1;
                     } else {
-                        pGadget->listbox.iSelectedItem = (taUInt32)iSelectedItem;
+                        pGadget->state.listbox.iSelectedItem = (taUInt32)iSelectedItem;
                     }
 
                     // Make sure this is the gadget with keyboard focus.
@@ -678,14 +678,14 @@ taBool32 taHandleGUIInput(taGame* pGame, taGUI* pGUI, taGUIInputEvent* pEvent)
                 if (iHeldGadget == iGadgetUnderMouse && ((wasLMBReleased && heldMB == TA_MOUSE_BUTTON_LEFT) || (wasRMBReleased && heldMB == TA_MOUSE_BUTTON_RIGHT))) {
                     // The gadget was pressed. May want to post an event here.
                     if (pGadget->id == TA_GUI_GADGET_TYPE_BUTTON) {
-                        if (pGadget->button.stages == 0) {
+                        if (pGadget->state.button.stages == 0) {
                             pEvent->type = TA_GUI_EVENT_TYPE_BUTTON_PRESSED;
                             pEvent->pGadget = pGadget;
                             return TA_TRUE;
                         } else {
-                            assert(pGadget->button.stages > 0);
-                            taUInt32 maxStage = (pGadget->button.stages == 1) ? 2 : pGadget->button.stages;
-                            pGadget->button.currentStage = (pGadget->button.currentStage + 1) % maxStage;
+                            assert(pGadget->state.button.stages > 0);
+                            taUInt32 maxStage = (pGadget->state.button.stages == 1) ? 2 : pGadget->state.button.stages;
+                            pGadget->state.button.currentStage = (pGadget->state.button.currentStage + 1) % maxStage;
                         }
                     }
                 }
@@ -916,7 +916,7 @@ void taStep_SkirmishMenu(taGame* pGame, double dt)
                     taUInt32 iMapListGadget;
                     taGUIFindGadgetByName(&pGame->selectMapDialog, "MAPNAMES", &iMapListGadget);
 
-                    pGame->iSelectedMPMap = pGame->selectMapDialog.pGadgets[iMapListGadget].listbox.iSelectedItem;
+                    pGame->iSelectedMPMap = pGame->selectMapDialog.pGadgets[iMapListGadget].state.listbox.iSelectedItem;
 
                     // TODO: Update the map label on the main GUI.
 

@@ -133,71 +133,71 @@ taResult taGUILoad(taEngineContext* pEngine, const char* filePath, taGUI* pGUI)
             {
                 case TA_GUI_GADGET_TYPE_ROOT:
                 {
-                    pGadget->root.totalgadgets = taConfigGetInt(pGadgetObj, "totalgadgets");
-                    pGadget->root.panel        = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "panel"));
-                    pGadget->root.crdefault    = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "crdefault"));
-                    pGadget->root.escdefault   = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "escdefault"));
-                    pGadget->root.defaultfocus = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "defaultfocus"));
+                    pGadget->state.root.totalgadgets = taConfigGetInt(pGadgetObj, "totalgadgets");
+                    pGadget->state.root.panel        = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "panel"));
+                    pGadget->state.root.crdefault    = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "crdefault"));
+                    pGadget->state.root.escdefault   = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "escdefault"));
+                    pGadget->state.root.defaultfocus = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "defaultfocus"));
 
                     // [VERSION]
                     taConfigObj* pVersionObj = taConfigGetSubObj(pGadgetObj, "VERSION");
                     if (pVersionObj != NULL) {
-                        pGadget->root.version.major    = taConfigGetInt(pVersionObj, "major");
-                        pGadget->root.version.minor    = taConfigGetInt(pVersionObj, "minor");
-                        pGadget->root.version.revision = taConfigGetInt(pVersionObj, "revision");
+                        pGadget->state.root.version.major    = taConfigGetInt(pVersionObj, "major");
+                        pGadget->state.root.version.minor    = taConfigGetInt(pVersionObj, "minor");
+                        pGadget->state.root.version.revision = taConfigGetInt(pVersionObj, "revision");
                     }
                 } break;
 
                 case TA_GUI_GADGET_TYPE_BUTTON:
                 {
-                    pGadget->button.status    = taConfigGetInt(pGadgetObj, "status");
-                    pGadget->button.text      = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "text"));
-                    pGadget->button.quickkey  = (taUInt32)taConfigGetInt(pGadgetObj, "quickkey");
-                    pGadget->button.grayedout = taConfigGetBool(pGadgetObj, "grayedout");
-                    pGadget->button.stages    = taConfigGetInt(pGadgetObj, "stages");
+                    pGadget->state.button.status    = taConfigGetInt(pGadgetObj, "status");
+                    pGadget->state.button.text      = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "text"));
+                    pGadget->state.button.quickkey  = (taUInt32)taConfigGetInt(pGadgetObj, "quickkey");
+                    pGadget->state.button.grayedout = taConfigGetBool(pGadgetObj, "grayedout");
+                    pGadget->state.button.stages    = taConfigGetInt(pGadgetObj, "stages");
 
                     // For multi-stage buttons, the text for each stage is separated with a '|' character. To make rendering easier we will
                     // replace '|' characters with '\0'.
-                    dr_string_replace_ascii(pGadget->button.text, '|', '\0');
+                    dr_string_replace_ascii(pGadget->state.button.text, '|', '\0');
                 } break;
 
                 case TA_GUI_GADGET_TYPE_LISTBOX:
                 {
-                    pGadget->listbox.pItems = NULL;
-                    pGadget->listbox.itemCount = 0;
-                    pGadget->listbox.iSelectedItem = (taUInt32)-1;
-                    pGadget->listbox.scrollPos = 0;
-                    pGadget->listbox.pageSize = (taUInt32)max(1, pGadget->height / pEngine->font.height);
+                    pGadget->state.listbox.pItems = NULL;
+                    pGadget->state.listbox.itemCount = 0;
+                    pGadget->state.listbox.iSelectedItem = (taUInt32)-1;
+                    pGadget->state.listbox.scrollPos = 0;
+                    pGadget->state.listbox.pageSize = (taUInt32)max(1, pGadget->height / pEngine->font.height);
                 } break;
 
                 case TA_GUI_GADGET_TYPE_TEXTBOX:
                 {
-                    pGadget->textbox.maxchars = taConfigGetInt(pGadgetObj, "maxchars");
+                    pGadget->state.textbox.maxchars = taConfigGetInt(pGadgetObj, "maxchars");
                 } break;
 
                 case TA_GUI_GADGET_TYPE_SCROLLBAR:
                 {
-                    pGadget->scrollbar.range    = taConfigGetInt(pGadgetObj, "range");
-                    pGadget->scrollbar.thick    = taConfigGetInt(pGadgetObj, "thick");
-                    pGadget->scrollbar.knobpos  = taConfigGetInt(pGadgetObj, "knobpos");
-                    pGadget->scrollbar.knobsize = taConfigGetInt(pGadgetObj, "knobsize");
+                    pGadget->state.scrollbar.range    = taConfigGetInt(pGadgetObj, "range");
+                    pGadget->state.scrollbar.thick    = taConfigGetInt(pGadgetObj, "thick");
+                    pGadget->state.scrollbar.knobpos  = taConfigGetInt(pGadgetObj, "knobpos");
+                    pGadget->state.scrollbar.knobsize = taConfigGetInt(pGadgetObj, "knobsize");
                 } break;
 
                 case TA_GUI_GADGET_TYPE_LABEL:
                 {
-                    pGadget->label.text = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "text"));
-                    pGadget->label.link = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "link"));
-                    pGadget->label.iLinkedGadget = (taUInt32)-1;
+                    pGadget->state.label.text = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "text"));
+                    pGadget->state.label.link = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "link"));
+                    pGadget->state.label.iLinkedGadget = (taUInt32)-1;
                 } break;
 
                 case TA_GUI_GADGET_TYPE_SURFACE:
                 {
-                    pGadget->surface.hotornot = taConfigGetBool(pGadgetObj, "hotornot");
+                    pGadget->state.surface.hotornot = taConfigGetBool(pGadgetObj, "hotornot");
                 } break;
 
                 case TA_GUI_GADGET_TYPE_FONT:
                 {
-                    pGadget->font.filename = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "filename"));
+                    pGadget->state.font.filename = taGUICopyStringProp(&pNextStr, taConfigGetString(pGadgetObj, "filename"));
                 } break;
 
                 case TA_GUI_GADGET_TYPE_PICTURE:
@@ -214,8 +214,8 @@ taResult taGUILoad(taEngineContext* pEngine, const char* filePath, taGUI* pGUI)
 
 
     // Default focus.
-    if (!taIsStringNullOrEmpty(pGUI->pGadgets[0].root.defaultfocus)) {
-        taGUIFindGadgetByName(pGUI, pGUI->pGadgets[0].root.defaultfocus, &pGUI->focusedGadgetIndex);
+    if (!taIsStringNullOrEmpty(pGUI->pGadgets[0].state.root.defaultfocus)) {
+        taGUIFindGadgetByName(pGUI, pGUI->pGadgets[0].state.root.defaultfocus, &pGUI->focusedGadgetIndex);
     }
 
     // We need to do some post-processing to link certain gadgets together.
@@ -223,8 +223,8 @@ taResult taGUILoad(taEngineContext* pEngine, const char* filePath, taGUI* pGUI)
     for (taUInt32 iGadget = 1; iGadget < pGUI->gadgetCount; ++iGadget) {
         taGUIGadget* pGadget = &pGUI->pGadgets[iGadget];
         if (pGadget->id == TA_GUI_GADGET_TYPE_LABEL) {
-            if (!taIsStringNullOrEmpty(pGadget->label.link)) {
-                taGUIFindGadgetByName(pGUI, pGadget->label.link, &pGadget->label.iLinkedGadget);
+            if (!taIsStringNullOrEmpty(pGadget->state.label.link)) {
+                taGUIFindGadgetByName(pGUI, pGadget->state.label.link, &pGadget->state.label.iLinkedGadget);
             }
         }
     }
@@ -262,48 +262,48 @@ taResult taGUILoad(taEngineContext* pEngine, const char* filePath, taGUI* pGUI)
             {
                 taUInt32 iSequence;
                 if (pGUI->hasGAF && taGAFTextureGroupFindSequenceByName(&pGUI->textureGroupGAF, pGadget->name, &iSequence)) {
-                    pGadget->button.pBackgroundTextureGroup = &pGUI->textureGroupGAF;
-                    pGadget->button.iBackgroundFrame = pGUI->textureGroupGAF.pSequences[iSequence].firstFrameIndex + pGadget->button.status;
+                    pGadget->state.button.pBackgroundTextureGroup = &pGUI->textureGroupGAF;
+                    pGadget->state.button.iBackgroundFrame = pGUI->textureGroupGAF.pSequences[iSequence].firstFrameIndex + pGadget->state.button.status;
                 } else {
-                    if (pGadget->button.stages == 0) {
-                        if (taCommonGUIGetButtonFrame(&pEngine->commonGUI, pGadget->width, pGadget->height, &pGadget->button.iBackgroundFrame) == TA_SUCCESS) {
-                            pGadget->button.pBackgroundTextureGroup = &pEngine->commonGUI.textureGroup;
+                    if (pGadget->state.button.stages == 0) {
+                        if (taCommonGUIGetButtonFrame(&pEngine->commonGUI, pGadget->width, pGadget->height, &pGadget->state.button.iBackgroundFrame) == TA_SUCCESS) {
+                            pGadget->state.button.pBackgroundTextureGroup = &pEngine->commonGUI.textureGroup;
                         }
                     } else {
-                        if (taCommonGUIGetMultiStageButtonFrame(&pEngine->commonGUI, pGadget->button.stages, &pGadget->button.iBackgroundFrame) == TA_SUCCESS) {
-                            pGadget->button.pBackgroundTextureGroup = &pEngine->commonGUI.textureGroup;
+                        if (taCommonGUIGetMultiStageButtonFrame(&pEngine->commonGUI, pGadget->state.button.stages, &pGadget->state.button.iBackgroundFrame) == TA_SUCCESS) {
+                            pGadget->state.button.pBackgroundTextureGroup = &pEngine->commonGUI.textureGroup;
                         }
                     }
                 }
 
                 // Experiment: Change the size of the button to that of it's graphic.
-                if (pGadget->button.pBackgroundTextureGroup != NULL) {
-                    pGadget->width  = (taInt32)pGadget->button.pBackgroundTextureGroup->pFrames[pGadget->button.iBackgroundFrame].sizeX;
-                    pGadget->height = (taInt32)pGadget->button.pBackgroundTextureGroup->pFrames[pGadget->button.iBackgroundFrame].sizeY;
+                if (pGadget->state.button.pBackgroundTextureGroup != NULL) {
+                    pGadget->width  = (taInt32)pGadget->state.button.pBackgroundTextureGroup->pFrames[pGadget->state.button.iBackgroundFrame].sizeX;
+                    pGadget->height = (taInt32)pGadget->state.button.pBackgroundTextureGroup->pFrames[pGadget->state.button.iBackgroundFrame].sizeY;
                 }
             } break;
 
             case TA_GUI_GADGET_TYPE_SCROLLBAR:
             {
-                pGadget->scrollbar.pTextureGroup = &pEngine->commonGUI.textureGroup;
+                pGadget->state.scrollbar.pTextureGroup = &pEngine->commonGUI.textureGroup;
                 if (pGadget->attribs & TA_GUI_SCROLLBAR_TYPE_VERTICAL) {
-                    pGadget->scrollbar.iArrow0Frame = pEngine->commonGUI.scrollbar.arrowUpFrameIndex;
-                    pGadget->scrollbar.iArrow1Frame = pEngine->commonGUI.scrollbar.arrowDownFrameIndex;
-                    pGadget->scrollbar.iTrackBegFrame = pEngine->commonGUI.scrollbar.trackTopFrameIndex;
-                    pGadget->scrollbar.iTrackEndFrame = pEngine->commonGUI.scrollbar.trackBottomFrameIndex;
-                    pGadget->scrollbar.iTrackMidFrame = pEngine->commonGUI.scrollbar.trackMidVertFrameIndex;
-                    pGadget->scrollbar.iThumbFrame = pEngine->commonGUI.scrollbar.thumbVertFrameIndex;
+                    pGadget->state.scrollbar.iArrow0Frame = pEngine->commonGUI.scrollbar.arrowUpFrameIndex;
+                    pGadget->state.scrollbar.iArrow1Frame = pEngine->commonGUI.scrollbar.arrowDownFrameIndex;
+                    pGadget->state.scrollbar.iTrackBegFrame = pEngine->commonGUI.scrollbar.trackTopFrameIndex;
+                    pGadget->state.scrollbar.iTrackEndFrame = pEngine->commonGUI.scrollbar.trackBottomFrameIndex;
+                    pGadget->state.scrollbar.iTrackMidFrame = pEngine->commonGUI.scrollbar.trackMidVertFrameIndex;
+                    pGadget->state.scrollbar.iThumbFrame = pEngine->commonGUI.scrollbar.thumbVertFrameIndex;
                 } else {
-                    pGadget->scrollbar.iArrow0Frame = pEngine->commonGUI.scrollbar.arrowLeftFrameIndex;
-                    pGadget->scrollbar.iArrow1Frame = pEngine->commonGUI.scrollbar.arrowRightFrameIndex;
-                    pGadget->scrollbar.iTrackBegFrame = pEngine->commonGUI.scrollbar.trackLeftFrameIndex;
-                    pGadget->scrollbar.iTrackEndFrame = pEngine->commonGUI.scrollbar.trackRightFrameIndex;
-                    pGadget->scrollbar.iTrackMidFrame = pEngine->commonGUI.scrollbar.trackMidHorzFrameIndex;
-                    pGadget->scrollbar.iThumbFrame = pEngine->commonGUI.scrollbar.thumbHorzFrameIndex;
+                    pGadget->state.scrollbar.iArrow0Frame = pEngine->commonGUI.scrollbar.arrowLeftFrameIndex;
+                    pGadget->state.scrollbar.iArrow1Frame = pEngine->commonGUI.scrollbar.arrowRightFrameIndex;
+                    pGadget->state.scrollbar.iTrackBegFrame = pEngine->commonGUI.scrollbar.trackLeftFrameIndex;
+                    pGadget->state.scrollbar.iTrackEndFrame = pEngine->commonGUI.scrollbar.trackRightFrameIndex;
+                    pGadget->state.scrollbar.iTrackMidFrame = pEngine->commonGUI.scrollbar.trackMidHorzFrameIndex;
+                    pGadget->state.scrollbar.iThumbFrame = pEngine->commonGUI.scrollbar.thumbHorzFrameIndex;
                 }
                 
-                pGadget->scrollbar.iThumbCapTopFrame = pEngine->commonGUI.scrollbar.thumbCapTopFrameIndex;
-                pGadget->scrollbar.iThumbCapBotFrame = pEngine->commonGUI.scrollbar.thumbCapBotFrameIndex;
+                pGadget->state.scrollbar.iThumbCapTopFrame = pEngine->commonGUI.scrollbar.thumbCapTopFrameIndex;
+                pGadget->state.scrollbar.iThumbCapBotFrame = pEngine->commonGUI.scrollbar.thumbCapBotFrameIndex;
             } break;
 
             // TESTING. TODO: DELETE ME.
@@ -494,7 +494,7 @@ TA_PRIVATE taBool32 taGUICanGadgetReceiveFocus(taGUIGadget* pGadget)
     assert(pGadget != NULL);
 
     return pGadget->active != 0 &&
-        ((pGadget->id == TA_GUI_GADGET_TYPE_BUTTON && !pGadget->button.grayedout && (pGadget->attribs & TA_GUI_GADGET_ATTRIB_SKIP_FOCUS) == 0) ||
+        ((pGadget->id == TA_GUI_GADGET_TYPE_BUTTON && !pGadget->state.button.grayedout && (pGadget->attribs & TA_GUI_GADGET_ATTRIB_SKIP_FOCUS) == 0) ||
          (pGadget->id == TA_GUI_GADGET_TYPE_LISTBOX) ||
          (pGadget->id == TA_GUI_GADGET_TYPE_TEXTBOX));
 }
@@ -554,15 +554,15 @@ const char* taGUIGetButtonText(taGUIGadget* pGadget, taUInt32 stage)
     }
 
     if (stage == 0) {
-        return pGadget->button.text;
+        return pGadget->state.button.text;
     }
 
-    if (pGadget->id != TA_GUI_GADGET_TYPE_BUTTON || (taInt32)stage >= pGadget->button.stages) {
+    if (pGadget->id != TA_GUI_GADGET_TYPE_BUTTON || (taInt32)stage >= pGadget->state.button.stages) {
         return NULL;
     }
 
     taUInt32 i = 0;
-    const char* text = pGadget->button.text;
+    const char* text = pGadget->state.button.text;
     for (;;) {
         char c = *text++;
         if (c == '\0') {
@@ -580,25 +580,25 @@ taResult taGUISetListboxItems(taGUIGadget* pGadget, const char** pItems, taUInt3
         return TA_INVALID_ARGS;
     }
     
-    if (pGadget->listbox.pItems != NULL) {
-        free(pGadget->listbox.pItems);
-        pGadget->listbox.itemCount = 0;
+    if (pGadget->state.listbox.pItems != NULL) {
+        free(pGadget->state.listbox.pItems);
+        pGadget->state.listbox.itemCount = 0;
     }
 
     // Make a copy of each item.
     size_t payloadSize = 0;
     for (taUInt32 i = 0; i < count; ++i) {
-        payloadSize += sizeof(*pGadget->listbox.pItems);
+        payloadSize += sizeof(*pGadget->state.listbox.pItems);
         payloadSize += taStrlenOrZero(pItems[i]) + 1;    // +1 for null terminator.
     }
 
-    pGadget->listbox.pItems = (char**)malloc(payloadSize);
-    if (pGadget->listbox.pItems == NULL) {
+    pGadget->state.listbox.pItems = (char**)malloc(payloadSize);
+    if (pGadget->state.listbox.pItems == NULL) {
         return TA_OUT_OF_MEMORY;
     }
 
     // Payload format: [ptr0, ptr1, ... ptrN][str0, str1, ... strN];
-    char* pDstStr = (char*)pGadget->listbox.pItems + (sizeof(*pGadget->listbox.pItems) * count);
+    char* pDstStr = (char*)pGadget->state.listbox.pItems + (sizeof(*pGadget->state.listbox.pItems) * count);
     for (taUInt32 i = 0; i < count; ++i) {
         const char* pSrcStr = pItems[i];
         if (pSrcStr == NULL) pSrcStr = "";
@@ -606,21 +606,21 @@ taResult taGUISetListboxItems(taGUIGadget* pGadget, const char** pItems, taUInt3
         size_t srcLen = taStrlenOrZero(pItems[i]) + 1;
         memcpy(pDstStr, pSrcStr, srcLen);
 
-        pGadget->listbox.pItems[i] = pDstStr;
+        pGadget->state.listbox.pItems[i] = pDstStr;
         pDstStr += srcLen;
     }
 
-    pGadget->listbox.itemCount = count;
+    pGadget->state.listbox.itemCount = count;
     return TA_SUCCESS;
 }
 
 const char* taGUIGetListboxItem(taGUIGadget* pGadget, taUInt32 index)
 {
-    if (pGadget == NULL || pGadget->id != TA_GUI_GADGET_TYPE_LISTBOX || index >= pGadget->listbox.itemCount) {
+    if (pGadget == NULL || pGadget->id != TA_GUI_GADGET_TYPE_LISTBOX || index >= pGadget->state.listbox.itemCount) {
         return NULL;
     }
 
-    return pGadget->listbox.pItems[index];
+    return pGadget->state.listbox.pItems[index];
 }
 
 

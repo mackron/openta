@@ -151,7 +151,7 @@ typedef struct
         {
             int unused;
         } picture;
-    };
+    } state;
 } taGUIGadget;
 
 struct taGUI

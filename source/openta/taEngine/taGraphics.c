@@ -1147,28 +1147,28 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
                     glDisable(GL_BLEND);
                 }
 
-                if (pGadget->button.pBackgroundTextureGroup != NULL) {
+                if (pGadget->state.button.pBackgroundTextureGroup != NULL) {
                     taUInt32 buttonState = (isGadgetPressed) ? TA_GUI_BUTTON_STATE_PRESSED : TA_GUI_BUTTON_STATE_NORMAL;
-                    if (pGadget->button.grayedout) {
+                    if (pGadget->state.button.grayedout) {
                         buttonState = TA_GUI_BUTTON_STATE_DISABLED;
                     }
 
                     taGAFTextureGroupFrame* pFrame = NULL;
-                    if (pGadget->button.stages == 0) {
-                        pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + buttonState;
+                    if (pGadget->state.button.stages == 0) {
+                        pFrame = pGadget->state.button.pBackgroundTextureGroup->pFrames + pGadget->state.button.iBackgroundFrame + buttonState;
                     } else {
                         if (buttonState == TA_GUI_BUTTON_STATE_NORMAL) {
-                            pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + pGadget->button.currentStage;
+                            pFrame = pGadget->state.button.pBackgroundTextureGroup->pFrames + pGadget->state.button.iBackgroundFrame + pGadget->state.button.currentStage;
                         } else {
-                            pFrame = pGadget->button.pBackgroundTextureGroup->pFrames + pGadget->button.iBackgroundFrame + pGadget->button.stages + (buttonState-1);
+                            pFrame = pGadget->state.button.pBackgroundTextureGroup->pFrames + pGadget->state.button.iBackgroundFrame + pGadget->state.button.stages + (buttonState-1);
                         }
                     }
 
-                    taTexture* pBackgroundTexture = pGadget->button.pBackgroundTextureGroup->ppAtlases[pFrame->atlasIndex];
+                    taTexture* pBackgroundTexture = pGadget->state.button.pBackgroundTextureGroup->ppAtlases[pFrame->atlasIndex];
                     taDrawSubTexture(pBackgroundTexture, posX, posY, pFrame->sizeX*scale, pFrame->sizeY*scale, TA_FALSE, pFrame->atlasPosX, pFrame->atlasPosY, pFrame->sizeX, pFrame->sizeY);
                 }
 
-                const char* text = taGUIGetButtonText(pGadget, pGadget->button.currentStage);
+                const char* text = taGUIGetButtonText(pGadget, pGadget->state.button.currentStage);
                 if (!taIsStringNullOrEmpty(text)) {
                     float textSizeX;
                     float textSizeY;
@@ -1178,7 +1178,7 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
                     float textPosY = posY + (sizeY - textSizeY)/2 - (4*scale);
 
                     // Left-align text for multi-stage buttons.
-                    if (pGadget->button.stages > 0) {
+                    if (pGadget->state.button.stages > 0) {
                         textPosX = posX + (3*scale);
                     }
 
@@ -1190,12 +1190,12 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
 
                     taDrawText(pGraphics, &pGraphics->pEngine->font, 255, scale, textPosX, textPosY, text);
 
-                    if (pGadget->button.quickkey != 0 && pGadget->button.stages == 0) {
+                    if (pGadget->state.button.quickkey != 0 && pGadget->state.button.stages == 0) {
                         float charPosX;
                         float charPosY;
                         float charSizeX;
                         float charSizeY;
-                        if (taFontFindCharacterMetrics(&pGraphics->pEngine->font, scale, text, (char)pGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
+                        if (taFontFindCharacterMetrics(&pGraphics->pEngine->font, scale, text, (char)pGadget->state.button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
                             float underlineHeight = roundf(1*scale);
                             float underlineOffsetY = roundf(0*scale);
                             charPosX += textPosX;
@@ -1227,9 +1227,9 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
                 const float itemPadding = 0;
                 float itemPosX = 0;
                 float itemPosY = -4*scale;
-                for (taUInt32 iItem = pGadget->listbox.scrollPos; iItem < pGadget->listbox.scrollPos + pGadget->listbox.pageSize && iItem < pGadget->listbox.itemCount; ++iItem) {
-                    taDrawText(pGraphics, &pGraphics->pEngine->font, 255, scale, posX + itemPosX, posY + itemPosY, pGadget->listbox.pItems[iItem]);
-                    if (iItem == pGadget->listbox.iSelectedItem) {
+                for (taUInt32 iItem = pGadget->state.listbox.scrollPos; iItem < pGadget->state.listbox.scrollPos + pGadget->state.listbox.pageSize && iItem < pGadget->state.listbox.itemCount; ++iItem) {
+                    taDrawText(pGraphics, &pGraphics->pEngine->font, 255, scale, posX + itemPosX, posY + itemPosY, pGadget->state.listbox.pItems[iItem]);
+                    if (iItem == pGadget->state.listbox.iSelectedItem) {
                         float highlightPosX  = posX + itemPosX - (0*scale);
                         float highlightPosY  = posY + itemPosY + (4*scale);
                         float highlightSizeX = sizeX + (0*scale)*2;
@@ -1263,32 +1263,32 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
 
             case TA_GUI_GADGET_TYPE_SCROLLBAR:
             {
-                taGAFTextureGroupFrame* pArrow0Frame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iArrow0Frame; // UP/LEFT arrow
-                taGAFTextureGroupFrame* pArrow1Frame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iArrow1Frame; // DOWN/RIGHT arrow
-                taTexture* pArrow0Texture = pGadget->scrollbar.pTextureGroup->ppAtlases[pArrow0Frame->atlasIndex];
-                taTexture* pArrow1Texture = pGadget->scrollbar.pTextureGroup->ppAtlases[pArrow1Frame->atlasIndex];
+                taGAFTextureGroupFrame* pArrow0Frame = pGadget->state.scrollbar.pTextureGroup->pFrames + pGadget->state.scrollbar.iArrow0Frame; // UP/LEFT arrow
+                taGAFTextureGroupFrame* pArrow1Frame = pGadget->state.scrollbar.pTextureGroup->pFrames + pGadget->state.scrollbar.iArrow1Frame; // DOWN/RIGHT arrow
+                taTexture* pArrow0Texture = pGadget->state.scrollbar.pTextureGroup->ppAtlases[pArrow0Frame->atlasIndex];
+                taTexture* pArrow1Texture = pGadget->state.scrollbar.pTextureGroup->ppAtlases[pArrow1Frame->atlasIndex];
                 float arrow0PosX = 0;
                 float arrow0PosY = 0;
                 float arrow1PosX = 0;
                 float arrow1PosY = 0;
 
-                taGAFTextureGroupFrame* pTrackBegFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackBegFrame;
-                taGAFTextureGroupFrame* pTrackEndFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackEndFrame;
-                taGAFTextureGroupFrame* pTrackMidFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iTrackMidFrame;
-                taTexture* pTrackBegTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackBegFrame->atlasIndex];
-                taTexture* pTrackEndTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackEndFrame->atlasIndex];
-                taTexture* pTrackMidTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pTrackMidFrame->atlasIndex]; (void)pTrackMidTexture; /* <-- TODO: Do something with this graphic. */
+                taGAFTextureGroupFrame* pTrackBegFrame = pGadget->state.scrollbar.pTextureGroup->pFrames + pGadget->state.scrollbar.iTrackBegFrame;
+                taGAFTextureGroupFrame* pTrackEndFrame = pGadget->state.scrollbar.pTextureGroup->pFrames + pGadget->state.scrollbar.iTrackEndFrame;
+                taGAFTextureGroupFrame* pTrackMidFrame = pGadget->state.scrollbar.pTextureGroup->pFrames + pGadget->state.scrollbar.iTrackMidFrame;
+                taTexture* pTrackBegTexture = pGadget->state.scrollbar.pTextureGroup->ppAtlases[pTrackBegFrame->atlasIndex];
+                taTexture* pTrackEndTexture = pGadget->state.scrollbar.pTextureGroup->ppAtlases[pTrackEndFrame->atlasIndex];
+                taTexture* pTrackMidTexture = pGadget->state.scrollbar.pTextureGroup->ppAtlases[pTrackMidFrame->atlasIndex]; (void)pTrackMidTexture; /* <-- TODO: Do something with this graphic. */
                 float trackBegPosX = 0;
                 float trackBegPosY = 0;
                 float trackEndPosX = 0;
                 float trackEndPosY = 0;
 
-                taGAFTextureGroupFrame* pThumbFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iThumbFrame;
-                taGAFTextureGroupFrame* pThumbCapTopFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iThumbCapTopFrame;
-                taGAFTextureGroupFrame* pThumbCapBotFrame = pGadget->scrollbar.pTextureGroup->pFrames + pGadget->scrollbar.iThumbCapBotFrame;
-                taTexture* pThumbTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pThumbFrame->atlasIndex];
-                taTexture* pThumbCapTopTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pThumbCapTopFrame->atlasIndex];
-                taTexture* pThumbCapBotTexture = pGadget->scrollbar.pTextureGroup->ppAtlases[pThumbCapBotFrame->atlasIndex];
+                taGAFTextureGroupFrame* pThumbFrame = pGadget->state.scrollbar.pTextureGroup->pFrames + pGadget->state.scrollbar.iThumbFrame;
+                taGAFTextureGroupFrame* pThumbCapTopFrame = pGadget->state.scrollbar.pTextureGroup->pFrames + pGadget->state.scrollbar.iThumbCapTopFrame;
+                taGAFTextureGroupFrame* pThumbCapBotFrame = pGadget->state.scrollbar.pTextureGroup->pFrames + pGadget->state.scrollbar.iThumbCapBotFrame;
+                taTexture* pThumbTexture = pGadget->state.scrollbar.pTextureGroup->ppAtlases[pThumbFrame->atlasIndex];
+                taTexture* pThumbCapTopTexture = pGadget->state.scrollbar.pTextureGroup->ppAtlases[pThumbCapTopFrame->atlasIndex];
+                taTexture* pThumbCapBotTexture = pGadget->state.scrollbar.pTextureGroup->ppAtlases[pThumbCapBotFrame->atlasIndex];
                 float thumbBegPosX = 0;
                 float thumbBegPosY = 0;
                 float thumbEndPosX = 0;
@@ -1305,9 +1305,9 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
                     trackEndPosX = arrow1PosX;
                     trackEndPosY = arrow1PosY - pTrackEndFrame->sizeY*scale;
                     thumbBegPosX = trackBegPosX + (3*scale);
-                    thumbBegPosY = trackBegPosY + (3*scale) + pGadget->scrollbar.knobpos*scale;
+                    thumbBegPosY = trackBegPosY + (3*scale) + pGadget->state.scrollbar.knobpos*scale;
                     thumbEndPosX = thumbBegPosX;
-                    thumbEndPosY = thumbBegPosY + pGadget->scrollbar.knobsize*scale;
+                    thumbEndPosY = thumbBegPosY + pGadget->state.scrollbar.knobsize*scale;
                 } else {
                     // Horizontal
                     arrow0PosX = posX;
@@ -1318,9 +1318,9 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
                     trackBegPosY = arrow0PosY;
                     trackEndPosX = arrow1PosX - pTrackEndFrame->sizeX*scale;
                     trackEndPosY = arrow1PosY;
-                    thumbBegPosX = trackBegPosX + (3*scale) + pGadget->scrollbar.knobpos*scale;
+                    thumbBegPosX = trackBegPosX + (3*scale) + pGadget->state.scrollbar.knobpos*scale;
                     thumbBegPosY = trackBegPosY + (3*scale);
-                    thumbEndPosX = thumbBegPosX + pGadget->scrollbar.knobsize*scale;
+                    thumbEndPosX = thumbBegPosX + pGadget->state.scrollbar.knobsize*scale;
                     thumbEndPosY = thumbBegPosY;
                 }
 
@@ -1378,23 +1378,23 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
 
             case TA_GUI_GADGET_TYPE_LABEL:
             {
-                if (!taIsStringNullOrEmpty(pGadget->label.text)) {
+                if (!taIsStringNullOrEmpty(pGadget->state.label.text)) {
                     float textSizeX;
                     float textSizeY;
-                    taFontMeasureText(&pGraphics->pEngine->fontSmall, scale, pGadget->label.text, &textSizeX, &textSizeY);
+                    taFontMeasureText(&pGraphics->pEngine->fontSmall, scale, pGadget->state.label.text, &textSizeX, &textSizeY);
 
                     float textPosX = posX + (1*scale);
                     float textPosY = posY - (4*scale);
-                    taDrawText(pGraphics, &pGraphics->pEngine->fontSmall, 255, scale, textPosX, textPosY, pGadget->label.text);
+                    taDrawText(pGraphics, &pGraphics->pEngine->fontSmall, 255, scale, textPosX, textPosY, pGadget->state.label.text);
 
                     // Underline the shortcut key for the associated button.
-                    if (pGadget->label.iLinkedGadget != (taUInt32)-1) {
-                        taGUIGadget* pLinkedGadget = &pGUI->pGadgets[pGadget->label.iLinkedGadget];
+                    if (pGadget->state.label.iLinkedGadget != (taUInt32)-1) {
+                        taGUIGadget* pLinkedGadget = &pGUI->pGadgets[pGadget->state.label.iLinkedGadget];
                         float charPosX;
                         float charPosY;
                         float charSizeX;
                         float charSizeY;
-                        if (taFontFindCharacterMetrics(&pGraphics->pEngine->fontSmall, scale, pGadget->label.text, (char)pLinkedGadget->button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
+                        if (taFontFindCharacterMetrics(&pGraphics->pEngine->fontSmall, scale, pGadget->state.label.text, (char)pLinkedGadget->state.button.quickkey, &charPosX, &charPosY, &charSizeX, &charSizeY) == TA_SUCCESS) {
                             float underlineHeight = roundf(1*scale);
                             float underlineOffsetY = roundf(0*scale);
                             charPosX += textPosX;
