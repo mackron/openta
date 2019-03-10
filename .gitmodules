@@ -1,3 +1,6 @@
 [submodule "source/external/dr_libs"]
 	path = source/external/dr_libs
 	url = https://github.com/mackron/dr_libs.git
+[submodule "source/external/miniaudio"]
+	path = source/external/miniaudio
+	url = https://github.com/dr-soft/miniaudio.git
