@@ -374,12 +374,12 @@ taConfigVar* taConfigGetVar(const taConfigObj* pConfig, const char* varName)
         return NULL;
     }
 
-    drpath_iterator iSeg;
-    if (drpath_first(varName, &iSeg)) {
-        drpath_iterator iNextSeg = iSeg;
-        if (drpath_next(&iNextSeg)) {
+    taPathIterator iSeg;
+    if (taPathFirst(varName, &iSeg)) {
+        taPathIterator iNextSeg = iSeg;
+        if (taPathNext(&iNextSeg)) {
             char subobjName[256];
-            drpath_copy_and_append_iterator(subobjName, sizeof(subobjName), "", iSeg);
+            taPathAppendIterator(subobjName, sizeof(subobjName), "", iSeg);
             taConfigObj* pSubObj = taConfigGetSubObj(pConfig, subobjName);
             if (pSubObj != NULL) {
                 return taConfigGetVar(pSubObj, iNextSeg.path + iNextSeg.segment.offset);

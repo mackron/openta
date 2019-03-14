@@ -32,10 +32,10 @@ taResult taPropertyManagerSet(taPropertyManager* pProperties, const char* key, c
 
         taProperty prop;
         prop.key = (char*)malloc(keyLen+1 + valLen+1); if (prop.key == NULL) return TA_OUT_OF_MEMORY;
-        dr_strcpy_s(prop.key, keyLen+1, key);
+        ta_strcpy_s(prop.key, keyLen+1, key);
 
         prop.val = prop.key + keyLen+1;
-        dr_strcpy_s(prop.val, valLen+1, val);
+        ta_strcpy_s(prop.val, valLen+1, val);
 
         if (pProperties->capacity == pProperties->count) {
             taUInt32 newCapacity = (pProperties->capacity == 0) ? 16 : pProperties->capacity*2;
@@ -108,7 +108,7 @@ const char* taPropertyManagerGetV(taPropertyManager* pProperties, const char* ke
 {
     const char* value = NULL;
 
-    char* formattedKey = taMakeStringV(key, args);
+    taString formattedKey = taMakeStringv(key, args);
     if (formattedKey != NULL) {
         value = taPropertyManagerGet(pProperties, formattedKey);
         taFreeString(formattedKey);

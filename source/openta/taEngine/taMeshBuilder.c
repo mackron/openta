@@ -6,7 +6,7 @@ taBool32 taMeshBuilderInit(taMeshBuilder* pBuilder, size_t vertexSize)
         return TA_FALSE;
     }
 
-    dr_zero_object(pBuilder);
+    taZeroObject(pBuilder);
     pBuilder->vertexSize = vertexSize;
 
     return TA_TRUE;

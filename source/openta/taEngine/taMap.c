@@ -518,11 +518,11 @@ TA_PRIVATE taMap3DO* taMapLoad3DO(taMapInstance* pMap, taMapLoadContext* pLoadCo
 {
     // 3DO files are in the "objects3d" folder.
     char fullFileName[TA_MAX_PATH];
-    if (!drpath_copy_and_append(fullFileName, sizeof(fullFileName), "objects3d", objectName /*"armgate"*/)) {
+    if (!taPathAppend(fullFileName, sizeof(fullFileName), "objects3d", objectName /*"armgate"*/)) {
         return NULL;
     }
-    if (!drpath_extension_equal(objectName, "3do")) {
-        if (!drpath_append_extension(fullFileName, sizeof(fullFileName), "3do")) {
+    if (!taPathExtensionEqual(objectName, "3do")) {
+        if (!taPathAppendExtension(fullFileName, sizeof(fullFileName), fullFileName, "3do")) {
             return NULL;
         }
     }
@@ -587,10 +587,10 @@ TA_PRIVATE void taMapCalculateObjectPositionXY(taUInt32 tileX, taUInt32 tileY, t
 TA_PRIVATE taFile* taMapOpenTNTFile(taFS* pFS, const char* mapName)
 {
     char filename[TA_MAX_PATH];
-    if (!drpath_copy_and_append(filename, sizeof(filename), "maps", mapName)) {
+    if (!taPathAppend(filename, sizeof(filename), "maps", mapName)) {
         return NULL;
     }
-    if (!drpath_append_extension(filename, sizeof(filename), "tnt")) {
+    if (!taPathAppendExtension(filename, sizeof(filename), filename, "tnt")) {
         return NULL;
     }
 
@@ -914,7 +914,7 @@ TA_PRIVATE taBool32 taMapLoadTNT(taMapInstance* pMap, const char* mapName, taMap
             {
                 // A new GAF file needs to be loaded. These will be in the "anims" directory.
                 char filename[TA_MAX_PATH];
-                if (!drpath_copy_and_append(filename, sizeof(filename), "anims", pFeatureType->pDesc->filename)) {
+                if (!taPathAppend(filename, sizeof(filename), "anims", pFeatureType->pDesc->filename)) {
                     goto on_error;
                 }
 
@@ -1022,10 +1022,10 @@ on_error:
 TA_PRIVATE taConfigObj* taMapOpenOTAFile(taFS* pFS, const char* mapName)
 {
     char filename[TA_MAX_PATH];
-    if (!drpath_copy_and_append(filename, sizeof(filename), "maps", mapName)) {
+    if (!taPathAppend(filename, sizeof(filename), "maps", mapName)) {
         return NULL;
     }
-    if (!drpath_append_extension(filename, sizeof(filename), "ota")) {
+    if (!taPathAppendExtension(filename, sizeof(filename), filename, "ota")) {
         return NULL;
     }
 

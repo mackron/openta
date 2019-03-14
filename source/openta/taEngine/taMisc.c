@@ -102,3 +102,55 @@ taBool32 taMemoryStreamWriteUInt32(taMemoryStream* pStream, taUInt32 value)
 
     return TA_TRUE;
 }
+
+
+//// Timing ////
+#ifdef _WIN32
+static LARGE_INTEGER g_taTimerFrequency = {{0}};
+void taTimerInit(taTimer* pTimer)
+{
+    if (g_taTimerFrequency.QuadPart == 0) {
+        QueryPerformanceFrequency(&g_taTimerFrequency);
+    }
+
+    LARGE_INTEGER counter;
+    QueryPerformanceCounter(&counter);
+    pTimer->counter = (taUInt64)counter.QuadPart;
+}
+
+double taTimerTick(taTimer* pTimer)
+{
+    LARGE_INTEGER counter;
+    if (!QueryPerformanceCounter(&counter)) {
+        return 0;
+    }
+
+    taUInt64 newTimeCounter = counter.QuadPart;
+    taUInt64 oldTimeCounter = pTimer->counter;
+
+    pTimer->counter = newTimeCounter;
+
+    return (newTimeCounter - oldTimeCounter) / (double)g_taTimerFrequency.QuadPart;
+}
+#else
+void taTimerInit(taTimer* pTimer)
+{
+    struct timespec newTime;
+    clock_gettime(CLOCK_MONOTONIC, &newTime);
+
+    pTimer->counter = (newTime.tv_sec * 1000000000LL) + newTime.tv_nsec;
+}
+
+double taTimerTick(taTimer* pTimer)
+{
+    struct timespec newTime;
+    clock_gettime(CLOCK_MONOTONIC, &newTime);
+
+    taUInt64 newTimeCounter = (newTime.tv_sec * 1000000000LL) + newTime.tv_nsec;
+    taUInt64 oldTimeCounter = pTimer->counter;
+
+    pTimer->counter = newTimeCounter;
+
+    return (newTimeCounter - oldTimeCounter) / 1000000000.0;
+}
+#endif

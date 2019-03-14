@@ -76,11 +76,11 @@ ta3DO* taOpen3DO(taFS* pFS, const char* fileName)
     }
 
     char fullFileName[TA_MAX_PATH];
-    if (!drpath_copy_and_append(fullFileName, sizeof(fullFileName), "objects", fileName)) {
+    if (!taPathAppend(fullFileName, sizeof(fullFileName), "objects", fileName)) {
         return NULL;
     }
-    if (!drpath_extension_equal(fileName, "3do")) {
-        if (!drpath_append_extension(fullFileName, sizeof(fullFileName), "3do")) {
+    if (!taPathExtensionEqual(fileName, "3do")) {
+        if (!taPathAppendExtension(fullFileName, sizeof(fullFileName), fullFileName, "3do")) {
             return NULL;
         }
     }

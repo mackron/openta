@@ -39,12 +39,6 @@
 #include "../../external/miniaudio/miniaudio.h"
 
 
-
-// TODO: Remove this dependency.
-#define DR_IMPLEMENTATION
-#include "../../external/dr_libs/old/dr.h"
-
-
 // Private Options
 
 // The number of tiles making up a chunk, on each dimension.
@@ -57,6 +51,7 @@
 #include "taFS.c"
 #include "taConfig.c"
 #include "taString.c"
+#include "taPath.c"
 #include "taPropertyManager.c"
 #include "taFeatures.c"
 #include "taInput.c"

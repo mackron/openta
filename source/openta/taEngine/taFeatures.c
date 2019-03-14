@@ -335,7 +335,7 @@ taFeaturesLibrary* taCreateFeaturesLibrary(taFS* pFS)
 
     taFSIterator* pIter = taFSBegin(pFS, "features", TA_TRUE);     // <-- "TA_TRUE" means to search recursively.
     while (taFSNext(pIter)) {
-        if (!pIter->fileInfo.isDirectory && drpath_extension_equal(pIter->fileInfo.relativePath, "tdf")) {
+        if (!pIter->fileInfo.isDirectory && taPathExtensionEqual(pIter->fileInfo.relativePath, "tdf")) {
             taFeaturesLibraryLoadAndParseScript(pLib, pFS, pIter->fileInfo.archiveRelativePath, pIter->fileInfo.relativePath);
         }
     }

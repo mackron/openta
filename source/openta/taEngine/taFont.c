@@ -122,13 +122,13 @@ taResult taFontLoadGAF(taEngineContext* pEngine, const char* filePath, taFont* p
     // with each frame corresponding to an ANSI(?) character.
     //
     // The frame's x and y positions determine the origin of the glyph.
-    const char* sequenceName = drpath_file_name(filePath);
+    const char* sequenceName = taPathFileName(filePath);
     if (taIsStringNullOrEmpty(sequenceName)) {
         return TA_FILE_NOT_FOUND;
     }
 
     char packagePath[TA_MAX_PATH];
-    if (!drpath_copy_and_remove_file_name(packagePath, sizeof(packagePath), filePath)) {
+    if (!taPathRemoveFileName(packagePath, sizeof(packagePath), filePath)) {
         return TA_FILE_NOT_FOUND;
     }
 
@@ -254,7 +254,7 @@ taResult taFontLoad(taEngineContext* pEngine, const char* filePath, taFont* pFon
     pFont->pEngine = pEngine;
 
     // The font is loaded differently depending on whether or not it's being loaded from a .FNT file or a .GAF file.
-    if (drpath_extension_equal(filePath, "FNT")) {
+    if (taPathExtensionEqual(filePath, "FNT")) {
         return taFontLoadFNT(pEngine, filePath, pFont);
     } else {
         return taFontLoadGAF(pEngine, filePath, pFont);

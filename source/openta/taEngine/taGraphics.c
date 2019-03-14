@@ -1653,7 +1653,7 @@ void taDrawTextF(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex
     va_list args;
     va_start(args, text);
     {
-        char* formattedText = taMakeStringV(text, args);
+        taString formattedText = taMakeStringv(text, args);
         if (formattedText) {
             taDrawText(pGraphics, pFont, colorIndex, scale, posX, posY, formattedText);
             taFreeString(formattedText);

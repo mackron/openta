@@ -290,7 +290,7 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                         if (IS_LOW_SURROGATE(wParam))
                         {
                             assert(IS_HIGH_SURROGATE(pWindow->utf16HighSurrogate) != 0);
-                            character = dr_utf16pair_to_utf32_ch(pWindow->utf16HighSurrogate, (unsigned short)wParam);
+                            character = taUTF16PairToUTF32ch(pWindow->utf16HighSurrogate, (unsigned short)wParam);
                         }
 
                         pWindow->utf16HighSurrogate = 0;
@@ -320,6 +320,61 @@ static LRESULT DefaultWindowProcWin32(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     return DefWindowProcA(hWnd, msg, wParam, lParam);
 }
 
+
+typedef enum TA_PROCESS_DPI_AWARENESS {
+    TA_PROCESS_DPI_UNAWARE = 0,
+    TA_PROCESS_SYSTEM_DPI_AWARE = 1,
+    TA_PROCESS_PER_MONITOR_DPI_AWARE = 2
+} OC_PROCESS_DPI_AWARENESS;
+
+typedef enum OC_MONITOR_DPI_TYPE {
+    TA_MDT_EFFECTIVE_DPI = 0,
+    TA_MDT_ANGULAR_DPI = 1,
+    TA_MDT_RAW_DPI = 2,
+    TA_MDT_DEFAULT = TA_MDT_EFFECTIVE_DPI
+} OC_MONITOR_DPI_TYPE;
+
+typedef BOOL    (__stdcall * OC_PFN_SetProcessDPIAware)     (void);
+typedef HRESULT (__stdcall * OC_PFN_SetProcessDpiAwareness) (OC_PROCESS_DPI_AWARENESS);
+typedef HRESULT (__stdcall * OC_PFN_GetDpiForMonitor)       (HMONITOR hmonitor, OC_MONITOR_DPI_TYPE dpiType, UINT *dpiX, UINT *dpiY);
+
+
+void taMakeDPIAware_Win32()
+{
+    taBool32 fallBackToDiscouragedAPI = TA_FALSE;
+
+    // We can't call SetProcessDpiAwareness() directly because otherwise on versions of Windows < 8.1 we'll get an error at load time about
+    // a missing DLL.
+    HMODULE hSHCoreDLL = LoadLibraryW(L"shcore.dll");
+    if (hSHCoreDLL != NULL) {
+        OC_PFN_SetProcessDpiAwareness _SetProcessDpiAwareness = (OC_PFN_SetProcessDpiAwareness)GetProcAddress(hSHCoreDLL, "SetProcessDpiAwareness");
+        if (_SetProcessDpiAwareness != NULL) {
+            if (_SetProcessDpiAwareness(TA_PROCESS_PER_MONITOR_DPI_AWARE) != S_OK) {
+                fallBackToDiscouragedAPI = TA_TRUE;
+            }
+        } else {
+            fallBackToDiscouragedAPI = TA_TRUE;
+        }
+
+        FreeLibrary(hSHCoreDLL);
+    } else {
+        fallBackToDiscouragedAPI = TA_TRUE;
+    }
+
+    if (fallBackToDiscouragedAPI) {
+        HMODULE hUser32DLL = LoadLibraryW(L"user32.dll");
+        if (hUser32DLL != NULL) {
+            OC_PFN_SetProcessDPIAware _SetProcessDPIAware = (OC_PFN_SetProcessDPIAware)GetProcAddress(hUser32DLL, "SetProcessDPIAware");
+            if (_SetProcessDPIAware != NULL) {
+                _SetProcessDPIAware();
+            }
+
+            FreeLibrary(hUser32DLL);
+        }
+    }
+}
+
+
 taBool32 taInitWindowSystem()
 {
     // The Windows operating system likes to automatically change the size of the game window when DPI scaling is
@@ -329,7 +384,7 @@ taBool32 taInitWindowSystem()
     // operating system to be changing the size of the window to anything other than what we explicitly request. To
     // do this, we just tell the operation system that it shouldn't do DPI scaling and that we'll do it ourselves
     // manually.
-    dr_win32_make_dpi_aware();
+    taMakeDPIAware_Win32();
 
     WNDCLASSEXA wc;
     ZeroMemory(&wc, sizeof(wc));

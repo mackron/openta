@@ -299,7 +299,7 @@ taGame* taCreateGame(int argc, char** argv)
 
     
 
-    dr_timer_init(&pGame->timer);
+    taTimerInit(&pGame->timer);
 
 
     // Switch to the main menu by default.
@@ -315,7 +315,7 @@ taGame* taCreateGame(int argc, char** argv)
     {
         // From what I can tell, it looks like skirmish/mp maps are determined by the "type" property of the first
         // schema in the OTA file.
-        if (drpath_extension_equal(pIter->fileInfo.relativePath, "ota")) {
+        if (taPathExtensionEqual(pIter->fileInfo.relativePath, "ota")) {
             taConfigObj* pOTA = taParseConfigFromFile(pGame->engine.pFS, pIter->fileInfo.relativePath);
             if (pOTA != NULL) {
                 const char* type = taConfigGetString(pOTA, "GlobalHeader/Schema 0/Type");
@@ -972,7 +972,7 @@ void taStep_Main(taGame* pGame)
 {
     assert(pGame != NULL);
 
-    const double dt = dr_timer_tick(&pGame->timer);
+    const double dt = taTimerTick(&pGame->timer);
     taGraphicsSetCurrentWindow(pGame->engine.pGraphics, pGame->pWindow);
     {
         // The first thing we need to do is figure out the delta time. We use high-resolution timing for this so we can have good accuracy

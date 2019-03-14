@@ -158,7 +158,7 @@ taResult taGUILoad(taEngineContext* pEngine, const char* filePath, taGUI* pGUI)
 
                     // For multi-stage buttons, the text for each stage is separated with a '|' character. To make rendering easier we will
                     // replace '|' characters with '\0'.
-                    dr_string_replace_ascii(pGadget->state.button.text, '|', '\0');
+                    taStringReplaceASCII(pGadget->state.button.text, '|', '\0');
                 } break;
 
                 case TA_GUI_GADGET_TYPE_LISTBOX:
@@ -233,15 +233,15 @@ taResult taGUILoad(taEngineContext* pEngine, const char* filePath, taGUI* pGUI)
 
 
     // There might be an associated GAF file in the "anims" directory that contains graphics for buttons and whatnot.
-    const char* fileName = drpath_file_name(filePath);
+    const char* fileName = taPathFileName(filePath);
     assert(fileName != NULL);
 
     char fileNameGAF[TA_MAX_PATH];
-    drpath_copy_and_remove_extension(fileNameGAF, sizeof(fileNameGAF), fileName);
-    drpath_append_extension(fileNameGAF, sizeof(fileNameGAF), "GAF");
+    taPathRemoveExtension(fileNameGAF, sizeof(fileNameGAF), fileName);
+    taPathAppendExtension(fileNameGAF, sizeof(fileNameGAF), fileNameGAF, "GAF");    /* In-place append. */
 
     char filePathGAF[TA_MAX_PATH];
-    drpath_copy_and_append(filePathGAF, sizeof(filePathGAF), "anims", fileNameGAF);
+    taPathAppend(filePathGAF, sizeof(filePathGAF), "anims", fileNameGAF);
     pGUI->hasGAF = taGAFTextureGroupInit(pEngine, filePathGAF, taColorModeTrueColor, &pGUI->textureGroupGAF) == TA_SUCCESS;
 
 

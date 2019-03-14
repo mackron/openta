@@ -27,9 +27,6 @@
 #include "../../external/dr_libs/dr_wav.h"
 #include "../../external/miniaudio/miniaudio.h"
 
-// TODO: Remove this dependency.
-#include "../../external/dr_libs/old/dr.h"
-
 
 // Options.
 
@@ -93,6 +90,7 @@ typedef enum taSeekOrigin taSeekOrigin;
 #include "taConfig.h"
 #include "taTypeDeclarations.h"
 #include "taString.h"
+#include "taPath.h"
 #include "taPropertyManager.h"
 #include "taFeatures.h"
 #include "taInput.h"

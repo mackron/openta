@@ -158,16 +158,16 @@ taGAF* taOpenGAF(taFS* pFS, const char* filename)
     }
 
     char fullFileName[TA_MAX_PATH];
-    if (dr_strcpy_s(fullFileName, sizeof(fullFileName), filename) != 0) {
+    if (ta_strcpy_s(fullFileName, sizeof(fullFileName), filename) != 0) {
         return NULL;
     }
 
-    //if (!drpath_copy_and_append(fullFileName, sizeof(fullFileName), "anims", filename)) {
+    //if (!taPathAppend(fullFileName, sizeof(fullFileName), "anims", filename)) {
     //    return NULL;
     //}
 
-    if (!drpath_extension_equal(filename, "gaf")) {
-        if (!drpath_append_extension(fullFileName, sizeof(fullFileName), "gaf")) {
+    if (!taPathExtensionEqual(filename, "gaf")) {
+        if (!taPathAppendExtension(fullFileName, sizeof(fullFileName), fullFileName, "gaf")) {
             return NULL;
         }
     }

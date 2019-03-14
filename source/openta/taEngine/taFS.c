@@ -60,8 +60,8 @@ TA_PRIVATE taBool32 taFSFindFileInArchive(taFS* pFS, taFSArchive* pArchive, cons
 
     // Finding the file within the archive is simple - we just search by each path segment in order and keep going until we
     // either find the file or don't find a segment.
-    drpath_iterator pathseg;
-    if (!drpath_first(fileRelativePath, &pathseg)) {
+    taPathIterator pathseg;
+    if (!taPathFirst(fileRelativePath, &pathseg)) {
         return TA_FALSE;
     }
 
@@ -121,7 +121,7 @@ TA_PRIVATE taBool32 taFSFindFileInArchive(taFS* pFS, taFSArchive* pArchive, cons
         if (!subdirExists) {
             return TA_FALSE;
         }
-    } while (drpath_next(&pathseg));
+    } while (taPathNext(&pathseg));
 
     return TA_FALSE;
 }
@@ -151,7 +151,7 @@ TA_PRIVATE void taFSGatherFilesInNativeDirectory(taFS* pFS, const char* director
 
 #ifdef _WIN32
     char searchQuery[TA_MAX_PATH];
-    if (!drpath_copy_and_append(searchQuery, sizeof(searchQuery), pFS->rootDir, directoryRelativePath)) {
+    if (!taPathAppend(searchQuery, sizeof(searchQuery), pFS->rootDir, directoryRelativePath)) {
         return;
     }
 
@@ -181,7 +181,7 @@ TA_PRIVATE void taFSGatherFilesInNativeDirectory(taFS* pFS, const char* director
 
         taFSFileInfo fi;
         fi.archiveRelativePath[0] = '\0';
-        drpath_copy_and_append(fi.relativePath, sizeof(fi.relativePath), directoryRelativePath, ffd.cFileName);
+        taPathAppend(fi.relativePath, sizeof(fi.relativePath), directoryRelativePath, ffd.cFileName);
         fi.isDirectory = (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 
         // Skip past the file if it's already in the list.
@@ -249,8 +249,8 @@ TA_PRIVATE void taFSGatherFilesInArchiveDirectoryAtLocation(taFS* pFS, taFSArchi
 
 
         taFSFileInfo fi;
-        strncpy_s(fi.archiveRelativePath, sizeof(fi.archiveRelativePath), pArchive->relativePath, _TRUNCATE);
-        drpath_copy_and_append(fi.relativePath, sizeof(fi.relativePath), parentPath, pArchive->pCentralDirectory + namePos);
+        ta_strncpy_s(fi.archiveRelativePath, sizeof(fi.archiveRelativePath), pArchive->relativePath, _TRUNCATE);
+        taPathAppend(fi.relativePath, sizeof(fi.relativePath), parentPath, pArchive->pCentralDirectory + namePos);
         fi.isDirectory = isDirectory;
 
         // Skip past the file if it's already in the list. Never skip directories.
@@ -404,7 +404,7 @@ TA_PRIVATE taBool32 taFSRegisterArchive(taFS* pFS, const char* archiveRelativePa
 
     // Before registering the archive we want to ensure it's valid. We just read the header for this.
     char archiveAbsolutePath[TA_MAX_PATH];
-    if (!drpath_copy_and_append(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, archiveRelativePath)) {
+    if (!taPathAppend(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, archiveRelativePath)) {
         return TA_FALSE;
     }
 
@@ -499,7 +499,7 @@ TA_PRIVATE taFile* taFSOpenFileFromArchive(taFS* pFS, taFSArchive* pArchive, con
 
     // It's in this archive.
     char archiveAbsolutePath[TA_MAX_PATH];
-    if (!drpath_copy_and_append(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, pArchive->relativePath)) {
+    if (!taPathAppend(archiveAbsolutePath, sizeof(archiveAbsolutePath), pFS->rootDir, pArchive->relativePath)) {
         return NULL;
     }
 
@@ -583,10 +583,9 @@ taFS* taCreateFileSystem()
 {
     // We need to retrieve the root directory first. We can't continue if this fails.
     char exedir[TA_MAX_PATH];
-    if (!dr_get_executable_path(exedir, sizeof(exedir))) {
+    if (taGetExecutableDirectoryPath(exedir, sizeof(exedir)) != TA_SUCCESS) {
         return NULL;
     }
-    drpath_remove_file_name(exedir);
 
 
 
@@ -636,7 +635,7 @@ taFS* taCreateFileSystem()
     qsort(pFiles, fileCount, sizeof(*pFiles), taFSFileInfoQuickSortCallback);
 
     for (taUInt32 iFile = 0; iFile < fileCount; ++iFile) {
-        if (!pFiles[iFile].isDirectory && drpath_extension_equal(pFiles[iFile].relativePath, "ufo")) {
+        if (!pFiles[iFile].isDirectory && taPathExtensionEqual(pFiles[iFile].relativePath, "ufo")) {
             taFSRegisterArchive(pFS, pFiles[iFile].relativePath);
         }
     }
@@ -675,7 +674,7 @@ taFile* taOpenSpecificFile(taFS* pFS, const char* archiveRelativePath, const cha
     if (archiveRelativePath == NULL || archiveRelativePath[0] == '\0') {
         // No archive file was specified. Try opening from the native file system.
         char fileAbsolutePath[TA_MAX_PATH];
-        if (!drpath_copy_and_append(fileAbsolutePath, sizeof(fileAbsolutePath), pFS->rootDir, fileRelativePath)) {
+        if (!taPathAppend(fileAbsolutePath, sizeof(fileAbsolutePath), pFS->rootDir, fileRelativePath)) {
             return NULL;
         }
 
@@ -1119,3 +1118,82 @@ finished:
     free(pChunkSizes);
     return result;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Known Folders and Files
+//
+///////////////////////////////////////////////////////////////////////////////
+taResult taGetExecutablePath(char* pathOut, size_t pathOutSize)
+{
+    if (pathOut == NULL) {
+        return TA_INVALID_ARGS;
+    }
+
+#ifdef _WIN32
+    if (pathOut == NULL || pathOutSize == 0) {
+        return TA_INVALID_ARGS;
+    }
+
+    DWORD length = GetModuleFileNameA(NULL, pathOut, (DWORD)pathOutSize);
+    if (length == 0) {
+        pathOut[0] = '\0';
+        return TA_ERROR;    /* TODO: Return proper error code. */
+    }
+
+    // Force null termination.
+    if (length == pathOutSize) {
+        pathOut[length - 1] = '\0';
+    }
+
+    // Back slashes need to be normalized to forward.
+    while (pathOut[0] != '\0') {
+        if (pathOut[0] == '\\') {
+            pathOut[0] = '/';
+        }
+        pathOut += 1;
+    }
+
+    return TA_SUCCESS;
+#else
+    if (pathOut == NULL || pathOutSize == 0) {
+        return TA_INVALID_ARGS;
+    }
+
+    ssize_t length = readlink("/proc/self/exe", pathOut, pathOutSize);
+    if (length == -1) {
+        pathOut[0] = '\0';
+        return TA_ERROR;    /* TODO: Return proper error code. */
+    }
+
+    if ((size_t)length == pathOutSize) {
+        pathOut[length - 1] = '\0';
+    } else {
+        pathOut[length] = '\0';
+    }
+
+    return TA_SUCCESS;
+#endif
+}
+
+taResult taGetExecutableDirectoryPath(char* pathOut, size_t pathOutSize)
+{
+    taResult result = taGetExecutablePath(pathOut, pathOutSize);
+    if (result != TA_SUCCESS) {
+        return result;
+    }
+
+    // A null terminator needs to be placed at the last slash.
+    char* lastSlash = pathOut;
+    while (pathOut[0] != '\0') {
+        if (pathOut[0] == '/' || pathOut[0] == '\\') {
+            lastSlash = pathOut;
+        }
+        pathOut += 1;
+    }
+
+    lastSlash[0] = '\0';
+    return TA_SUCCESS;
+}
+

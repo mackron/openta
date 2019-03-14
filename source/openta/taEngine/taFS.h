@@ -186,3 +186,16 @@ size_t taHPIReadAndDecrypt(FILE* pFile, void* pBufferOut, size_t bytesToRead, ta
 
 // Reads, decrypts and decompresses data from a HPI archive file.
 size_t taHPIReadAndDecryptCompressed(FILE* pFile, void* pBufferOut, size_t uncompressedBytesToRead, taUInt32 decryptionKey);
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Known Folders and Files
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// Retrieves the absolute path of the executable.
+taResult taGetExecutablePath(char* pathOut, size_t pathOutSize);
+
+// Retrieves the absolute path of the directory containing the executable.
+taResult taGetExecutableDirectoryPath(char* pathOut, size_t pathOutSize);

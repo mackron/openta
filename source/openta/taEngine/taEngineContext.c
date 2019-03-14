@@ -135,7 +135,7 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
     pEngine->textureGAFCount = 0;
     taFSIterator* iGAF = taFSBegin(pEngine->pFS, "textures", TA_FALSE);
     while (taFSNext(iGAF)) {
-        if (drpath_extension_equal(iGAF->fileInfo.relativePath, "gaf")) {
+        if (taPathExtensionEqual(iGAF->fileInfo.relativePath, "gaf")) {
             pEngine->textureGAFCount += 1;
         }
     }
@@ -149,7 +149,7 @@ taResult taEngineContextInit(int argc, char** argv, taLoadPropertiesProc onLoadP
     pEngine->textureGAFCount = 0;
     iGAF = taFSBegin(pEngine->pFS, "textures", TA_FALSE);
     while (taFSNext(iGAF)) {
-        if (drpath_extension_equal(iGAF->fileInfo.relativePath, "gaf")) {
+        if (taPathExtensionEqual(iGAF->fileInfo.relativePath, "gaf")) {
             pEngine->ppTextureGAFs[pEngine->textureGAFCount] = taOpenGAF(pEngine->pFS, iGAF->fileInfo.relativePath);
             if (pEngine->ppTextureGAFs[pEngine->textureGAFCount] != NULL) {
                 pEngine->textureGAFCount += 1;
@@ -208,7 +208,7 @@ taTexture* taLoadImage(taEngineContext* pEngine, const char* filePath)
         return NULL;
     }
     
-    if (drpath_extension_equal(filePath, "pcx")) {
+    if (taPathExtensionEqual(filePath, "pcx")) {
         taFile* pFile = taOpenFile(pEngine->pFS, filePath, 0);
         if (pFile == NULL) {
             return NULL;    // File not found.
@@ -216,7 +216,7 @@ taTexture* taLoadImage(taEngineContext* pEngine, const char* filePath)
 
         int width;
         int height;
-        dr_uint8* pImageData = drpcx_load_memory(pFile->pFileData, pFile->sizeInBytes, TA_FALSE, &width, &height, NULL, 4);
+        taUInt8* pImageData = drpcx_load_memory(pFile->pFileData, pFile->sizeInBytes, TA_FALSE, &width, &height, NULL, 4);
         if (pImageData == NULL) {
             return NULL;    // Not a valid PCX file.
         }

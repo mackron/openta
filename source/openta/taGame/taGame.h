@@ -24,7 +24,7 @@ typedef struct
     taWindow* pWindow;
 
     // The game timer for stepping the game.
-    dr_timer timer;
+    taTimer timer;
 
 
     // The current map instance. Set to null when there is no map running.

@@ -105,3 +105,18 @@ size_t taMemoryStreamTell(taMemoryStream* pStream);
 // the read position to past the value. This will fail if the stream is at the end and there is no room to fit the value. The stream
 // does not expand.
 taBool32 taMemoryStreamWriteUInt32(taMemoryStream* pStream, taUInt32 value);
+
+
+//// Timing ////
+typedef struct
+{
+    taInt64 counter;
+} taTimer;
+
+// Initializes a high-resolution timer.
+void taTimerInit(taTimer* pTimer);
+
+// Ticks the timer and returns the number of seconds since the previous tick.
+//
+// The maximum return value is about 140 years or so.
+double taTimerTick(taTimer* pTimer);
