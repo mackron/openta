@@ -4,3 +4,6 @@
 [submodule "source/external/miniaudio"]
 	path = source/external/miniaudio
 	url = https://github.com/dr-soft/miniaudio.git
+[submodule "source/external/glbind"]
+	path = source/external/glbind
+	url = https://github.com/dr-soft/glbind.git

@@ -13,12 +13,8 @@
 // TODO:
 // - Experiment with alpha testing for handling transparency instead of alpha blending.
 
-#include <gl/gl.h>
-#include "../external/gl/glext.h"
-
-#ifdef _WIN32
-#include "../external/gl/wglext.h"
-#endif
+#define GLBIND_IMPLEMENTATION
+#include "../../external/glbind/glbind.h"
 
 typedef struct
 {
@@ -28,6 +24,8 @@ typedef struct
 
 struct taGraphicsContext
 {
+    GLBapi gl;
+
     // A pointer to the engine context that owns this renderer.
     taEngineContext* pEngine;
 
@@ -53,42 +51,6 @@ struct taGraphicsContext
 
     // A mesh for drawing features.
     taMesh* pFeaturesMesh;
-
-
-    // Platform Specific.
-#if _WIN32
-    // The dummy window for creating the main rendering context.
-    HWND hDummyHWND;
-
-    // The dummy DC for creating the main rendering context.
-    HDC hDummyDC;
-
-    /// The OpenGL rendering context. One per renderer.
-    HGLRC hRC;
-
-    // The pixel format for use with SetPixelFormat()
-    int pixelFormat;
-
-    // The pixel format descriptor for use with SetPixelFormat()
-    PIXELFORMATDESCRIPTOR pfd;
-
-
-    // WGL Functions
-    PFNWGLSWAPINTERVALEXTPROC SwapIntervalEXT;
-#endif
-
-    PFNGLACTIVETEXTUREPROC glActiveTexture;
-
-    PFNGLGENPROGRAMSARBPROC glGenProgramsARB;
-    PFNGLDELETEPROGRAMSARBPROC glDeleteProgramsARB;
-    PFNGLBINDPROGRAMARBPROC glBindProgramARB;
-    PFNGLPROGRAMSTRINGARBPROC glProgramStringARB;
-    PFNGLPROGRAMLOCALPARAMETER4FARBPROC glProgramLocalParameter4fARB;
-
-    PFNGLGENBUFFERSPROC glGenBuffers;
-    PFNGLDELETEBUFFERSPROC glDeleteBuffers;
-    PFNGLBINDBUFFERPROC glBindBuffer;
-    PFNGLBUFFERDATAPROC glBufferData;
 
 
     // Limits.
@@ -193,14 +155,14 @@ TA_PRIVATE taBool32 taGraphicsCompileShader(taGraphicsContext* pGraphics, taGrap
 
     // Vertex shader.
     if (vertexStr != NULL) {
-        pGraphics->glGenProgramsARB(1, &pShader->vertexProgram);
-        pGraphics->glBindProgramARB(GL_VERTEX_PROGRAM_ARB, pShader->vertexProgram);
-        pGraphics->glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, (GLsizei)strlen(vertexStr), vertexStr);    // -1 to remove null terminator.
+        pGraphics->gl.glGenProgramsARB(1, &pShader->vertexProgram);
+        pGraphics->gl.glBindProgramARB(GL_VERTEX_PROGRAM_ARB, pShader->vertexProgram);
+        pGraphics->gl.glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, (GLsizei)strlen(vertexStr), vertexStr);    // -1 to remove null terminator.
 
         GLint errorPos;
-        glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
+        pGraphics->gl.glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
         if (errorPos != -1) {
-            snprintf(pOutputLog, outputLogSize, "--- VERTEX SHADER ---\n%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+            snprintf(pOutputLog, outputLogSize, "--- VERTEX SHADER ---\n%s", pGraphics->gl.glGetString(GL_PROGRAM_ERROR_STRING_ARB));
             return TA_FALSE;
         }
     } else {
@@ -210,14 +172,14 @@ TA_PRIVATE taBool32 taGraphicsCompileShader(taGraphicsContext* pGraphics, taGrap
 
     // Fragment shader.
     if (fragmentStr != NULL) {
-        pGraphics->glGenProgramsARB(1, &pShader->fragmentProgram);
-        pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pShader->fragmentProgram);
-        pGraphics->glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, (GLsizei)strlen(fragmentStr), fragmentStr);    // -1 to remove null terminator.
+        pGraphics->gl.glGenProgramsARB(1, &pShader->fragmentProgram);
+        pGraphics->gl.glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, pShader->fragmentProgram);
+        pGraphics->gl.glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, (GLsizei)strlen(fragmentStr), fragmentStr);    // -1 to remove null terminator.
 
         GLint errorPos;
-        glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
+        pGraphics->gl.glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errorPos);
         if (errorPos != -1) {
-            snprintf(pOutputLog, outputLogSize, "--- FRAGMENT SHADER ---\n%s", glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+            snprintf(pOutputLog, outputLogSize, "--- FRAGMENT SHADER ---\n%s", pGraphics->gl.glGetString(GL_PROGRAM_ERROR_STRING_ARB));
             return TA_FALSE;
         }
     } else {
@@ -239,6 +201,13 @@ taGraphicsContext* taCreateGraphicsContext(taEngineContext* pEngine, taUInt32 pa
         return NULL;
     }
 
+    // Initialize OpenGL to begin with.
+    GLenum resultGL = glbInit(&pGraphics->gl, NULL);
+    if (resultGL != GL_NO_ERROR) {
+        free(pGraphics);
+        return NULL;
+    }
+
 
     pGraphics->pEngine        = pEngine;
     pGraphics->pCurrentWindow = NULL;
@@ -246,104 +215,30 @@ taGraphicsContext* taCreateGraphicsContext(taEngineContext* pEngine, taUInt32 pa
     // Default settings.
     pGraphics->isShadowsEnabled = TA_TRUE;
 
-
-    // Platform specific.
-#ifdef _WIN32
-    pGraphics->hDummyHWND = NULL;
-    pGraphics->hDummyDC   = NULL;
-    pGraphics->hRC        = NULL;
-
-    WNDCLASSEXW dummyWC;
-    memset(&dummyWC, 0, sizeof(dummyWC));
-    dummyWC.cbSize        = sizeof(dummyWC);
-    dummyWC.lpfnWndProc   = (WNDPROC)DummyWindowProcWin32;
-    dummyWC.lpszClassName = L"TA_OpenGL_DummyHWND";
-    dummyWC.style         = CS_OWNDC;
-    if (!RegisterClassExW(&dummyWC)) {
-        goto on_error;
-    }
-
-    pGraphics->hDummyHWND = CreateWindowExW(0, L"TA_OpenGL_DummyHWND", L"", 0, 0, 0, 0, 0, NULL, NULL, GetModuleHandle(NULL), NULL);
-    pGraphics->hDummyDC   = GetDC(pGraphics->hDummyHWND);
-
-    memset(&pGraphics->pfd, 0, sizeof(pGraphics->pfd));
-    pGraphics->pfd.nSize        = sizeof(pGraphics->pfd);
-    pGraphics->pfd.nVersion     = 1;
-    pGraphics->pfd.dwFlags      = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-    pGraphics->pfd.iPixelType   = PFD_TYPE_RGBA;
-    pGraphics->pfd.cStencilBits = 8;
-    pGraphics->pfd.cDepthBits   = 24;
-    pGraphics->pfd.cColorBits   = 32;
-    pGraphics->pixelFormat = ChoosePixelFormat(pGraphics->hDummyDC, &pGraphics->pfd);
-    if (pGraphics->pixelFormat == 0) {
-        goto on_error;
-    }
-
-    if (!SetPixelFormat(pGraphics->hDummyDC, pGraphics->pixelFormat,  &pGraphics->pfd)) {
-        goto on_error;
-    }
-
-    pGraphics->hRC = wglCreateContext(pGraphics->hDummyDC);
-    if (pGraphics->hRC == NULL) {
-        goto on_error;
-    }
-
-    wglMakeCurrent(pGraphics->hDummyDC, pGraphics->hRC);
-
-    // Retrieve WGL function pointers.
-    pGraphics->SwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
-#endif
-
     // TODO: Check for support for mandatory extensions such as ARB shaders.
 
-    // Function pointers.
-    // Multitexture
-    pGraphics->glActiveTexture              = (PFNGLACTIVETEXTUREPROC)taGetGLProcAddress("glActiveTexture");
-
-    // ARB_vertex_program / ARG_fragment_program
-    pGraphics->glGenProgramsARB             = (PFNGLGENPROGRAMSARBPROC)taGetGLProcAddress("glGenProgramsARB");
-    pGraphics->glDeleteProgramsARB          = (PFNGLDELETEPROGRAMSARBPROC)taGetGLProcAddress("glDeleteProgramsARB");
-    pGraphics->glBindProgramARB             = (PFNGLBINDPROGRAMARBPROC)taGetGLProcAddress("glBindProgramARB");
-    pGraphics->glProgramStringARB           = (PFNGLPROGRAMSTRINGARBPROC)taGetGLProcAddress("glProgramStringARB");
-    pGraphics->glProgramLocalParameter4fARB = (PFNGLPROGRAMLOCALPARAMETER4FARBPROC)taGetGLProcAddress("glProgramLocalParameter4fARB");
-
-    // VBO
-    pGraphics->glGenBuffers                 = (PFNGLGENBUFFERSPROC)taGetGLProcAddress("glGenBuffers");
-    pGraphics->glDeleteBuffers              = (PFNGLDELETEBUFFERSPROC)taGetGLProcAddress("glDeleteBuffers");
-    pGraphics->glBindBuffer                 = (PFNGLBINDBUFFERPROC)taGetGLProcAddress("glBindBuffer");
-    pGraphics->glBufferData                 = (PFNGLBUFFERDATAPROC)taGetGLProcAddress("glBufferData");
-    if (pGraphics->glGenBuffers == NULL)
-    {
-        // VBO's aren't supported in core, so try the extension APIs.
-        pGraphics->glGenBuffers             = (PFNGLGENBUFFERSPROC)taGetGLProcAddress("glGenBuffersARB");
-        pGraphics->glDeleteBuffers          = (PFNGLDELETEBUFFERSPROC)taGetGLProcAddress("glDeleteBuffersARB");
-        pGraphics->glBindBuffer             = (PFNGLBINDBUFFERPROC)taGetGLProcAddress("glBindBufferARB");
-        pGraphics->glBufferData             = (PFNGLBUFFERDATAPROC)taGetGLProcAddress("glBufferDataARB");
-    }
-
-    pGraphics->supportsVBO = pGraphics->glGenBuffers != NULL;
-
+    pGraphics->supportsVBO = pGraphics->gl.glGenBuffers != NULL;
 
 
     // Limits.
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &pGraphics->maxTextureSize);
+    pGraphics->gl.glGetIntegerv(GL_MAX_TEXTURE_SIZE, &pGraphics->maxTextureSize);
 
 
     // The texture containing the palette. This is always bound to texture unit 1.
-    pGraphics->glActiveTexture(GL_TEXTURE0 + 1);
+    pGraphics->gl.glActiveTexture(GL_TEXTURE0 + 1);
     {
-        glGenTextures(1, &pGraphics->paletteTextureGL);
+        pGraphics->gl.glGenTextures(1, &pGraphics->paletteTextureGL);
 
-        glBindTexture(GL_TEXTURE_2D, pGraphics->paletteTextureGL);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, palette);
+        pGraphics->gl.glBindTexture(GL_TEXTURE_2D, pGraphics->paletteTextureGL);
+        pGraphics->gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, palette);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        pGraphics->gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        pGraphics->gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        pGraphics->gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        pGraphics->gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     }
-    pGraphics->glActiveTexture(GL_TEXTURE0 + 0);
+    pGraphics->gl.glActiveTexture(GL_TEXTURE0 + 0);
     
 
 
@@ -452,23 +347,23 @@ taGraphicsContext* taCreateGraphicsContext(taEngineContext* pEngine, taUInt32 pa
 
 
     // Default state.
-    glEnable(GL_TEXTURE_2D);
-    glShadeModel(GL_SMOOTH);
-    glDisable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+    pGraphics->gl.glEnable(GL_TEXTURE_2D);
+    pGraphics->gl.glShadeModel(GL_SMOOTH);
+    pGraphics->gl.glDisable(GL_DEPTH_TEST);
+    pGraphics->gl.glDepthFunc(GL_LEQUAL);
+    pGraphics->gl.glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    pGraphics->gl.glEnable(GL_CULL_FACE);
+    pGraphics->gl.glCullFace(GL_BACK);
 
-    glClearDepth(1.0f);
-    glClearColor(0, 0, 0, 0);
+    pGraphics->gl.glClearDepth(1.0f);
+    pGraphics->gl.glClearColor(0, 0, 0, 0);
 
 
     // Always using vertex and texture coordinate arrays.
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glEnableClientState(GL_NORMAL_ARRAY);
+    pGraphics->gl.glEnableClientState(GL_VERTEX_ARRAY);
+    pGraphics->gl.glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    pGraphics->gl.glEnableClientState(GL_NORMAL_ARRAY);
     
     // Always using fragment programs.
     //glEnable(GL_FRAGMENT_PROGRAM_ARB);
@@ -496,17 +391,7 @@ void taDeleteGraphicsContext(taGraphicsContext* pGraphics)
         return;
     }
 
-#ifdef _WIN32
-    if (pGraphics->hDummyHWND) {
-        DestroyWindow(pGraphics->hDummyHWND);
-    }
-
-    if (pGraphics->hRC) {
-        wglDeleteContext(pGraphics->hRC);
-    }
-#endif
-
-
+    glbUninit();
     free(pGraphics);
 }
 
@@ -519,7 +404,7 @@ taWindow* taGraphicsCreateWindow(taGraphicsContext* pGraphics, const char* pTitl
         return NULL;
     }
 
-    SetPixelFormat(taGetWindowHDC(pWindow), pGraphics->pixelFormat, &pGraphics->pfd);
+    SetPixelFormat(taGetWindowHDC(pWindow), glbGetPixelFormat(), glbGetPFD());
 
     return pWindow;
 #else
@@ -540,12 +425,40 @@ void taGraphicsSetCurrentWindow(taGraphicsContext* pGraphics, taWindow* pWindow)
     }
 
 #ifdef _WIN32
-    wglMakeCurrent(taGetWindowHDC(pWindow), pGraphics->hRC);
+    wglMakeCurrent(taGetWindowHDC(pWindow), glbGetRC());
 #endif
 
     pGraphics->pCurrentWindow = pWindow;
 }
 
+
+void taGraphicsSetSwapInterval(taGraphicsContext* pGraphics, taWindow* pWindow, int interval)
+{
+    assert(pGraphics != NULL);
+
+#if defined(GLBIND_WGL)
+    if (pGraphics->gl.wglSwapIntervalEXT == NULL) {
+        return;
+    }
+#endif
+#if defined(GLBIND_GLX)
+    if (pGraphics->gl.glXSwapIntervalEXT == NULL) {
+        return;
+    }
+#endif
+
+    taWindow* pPrevWindow = pGraphics->pCurrentWindow;
+    taGraphicsSetCurrentWindow(pGraphics, pWindow);
+
+#if defined(GLBIND_WGL)
+    pGraphics->gl.wglSwapIntervalEXT(interval);
+#endif
+#if defined(GLBIND_GLX)
+    pGraphics->gl.glXSwapIntervalEXT(taWindowGetDisplay(pWindow), taWindowGetXWindow(pWindow), interval);
+#endif
+
+    taGraphicsSetCurrentWindow(pGraphics, pPrevWindow);
+}
 
 void taGraphicsEnableVSync(taGraphicsContext* pGraphics, taWindow* pWindow)
 {
@@ -553,14 +466,7 @@ void taGraphicsEnableVSync(taGraphicsContext* pGraphics, taWindow* pWindow)
         return;
     }
 
-    if (pGraphics->SwapIntervalEXT) {
-        taWindow* pPrevWindow = pGraphics->pCurrentWindow;
-        taGraphicsSetCurrentWindow(pGraphics, pWindow);
-
-        pGraphics->SwapIntervalEXT(1);
-
-        taGraphicsSetCurrentWindow(pGraphics, pPrevWindow);
-    }
+    taGraphicsSetSwapInterval(pGraphics, pWindow, 1);
 }
 
 void taGraphicsDisableVSync(taGraphicsContext* pGraphics, taWindow* pWindow)
@@ -569,14 +475,7 @@ void taGraphicsDisableVSync(taGraphicsContext* pGraphics, taWindow* pWindow)
         return;
     }
 
-    if (pGraphics->SwapIntervalEXT) {
-        taWindow* pPrevWindow = pGraphics->pCurrentWindow;
-        taGraphicsSetCurrentWindow(pGraphics, pWindow);
-
-        pGraphics->SwapIntervalEXT(0);
-
-        taGraphicsSetCurrentWindow(pGraphics, pPrevWindow);
-    }
+    taGraphicsSetSwapInterval(pGraphics, pWindow, 0);
 }
 
 void taGraphicsPresent(taGraphicsContext* pGraphics, taWindow* pWindow)
@@ -622,31 +521,31 @@ taTexture* taCreateTexture(taGraphicsContext* pGraphics, unsigned int width, uns
     }
 
     GLuint objectGL;
-    glGenTextures(1, &objectGL);
+    pGraphics->gl.glGenTextures(1, &objectGL);
     
-    glBindTexture(GL_TEXTURE_2D, objectGL);
+    pGraphics->gl.glBindTexture(GL_TEXTURE_2D, objectGL);
 
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, pImageData);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    pGraphics->gl.glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    pGraphics->gl.glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, pImageData);
+    pGraphics->gl.glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
     // Must use nearest/nearest filtering in order for palettes to work properly.
     if (components == 1) {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        pGraphics->gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        pGraphics->gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     } else {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        pGraphics->gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        pGraphics->gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     }
 
     if (pGraphics->pCurrentTexture) {
-        glBindTexture(GL_TEXTURE_2D, pGraphics->pCurrentTexture->objectGL);
+        pGraphics->gl.glBindTexture(GL_TEXTURE_2D, pGraphics->pCurrentTexture->objectGL);
     }
 
 
     taTexture* pTexture = malloc(sizeof(*pTexture));
     if (pTexture == NULL) {
-        glDeleteTextures(1, &objectGL);
+        pGraphics->gl.glDeleteTextures(1, &objectGL);
         return NULL;
     }
 
@@ -661,7 +560,7 @@ taTexture* taCreateTexture(taGraphicsContext* pGraphics, unsigned int width, uns
 
 void taDeleteTexture(taTexture* pTexture)
 {
-    glDeleteTextures(1, &pTexture->objectGL);
+    pTexture->pGraphics->gl.glDeleteTextures(1, &pTexture->objectGL);
     free(pTexture);
 }
 
@@ -727,18 +626,18 @@ taMesh* taCreateMesh(taGraphicsContext* pGraphics, taPrimitiveType primitiveType
         pMesh->pIndexData = NULL;
 
         GLuint buffers[2];  // 0 = VBO; 1 = IBO.
-        pGraphics->glGenBuffers(2, buffers);
+        pGraphics->gl.glGenBuffers(2, buffers);
 
 
         // Vertices.
         pMesh->vertexObjectGL = buffers[0];
-        pGraphics->glBindBuffer(GL_ARRAY_BUFFER, pMesh->vertexObjectGL);
-        pGraphics->glBufferData(GL_ARRAY_BUFFER, vertexBufferSize, pVertexData, GL_STATIC_DRAW);
+        pGraphics->gl.glBindBuffer(GL_ARRAY_BUFFER, pMesh->vertexObjectGL);
+        pGraphics->gl.glBufferData(GL_ARRAY_BUFFER, vertexBufferSize, pVertexData, GL_STATIC_DRAW);
 
         // Indices.
         pMesh->indexObjectGL = buffers[1];
-        pGraphics->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pMesh->indexObjectGL);
-        pGraphics->glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferSize, pIndexData, GL_STATIC_DRAW);
+        pGraphics->gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pMesh->indexObjectGL);
+        pGraphics->gl.glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferSize, pIndexData, GL_STATIC_DRAW);
     }
     else
     {
@@ -818,10 +717,10 @@ void taDeleteMesh(taMesh* pMesh)
     }
 
     if (pMesh->vertexObjectGL) {
-        pMesh->pGraphics->glDeleteBuffers(1, &pMesh->vertexObjectGL);
+        pMesh->pGraphics->gl.glDeleteBuffers(1, &pMesh->vertexObjectGL);
     }
     if (pMesh->indexObjectGL) {
-        pMesh->pGraphics->glDeleteBuffers(1, &pMesh->indexObjectGL);
+        pMesh->pGraphics->gl.glDeleteBuffers(1, &pMesh->indexObjectGL);
     }
 
     if (pMesh->pVertexData) {
@@ -859,7 +758,7 @@ void taSetResolution(taGraphicsContext* pGraphics, unsigned int resolutionX, uns
 
     pGraphics->resolutionX = (GLsizei)resolutionX;
     pGraphics->resolutionY = (GLsizei)resolutionY;
-    glViewport(0, 0, pGraphics->resolutionX, pGraphics->resolutionY);
+    pGraphics->gl.glViewport(0, 0, pGraphics->resolutionX, pGraphics->resolutionY);
 }
 
 void taSetCameraPosition(taGraphicsContext* pGraphics, int posX, int posY)
@@ -893,9 +792,9 @@ static TA_INLINE void taGraphicsBindTexture(taGraphicsContext* pGraphics, taText
     }
 
     if (pTexture != NULL) {
-        glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
+        pGraphics->gl.glBindTexture(GL_TEXTURE_2D, pTexture->objectGL);
     } else {
-        glBindTexture(GL_TEXTURE_2D, 0);
+        pGraphics->gl.glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     pGraphics->pCurrentTexture = pTexture;
@@ -910,12 +809,12 @@ static TA_INLINE void taGraphicsBindVertexProgram(taGraphicsContext* pGraphics, 
     }
 
     if (vertexProgram == 0) {
-        glDisable(GL_VERTEX_PROGRAM_ARB);
+        pGraphics->gl.glDisable(GL_VERTEX_PROGRAM_ARB);
     } else {
-        glEnable(GL_VERTEX_PROGRAM_ARB);
+        pGraphics->gl.glEnable(GL_VERTEX_PROGRAM_ARB);
     }
 
-    pGraphics->glBindProgramARB(GL_VERTEX_PROGRAM_ARB, vertexProgram);
+    pGraphics->gl.glBindProgramARB(GL_VERTEX_PROGRAM_ARB, vertexProgram);
     pGraphics->currentVertexProgram = vertexProgram;
 }
 
@@ -928,12 +827,12 @@ static TA_INLINE void taGraphicsBindFragmentProgram(taGraphicsContext* pGraphics
     }
 
     if (fragmentProgram == 0) {
-        glDisable(GL_FRAGMENT_PROGRAM_ARB);
+        pGraphics->gl.glDisable(GL_FRAGMENT_PROGRAM_ARB);
     } else {
-        glEnable(GL_FRAGMENT_PROGRAM_ARB);
+        pGraphics->gl.glEnable(GL_FRAGMENT_PROGRAM_ARB);
     }
 
-    pGraphics->glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, fragmentProgram);
+    pGraphics->gl.glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, fragmentProgram);
     pGraphics->currentFragmentProgram = fragmentProgram;
 }
 
@@ -960,53 +859,53 @@ static TA_INLINE void taGraphicsBindMesh(taGraphicsContext* pGraphics, taMesh* p
         return;
     }
 
-    glDisableClientState(GL_NORMAL_ARRAY);
+    pGraphics->gl.glDisableClientState(GL_NORMAL_ARRAY);
 
     if (pMesh != NULL) {
         if (pMesh->pVertexData != NULL) {
             // Using vertex arrays.
             if (pGraphics->supportsVBO) {
-                pGraphics->glBindBuffer(GL_ARRAY_BUFFER, 0);
-                pGraphics->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+                pGraphics->gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
+                pGraphics->gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
             }
 
             if (pMesh->vertexFormat == taVertexFormatP2T2) {
-                glVertexPointer(2, GL_FLOAT, sizeof(taVertexP2T2), pMesh->pVertexData);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP2T2), ((taUInt8*)pMesh->pVertexData) + (2*sizeof(float)));
+                pGraphics->gl.glVertexPointer(2, GL_FLOAT, sizeof(taVertexP2T2), pMesh->pVertexData);
+                pGraphics->gl.glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP2T2), ((taUInt8*)pMesh->pVertexData) + (2*sizeof(float)));
             } else if (pMesh->vertexFormat == taVertexFormatP3T2) {
-                glVertexPointer(3, GL_FLOAT, sizeof(taVertexP3T2), pMesh->pVertexData);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP3T2), ((taUInt8*)pMesh->pVertexData) + (3*sizeof(float)));
+                pGraphics->gl.glVertexPointer(3, GL_FLOAT, sizeof(taVertexP3T2), pMesh->pVertexData);
+                pGraphics->gl.glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP3T2), ((taUInt8*)pMesh->pVertexData) + (3*sizeof(float)));
             } else {
-                glEnableClientState(GL_NORMAL_ARRAY);
-                glVertexPointer(3, GL_FLOAT, sizeof(taVertexP3T2N3), pMesh->pVertexData);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP3T2N3), ((taUInt8*)pMesh->pVertexData) + (3*sizeof(float)));
-                glNormalPointer(GL_FLOAT, sizeof(taVertexP3T2N3), ((taUInt8*)pMesh->pVertexData) + (5*sizeof(float)));
+                pGraphics->gl.glEnableClientState(GL_NORMAL_ARRAY);
+                pGraphics->gl.glVertexPointer(3, GL_FLOAT, sizeof(taVertexP3T2N3), pMesh->pVertexData);
+                pGraphics->gl.glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP3T2N3), ((taUInt8*)pMesh->pVertexData) + (3*sizeof(float)));
+                pGraphics->gl.glNormalPointer(GL_FLOAT, sizeof(taVertexP3T2N3), ((taUInt8*)pMesh->pVertexData) + (5*sizeof(float)));
             }
         } else if (pMesh->vertexObjectGL) {
-            pGraphics->glBindBuffer(GL_ARRAY_BUFFER, pMesh->vertexObjectGL);
-            pGraphics->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pMesh->indexObjectGL);
+            pGraphics->gl.glBindBuffer(GL_ARRAY_BUFFER, pMesh->vertexObjectGL);
+            pGraphics->gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pMesh->indexObjectGL);
 
             if (pMesh->vertexFormat == taVertexFormatP2T2) {
-                glVertexPointer(2, GL_FLOAT, sizeof(taVertexP2T2), 0);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP2T2), (const GLvoid*)(2*sizeof(float)));
+                pGraphics->gl.glVertexPointer(2, GL_FLOAT, sizeof(taVertexP2T2), 0);
+                pGraphics->gl.glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP2T2), (const GLvoid*)(2*sizeof(float)));
             } else if (pMesh->vertexFormat == taVertexFormatP3T2) {
-                glVertexPointer(3, GL_FLOAT, sizeof(taVertexP3T2), 0);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP3T2), (const GLvoid*)(3*sizeof(float)));
+                pGraphics->gl.glVertexPointer(3, GL_FLOAT, sizeof(taVertexP3T2), 0);
+                pGraphics->gl.glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP3T2), (const GLvoid*)(3*sizeof(float)));
             } else {
-                glEnableClientState(GL_NORMAL_ARRAY);
-                glVertexPointer(3, GL_FLOAT, sizeof(taVertexP3T2N3), 0);
-                glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP3T2N3), (const GLvoid*)(3*sizeof(float)));
-                glNormalPointer(GL_FLOAT, sizeof(taVertexP3T2N3), (const GLvoid*)(5*sizeof(float)));
+                pGraphics->gl.glEnableClientState(GL_NORMAL_ARRAY);
+                pGraphics->gl.glVertexPointer(3, GL_FLOAT, sizeof(taVertexP3T2N3), 0);
+                pGraphics->gl.glTexCoordPointer(2, GL_FLOAT, sizeof(taVertexP3T2N3), (const GLvoid*)(3*sizeof(float)));
+                pGraphics->gl.glNormalPointer(GL_FLOAT, sizeof(taVertexP3T2N3), (const GLvoid*)(5*sizeof(float)));
             }
         }
     } else {
-        glVertexPointer(4, GL_FLOAT, 0, NULL);
-        glTexCoordPointer(4, GL_FLOAT, 0, NULL);
-        glNormalPointer(GL_FLOAT, 0, NULL);
+        pGraphics->gl.glVertexPointer(4, GL_FLOAT, 0, NULL);
+        pGraphics->gl.glTexCoordPointer(4, GL_FLOAT, 0, NULL);
+        pGraphics->gl.glNormalPointer(GL_FLOAT, 0, NULL);
 
         if (pGraphics->supportsVBO) {
-            pGraphics->glBindBuffer(GL_ARRAY_BUFFER, 0);
-            pGraphics->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+            pGraphics->gl.glBindBuffer(GL_ARRAY_BUFFER, 0);
+            pGraphics->gl.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         }
     }
 
@@ -1025,9 +924,9 @@ static TA_INLINE void taGraphicsDrawMesh(taGraphicsContext* pGraphics, taMesh* p
     taUInt32 byteOffset = indexOffset * ((taUInt32)pMesh->indexFormat);
 
     if (pMesh->pIndexData != NULL) {
-        glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (taUInt8*)pMesh->pIndexData + byteOffset);
+        pGraphics->gl.glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (taUInt8*)pMesh->pIndexData + byteOffset);
     } else {
-        glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (const GLvoid*)((taUInt8*)0 + byteOffset));
+        pGraphics->gl.glDrawElements(pMesh->primitiveTypeGL, indexCount, pMesh->indexFormatGL, (const GLvoid*)((taUInt8*)0 + byteOffset));
     }
 }
 
@@ -1061,50 +960,50 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
     quadRight  += offsetX;
     quadBottom += offsetY;
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
+    pGraphics->gl.glMatrixMode(GL_PROJECTION);
+    pGraphics->gl.glLoadIdentity();
+    pGraphics->gl.glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    pGraphics->gl.glMatrixMode(GL_MODELVIEW);
+    pGraphics->gl.glLoadIdentity();
 
     if (clearMode == TA_GUI_CLEAR_MODE_BLACK) {
-        glClearDepth(1.0);
-        glClearColor(0, 0, 0, 0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        pGraphics->gl.glClearDepth(1.0);
+        pGraphics->gl.glClearColor(0, 0, 0, 0);
+        pGraphics->gl.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     } else {
-        glEnable(GL_BLEND); // <-- This is disabled below.
+        pGraphics->gl.glEnable(GL_BLEND); // <-- This is disabled below.
         taGraphicsBindShader(pGraphics, NULL);
         taGraphicsBindTexture(pGraphics, NULL);
-        glBegin(GL_QUADS);
+        pGraphics->gl.glBegin(GL_QUADS);
         {
-            glColor4f(0, 0, 0, 0.5f); glVertex3f(0,                             (float)pGraphics->resolutionY, 0.0f);
-            glColor4f(0, 0, 0, 0.5f); glVertex3f((float)pGraphics->resolutionX, (float)pGraphics->resolutionY, 0.0f);
-            glColor4f(0, 0, 0, 0.5f); glVertex3f((float)pGraphics->resolutionX, 0,                             0.0f);
-            glColor4f(0, 0, 0, 0.5f); glVertex3f(0,                             0,                             0.0f);
-            glColor4f(1, 1, 1, 1);
+            pGraphics->gl.glColor4f(0, 0, 0, 0.5f); pGraphics->gl.glVertex3f(0,                             (float)pGraphics->resolutionY, 0.0f);
+            pGraphics->gl.glColor4f(0, 0, 0, 0.5f); pGraphics->gl.glVertex3f((float)pGraphics->resolutionX, (float)pGraphics->resolutionY, 0.0f);
+            pGraphics->gl.glColor4f(0, 0, 0, 0.5f); pGraphics->gl.glVertex3f((float)pGraphics->resolutionX, 0,                             0.0f);
+            pGraphics->gl.glColor4f(0, 0, 0, 0.5f); pGraphics->gl.glVertex3f(0,                             0,                             0.0f);
+            pGraphics->gl.glColor4f(1, 1, 1, 1);
         }
-        glEnd();
+        pGraphics->gl.glEnd();
     }
 
-    glDisable(GL_BLEND);
+    pGraphics->gl.glDisable(GL_BLEND);
 
     if (pGUI->pBackgroundTexture != NULL) {
         taGraphicsBindShader(pGraphics, NULL);
         taGraphicsBindTexture(pGraphics, pGUI->pBackgroundTexture);
-        glBegin(GL_QUADS);
+        pGraphics->gl.glBegin(GL_QUADS);
         {
             float uvleft   = 0;
             float uvtop    = 0;
             float uvright  = (float)pGUI->pGadgets[0].width  / 640.0f;
             float uvbottom = (float)pGUI->pGadgets[0].height / 480.0f;
 
-            glTexCoord2f(uvleft,  uvbottom); glVertex3f(quadLeft,  quadBottom, 0.0f);
-            glTexCoord2f(uvright, uvbottom); glVertex3f(quadRight, quadBottom, 0.0f);
-            glTexCoord2f(uvright, uvtop);    glVertex3f(quadRight, quadTop,    0.0f);
-            glTexCoord2f(uvleft,  uvtop);    glVertex3f(quadLeft,  quadTop,    0.0f);
+            pGraphics->gl.glTexCoord2f(uvleft,  uvbottom); pGraphics->gl.glVertex3f(quadLeft,  quadBottom, 0.0f);
+            pGraphics->gl.glTexCoord2f(uvright, uvbottom); pGraphics->gl.glVertex3f(quadRight, quadBottom, 0.0f);
+            pGraphics->gl.glTexCoord2f(uvright, uvtop);    pGraphics->gl.glVertex3f(quadRight, quadTop,    0.0f);
+            pGraphics->gl.glTexCoord2f(uvleft,  uvtop);    pGraphics->gl.glVertex3f(quadLeft,  quadTop,    0.0f);
         }
-        glEnd();
+        pGraphics->gl.glEnd();
     }
 
     // Gadgets, not including the root.
@@ -1132,19 +1031,19 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
                     float highlightSizeX = sizeX + (6*scale)*2;
                     float highlightSizeY = sizeY + (6*scale)*2;
 
-                    glEnable(GL_BLEND);
+                    pGraphics->gl.glEnable(GL_BLEND);
                     taGraphicsBindShader(pGraphics, NULL);
                     taGraphicsBindTexture(pGraphics, NULL);
-                    glBegin(GL_QUADS);
+                    pGraphics->gl.glBegin(GL_QUADS);
                     {
-                        glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX,                highlightPosY+highlightSizeY, 0.0f);
-                        glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX+highlightSizeX, highlightPosY+highlightSizeY, 0.0f);
-                        glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX+highlightSizeX, highlightPosY,                0.0f);
-                        glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX,                highlightPosY,                0.0f);
-                        glColor4f(1, 1, 1, 1);
+                        pGraphics->gl.glColor4f(1, 1, 1, 0.15f); pGraphics->gl.glVertex3f(highlightPosX,                highlightPosY+highlightSizeY, 0.0f);
+                        pGraphics->gl.glColor4f(1, 1, 1, 0.15f); pGraphics->gl.glVertex3f(highlightPosX+highlightSizeX, highlightPosY+highlightSizeY, 0.0f);
+                        pGraphics->gl.glColor4f(1, 1, 1, 0.15f); pGraphics->gl.glVertex3f(highlightPosX+highlightSizeX, highlightPosY,                0.0f);
+                        pGraphics->gl.glColor4f(1, 1, 1, 0.15f); pGraphics->gl.glVertex3f(highlightPosX,                highlightPosY,                0.0f);
+                        pGraphics->gl.glColor4f(1, 1, 1, 1);
                     }
-                    glEnd();
-                    glDisable(GL_BLEND);
+                    pGraphics->gl.glEnd();
+                    pGraphics->gl.glDisable(GL_BLEND);
                 }
 
                 if (pGadget->state.button.pBackgroundTextureGroup != NULL) {
@@ -1208,15 +1107,15 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
 
                             taGraphicsBindShader(pGraphics, NULL);
                             taGraphicsBindTexture(pGraphics, NULL);
-                            glBegin(GL_QUADS);
+                            pGraphics->gl.glBegin(GL_QUADS);
                             {
-                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
-                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
-                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY,                 0.0f);
-                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY,                 0.0f);
-                                glColor3f(1, 1, 1);
+                                pGraphics->gl.glColor3f(underlineR, underlineG, underlineB); pGraphics->gl.glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
+                                pGraphics->gl.glColor3f(underlineR, underlineG, underlineB); pGraphics->gl.glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
+                                pGraphics->gl.glColor3f(underlineR, underlineG, underlineB); pGraphics->gl.glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY,                 0.0f);
+                                pGraphics->gl.glColor3f(underlineR, underlineG, underlineB); pGraphics->gl.glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY,                 0.0f);
+                                pGraphics->gl.glColor3f(1, 1, 1);
                             }
-                            glEnd();
+                            pGraphics->gl.glEnd();
                         }
                     }
                 }
@@ -1235,19 +1134,19 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
                         float highlightSizeX = sizeX + (0*scale)*2;
                         float highlightSizeY = pGraphics->pEngine->font.height*scale + (0*scale)*2;
 
-                        glEnable(GL_BLEND);
+                        pGraphics->gl.glEnable(GL_BLEND);
                         taGraphicsBindShader(pGraphics, NULL);
                         taGraphicsBindTexture(pGraphics, NULL);
-                        glBegin(GL_QUADS);
+                        pGraphics->gl.glBegin(GL_QUADS);
                         {
-                            glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX,                highlightPosY+highlightSizeY, 0.0f);
-                            glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX+highlightSizeX, highlightPosY+highlightSizeY, 0.0f);
-                            glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX+highlightSizeX, highlightPosY,                0.0f);
-                            glColor4f(1, 1, 1, 0.15f); glVertex3f(highlightPosX,                highlightPosY,                0.0f);
-                            glColor4f(1, 1, 1, 1);
+                            pGraphics->gl.glColor4f(1, 1, 1, 0.15f); pGraphics->gl.glVertex3f(highlightPosX,                highlightPosY+highlightSizeY, 0.0f);
+                            pGraphics->gl.glColor4f(1, 1, 1, 0.15f); pGraphics->gl.glVertex3f(highlightPosX+highlightSizeX, highlightPosY+highlightSizeY, 0.0f);
+                            pGraphics->gl.glColor4f(1, 1, 1, 0.15f); pGraphics->gl.glVertex3f(highlightPosX+highlightSizeX, highlightPosY,                0.0f);
+                            pGraphics->gl.glColor4f(1, 1, 1, 0.15f); pGraphics->gl.glVertex3f(highlightPosX,                highlightPosY,                0.0f);
+                            pGraphics->gl.glColor4f(1, 1, 1, 1);
                         }
-                        glEnd();
-                        glDisable(GL_BLEND);
+                        pGraphics->gl.glEnd();
+                        pGraphics->gl.glDisable(GL_BLEND);
                     }
 
                     itemPosY += (pGraphics->pEngine->font.height + (itemPadding*2)) * scale;
@@ -1407,15 +1306,15 @@ void taDrawGUI(taGraphicsContext* pGraphics, taGUI* pGUI, taUInt32 clearMode)
 
                             taGraphicsBindShader(pGraphics, NULL);
                             taGraphicsBindTexture(pGraphics, NULL);
-                            glBegin(GL_QUADS);
+                            pGraphics->gl.glBegin(GL_QUADS);
                             {
-                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
-                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
-                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY,                 0.0f);
-                                glColor3f(underlineR, underlineG, underlineB); glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY,                 0.0f);
-                                glColor3f(1, 1, 1);
+                                pGraphics->gl.glColor3f(underlineR, underlineG, underlineB); pGraphics->gl.glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
+                                pGraphics->gl.glColor3f(underlineR, underlineG, underlineB); pGraphics->gl.glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY+underlineHeight, 0.0f);
+                                pGraphics->gl.glColor3f(underlineR, underlineG, underlineB); pGraphics->gl.glVertex3f(charPosX+charSizeX, charPosY+charSizeY+underlineOffsetY,                 0.0f);
+                                pGraphics->gl.glColor3f(underlineR, underlineG, underlineB); pGraphics->gl.glVertex3f(charPosX,           charPosY+charSizeY+underlineOffsetY,                 0.0f);
+                                pGraphics->gl.glColor3f(1, 1, 1);
                             }
-                            glEnd();
+                            pGraphics->gl.glEnd();
                         }
                     }
                 }
@@ -1457,20 +1356,20 @@ void taDrawMapTerrain(taGraphicsContext* pGraphics, taMapInstance* pMap)
         clearFlags |= GL_COLOR_BUFFER_BIT;
     }
 
-    glClear(clearFlags);
+    pGraphics->gl.glClear(clearFlags);
 
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
+    pGraphics->gl.glMatrixMode(GL_PROJECTION);
+    pGraphics->gl.glLoadIdentity();
+    pGraphics->gl.glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef((GLfloat)-pGraphics->cameraPosX, (GLfloat)-pGraphics->cameraPosY, 0);
+    pGraphics->gl.glMatrixMode(GL_MODELVIEW);
+    pGraphics->gl.glLoadIdentity();
+    pGraphics->gl.glTranslatef((GLfloat)-pGraphics->cameraPosX, (GLfloat)-pGraphics->cameraPosY, 0);
 
 
     // The terrain will never be transparent.
-    glDisable(GL_BLEND);
+    pGraphics->gl.glDisable(GL_BLEND);
 
 
     // The mesh must be bound before we can draw it.
@@ -1593,8 +1492,8 @@ void taDrawMapFeature3DOObjectRecursive(taGraphicsContext* pGraphics, taMapInsta
     taMap3DOObject* pObject = &p3DO->pObjects[objectIndex];
     assert(pObject != NULL);
 
-    glPushMatrix();
-    glTranslatef((float)pObject->relativePosX, (float)pObject->relativePosY, (float)pObject->relativePosZ);
+    pGraphics->gl.glPushMatrix();
+    pGraphics->gl.glTranslatef((float)pObject->relativePosX, (float)pObject->relativePosY, (float)pObject->relativePosZ);
     {
         taGraphicsBindShader(pGraphics, &pGraphics->palettedShader3D);
 
@@ -1613,7 +1512,7 @@ void taDrawMapFeature3DOObjectRecursive(taGraphicsContext* pGraphics, taMapInsta
             taDrawMapFeature3DOObjectRecursive(pGraphics, pMap, pFeature, p3DO, pObject->firstChildIndex);
         }
     }
-    glPopMatrix();
+    pGraphics->gl.glPopMatrix();
 
     // Siblings.
     if (pObject->nextSiblingIndex) {
@@ -1634,20 +1533,20 @@ void taDrawMapFeature3DO(taGraphicsContext* pGraphics, taMapInstance* pMap, taMa
     // Perspective correction for the height.
     posY -= (int)posZ/2;
 
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glTranslatef(posX, posY, posZ);
-    glScalef(1, 1, 1);
-    glRotatef(27.67f, 1, 0, 0);
+    pGraphics->gl.glMatrixMode(GL_MODELVIEW);
+    pGraphics->gl.glPushMatrix();
+    pGraphics->gl.glTranslatef(posX, posY, posZ);
+    pGraphics->gl.glScalef(1, 1, 1);
+    pGraphics->gl.glRotatef(27.67f, 1, 0, 0);
     {
         // This disable/enable pair can be made more efficient. Consider splitting 2D and 3D objects and render in separate loops.
-        glEnable(GL_DEPTH_TEST);
-        glDisable(GL_BLEND);
+        pGraphics->gl.glEnable(GL_DEPTH_TEST);
+        pGraphics->gl.glDisable(GL_BLEND);
         taDrawMapFeature3DOObjectRecursive(pGraphics, pMap, pFeature, p3DO, 0);
-        glEnable(GL_BLEND);
-        glDisable(GL_DEPTH_TEST);
+        pGraphics->gl.glEnable(GL_BLEND);
+        pGraphics->gl.glDisable(GL_DEPTH_TEST);
     }
-    glPopMatrix();
+    pGraphics->gl.glPopMatrix();
 }
 
 void taDrawMap(taGraphicsContext* pGraphics, taMapInstance* pMap)
@@ -1664,8 +1563,8 @@ void taDrawMap(taGraphicsContext* pGraphics, taMapInstance* pMap)
 
 
     // Features can be assumed to be transparent.
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    pGraphics->gl.glEnable(GL_BLEND);
+    pGraphics->gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     for (taUInt32 iFeature = 0; iFeature < pMap->featureCount; ++iFeature) {
         taMapFeature* pFeature = pMap->pFeatures + iFeature;
@@ -1693,20 +1592,20 @@ void taDrawText(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex,
         return;
     }
 
-    glMatrixMode(GL_PROJECTION);
+    pGraphics->gl.glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-    glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
+    pGraphics->gl.glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    pGraphics->gl.glMatrixMode(GL_MODELVIEW);
+    pGraphics->gl.glLoadIdentity();
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    pGraphics->gl.glEnable(GL_BLEND);
+    pGraphics->gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if (pFont->canBeColored) {
         taGraphicsBindShader(pGraphics, &pGraphics->textShader);
-        pGraphics->glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f);
-        pGraphics->glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 1, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f);
+        pGraphics->gl.glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f, colorIndex/255.0f);
+        pGraphics->gl.glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 1, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f, TA_TRANSPARENT_COLOR/255.0f);
     } else {
         taGraphicsBindShader(pGraphics, NULL);
     }
@@ -1717,7 +1616,7 @@ void taDrawText(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex,
     float penPosX = posX;
     float penPosY = posY;
 
-    glBegin(GL_QUADS);
+    pGraphics->gl.glBegin(GL_QUADS);
     for (;;) {
         unsigned char c = (unsigned char)*text++;
         if (c == '\0') {
@@ -1735,10 +1634,10 @@ void taDrawText(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex,
         float uvright  = uvleft + (glyphSizeX / pFont->pTexture->width);
         float uvbottom = uvtop  + (glyphSizeY / pFont->pTexture->height);
 
-        glTexCoord2f(uvleft,  uvbottom); glVertex3f(glyphPosX,                    glyphPosY + glyphSizeY*scale, 0.0f);
-        glTexCoord2f(uvright, uvbottom); glVertex3f(glyphPosX + glyphSizeX*scale, glyphPosY + glyphSizeY*scale, 0.0f);
-        glTexCoord2f(uvright, uvtop);    glVertex3f(glyphPosX + glyphSizeX*scale, glyphPosY,                    0.0f);
-        glTexCoord2f(uvleft,  uvtop);    glVertex3f(glyphPosX,                    glyphPosY,                    0.0f);
+        pGraphics->gl.glTexCoord2f(uvleft,  uvbottom); pGraphics->gl.glVertex3f(glyphPosX,                    glyphPosY + glyphSizeY*scale, 0.0f);
+        pGraphics->gl.glTexCoord2f(uvright, uvbottom); pGraphics->gl.glVertex3f(glyphPosX + glyphSizeX*scale, glyphPosY + glyphSizeY*scale, 0.0f);
+        pGraphics->gl.glTexCoord2f(uvright, uvtop);    pGraphics->gl.glVertex3f(glyphPosX + glyphSizeX*scale, glyphPosY,                    0.0f);
+        pGraphics->gl.glTexCoord2f(uvleft,  uvtop);    pGraphics->gl.glVertex3f(glyphPosX,                    glyphPosY,                    0.0f);
         
         penPosX += glyphSizeX*scale;
         if (c == '\n') {
@@ -1746,7 +1645,7 @@ void taDrawText(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex,
             penPosX  = posX;
         }
     }
-    glEnd();
+    pGraphics->gl.glEnd();
 }
 
 void taDrawTextF(taGraphicsContext* pGraphics, taFont* pFont, taUInt8 colorIndex, float scale, float posX, float posY, const char* text, ...)
@@ -1771,18 +1670,18 @@ void taDrawSubTexture(taTexture* pTexture, float posX, float posY, float width, 
 
     taGraphicsContext* pGraphics = pTexture->pGraphics;
 
-    glMatrixMode(GL_PROJECTION);
+    pGraphics->gl.glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-    glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
+    pGraphics->gl.glOrtho(0, pGraphics->resolutionX, pGraphics->resolutionY, 0, -1000, 1000);
     
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    pGraphics->gl.glMatrixMode(GL_MODELVIEW);
+    pGraphics->gl.glLoadIdentity();
 
     if (transparent) {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        pGraphics->gl.glEnable(GL_BLEND);
+        pGraphics->gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     } else {
-        glDisable(GL_BLEND);
+        pGraphics->gl.glDisable(GL_BLEND);
     }
 
 
@@ -1796,24 +1695,24 @@ void taDrawSubTexture(taTexture* pTexture, float posX, float posY, float width, 
     
 
     taGraphicsBindTexture(pGraphics, pTexture);
-    glBegin(GL_QUADS);
+    pGraphics->gl.glBegin(GL_QUADS);
     {
         float uvleft   = subtexturePosX / pTexture->width;
         float uvtop    = subtexturePosY / pTexture->height;
         float uvright  = (subtexturePosX + subtextureSizeX) / pTexture->width;
         float uvbottom = (subtexturePosY + subtextureSizeY) / pTexture->height;
 
-        glTexCoord2f(uvleft,  uvbottom); glVertex3f(posX,         posY + height, 1.0f);
-        glTexCoord2f(uvright, uvbottom); glVertex3f(posX + width, posY + height, 1.0f);
-        glTexCoord2f(uvright, uvtop);    glVertex3f(posX + width, posY,          1.0f);
-        glTexCoord2f(uvleft,  uvtop);    glVertex3f(posX,         posY,          1.0f);
+        pGraphics->gl.glTexCoord2f(uvleft,  uvbottom); pGraphics->gl.glVertex3f(posX,         posY + height, 1.0f);
+        pGraphics->gl.glTexCoord2f(uvright, uvbottom); pGraphics->gl.glVertex3f(posX + width, posY + height, 1.0f);
+        pGraphics->gl.glTexCoord2f(uvright, uvtop);    pGraphics->gl.glVertex3f(posX + width, posY,          1.0f);
+        pGraphics->gl.glTexCoord2f(uvleft,  uvtop);    pGraphics->gl.glVertex3f(posX,         posY,          1.0f);
     }
-    glEnd();
+    pGraphics->gl.glEnd();
 
 
     // Restore default state.
     if (transparent) {
-        glDisable(GL_BLEND);
+        pGraphics->gl.glDisable(GL_BLEND);
     }
 }
 
