@@ -706,7 +706,7 @@ size_t taPathRemoveExtension(char* pathOut, size_t pathOutSize, const char* path
     }
 
     const char* extension = taPathExtension(path);
-    if (extension != NULL && extension != '\0') {
+    if (extension != NULL && extension[0] != '\0') {
         extension -= 1; // -1 to ensure the dot is removed as well.
     }
 
